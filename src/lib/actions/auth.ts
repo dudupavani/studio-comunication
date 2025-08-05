@@ -44,6 +44,22 @@ export async function signUp(formData: FormData) {
     return { error: error.message, data: {} }
   }
 
+  // Manually update user metadata because of a known Supabase issue
+  // where data on signup is not always persisted.
+  if (data.user) {
+    const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+            name: name,
+            role: 'user'
+        }
+    })
+    if (updateError) {
+        // Log the error but don't block the user flow
+        console.error("Error updating user metadata:", updateError.message)
+    }
+  }
+
+
   return { error: null, data };
 }
 
