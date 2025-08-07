@@ -1,12 +1,13 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import type { Profile } from "@/lib/types";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -15,7 +16,18 @@ export default async function AdminLayout({
     return redirect("/login")
   }
 
-  if (user.user_metadata?.role !== "admin") {
+  const { data: profileData, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError) {
+    console.error("Error fetching profile role in AdminLayout:", profileError);
+    return redirect("/profile"); // Redirect on error fetching role
+  }
+
+  if (profileData?.role !== "admin") {
     return redirect("/profile")
   }
 

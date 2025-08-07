@@ -1,4 +1,4 @@
-import { getUsers } from "@/lib/actions/user"
+import { getUsers } from "@/lib/actions/user";
 import {
   Table,
   TableBody,
@@ -6,19 +6,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { format } from 'date-fns'
-import { UserActions } from "@/components/admin/user-actions"
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { UserActions } from "@/components/admin/user-actions";
 
 export default async function AdminPage() {
-  const users = await getUsers()
+  const users = await getUsers();
 
   return (
     <div className="container py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-headline">Users</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-headline">
+            Users
+          </h1>
           <p className="text-muted-foreground">Manage all registered users.</p>
         </div>
       </div>
@@ -36,15 +38,16 @@ export default async function AdminPage() {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
+                <TableCell className="font-medium">{user.full_name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                  <Badge
+                    variant={user.role === "admin" ? "default" : "secondary"}>
                     {user.role}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {format(new Date(user.created_at), 'MMMM d, yyyy')}
+                  {format(new Date(user.created_at), "MMMM d, yyyy")}
                 </TableCell>
                 <TableCell className="text-right">
                   <UserActions userId={user.id} />
@@ -60,5 +63,5 @@ export default async function AdminPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
