@@ -161,7 +161,7 @@ export async function getUsers(): Promise<Profile[]> {
     id: user.id,
     email: user.email,
     full_name: profilesMap.get(user.id)?.full_name || user.user_metadata.name || "No name",
-    role: user.user_metadata.role || "user",
+    role: profilesMap.get(user.id)?.role || "user",
     created_at: user.created_at,
     phone: profilesMap.get(user.id)?.phone || null,
     avatar_url: profilesMap.get(user.id)?.avatar_url || null,
@@ -208,7 +208,7 @@ export async function getUserById(id: string): Promise<Profile | null> {
     id: user.id,
     email: user.email,
     name: user.user_metadata.name || "No name",
-    role: user.user_metadata.role || "user",
+    role: profilesMap.get(user.id)?.role || "user",
     created_at: user.created_at,
   };
 }
