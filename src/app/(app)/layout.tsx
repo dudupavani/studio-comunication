@@ -1,25 +1,28 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Header } from "@/components/header";
-import { Toaster } from "@/components/ui/toaster";
-import "../globals.css";
 import { cn } from "@/lib/utils";
-
 import type { Profile } from "@/lib/types";
+
+import AppSidebar from "@/components/sidebar/app-sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+
+import { Separator } from "@/components/ui/separator";
+import { UserMenu } from "@/components/user-menu";
+import ModuleTitle from "@/components/modules-title";
 
 export default async function AppLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const { data: profileData, error: profileError } = await supabase
     .from("profiles")
@@ -29,29 +32,42 @@ export default async function AppLayout({
 
   if (profileError) {
     console.error("Error fetching profile in AppLayout:", profileError);
-    // Handle error, maybe redirect to an error page or show a message
   }
 
   const userProfile: Profile = {
     id: user.id,
     email: user.email,
-    full_name: profileData?.full_name || user.user_metadata.name || "",
+    full_name: profileData?.full_name || user.user_metadata?.name || "",
     phone: profileData?.phone || "",
     avatar_url: profileData?.avatar_url || "",
-    role: profileData?.role || user.user_metadata.role || "user",
+    role: profileData?.role || user.user_metadata?.role || "user",
     created_at: user.created_at,
   };
 
   return (
-    <html lang="pt-BR">
-      <head></head>
-      <body className={cn("font-body antialiased h-full bg-background")}>
-        <div className="flex flex-col min-h-screen">
-          <Header user={userProfile} />
-          <main className="flex-1">{children}</main>
-        </div>
-        <Toaster />
-      </body>
-    </html>
+    <SidebarProvider defaultOpen>
+      <AppSidebar />
+
+      <SidebarInset className="min-h-screen">
+        {/* Topbar */}
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b">
+          <div className="flex items-center gap-2 px-4 w-full">
+            <SidebarTrigger className="-ml-1" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 data-[orientation=vertical]:h-4"
+            />
+            <ModuleTitle />
+
+            <div className="ml-auto">
+              <UserMenu user={userProfile} />
+            </div>
+          </div>
+        </header>
+
+        {/* Conteúdo */}
+        <div className={cn("flex flex-1 flex-col")}>{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

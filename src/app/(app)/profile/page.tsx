@@ -35,19 +35,9 @@ export default async function ProfilePage() {
   };
 
   return (
-    <div className="container mx-auto flex flex-col items-center">
-      <div className="pt-12 w-7/12 max-w-3xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight font-headline">
-            Perfil
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Gerenciar dados da sua conta. Mantenha sempre atualizado.
-          </p>
-        </div>
-        <div>
-          <ProfileForm user={userProfile} />
-        </div>
+    <div className="pt-8 px-12 w-7/12 max-w-3xl">
+      <div>
+        <ProfileForm user={userProfile} />
       </div>
     </div>
   );

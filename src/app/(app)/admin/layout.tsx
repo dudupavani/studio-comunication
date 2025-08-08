@@ -1,20 +1,20 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import type { Profile } from "@/lib/types";
 
 export default async function AdminLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const supabase = await createClient()
+  const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   if (!user) {
     console.log("AdminLayout: No user found, redirecting to /login");
-    return redirect("/login")
+    return redirect("/login");
   }
 
   console.log("AdminLayout: User found:", user.id, user.email);
@@ -34,10 +34,10 @@ export default async function AdminLayout({
 
   if (profileData?.role !== "admin") {
     console.log("AdminLayout: User is not admin, redirecting to /profile");
-    return redirect("/profile")
+    return redirect("/profile");
   }
 
   console.log("AdminLayout: User is admin, rendering children");
 
-  return <>{children}</>
+  return <>{children}</>;
 }

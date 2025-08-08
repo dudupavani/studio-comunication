@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { UserActions } from "@/components/admin/user-actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -23,26 +24,16 @@ export default async function AdminPage() {
   };
 
   return (
-    <div className="container-xl mx-auto pt-8 pb-12 px-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight font-headline">
-            Users
-          </h1>
-          <p className="text-muted-foreground">
-            Gerencie os usuários cadastrados
-          </p>
-        </div>
-      </div>
+    <div className="pt-8 pb-12 px-6">
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Joined On</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>E-mail</TableHead>
+              <TableHead>Função</TableHead>
+              <TableHead>Registro</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -50,8 +41,13 @@ export default async function AdminPage() {
               <TableRow key={user.id}>
                 <TableCell className="font-medium flex items-center">
                   <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || user.email} />
-                    <AvatarFallback>{getInitials(user.full_name || user.email || "U")}</AvatarFallback>
+                    <AvatarImage
+                      src={user.avatar_url || undefined}
+                      alt={user.full_name || user.email}
+                    />
+                    <AvatarFallback>
+                      {getInitials(user.full_name || user.email || "U")}
+                    </AvatarFallback>
                   </Avatar>
                   {user.full_name}
                 </TableCell>
@@ -63,7 +59,9 @@ export default async function AdminPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {format(new Date(user.created_at), "MMMM d, yyyy")}
+                  {format(new Date(user.created_at), "dd/MM/yyyy - HH:mm", {
+                    locale: ptBR,
+                  })}
                 </TableCell>
                 <TableCell className="text-right">
                   <UserActions userId={user.id} />
