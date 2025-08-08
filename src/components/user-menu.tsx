@@ -49,12 +49,6 @@ export function UserMenu({ user }: { user: Profile }) {
             Meu perfil
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/admin/users">
-            <UserCog className="h-4 w-4" />
-            Gerenciar Usuários
-          </Link>
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/auth/logout">
