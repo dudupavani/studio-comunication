@@ -34,6 +34,8 @@ export default async function ProfilePage() {
     created_at: user.created_at,
   };
 
+  console.log("ProfilePage: userProfile.avatar_url", userProfile.avatar_url);
+
   return (
     <div className="pt-8 px-12 w-7/12 max-w-3xl">
       <div>
