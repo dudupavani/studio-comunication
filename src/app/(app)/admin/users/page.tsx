@@ -10,9 +10,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { UserActions } from "@/components/admin/user-actions";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default async function AdminPage() {
   const users = await getUsers();
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("");
+  };
 
   return (
     <div className="container-xl mx-auto pt-8 pb-12 px-8">
@@ -40,7 +48,13 @@ export default async function AdminPage() {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.full_name}</TableCell>
+                <TableCell className="font-medium flex items-center">
+                  <Avatar className="h-8 w-8 mr-2">
+                    <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || user.email} />
+                    <AvatarFallback>{getInitials(user.full_name || user.email || "U")}</AvatarFallback>
+                  </Avatar>
+                  {user.full_name}
+                </TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   <Badge
