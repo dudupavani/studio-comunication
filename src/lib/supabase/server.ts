@@ -1,3 +1,4 @@
+// src/lib/supabase/server.ts
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -7,20 +8,34 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
+        // ✅ leitura assíncrona
         get: async (name: string) => {
-          const cookieStore = await cookies();
-          return cookieStore.get(name)?.value;
+          const store = await cookies();
+          return store.get(name)?.value;
         },
-        set(name: string, value: string, options: CookieOptions) {
+
+        // ✅ escrita assíncrona (Server Action/Route Handler)
+        set: async (name: string, value: string, options: CookieOptions) => {
           try {
-            cookies().set({ name, value, ...options });
+            const store = await cookies();
+            // Next 14/15: set aceita objeto { name, value, ...options }
+            (store as any).set
+              ? (store as any).set({ name, value, ...options })
+              : null;
           } catch (error) {
             console.warn("Failed to set cookie:", error);
           }
         },
-        remove(name: string, options: CookieOptions) {
+
+        // ✅ remoção assíncrona (usa delete se existir; fallback maxAge=0)
+        remove: async (name: string, options: CookieOptions) => {
           try {
-            cookies().set({ name, value: "", ...options });
+            const store = await cookies();
+            if ((store as any).delete) {
+              (store as any).delete(name);
+            } else if ((store as any).set) {
+              (store as any).set({ name, value: "", maxAge: 0, ...options });
+            }
           } catch (error) {
             console.warn("Failed to remove cookie:", error);
           }
