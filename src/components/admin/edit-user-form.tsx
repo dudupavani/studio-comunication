@@ -1,14 +1,14 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import * as React from "react";
 import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,87 +22,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { updateUser } from "@/lib/actions/user";
 import type { Profile } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+// ✅ Admin só pode mudar o role
 const formSchema = z.object({
-  name: z.string().min(1, { message: "Name is required" }),
-  email: z.string().email(),
   role: z.enum(["master", "user"]),
 });
 
 export function EditUserForm({ user }: { user: Profile }) {
   const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: user.full_name || "",
-      email: user.email || "",
-      role: user.role || "user",
+      role: (user.role as "master" | "user") || "user",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const formData = new FormData();
-    formData.append("id", user.id);
-    formData.append("name", values.name);
-    formData.append("role", values.role);
+    const fd = new FormData();
+    fd.append("id", user.id);
+    fd.append("role", values.role); // 👈 somente role
 
-    const { error } = await updateUser(formData);
-
+    const { error } = await updateUser(fd);
     if (error) {
       toast({
         variant: "destructive",
-        title: "Error updating user",
+        title: "Erro ao salvar",
         description: error,
       });
     } else {
       toast({
-        title: "User updated",
-        description: "The user has been updated successfully.",
+        title: "Perfil atualizado",
+        description: "O papel do usuário foi alterado.",
       });
     }
   }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>User Details</CardTitle>
-      </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Seu nome completo" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email Address</FormLabel>
-                  <FormControl>
-                    <Input disabled {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Email address cannot be changed.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Somente leitura - não fazem parte do form/control */}
+            <div>
+              <FormLabel>Nome completo</FormLabel>
+              <Input value={user.full_name ?? ""} disabled readOnly />
+            </div>
+
+            <div>
+              <FormLabel>E-mail</FormLabel>
+              <Input value={user.email ?? ""} disabled readOnly />
+            </div>
+
+            {/* Único campo editável */}
             <FormField
               control={form.control}
               name="role"
@@ -126,13 +102,10 @@ export function EditUserForm({ user }: { user: Profile }) {
                 </FormItem>
               )}
             />
+
             <div className="flex justify-end">
-              <Button
-                type="submit"
-                disabled={
-                  form.formState.isSubmitting || !form.formState.isDirty
-                }>
-                {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
               </Button>
             </div>
           </form>

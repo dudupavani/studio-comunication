@@ -17,20 +17,18 @@ export default async function EditUserPage({
   }
 
   return (
-    <div className="container flex flex-col items-center py-8">
+    <div className="flex flex-col items-start pt-8 pb-12 px-6">
       <div className="flex items-center gap-4 mb-6">
         <Button variant="outline" size="icon" asChild>
           <Link href="/admin/users">
             <ArrowLeft className="w-4 h-4" />
           </Link>
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight font-headline">
-            Gerenciar usuários
-          </h1>
-        </div>
+        <h2 className="text-2xl font-semibold text-gray-800">
+          Detalhes do usuário
+        </h2>
       </div>
-      <div className="max-w-xl">
+      <div className="w-full max-w-2xl">
         <EditUserForm user={user} />
       </div>
     </div>
