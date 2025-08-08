@@ -19,7 +19,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Trash2, Crop } from "lucide-react"; // Import the Trash2 icon
+import { Trash2 } from "lucide-react"; // Import the Trash2 icon
 
 function centerAspectCrop(
   mediaWidth: number,
@@ -214,10 +214,7 @@ export function ImageCropper({
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleCrop}>
-              <Crop className="h-4 w-4" />
-              Recortar
-            </Button>
+            <Button onClick={handleCrop}>Recortar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
