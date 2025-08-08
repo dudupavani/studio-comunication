@@ -1,41 +1,18 @@
-import { createClient } from "@/lib/supabase/server";
+'use client';
+
 import Link from "next/link";
 import { UserNav } from "./user-nav";
 import { Button } from "./ui/button";
 import { Mountain } from "lucide-react";
 import type { Profile } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 
-export async function Header() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+interface HeaderProps {
+  user: Profile | null;
+}
 
-  let userProfile: Profile | null = null;
-
-  if (user) {
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError) {
-      console.error("Error fetching profile in header:", profileError);
-    }
-
-    userProfile = {
-      id: user.id,
-      email: user.email,
-      full_name: profileData?.full_name || user.user_metadata.name || "",
-      phone: profileData?.phone || "",
-      avatar_url: profileData?.avatar_url || "",
-      role: profileData?.role || "user", // Alterado para buscar a role da tabela profiles
-      created_at: user.created_at,
-    };
-  }
-
-  const isAdmin = userProfile?.role === "admin";
+export function Header({ user }: HeaderProps) {
+  const isAdmin = user?.role === "admin";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b">
@@ -54,8 +31,8 @@ export async function Header() {
           )}
         </nav>
         <div className="flex items-center justify-end flex-1">
-          {userProfile ? (
-            <UserNav user={userProfile} />
+          {user ? (
+            <UserNav user={user} />
           ) : (
             <Button asChild>
               <Link href="/login">Login</Link>

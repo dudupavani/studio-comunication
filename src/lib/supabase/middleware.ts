@@ -54,7 +54,25 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const publicPaths = ['/login', '/signup', '/forgot-password', '/reset-password'];
+  const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path));
+
+  // If user is authenticated and tries to access a public auth path, redirect to dashboard
+  if (user && isPublicPath) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // If user is NOT authenticated and tries to access a private path, redirect to login
+  if (!user && !isPublicPath) {
+    // Allow access to the root path if it's not a public auth path (e.g., if it's the main app root)
+    // This prevents redirect loops if the root is meant to be a landing page for unauthenticated users
+    if (request.nextUrl.pathname === '/') {
+      return response; // Or redirect to /login if you want the root to always be login
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 
   return response
 }

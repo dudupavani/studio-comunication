@@ -20,7 +20,7 @@ export default async function EditUserPage({
     <div className="container flex flex-col items-center py-8">
       <div className="flex items-center gap-4 mb-6">
         <Button variant="outline" size="icon" asChild>
-          <Link href="/admin">
+          <Link href="/admin/users">
             <ArrowLeft className="w-4 h-4" />
           </Link>
         </Button>

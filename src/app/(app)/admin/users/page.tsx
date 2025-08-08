@@ -15,13 +15,15 @@ export default async function AdminPage() {
   const users = await getUsers();
 
   return (
-    <div className="container py-8">
+    <div className="container-xl mx-auto pt-8 pb-12 px-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-headline">
             Users
           </h1>
-          <p className="text-muted-foreground">Manage all registered users.</p>
+          <p className="text-muted-foreground">
+            Gerencie os usuários cadastrados
+          </p>
         </div>
       </div>
       <div className="border rounded-lg">
