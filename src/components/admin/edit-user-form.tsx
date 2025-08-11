@@ -1,20 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { useTransition } from "react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -22,95 +12,83 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { updateUser } from "@/lib/actions/user";
-import type { Profile } from "@/lib/types";
+import { updateUser } from "@/lib/actions/user"; // <-- SINGULAR
 
-// ✅ Admin só pode mudar o role
-const formSchema = z.object({
-  role: z.enum(["master", "user"]),
-});
+type EditUserFormProps = {
+  user: {
+    id: string;
+    full_name: string;
+    email: string;
+    role: string; // "user" | "master" | "admin"
+  };
+};
 
-export function EditUserForm({ user }: { user: Profile }) {
+export function EditUserForm({ user }: EditUserFormProps) {
   const { toast } = useToast();
+  const [pending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      role: (user.role as "master" | "user") || "user",
-    },
-  });
+  const [name, setName] = React.useState(user.full_name || "");
+  const [role, setRole] = React.useState<string>(user.role || "user");
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    const fd = new FormData();
-    fd.append("id", user.id);
-    fd.append("role", values.role); // 👈 somente role
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const form = new FormData();
+    form.set("id", user.id);
+    form.set("name", name);
+    form.set("role", role);
 
-    const { error } = await updateUser(fd);
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao salvar",
-        description: error,
-      });
-    } else {
-      toast({
-        title: "Perfil atualizado",
-        description: "O papel do usuário foi alterado.",
-      });
-    }
+    startTransition(async () => {
+      const res = await updateUser(form);
+      if (res?.error) {
+        toast({
+          title: "Erro ao salvar",
+          description: res.error,
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({ title: "Usuário atualizado", description: "Alterações salvas." });
+    });
   }
 
   return (
-    <Card>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Somente leitura - não fazem parte do form/control */}
-            <div>
-              <FormLabel>Nome completo</FormLabel>
-              <Input value={user.full_name ?? ""} disabled readOnly />
-            </div>
+    <form onSubmit={onSubmit} className="w-full max-w-xl space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Nome</Label>
+        <Input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.currentTarget.value)}
+          placeholder="Nome completo"
+          required
+        />
+      </div>
 
-            <div>
-              <FormLabel>E-mail</FormLabel>
-              <Input value={user.email ?? ""} disabled readOnly />
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">E-mail</Label>
+        <Input id="email" value={user.email} disabled />
+      </div>
 
-            {/* Único campo editável */}
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="master">Master</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <div className="space-y-2">
+        <Label>Função</Label>
+        <Select value={role} onValueChange={(v) => setRole(v)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione a função" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="user">user</SelectItem>
+            <SelectItem value="master">master</SelectItem>
+            <SelectItem value="admin">admin</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-            <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={pending}>
+          {pending ? "Salvando..." : "Salvar"}
+        </Button>
+      </div>
+    </form>
   );
 }

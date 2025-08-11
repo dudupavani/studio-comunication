@@ -12,19 +12,33 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserActions } from "@/components/admin/user-actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NewUserModal } from "@/components/admin/new-user-modal";
+import { Button } from "@/components/ui/button";
+import { CirclePlus } from "lucide-react";
 
-export default async function AdminPage() {
+export default async function AdminUsersPage() {
   const users = await getUsers();
 
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name: string) =>
+    name
       .split(" ")
+      .filter(Boolean)
       .map((n) => n[0])
-      .join("");
-  };
+      .join("")
+      .toUpperCase();
 
   return (
-    <div className="pt-8 pb-12 px-6">
+    <div className="pt-8 pb-12 px-6 space-y-4">
+      {/* Header com ação */}
+      <div className="flex items-center justify-end">
+        <NewUserModal>
+          <Button>
+            <CirclePlus />
+            Usuário
+          </Button>
+        </NewUserModal>
+      </div>
+
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -71,6 +85,7 @@ export default async function AdminPage() {
           </TableBody>
         </Table>
       </div>
+
       {users.length === 0 && (
         <div className="py-20 text-center text-muted-foreground">
           No users found.

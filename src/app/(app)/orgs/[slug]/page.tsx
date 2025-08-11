@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { listUnits, createUnit } from "@/lib/actions/units";
 import { getOrg, updateOrg } from "@/lib/actions/orgs";
 import UnitsTable from "@/components/units/units-table";
+import { Building2 } from "lucide-react";
 
 export default async function OrgDetailPage({
   params,
@@ -40,8 +41,14 @@ export default async function OrgDetailPage({
   return (
     <div className="p-6 space-y-8">
       {/* Renomear organização */}
+
       <section className="space-y-3">
-        <h1 className="text-2xl font-bold">{org.name}</h1>
+        <div className="flex items-center gap-4">
+          <div className="p-2 bg-gray-200 text-gray-900 rounded">
+            <Building2 size={24} />
+          </div>
+          <h1 className="text-2xl font-bold">{org.name}</h1>
+        </div>
 
         <form action={renameOrgAction} className="flex gap-2">
           <input
@@ -53,14 +60,14 @@ export default async function OrgDetailPage({
           <button
             type="submit"
             className="px-4 py-2 rounded bg-black text-white">
-            Salvar nome
+            Salvar
           </button>
         </form>
       </section>
 
       {/* Unidades */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Unidades</h2>
+        <h2 className="text-xl font-bold">Unidades</h2>
 
         <form action={createUnitAction} className="flex gap-2">
           <input
