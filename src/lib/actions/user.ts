@@ -49,24 +49,28 @@ export async function updateUserProfile(formData: FormData) {
   let avatar_url: string | null | undefined;
 
   if (avatarFile && avatarFile.size > 0) {
+    // Upload com upsert
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("avatars")
       .upload(`${user.id}/avatar.jpg`, avatarFile, { upsert: true });
     if (uploadError) return { error: uploadError.message };
 
+    // Public URL + cache-busting para forçar o browser a baixar a nova imagem
     const { data: publicUrlData } = supabase.storage
       .from("avatars")
       .getPublicUrl(uploadData.path);
-    avatar_url = publicUrlData.publicUrl;
+    const bust = Date.now();
+    avatar_url = `${publicUrlData.publicUrl}?v=${bust}`;
   } else if (formData.get("avatar") === "REMOVE") {
     await supabase.storage.from("avatars").remove([`${user.id}/avatar.jpg`]);
     avatar_url = null;
   }
 
+  // Atualiza Auth (name, full_name, avatar_url; e e-mail se mudou)
   const updateAuthData: {
-    data: { name: string; avatar_url?: string | null };
+    data: { name: string; full_name?: string; avatar_url?: string | null };
     email?: string;
-  } = { data: { name } };
+  } = { data: { name, full_name: name } };
 
   if (avatar_url !== undefined) updateAuthData.data.avatar_url = avatar_url;
   if (email) updateAuthData.email = email;
@@ -74,6 +78,7 @@ export async function updateUserProfile(formData: FormData) {
   const { error: authError } = await supabase.auth.updateUser(updateAuthData);
   if (authError) return { error: authError.message };
 
+  // Atualiza tabela profiles
   const updateProfileData: {
     phone?: string;
     avatar_url?: string | null;
@@ -91,7 +96,10 @@ export async function updateUserProfile(formData: FormData) {
     if (profileError) return { error: profileError.message };
   }
 
+  // Revalida páginas que listam / exibem avatar
   revalidatePath("/profile");
+  revalidatePath("/admin/users");
+  revalidatePath("/admin");
   return { error: null };
 }
 
@@ -197,7 +205,7 @@ export async function updateUser(formData: FormData) {
   const role = formData.get("role") as string; // "user" | "master" | "admin"
 
   const { error } = await admin.auth.admin.updateUserById(id, {
-    user_metadata: { name },
+    user_metadata: { name, full_name: name }, // mantém display name no dashboard
   });
   if (error) return { error: error.message };
 
@@ -257,7 +265,10 @@ export async function createUserAsAdmin(input: {
     email: input.email,
     password: input.password || crypto.randomUUID(),
     email_confirm: true,
-    user_metadata: { name: input.full_name || null },
+    user_metadata: {
+      name: input.full_name || null,
+      full_name: input.full_name || null,
+    },
   });
 
   // trata e-mail já existente

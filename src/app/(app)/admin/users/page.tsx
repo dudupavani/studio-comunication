@@ -44,7 +44,6 @@ export default async function AdminUsersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>E-mail</TableHead>
               <TableHead>Função</TableHead>
               <TableHead>Registro</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -53,7 +52,7 @@ export default async function AdminUsersPage() {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium flex items-center">
+                <TableCell className="font-medium flex items-center gap-2">
                   <Avatar className="h-8 w-8 mr-2">
                     <AvatarImage
                       src={user.avatar_url || undefined}
@@ -63,9 +62,12 @@ export default async function AdminUsersPage() {
                       {getInitials(user.full_name || user.email || "U")}
                     </AvatarFallback>
                   </Avatar>
-                  {user.full_name}
+                  <div className="flex flex-col justify-start">
+                    <span className="font-semibold">{user.full_name}</span>
+                    <span className="text-xs text-gray-500">{user.email}</span>
+                  </div>
                 </TableCell>
-                <TableCell>{user.email}</TableCell>
+
                 <TableCell>
                   <Badge
                     variant={user.role === "admin" ? "default" : "secondary"}>

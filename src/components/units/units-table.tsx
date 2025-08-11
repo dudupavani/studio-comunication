@@ -28,7 +28,6 @@ export default function UnitsTable({ orgId, orgSlug, units }: Props) {
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
-            <TableHead>Endereço</TableHead>
             <TableHead className="w-[180px]">CNPJ</TableHead>
             <TableHead className="w-[140px]">Telefone</TableHead>
             <TableHead className="w-[96px] text-right">Ações</TableHead>
@@ -44,15 +43,8 @@ export default function UnitsTable({ orgId, orgSlug, units }: Props) {
                   {u.name}
                 </Link>
               </TableCell>
-              <TableCell className="text-muted-foreground">
-                {u.address ?? "-"}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {u.cnpj ?? "-"}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {u.phone ?? "-"}
-              </TableCell>
+              <TableCell>{u.cnpj ?? "-"}</TableCell>
+              <TableCell>{u.phone ?? "-"}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   <Button

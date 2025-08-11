@@ -57,9 +57,13 @@ export function ProfileForm({ user }: { user: Profile }) {
     }
 
     if (croppedImage) {
-      formData.append("avatar", croppedImage, "avatar.jpg");
+      // 🔧 Envie um File com nome e tipo garantidos
+      const file = new File([croppedImage], "avatar.jpg", {
+        type: "image/jpeg",
+      });
+      formData.append("avatar", file);
     } else if (isAvatarRemoved) {
-      formData.append("avatar", "REMOVE"); // Signal to remove avatar
+      formData.append("avatar", "REMOVE"); // sinaliza remoção
     }
 
     const { error } = await updateUserProfile(formData);
@@ -76,6 +80,7 @@ export function ProfileForm({ user }: { user: Profile }) {
         description: "Your profile has been updated successfully.",
       });
       if (croppedImage) {
+        // atualiza preview local sem depender do retorno
         const reader = new FileReader();
         reader.onloadend = () => {
           setPreview(reader.result as string);
@@ -84,20 +89,21 @@ export function ProfileForm({ user }: { user: Profile }) {
       } else if (isAvatarRemoved) {
         setPreview(null);
       }
-      setIsAvatarRemoved(false); // Reset the flag after successful update
+      setIsAvatarRemoved(false);
+      form.reset(values); // limpa estado "dirty" após salvar
     }
   }
 
   const handleCrop = (blob: Blob) => {
     setCroppedImage(blob);
     setPreview(URL.createObjectURL(blob));
-    setIsAvatarRemoved(false); // If a new image is cropped, it's not removed
+    setIsAvatarRemoved(false);
   };
 
   const handleRemoveImage = () => {
     setCroppedImage(null);
     setPreview(null);
-    setIsAvatarRemoved(true); // Set flag to indicate avatar removal
+    setIsAvatarRemoved(true);
   };
 
   return (
@@ -112,6 +118,7 @@ export function ProfileForm({ user }: { user: Profile }) {
                 onRemove={handleRemoveImage}
               />
             </div>
+
             <FormField
               control={form.control}
               name="name"
@@ -125,6 +132,7 @@ export function ProfileForm({ user }: { user: Profile }) {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="email"
@@ -138,6 +146,7 @@ export function ProfileForm({ user }: { user: Profile }) {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="phone"
@@ -156,6 +165,7 @@ export function ProfileForm({ user }: { user: Profile }) {
                 </FormItem>
               )}
             />
+
             <div className="flex justify-end">
               <Button
                 type="submit"
