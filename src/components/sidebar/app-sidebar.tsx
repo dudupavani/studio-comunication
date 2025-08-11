@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
-import { ChartArea, UserCog } from "lucide-react";
+import { Building2, ChartArea, UserCog } from "lucide-react";
 
 import {
   Sidebar,
@@ -51,6 +51,17 @@ export default function AppSidebar() {
                   <Link href="/dashboard">
                     <ChartArea />
                     Dashboard
+                  </Link>
+                </Button>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  asChild>
+                  <Link href="/orgs">
+                    <Building2 />
+                    Organizações
                   </Link>
                 </Button>
               </SidebarMenuItem>
