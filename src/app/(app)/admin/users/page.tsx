@@ -33,7 +33,7 @@ export default async function AdminUsersPage() {
         <h1 className="text-3xl font-bold tracking-tight">
           Gerenciar Usuários
         </h1>
-        {isAdmin && <NewUserModal />}
+        {isAdmin && auth?.orgId && <NewUserModal orgId={auth.orgId} />}
       </div>
 
       {/* Tabela */}
@@ -65,12 +65,12 @@ export default async function AdminUsersPage() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={user.avatar_url}
-                          alt={user.name || "Avatar"}
+                          alt={user.full_name || "Avatar"}
                           className="h-8 w-8 rounded-full"
                         />
                       ) : (
                         <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
-                          {(user.name ?? "NN")
+                          {(user.full_name ?? "NN")
                             .split(" ")
                             .map((n: string) => n[0])
                             .join("")
@@ -80,7 +80,7 @@ export default async function AdminUsersPage() {
                       )}
                       <div>
                         <div className="font-medium">
-                          {user.name || "No name"}
+                          {user.full_name || "No name"}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {user.email}

@@ -1,3 +1,4 @@
+// src/app/(app)/orgs/[slug]/page.tsx
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
@@ -13,12 +14,14 @@ import { Input } from "@/components/ui/input";
 export default async function OrgPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
+
   const auth = await getAuthContext();
   if (!auth) redirect("/");
 
-  const orgRes = await getOrg(params.slug);
+  const orgRes = await getOrg(slug);
   if (!orgRes.ok) redirect("/orgs");
   const org = orgRes.data;
 

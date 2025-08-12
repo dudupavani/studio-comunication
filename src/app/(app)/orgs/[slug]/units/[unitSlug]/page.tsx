@@ -29,17 +29,24 @@ export default async function UnitPage({
   // server action de salvar (inline na RSC)
   async function save(formData: FormData) {
     "use server";
+
     const name = String(formData.get("name") ?? "");
     const address = String(formData.get("address") ?? "");
     const cnpj = String(formData.get("cnpj") ?? "");
     const phone = String(formData.get("phone") ?? "");
 
-    const res = await updateUnit(org.id, unit.id, {
-      name,
-      address,
-      cnpj,
-      phone,
-    });
+    // updateUnit espera: (unitId, newName, opts?)
+    // Então precisamos atualizar os campos extras separadamente após o nome
+    const res = await updateUnit(unit.id, name);
+    if (!res.ok) {
+      return;
+    }
+    // Atualiza os campos extras se necessário
+    const supabase = (await import("@/lib/supabase/server")).createClient();
+    await supabase
+      .from("units")
+      .update({ address, cnpj, phone })
+      .eq("id", unit.id);
 
     if (!res.ok) {
       // poderia exibir um toast via cookies/headers; por ora apenas retorna

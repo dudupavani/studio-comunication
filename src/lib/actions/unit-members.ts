@@ -1,90 +1,135 @@
+// src/lib/actions/unit-members.ts
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import type { ActionResult } from "@/lib/types/db";
-
-export type UnitMemberRole = "unit_master" | "unit_user";
+import { createServiceClient } from "@/lib/supabase/service";
+import { revalidatePath } from "next/cache";
 
 export type UnitMember = {
-  unit_id: string;
   user_id: string;
-  org_id: string;
-  role: UnitMemberRole;
-  email?: string | null;
-  name?: string | null;
-  created_at?: string;
+  role: "unit_user" | "unit_master" | "org_admin";
+  profiles: { name: string | null; email: string | null } | null;
 };
 
-export async function listUnitMembers(unit_id: string): Promise<UnitMember[]> {
-  const supabase = await createClient();
+export async function listUnitMembers(orgId: string, unitId: string) {
+  const supabase = createServiceClient();
 
   const { data, error } = await supabase
     .from("unit_members")
-    .select(
-      `
-      unit_id, user_id, org_id, role, created_at,
-      profiles:profiles!unit_members_user_id_fkey(id, email, full_name)
-    `
-    )
-    .eq("unit_id", unit_id)
-    .order("created_at", { ascending: true });
+    .select("user_id, role, profiles(name, email)")
+    .eq("org_id", orgId)
+    .eq("unit_id", unitId)
+    .order("user_id", { ascending: true }); // ordem estável sem depender de created_at
 
   if (error) {
-    console.error("Erro ao listar membros da unidade:", error);
-    return [];
+    return { ok: false as const, error: error.message };
   }
 
-  return (data ?? []).map((row: any) => ({
-    unit_id: row.unit_id,
-    user_id: row.user_id,
-    org_id: row.org_id,
-    role: row.role,
-    created_at: row.created_at,
-    email: row.profiles?.email ?? null,
-    name: row.profiles?.full_name ?? null,
-  }));
+  return { ok: true as const, data: (data as unknown as UnitMember[]) ?? [] };
 }
 
-export async function addUnitMember(input: {
-  org_id: string;
-  unit_id: string;
-  user_id: string;
-  role: UnitMemberRole;
-}): Promise<ActionResult<UnitMember>> {
-  const supabase = await createClient();
-  const { org_id, unit_id, user_id, role } = input;
+type AddUnitMemberResult =
+  | { ok: true; data: UnitMember }
+  | { ok: false; error: string };
 
+export async function addUnitMember(params: {
+  orgId: string;
+  unitId: string;
+  userId: string;
+  role: UnitMember["role"];
+}): Promise<AddUnitMemberResult> {
+  const supabase = createServiceClient();
+
+  // Verifica se usuário pertence à organização
+  const { data: orgMember } = await supabase
+    .from("org_members")
+    .select("role")
+    .eq("org_id", params.orgId)
+    .eq("user_id", params.userId)
+    .single();
+
+  if (!orgMember) {
+    return {
+      ok: false,
+      error: "Usuário não pertence a esta organização",
+    };
+  }
+
+  // Verifica se já está vinculado à unidade
+  const { data: existing } = await supabase
+    .from("unit_members")
+    .select("*")
+    .eq("unit_id", params.unitId)
+    .eq("user_id", params.userId)
+    .single();
+
+  if (existing) {
+    return {
+      ok: false,
+      error: "Usuário já vinculado a esta unidade",
+    };
+  }
+
+  // Insere vínculo
   const { data, error } = await supabase
     .from("unit_members")
-    .insert([{ org_id, unit_id, user_id, role }])
-    .select()
+    .insert({
+      org_id: params.orgId,
+      unit_id: params.unitId,
+      user_id: params.userId,
+      role: params.role,
+    })
+    .select("user_id, role, profiles(name, email)")
     .single();
 
   if (error) {
-    console.error("Erro ao adicionar membro à unidade:", error);
     return { ok: false, error: error.message };
   }
 
-  return { ok: true, data };
+  // Revalida as páginas que podem mostrar membros da unidade
+  revalidatePath(`/orgs/[slug]/units/[unitSlug]`);
+  revalidatePath(`/orgs/[slug]/units/[unitSlug]/members`);
+
+  return {
+    ok: true,
+    data: data as unknown as UnitMember,
+  };
 }
 
-export async function removeUnitMember(input: {
-  unit_id: string;
-  user_id: string;
-}): Promise<ActionResult<null>> {
-  const supabase = await createClient();
-  const { unit_id, user_id } = input;
+export async function removeUnitMember(params: {
+  orgId: string;
+  unitId: string;
+  userId: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = createServiceClient();
+
+  // Verifica se usuário está vinculado à unidade
+  const { data: existing } = await supabase
+    .from("unit_members")
+    .select("*")
+    .eq("unit_id", params.unitId)
+    .eq("user_id", params.userId)
+    .single();
+
+  if (!existing) {
+    return {
+      ok: false,
+      error: "Usuário não está vinculado a esta unidade",
+    };
+  }
 
   const { error } = await supabase
     .from("unit_members")
     .delete()
-    .eq("unit_id", unit_id)
-    .eq("user_id", user_id);
+    .eq("unit_id", params.unitId)
+    .eq("user_id", params.userId);
 
   if (error) {
-    console.error("Erro ao remover membro da unidade:", error);
     return { ok: false, error: error.message };
   }
 
-  return { ok: true, data: null };
+  // Revalida as páginas que podem mostrar membros da unidade
+  revalidatePath(`/orgs/[slug]/units/[unitSlug]`);
+  revalidatePath(`/orgs/[slug]/units/[unitSlug]/members`);
+
+  return { ok: true };
 }

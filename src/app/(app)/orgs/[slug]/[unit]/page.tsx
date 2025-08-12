@@ -1,3 +1,4 @@
+// src/app/(app)/orgs/[slug]/[unit]/page.tsx
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
@@ -9,23 +10,24 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Text, Users } from "lucide-react";
-import MembersTabServer from "@/components/units/members/members-tab.server"; // 👈 ADICIONADO
+import MembersTabServer from "@/components/units/members/members-tab.server";
 
 export default async function UnitPage({
   params,
 }: {
-  params: { slug: string; unit: string };
+  params: Promise<{ slug: string; unit: string }>;
 }) {
+  const { slug, unit: unitSlug } = await params;
+
   const auth = await getAuthContext();
   if (!auth) redirect("/");
 
-  const orgRes = await getOrg(params.slug);
+  const orgRes = await getOrg(slug);
   if (!orgRes.ok) redirect("/orgs");
   const org = orgRes.data!;
 
-  const unitRes = await getUnitBySlug(org.id, params.unit);
+  const unitRes = await getUnitBySlug(org.id, unitSlug);
   if (!unitRes.ok) redirect(`/orgs/${org.slug}`);
   const unit = unitRes.data!;
 

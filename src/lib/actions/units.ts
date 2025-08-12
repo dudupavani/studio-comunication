@@ -9,6 +9,9 @@ export type Unit = {
   name: string;
   slug: string;
   org_id: string;
+  address?: string | null;
+  cnpj?: string | null;
+  phone?: string | null;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -84,7 +87,7 @@ export async function listUnits(orgId: string): Promise<Result<Unit[]>> {
 
     const { data, error } = await supabase
       .from("units")
-      .select("id, name, slug, org_id")
+      .select("id, name, slug, org_id, address, cnpj, phone")
       .eq("org_id", orgId)
       .order("name");
 
@@ -129,7 +132,7 @@ export async function getUnitBySlug(
     // 3) busca unidade
     const { data, error } = await supabase
       .from("units")
-      .select("id, name, slug, org_id")
+      .select("id, name, slug, org_id, address, cnpj, phone")
       .eq("org_id", orgId)
       .eq("slug", slug)
       .single();
@@ -167,7 +170,7 @@ export async function createUnit(
       const { data, error } = await supabase
         .from("units")
         .insert({ org_id: orgId, name: trimmed, slug: candidate })
-        .select("id, name, slug, org_id")
+        .select("id, name, slug, org_id, address, cnpj, phone")
         .single();
 
       if (!error && data) {
@@ -222,7 +225,7 @@ export async function updateUnit(
         .from("units")
         .update({ name: trimmed, slug: candidate })
         .eq("id", unitId)
-        .select("id, name, slug, org_id")
+        .select("id, name, slug, org_id, address, cnpj, phone")
         .single();
 
       if (!error && data) {
