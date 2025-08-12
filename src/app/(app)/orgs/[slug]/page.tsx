@@ -1,93 +1,102 @@
-// src/app/(app)/orgs/[slug]/page.tsx
-import { redirect } from "next/navigation";
-import { listUnits, createUnit } from "@/lib/actions/units";
-import { getOrg, updateOrg } from "@/lib/actions/orgs";
-import UnitsTable from "@/components/units/units-table";
-import { Building2 } from "lucide-react";
+export const dynamic = "force-dynamic";
 
-export default async function OrgDetailPage({
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getOrg, updateOrg } from "@/lib/actions/orgs";
+import { listUnits } from "@/lib/actions/units";
+import { getAuthContext } from "@/lib/auth-context";
+import { createUnitAction } from "@/app/(app)/orgs/unit-actions";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+export default async function OrgPage({
   params,
 }: {
-  // Next 15: params é assíncrono
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }) {
-  const { slug } = await params;
+  const auth = await getAuthContext();
+  if (!auth) redirect("/");
 
-  const orgRes = await getOrg(slug);
+  const orgRes = await getOrg(params.slug);
   if (!orgRes.ok) redirect("/orgs");
   const org = orgRes.data;
 
-  // carrega unidades
-  const units = await listUnits(org.id);
+  const unitsRes = await listUnits(org.id);
+  const units = unitsRes.ok ? unitsRes.data : [];
 
-  // criar uma unidade
-  async function createUnitAction(formData: FormData) {
-    "use server";
-    const name = String(formData.get("name") ?? "");
-    await createUnit(org.id, name);
-  }
-
-  // renomear organização (slug pode mudar)
   async function renameOrgAction(formData: FormData) {
     "use server";
-    const newName = String(formData.get("newName") ?? "").trim();
-    if (!newName) return;
-    const res = await updateOrg(org.id, newName);
-    if (res.ok && res.data?.slug && res.data.slug !== org.slug) {
-      redirect(`/orgs/${res.data.slug}`);
-    }
+    const name = String(formData.get("name") ?? "").trim();
+    if (!name) return;
+    await updateOrg(org.id, name);
+    redirect(`/orgs/${org.slug}`);
   }
 
   return (
-    <div className="p-6 space-y-8">
-      {/* Renomear organização */}
-
-      <section className="space-y-3">
-        <div className="flex items-center gap-4">
-          <div className="p-2 bg-gray-200 text-gray-900 rounded">
-            <Building2 size={24} />
-          </div>
-          <h1 className="text-2xl font-bold">{org.name}</h1>
+    <div className="p-6">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center text-2xl">
+          🏢
         </div>
+        <h1 className="text-2xl font-bold">{org.name}</h1>
+      </div>
 
-        <form action={renameOrgAction} className="flex gap-2">
-          <input
-            name="newName"
-            placeholder="Novo nome da organização"
-            className="border rounded px-3 py-2"
-            defaultValue={org.name}
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 rounded bg-black text-white">
-            Salvar
-          </button>
-        </form>
-      </section>
+      {/* Renomear organização */}
+      <form action={renameOrgAction} className="flex items-center gap-3 mb-10">
+        <Input
+          name="name"
+          defaultValue={org.name}
+          placeholder="Nome da organização"
+          className="max-w-md"
+        />
+        <Button type="submit">Salvar</Button>
+      </form>
 
-      {/* Unidades */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold">Unidades</h2>
-
-        <form action={createUnitAction} className="flex gap-2">
-          <input
+      {/* Criar unidade */}
+      <section className="mb-6">
+        <h2 className="text-2xl font-semibold mb-3">Unidades</h2>
+        <form action={createUnitAction} className="flex items-center gap-3">
+          <Input
             name="name"
             placeholder="Nome da unidade"
-            className="border rounded px-3 py-2"
+            className="max-w-md"
+            required
           />
-          <button
-            type="submit"
-            className="px-4 py-2 rounded bg-black text-white">
-            Adicionar
-          </button>
+          <input type="hidden" name="orgId" value={org.id} />
+          <input type="hidden" name="slug" value={org.slug} />
+          <Button type="submit">Adicionar</Button>
         </form>
-
-        {!units.ok ? (
-          <p className="text-red-600">{units.error}</p>
-        ) : (
-          <UnitsTable orgId={org.id} orgSlug={org.slug} units={units.data} />
-        )}
       </section>
+
+      {/* Tabela de unidades (sem botão Excluir) */}
+      <div className="mt-6 border rounded-lg">
+        <div className="grid grid-cols-12 px-4 py-3 text-sm text-muted-foreground border-b">
+          <div className="col-span-6">Nome</div>
+          <div className="col-span-6">Slug</div>
+        </div>
+
+        {units.length === 0 ? (
+          <div className="p-6 text-muted-foreground">
+            Nenhuma unidade encontrada.
+          </div>
+        ) : (
+          units.map((u) => (
+            <div
+              key={u.id}
+              className="grid grid-cols-12 px-4 py-3 border-b items-center">
+              <div className="col-span-6">
+                <Link
+                  href={`/orgs/${org.slug}/${u.slug}`}
+                  className="text-primary hover:underline font-medium">
+                  {u.name}
+                </Link>
+              </div>
+              <div className="col-span-6 text-muted-foreground">{u.slug}</div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

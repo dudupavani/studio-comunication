@@ -1,28 +1,41 @@
-// src/app/(app)/orgs/unit-actions.ts
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
-import { deleteUnit } from "@/lib/actions/units";
+import { createUnit, deleteUnit } from "@/lib/actions/units";
 
+/**
+ * Cria uma unidade e revalida a página da organização.
+ * Espera: orgId, slug, name
+ */
+export async function createUnitAction(formData: FormData) {
+  const orgId = String(formData.get("orgId") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+
+  if (!orgId || !slug || !name) {
+    // volta para a página sem quebrar
+    redirect(`/orgs/${slug}`);
+  }
+
+  const res = await createUnit(orgId, name, { revalidate: `/orgs/${slug}` });
+
+  // independente de ok/erro, voltamos para a página (você pode colocar toast via client, se quiser)
+  redirect(`/orgs/${slug}`);
+}
+
+/**
+ * Exclui uma unidade e revalida a página da organização.
+ * Espera: orgId, slug, unitId
+ */
 export async function deleteUnitAction(formData: FormData) {
   const orgId = String(formData.get("orgId") ?? "");
+  const slug = String(formData.get("slug") ?? "");
   const unitId = String(formData.get("unitId") ?? "");
-  const redirectTo = String(formData.get("redirectTo") ?? "");
 
-  if (!orgId || !unitId) {
-    return { ok: false, error: "Dados insuficientes." };
+  if (!orgId || !slug || !unitId) {
+    redirect(`/orgs/${slug}`);
   }
 
-  const res = await deleteUnit(orgId, unitId);
-  if (!res.ok) {
-    return { ok: false, error: res.error ?? "Falha ao excluir unidade." };
-  }
-
-  // invalida listas
-  revalidatePath("/orgs");
-  // se veio destino, manda pra lá (página da organização)
-  if (redirectTo) redirect(redirectTo);
-
-  return { ok: true, data: null };
+  await deleteUnit(unitId, { revalidate: `/orgs/${slug}` });
+  redirect(`/orgs/${slug}`);
 }

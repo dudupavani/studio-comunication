@@ -95,7 +95,7 @@ export async function listUnits(orgId: string): Promise<Result<Unit[]>> {
   }
 }
 
-/** Retorna unidade pelo slug e org_id, validando se o usuário pertence à organização */
+/** Retorna unidade pelo slug e org_id, validando pertencimento via org_members */
 export async function getUnitBySlug(
   orgId: string,
   slug: string
@@ -109,18 +109,21 @@ export async function getUnitBySlug(
     } = await supabase.auth.getUser();
     if (!user) return { ok: false, error: "Usuário não autenticado." };
 
-    // 2) valida org do usuário
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("org_id")
-      .eq("id", user.id)
-      .single();
+    // 2) valida se usuário pertence à organização (org_members)
+    // (Policy de SELECT em org_members permite ler a PRÓPRIA linha)
+    const { data: membership, error: mErr } = await supabase
+      .from("org_members")
+      .select("user_id")
+      .eq("org_id", orgId)
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-    if (profileError || !profile) {
-      return { ok: false, error: "Perfil do usuário não encontrado." };
-    }
-    if (profile.org_id !== orgId) {
-      return { ok: false, error: "Acesso negado à organização." };
+    // Se não for membro e não for platform_admin => acesso negado
+    if (!membership) {
+      const platform = await isPlatformAdmin();
+      if (!platform) {
+        return { ok: false, error: "Acesso negado à organização." };
+      }
     }
 
     // 3) busca unidade
