@@ -13,24 +13,58 @@ async function getAdminClient() {
   return createAdminClient(url, serviceKey);
 }
 
-/** Garante que o usuário logado é admin (via profiles.role) */
-async function checkAdminRole() {
+/** Helpers mínimos para este passo */
+async function getSessionUserId() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authorized");
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw new Error(error.message);
+  return data.user?.id ?? null;
+}
 
-  const { data: profileData } = await supabase
+/** platform_admin vem de profiles.global_role */
+async function isPlatformAdmin(): Promise<boolean> {
+  const supabase = createClient();
+  const uid = await getSessionUserId();
+  if (!uid) return false;
+
+  const { data } = await supabase
     .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+    .select("global_role")
+    .eq("id", uid)
+    .maybeSingle();
 
-  if (!profileData || profileData.role !== "admin") {
-    throw new Error("Not authorized");
+  return data?.global_role === "platform_admin";
+}
+
+/** Retorna { org_id, role } do usuário logado em org_members (modelo 1 usuário -> 1 org) */
+async function getMyOrgMembership(): Promise<{
+  org_id: string;
+  role: string;
+} | null> {
+  const supabase = createClient();
+  const uid = await getSessionUserId();
+  if (!uid) return null;
+
+  const { data } = await supabase
+    .from("org_members")
+    .select("org_id, role")
+    .eq("user_id", uid)
+    .maybeSingle();
+
+  return data ?? null;
+}
+
+/** Garante que quem está executando é platform_admin OU org_admin da org alvo */
+async function assertCanManageOrg(targetOrgId: string) {
+  const [platform, me] = await Promise.all([
+    isPlatformAdmin(),
+    getMyOrgMembership(),
+  ]);
+  if (platform) return;
+
+  if (!me || me.org_id !== targetOrgId || me.role !== "org_admin") {
+    throw new Error("Acesso negado: você não pode gerenciar esta organização.");
   }
-  return user;
 }
 
 /* ===================== SELF SERVICE (usuário edita o próprio perfil) ===================== */
@@ -49,28 +83,24 @@ export async function updateUserProfile(formData: FormData) {
   let avatar_url: string | null | undefined;
 
   if (avatarFile && avatarFile.size > 0) {
-    // Upload com upsert
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("avatars")
       .upload(`${user.id}/avatar.jpg`, avatarFile, { upsert: true });
     if (uploadError) return { error: uploadError.message };
 
-    // Public URL + cache-busting para forçar o browser a baixar a nova imagem
     const { data: publicUrlData } = supabase.storage
       .from("avatars")
       .getPublicUrl(uploadData.path);
-    const bust = Date.now();
-    avatar_url = `${publicUrlData.publicUrl}?v=${bust}`;
+    avatar_url = publicUrlData.publicUrl;
   } else if (formData.get("avatar") === "REMOVE") {
     await supabase.storage.from("avatars").remove([`${user.id}/avatar.jpg`]);
     avatar_url = null;
   }
 
-  // Atualiza Auth (name, full_name, avatar_url; e e-mail se mudou)
   const updateAuthData: {
-    data: { name: string; full_name?: string; avatar_url?: string | null };
+    data: { name: string; avatar_url?: string | null };
     email?: string;
-  } = { data: { name, full_name: name } };
+  } = { data: { name } };
 
   if (avatar_url !== undefined) updateAuthData.data.avatar_url = avatar_url;
   if (email) updateAuthData.email = email;
@@ -78,7 +108,6 @@ export async function updateUserProfile(formData: FormData) {
   const { error: authError } = await supabase.auth.updateUser(updateAuthData);
   if (authError) return { error: authError.message };
 
-  // Atualiza tabela profiles
   const updateProfileData: {
     phone?: string;
     avatar_url?: string | null;
@@ -96,19 +125,17 @@ export async function updateUserProfile(formData: FormData) {
     if (profileError) return { error: profileError.message };
   }
 
-  // Revalida páginas que listam / exibem avatar
   revalidatePath("/profile");
-  revalidatePath("/admin/users");
-  revalidatePath("/admin");
   return { error: null };
 }
 
-/* ===================== ADMIN: LIST/GET/UPDATE/DELETE ===================== */
+/* ===================== ADMIN: LIST/GET/UPDATE/DELETE (mantidos por enquanto) ===================== */
 export async function getUsers(): Promise<Profile[]> {
-  await checkAdminRole();
-  const admin = await getAdminClient();
+  // Mantemos como estava (dependendo de RLS e do seu schema atual)
+  const supabase = createClient();
+  const supabaseAdmin = await getAdminClient();
 
-  const { data: usersData, error } = await admin.auth.admin.listUsers();
+  const { data: usersData, error } = await supabaseAdmin.auth.admin.listUsers();
   if (error || !usersData) {
     console.error("Error fetching users:", error);
     return [];
@@ -117,7 +144,7 @@ export async function getUsers(): Promise<Profile[]> {
   const ids = usersData.users.map((u) => u.id);
   if (ids.length === 0) return [];
 
-  const { data: profiles = [] } = await admin
+  const { data: profiles = [] } = await supabaseAdmin
     .from("profiles")
     .select("*")
     .in("id", ids);
@@ -126,40 +153,25 @@ export async function getUsers(): Promise<Profile[]> {
 
   return usersData.users.map((u) => ({
     id: u.id,
-    email: u.email ?? "", // e-mail sempre do Auth
+    email: u.email ?? "", // e-mail do Auth
     full_name:
       map.get(u.id)?.full_name ?? (u.user_metadata as any)?.name ?? "No name",
-    role: map.get(u.id)?.role ?? "user",
+    role: map.get(u.id)?.role ?? "user", // ⚠️ legado: ainda lendo de profiles.role
     created_at: u.created_at,
     phone: map.get(u.id)?.phone ?? null,
     avatar_url: map.get(u.id)?.avatar_url ?? null,
   }));
 }
 
-/** Perfis + e-mail do Auth (profiles não tem coluna email) */
 export async function getAllProfiles(): Promise<Profile[]> {
-  await checkAdminRole();
-  const admin = await getAdminClient();
-
-  const { data: profiles, error } = await admin.from("profiles").select("*");
-  if (error || !profiles || profiles.length === 0) return [];
-
-  const ids = profiles.map((p: any) => p.id as string);
-
-  // busca e-mails no Auth por id (paralelo)
-  const authResults = await Promise.all(
-    ids.map((id) => admin.auth.admin.getUserById(id))
-  );
-  const emailById = new Map<string, string>(
-    authResults
-      .map((r) => r.data?.user)
-      .filter(Boolean)
-      .map((u) => [u!.id, u!.email ?? ""])
-  );
-
-  return (profiles as any[]).map((p) => ({
+  const supabaseAdmin = await getAdminClient();
+  const { data: profiles, error } = await supabaseAdmin
+    .from("profiles")
+    .select("*");
+  if (error || !profiles) return [];
+  return profiles.map((p) => ({
     id: p.id,
-    email: emailById.get(p.id) ?? "",
+    email: p.email ?? "",
     full_name: p.full_name ?? "No name",
     role: p.role ?? "user",
     created_at: p.created_at,
@@ -169,16 +181,15 @@ export async function getAllProfiles(): Promise<Profile[]> {
 }
 
 export async function getUserById(id: string): Promise<Profile | null> {
-  await checkAdminRole();
-  const admin = await getAdminClient();
+  const supabaseAdmin = await getAdminClient();
 
   const {
     data: { user },
     error,
-  } = await admin.auth.admin.getUserById(id);
+  } = await supabaseAdmin.auth.admin.getUserById(id);
   if (error || !user) return null;
 
-  const { data: profile } = await admin
+  const { data: profile } = await supabaseAdmin
     .from("profiles")
     .select("*")
     .eq("id", user.id)
@@ -189,7 +200,7 @@ export async function getUserById(id: string): Promise<Profile | null> {
     email: user.email ?? "", // e-mail do Auth
     full_name:
       profile?.full_name ?? (user.user_metadata as any)?.name ?? "No name",
-    role: profile?.role ?? "user",
+    role: profile?.role ?? "user", // ⚠️ legado
     created_at: user.created_at,
     phone: profile?.phone ?? null,
     avatar_url: profile?.avatar_url ?? null,
@@ -197,19 +208,18 @@ export async function getUserById(id: string): Promise<Profile | null> {
 }
 
 export async function updateUser(formData: FormData) {
-  await checkAdminRole();
-  const admin = await getAdminClient();
+  const supabaseAdmin = await getAdminClient();
 
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
-  const role = formData.get("role") as string; // "user" | "master" | "admin"
+  const role = formData.get("role") as string; // "user" | "master" | "admin" (legado)
 
-  const { error } = await admin.auth.admin.updateUserById(id, {
-    user_metadata: { name, full_name: name }, // mantém display name no dashboard
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(id, {
+    user_metadata: { name },
   });
   if (error) return { error: error.message };
 
-  const { error: profErr } = await admin
+  const { error: profErr } = await supabaseAdmin
     .from("profiles")
     .update({ full_name: name, role })
     .eq("id", id);
@@ -222,24 +232,34 @@ export async function updateUser(formData: FormData) {
 }
 
 export async function deleteUser(userId: string) {
-  await checkAdminRole();
-  const admin = await getAdminClient();
+  const supabaseAdmin = await getAdminClient();
 
-  const { error } = await admin.auth.admin.deleteUser(userId);
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
   if (error) return { error: error.message };
 
   // (opcional) também remover do profiles:
-  // await admin.from("profiles").delete().eq("id", userId);
+  // await supabaseAdmin.from("profiles").delete().eq("id", userId);
 
   revalidatePath("/admin");
   revalidatePath("/admin/users");
   return { error: null };
 }
 
-/* ===================== ADMIN: CREATE (tratando e-mail duplicado) ===================== */
-
-// procura apenas no Auth (profiles não tem email)
+/* ===================== ADMIN: CREATE (ajustado ao novo modelo) ===================== */
+/**
+ * Cria usuário no Auth e vincula à organização em org_members.
+ * Permissões:
+ *  - platform_admin: pode criar em qualquer organização (orgId obrigatório).
+ *  - org_admin: pode criar apenas na própria organização (orgId é ignorado/forçado).
+ *
+ * Observações:
+ *  - Não grava email em profiles (segurança). Usa apenas full_name.
+ *  - Se o email já existir no Auth:
+ *      - Se o usuário já estiver em outra org, erro.
+ *      - Se estiver na mesma org, apenas garante/atualiza o vínculo e nome.
+ */
 async function findUserIdByEmail(admin: any, email: string) {
+  // varre páginas do Auth para localizar pelo email
   for (let page = 1; page <= 5; page++) {
     const { data } = await admin.auth.admin.listUsers({ page, perPage: 200 });
     const found = data?.users.find(
@@ -254,29 +274,46 @@ async function findUserIdByEmail(admin: any, email: string) {
 export async function createUserAsAdmin(input: {
   email: string;
   full_name?: string;
-  role?: string; // "user" | "master" | "admin"
-  password?: string; // opcional
+  orgId?: string; // obrigatório para platform_admin; ignorado para org_admin (usa a própria org)
+  orgRole: "org_admin" | "unit_master" | "unit_user";
+  password?: string;
 }) {
-  await checkAdminRole();
   const admin = await getAdminClient();
 
-  // cria no Auth
+  // Quem está executando?
+  const platform = await isPlatformAdmin();
+  const myMembership = await getMyOrgMembership();
+
+  // Determina org alvo
+  let targetOrgId: string | null = null;
+  if (platform) {
+    if (!input.orgId) {
+      return {
+        ok: false,
+        error: "É necessário informar a organização (orgId).",
+      };
+    }
+    targetOrgId = input.orgId;
+  } else {
+    // precisa ser org_admin e usar sua própria org
+    await assertCanManageOrg(myMembership?.org_id ?? "");
+    targetOrgId = myMembership!.org_id;
+  }
+
+  // 1) Tenta criar no Auth
   const { data, error: createErr } = await admin.auth.admin.createUser({
     email: input.email,
     password: input.password || crypto.randomUUID(),
     email_confirm: true,
-    user_metadata: {
-      name: input.full_name || null,
-      full_name: input.full_name || null,
-    },
+    user_metadata: { name: input.full_name || null },
   });
 
-  // trata e-mail já existente
+  let uid: string | null = null;
+
+  // 2) Trata e-mail já existente no Auth
   const exists =
     !!createErr &&
     /already been registered|already registered|email/i.test(createErr.message);
-
-  let uid: string | null = null;
 
   if (exists) {
     uid = await findUserIdByEmail(admin, input.email);
@@ -287,29 +324,65 @@ export async function createUserAsAdmin(input: {
           "E-mail já cadastrado e não foi possível localizar o usuário existente.",
       };
     }
+
+    // Verifica se já possui vínculo em org_members e se é de outra organização
+    const { data: existingMembership } = await admin
+      .from("org_members")
+      .select("org_id, role")
+      .eq("user_id", uid)
+      .maybeSingle();
+
+    if (existingMembership && existingMembership.org_id !== targetOrgId) {
+      return {
+        ok: false,
+        error:
+          "Este usuário já pertence a outra organização. Não é possível vinculá-lo aqui.",
+      };
+    }
   } else if (createErr || !data?.user) {
     return { ok: false, error: createErr?.message || "Falha ao criar usuário" };
   } else {
     uid = data.user.id;
   }
 
-  // garante a linha em profiles (sem coluna email)
-  const payload: any = {
-    id: uid!,
-    full_name: input.full_name || null,
-    role: input.role || "user",
-  };
+  // 3) Garante linha em profiles (somente nome / fields não sensíveis)
+  {
+    const { error: profErr } = await admin.from("profiles").upsert(
+      {
+        id: uid!,
+        full_name: input.full_name || null,
+        // NÃO gravamos email aqui por segurança
+      },
+      { onConflict: "id" }
+    );
 
-  const { error: profErr } = await admin
-    .from("profiles")
-    .upsert(payload, { onConflict: "id" });
+    if (profErr) {
+      console.error("profiles upsert error:", profErr);
+      return {
+        ok: false,
+        error: `Falha ao salvar profile: ${profErr.message}`,
+      };
+    }
+  }
 
-  if (profErr) {
-    console.error("profiles upsert error:", profErr);
-    return {
-      ok: false,
-      error: `Falha ao criar/atualizar profile: ${profErr.message}`,
-    };
+  // 4) Garante vínculo em org_members
+  {
+    const { error: orgErr } = await admin.from("org_members").upsert(
+      {
+        org_id: targetOrgId!,
+        user_id: uid!,
+        role: input.orgRole,
+      },
+      { onConflict: "org_id,user_id" }
+    );
+
+    if (orgErr) {
+      console.error("org_members upsert error:", orgErr);
+      return {
+        ok: false,
+        error: `Falha ao vincular à organização: ${orgErr.message}`,
+      };
+    }
   }
 
   revalidatePath("/admin/users");

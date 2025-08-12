@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-
 import { cn } from "@/lib/utils";
 
+/** ⬇️ Importa o provider cliente para contexto de autenticação/roles */
+import { AuthProvider } from "@/hooks/use-auth-context";
+
 export const metadata: Metadata = {
-  title: "Profile Forge",
-  description: "Manage user profiles with ease.",
+  title: "My Saas",
+  description: "Future is here.",
 };
 
 export default function RootLayout({
@@ -29,9 +31,14 @@ export default function RootLayout({
         />
       </head>
       <body className={cn("font-body antialiased h-full bg-background")}>
-        <div className="flex flex-col min-h-screen">
-          <main className="flex-1">{children}</main>
-        </div>
+        {/* Provider de auth precisa envolver a árvore para disponibilizar o contexto */}
+        <AuthProvider>
+          <div className="flex flex-col min-h-screen">
+            <main className="flex-1">{children}</main>
+          </div>
+        </AuthProvider>
+
+        {/* Toaster global para notificações */}
         <Toaster />
       </body>
     </html>

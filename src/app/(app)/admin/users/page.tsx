@@ -12,32 +12,25 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UserActions } from "@/components/admin/user-actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NewUserModal } from "@/components/admin/new-user-modal";
-import { Button } from "@/components/ui/button";
-import { CirclePlus } from "lucide-react";
+import { UsersHeader } from "@/components/admin/users-header";
 
 export default async function AdminUsersPage() {
   const users = await getUsers();
 
-  const getInitials = (name: string) =>
-    name
+  const getInitials = (name: string) => {
+    return name
       .split(" ")
       .filter(Boolean)
       .map((n) => n[0])
       .join("")
+      .slice(0, 2)
       .toUpperCase();
+  };
 
   return (
-    <div className="pt-8 pb-12 px-6 space-y-4">
-      {/* Header com ação */}
-      <div className="flex items-center justify-end">
-        <NewUserModal>
-          <Button>
-            <CirclePlus />
-            Usuário
-          </Button>
-        </NewUserModal>
-      </div>
+    <div className="pt-8 pb-12 px-6">
+      {/* Cabeçalho com checagem de permissão para exibir o botão */}
+      <UsersHeader />
 
       <div className="border rounded-lg">
         <Table>
@@ -52,7 +45,7 @@ export default async function AdminUsersPage() {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium flex items-center gap-2">
+                <TableCell className="font-medium flex items-center">
                   <Avatar className="h-8 w-8 mr-2">
                     <AvatarImage
                       src={user.avatar_url || undefined}
@@ -62,12 +55,14 @@ export default async function AdminUsersPage() {
                       {getInitials(user.full_name || user.email || "U")}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col justify-start">
-                    <span className="font-semibold">{user.full_name}</span>
-                    <span className="text-xs text-gray-500">{user.email}</span>
+                  <div className="flex flex-col">
+                    <span>{user.full_name}</span>
+                    {/* e-mail abaixo do nome (pedido anterior) */}
+                    <span className="text-xs text-muted-foreground">
+                      {user.email}
+                    </span>
                   </div>
                 </TableCell>
-
                 <TableCell>
                   <Badge
                     variant={user.role === "admin" ? "default" : "secondary"}>
@@ -90,7 +85,7 @@ export default async function AdminUsersPage() {
 
       {users.length === 0 && (
         <div className="py-20 text-center text-muted-foreground">
-          No users found.
+          Nenhum usuário encontrado.
         </div>
       )}
     </div>

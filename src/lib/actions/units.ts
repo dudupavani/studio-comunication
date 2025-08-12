@@ -1,184 +1,272 @@
-// src/lib/actions/units.ts
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
-// Ajuste para o seu tipo global se já existir
-export type ActionResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string };
-
-type UnitRow = {
+/** Tipos */
+export type Unit = {
   id: string;
-  org_id: string;
   name: string;
   slug: string;
-  address?: string | null;
-  cnpj?: string | null;
-  phone?: string | null;
-  created_at?: string;
-  updated_at?: string;
+  org_id: string;
 };
 
-// util slug simples (troque pelo seu oficial se tiver)
-function toSlug(input: string) {
-  return input
+type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+
+/** Utils */
+function slugify(txt: string) {
+  return (txt || "")
+    .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "")
-    .slice(0, 80);
+    .replace(/(^-|-$)/g, "");
 }
 
-/** Gera slug único dentro da organização. */
-async function uniqueUnitSlug(
-  orgId: string,
-  baseName: string
-): Promise<string> {
-  const supabase = await createClient();
-  const base = toSlug(baseName) || "unidade";
+async function getSessionUserId() {
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw new Error(error.message);
+  return data.user?.id ?? null;
+}
 
-  const { data, error } = await supabase
-    .from("units")
-    .select("slug")
-    .eq("org_id", orgId)
-    .like("slug", `${base}%`);
+async function isPlatformAdmin(): Promise<boolean> {
+  const supabase = createClient();
+  const uid = await getSessionUserId();
+  if (!uid) return false;
 
-  if (error || !data?.length) return base;
+  const { data } = await supabase
+    .from("profiles")
+    .select("global_role")
+    .eq("id", uid)
+    .maybeSingle();
 
-  // encontra próximo sufixo livre
-  let i = 1;
-  const has = new Set(data.map((d) => d.slug));
-  let candidate = base;
-  while (has.has(candidate)) {
-    i += 1;
-    candidate = `${base}-${i}`;
+  return data?.global_role === "platform_admin";
+}
+
+/** Retorna { org_id, role } do usuário logado em org_members */
+async function getMyOrgMembership() {
+  const supabase = createClient();
+  const uid = await getSessionUserId();
+  if (!uid) return null;
+
+  const { data } = await supabase
+    .from("org_members")
+    .select("org_id, role")
+    .eq("user_id", uid)
+    .maybeSingle();
+
+  return data as { org_id: string; role: string } | null;
+}
+
+/** Quem pode gerenciar unidades da org? platform_admin OU org_admin da org */
+async function assertCanManageUnits(targetOrgId: string) {
+  const [platform, me] = await Promise.all([
+    isPlatformAdmin(),
+    getMyOrgMembership(),
+  ]);
+  if (platform) return;
+  if (!me || me.org_id !== targetOrgId || me.role !== "org_admin") {
+    throw new Error(
+      "Acesso negado: você não pode gerenciar unidades desta organização."
+    );
   }
-  return candidate;
 }
 
-/** Lista unidades da org (para a página da organização). */
-export async function listUnits(
-  orgId: string
-): Promise<ActionResult<UnitRow[]>> {
-  const supabase = await createClient();
+/* ===================== QUERIES ===================== */
 
-  const { data, error } = await supabase
-    .from("units")
-    .select("id, org_id, name, slug, address, cnpj, phone")
-    .eq("org_id", orgId)
-    .order("name", { ascending: true });
+/** Lista unidades de uma organização (RLS restringe o acesso) */
+export async function listUnits(orgId: string): Promise<Result<Unit[]>> {
+  try {
+    const supabase = createClient();
+    const uid = await getSessionUserId();
+    if (!uid) return { ok: false, error: "Usuário não autenticado." };
 
-  if (error) return { ok: false, error: error.message };
-  return { ok: true, data: (data ?? []) as UnitRow[] };
+    const { data, error } = await supabase
+      .from("units")
+      .select("id, name, slug, org_id")
+      .eq("org_id", orgId)
+      .order("name");
+
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, data: (data ?? []) as Unit[] };
+  } catch (e: any) {
+    return { ok: false, error: e.message ?? "Falha ao listar unidades." };
+  }
 }
 
-/** Cria uma unidade na org (nome obrigatório). */
-export async function createUnit(
-  orgId: string,
-  name: string
-): Promise<ActionResult<UnitRow>> {
-  const supabase = await createClient();
-
-  const trimmed = (name ?? "").trim();
-  if (!trimmed) return { ok: false, error: "Nome da unidade é obrigatório." };
-
-  const slug = await uniqueUnitSlug(orgId, trimmed);
-
-  const { data, error } = await supabase
-    .from("units")
-    .insert({ org_id: orgId, name: trimmed, slug })
-    .select()
-    .single();
-
-  if (error) return { ok: false, error: error.message };
-
-  revalidatePath("/orgs");
-  return { ok: true, data: data as UnitRow };
-}
-
-/** Busca unidade por slug (garantindo org). */
+/** Retorna unidade pelo slug e org_id, validando se o usuário pertence à organização */
 export async function getUnitBySlug(
   orgId: string,
-  unitSlug: string
-): Promise<ActionResult<UnitRow>> {
-  const supabase = await createClient();
+  slug: string
+): Promise<Result<Unit>> {
+  try {
+    const supabase = createClient();
 
-  const { data, error } = await supabase
-    .from("units")
-    .select("*")
-    .eq("org_id", orgId)
-    .eq("slug", unitSlug)
-    .single();
+    // 1) auth
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: "Usuário não autenticado." };
 
-  if (error) return { ok: false, error: error.message };
-  return { ok: true, data: data as UnitRow };
+    // 2) valida org do usuário
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("org_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return { ok: false, error: "Perfil do usuário não encontrado." };
+    }
+    if (profile.org_id !== orgId) {
+      return { ok: false, error: "Acesso negado à organização." };
+    }
+
+    // 3) busca unidade
+    const { data, error } = await supabase
+      .from("units")
+      .select("id, name, slug, org_id")
+      .eq("org_id", orgId)
+      .eq("slug", slug)
+      .single();
+
+    if (error || !data) {
+      return { ok: false, error: error?.message || "Unidade não encontrada." };
+    }
+
+    return { ok: true, data: data as Unit };
+  } catch (e: any) {
+    return { ok: false, error: e.message ?? "Falha ao carregar unidade." };
+  }
 }
 
-/** Atualiza campos da unidade; se nome mudar, recalcula slug. */
+/* ===================== MUTATIONS ===================== */
+
+/** Cria uma unidade (platform_admin ou org_admin) — cria slug único por org */
+export async function createUnit(
+  orgId: string,
+  name: string,
+  opts?: { revalidate?: string }
+): Promise<Result<Unit>> {
+  try {
+    await assertCanManageUnits(orgId);
+
+    const supabase = createClient();
+    const trimmed = (name || "").trim();
+    if (!trimmed) return { ok: false, error: "Nome inválido." };
+
+    const base = slugify(trimmed);
+
+    for (let i = 0; i < 5; i++) {
+      const candidate = i === 0 ? base : `${base}-${i + 1}`;
+
+      const { data, error } = await supabase
+        .from("units")
+        .insert({ org_id: orgId, name: trimmed, slug: candidate })
+        .select("id, name, slug, org_id")
+        .single();
+
+      if (!error && data) {
+        if (opts?.revalidate) revalidatePath(opts.revalidate);
+        return { ok: true, data: data as Unit };
+      }
+      // 23505 = unique violation (slug duplicado dentro da org)
+      if (error && (error as any).code !== "23505") {
+        return { ok: false, error: error.message };
+      }
+    }
+    return { ok: false, error: "Já existe uma unidade com esse nome." };
+  } catch (e: any) {
+    return { ok: false, error: e.message ?? "Falha ao criar unidade." };
+  }
+}
+
+/** Atualiza nome/slug da unidade (platform_admin ou org_admin da org da unidade) */
 export async function updateUnit(
-  orgId: string,
   unitId: string,
-  patch: {
-    name?: string;
-    address?: string;
-    cnpj?: string;
-    phone?: string;
+  newName: string,
+  opts?: { revalidate?: string }
+): Promise<Result<Unit>> {
+  try {
+    const supabase = createClient();
+
+    // pega org da unidade
+    const { data: current, error: readErr } = await supabase
+      .from("units")
+      .select("id, org_id")
+      .eq("id", unitId)
+      .single();
+
+    if (readErr || !current) {
+      return {
+        ok: false,
+        error: readErr?.message || "Unidade não encontrada.",
+      };
+    }
+
+    await assertCanManageUnits(current.org_id);
+
+    const trimmed = (newName || "").trim();
+    if (!trimmed) return { ok: false, error: "Nome inválido." };
+
+    const base = slugify(trimmed);
+
+    for (let i = 0; i < 5; i++) {
+      const candidate = i === 0 ? base : `${base}-${i + 1}`;
+
+      const { data, error } = await supabase
+        .from("units")
+        .update({ name: trimmed, slug: candidate })
+        .eq("id", unitId)
+        .select("id, name, slug, org_id")
+        .single();
+
+      if (!error && data) {
+        if (opts?.revalidate) revalidatePath(opts.revalidate);
+        return { ok: true, data: data as Unit };
+      }
+      if (error && (error as any).code !== "23505") {
+        return { ok: false, error: error.message };
+      }
+    }
+
+    return { ok: false, error: "Já existe uma unidade com esse nome." };
+  } catch (e: any) {
+    return { ok: false, error: e.message ?? "Falha ao atualizar unidade." };
   }
-): Promise<ActionResult<UnitRow>> {
-  const supabase = await createClient();
-
-  const name = patch.name !== undefined ? String(patch.name ?? "") : undefined;
-  const address =
-    patch.address !== undefined ? String(patch.address ?? "") : undefined;
-  const cnpj = patch.cnpj !== undefined ? String(patch.cnpj ?? "") : undefined;
-  const phone =
-    patch.phone !== undefined ? String(patch.phone ?? "") : undefined;
-
-  const updateData: Partial<UnitRow> = {
-    ...(name !== undefined ? { name } : {}),
-    ...(address !== undefined ? { address } : {}),
-    ...(cnpj !== undefined ? { cnpj } : {}),
-    ...(phone !== undefined ? { phone } : {}),
-  };
-
-  if (name !== undefined) {
-    const next = toSlug(name) || "unidade";
-    // garante unicidade no org
-    updateData.slug = await uniqueUnitSlug(orgId, next);
-  }
-
-  const { data, error } = await supabase
-    .from("units")
-    .update(updateData)
-    .eq("id", unitId)
-    .eq("org_id", orgId)
-    .select()
-    .single();
-
-  if (error) return { ok: false, error: error.message };
-
-  revalidatePath("/orgs");
-  return { ok: true, data: data as UnitRow };
 }
 
-/** Exclui unidade. */
+/** Exclui unidade (platform_admin ou org_admin da org da unidade) */
 export async function deleteUnit(
-  orgId: string,
-  unitId: string
-): Promise<ActionResult<null>> {
-  const supabase = await createClient();
+  unitId: string,
+  opts?: { revalidate?: string }
+): Promise<Result<null>> {
+  try {
+    const supabase = createClient();
 
-  const { error } = await supabase
-    .from("units")
-    .delete()
-    .eq("id", unitId)
-    .eq("org_id", orgId);
+    // pega org da unidade
+    const { data: current, error: readErr } = await supabase
+      .from("units")
+      .select("id, org_id")
+      .eq("id", unitId)
+      .single();
 
-  if (error) return { ok: false, error: error.message };
+    if (readErr || !current) {
+      return {
+        ok: false,
+        error: readErr?.message || "Unidade não encontrada.",
+      };
+    }
 
-  revalidatePath("/orgs");
-  return { ok: true, data: null };
+    await assertCanManageUnits(current.org_id);
+
+    const { error } = await supabase.from("units").delete().eq("id", unitId);
+    if (error) return { ok: false, error: error.message };
+
+    if (opts?.revalidate) revalidatePath(opts.revalidate);
+    return { ok: true, data: null };
+  } catch (e: any) {
+    return { ok: false, error: e.message ?? "Falha ao excluir unidade." };
+  }
 }
