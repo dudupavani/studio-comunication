@@ -89,7 +89,8 @@ export function LoginForm() {
                     <FormLabel>Password</FormLabel>
                     <Link
                       href="/forgot-password"
-                      className="inline-block ml-auto text-xs font-medium text-gray-700 hover:text-primary">
+                      className="inline-block ml-auto text-xs font-medium text-gray-700 hover:text-primary"
+                      tabIndex={-1}>
                       Esqueceu a senha?
                     </Link>
                   </div>

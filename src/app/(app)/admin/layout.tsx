@@ -1,8 +1,7 @@
-// impede SSG/Export deste layout (depende de auth/cookies)
+// app/(app)/admin/layout.tsx
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
-// garante Node.js runtime (e não Edge) neste layout
 export const runtime = "nodejs";
 
 import { createClient } from "@/lib/supabase/server";
@@ -23,9 +22,10 @@ export default async function AdminLayout({
     return redirect("/login");
   }
 
+  // Agora busca global_role
   const { data: profileData, error: profileError } = await supabase
     .from("profiles")
-    .select("role")
+    .select("global_role")
     .eq("id", user.id)
     .single();
 
@@ -33,7 +33,8 @@ export default async function AdminLayout({
     return redirect("/profile");
   }
 
-  if (profileData?.role !== "admin") {
+  // Permite apenas platform_admin
+  if (profileData?.global_role !== "platform_admin") {
     return redirect("/profile");
   }
 

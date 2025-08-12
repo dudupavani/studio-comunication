@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -19,205 +20,243 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAuthContext } from "@/hooks/use-auth-context";
-import { createUserAsAdmin } from "@/lib/actions/user";
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-type Org = { id: string; name: string; slug: string };
+type Org = { id: string; name: string };
+type Unit = { id: string; name: string };
 
-export function NewUserModal({ children }: { children: React.ReactNode }) {
+export default function NewUserModal() {
   const { toast } = useToast();
-  const { auth, loading } = useAuthContext();
+  const router = useRouter();
 
   const [open, setOpen] = useState(false);
-  const [pending, startTransition] = useTransition();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [orgId, setOrgId] = useState<string>("");
 
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [unitId, setUnitId] = useState<string>("");
 
-  // orgRole: qual papel o novo usuário terá na organização
-  const [orgRole, setOrgRole] = useState<
-    "org_admin" | "unit_master" | "unit_user"
-  >("unit_user");
+  // roles com valor "none" como padrão (evita erro do SelectItem)
+  const [orgRole, setOrgRole] = useState<"none" | "org_admin">("none");
+  const [unitRole, setUnitRole] = useState<"none" | "unit_master">("none");
 
-  // quem é platform_admin pode escolher a organização; org_admin não precisa (o backend força)
-  const isPlatformAdmin = useMemo(
-    () => auth?.platformRole === "platform_admin",
-    [auth]
-  );
+  const [loadingOrgs, startLoadOrgs] = useTransition();
+  const [loadingUnits, startLoadUnits] = useTransition();
+  const [submitting, setSubmitting] = useState(false);
 
-  // quando abrir o modal: se for platform_admin, carregar orgs
   useEffect(() => {
     if (!open) return;
-
-    if (isPlatformAdmin) {
-      (async () => {
-        try {
-          const res = await fetch("/api/orgs", { credentials: "include" });
-          const j = await res.json();
-          if (!res.ok || !j?.ok) {
-            throw new Error(j?.error || `HTTP ${res.status}`);
-          }
-          const list: Org[] = j.data ?? [];
-          setOrgs(list);
-          // se houver apenas 1 org, pré-seleciona
-          if (list.length === 1) setOrgId(list[0].id);
-        } catch (err: any) {
-          toast({
-            variant: "destructive",
-            title: "Erro ao carregar organizações",
-            description: err?.message ?? "Tente novamente.",
-          });
-        }
-      })();
-    }
-  }, [open, isPlatformAdmin, toast]);
-
-  function resetForm() {
-    setFullName("");
-    setEmail("");
-    setOrgRole("unit_user");
-    setOrgId("");
-  }
-
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    // Validações mínimas no client para UX
-    if (!email || !email.includes("@")) {
-      toast({
-        variant: "destructive",
-        title: "E-mail inválido",
-        description: "Informe um e-mail válido.",
-      });
-      return;
-    }
-    if (!fullName.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Nome inválido",
-        description: "Informe o nome completo do usuário.",
-      });
-      return;
-    }
-    if (isPlatformAdmin && !orgId) {
-      toast({
-        variant: "destructive",
-        title: "Organização obrigatória",
-        description: "Selecione a organização para o novo usuário.",
-      });
-      return;
-    }
-
-    startTransition(async () => {
-      const res = await createUserAsAdmin({
-        email,
-        full_name: fullName,
-        orgRole,
-        // orgId só é usado/necessário quando quem cria é platform_admin
-        orgId: isPlatformAdmin ? orgId : undefined,
-      });
-
-      if (!res.ok) {
+    startLoadOrgs(async () => {
+      const res = await fetch("/api/admin/orgs", { cache: "no-store" });
+      if (res.ok) setOrgs(await res.json());
+      else
         toast({
+          description: "Falha ao carregar organizações.",
           variant: "destructive",
-          title: "Erro ao criar usuário",
-          description: res.error || "Tente novamente mais tarde.",
         });
-        return;
-      }
-
-      toast({
-        title: "Usuário criado",
-        description:
-          res.status === "updated"
-            ? "Usuário já existia no Auth; vínculo/atualização realizados."
-            : "Cadastro realizado com sucesso.",
-      });
-
-      setOpen(false);
-      resetForm();
     });
-  }
+  }, [open, toast]);
 
-  // enquanto o contexto carrega, só mostra o trigger
-  if (loading) {
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>{children}</DialogTrigger>
-        {/* sem conteúdo enquanto carrega */}
-      </Dialog>
-    );
-  }
+  useEffect(() => {
+    if (!orgId) {
+      setUnits([]);
+      setUnitId("");
+      setUnitRole("none");
+      return;
+    }
+    startLoadUnits(async () => {
+      const res = await fetch(`/api/admin/orgs/${orgId}/units`, {
+        cache: "no-store",
+      });
+      if (res.ok) setUnits(await res.json());
+      else
+        toast({
+          description: "Falha ao carregar unidades.",
+          variant: "destructive",
+        });
+    });
+  }, [orgId, toast]);
 
-  // se não tiver auth, não renderiza nada
-  if (!auth) return null;
+  const canSubmit = useMemo(
+    () => !!name.trim() && !!email.trim() && !!orgId && !submitting,
+    [name, email, orgId, submitting]
+  );
+
+  const reset = () => {
+    setName("");
+    setEmail("");
+    setOrgId("");
+    setOrgs([]);
+    setUnits([]);
+    setUnitId("");
+    setOrgRole("none");
+    setUnitRole("none");
+  };
+
+  const onSubmit = async () => {
+    try {
+      setSubmitting(true);
+      const res = await fetch("/api/admin/users/create-and-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          org_id: orgId,
+          unit_id: unitId || null,
+          org_role: orgRole === "none" ? null : orgRole,
+          unit_role: unitId ? (unitRole === "none" ? null : unitRole) : null,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Erro ao criar usuário");
+      }
+      toast({ description: "Usuário criado e vinculado com sucesso." });
+      setOpen(false);
+      reset();
+      router.refresh();
+    } catch (e: any) {
+      toast({
+        description: e.message ?? "Falha ao criar usuário.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-
-      <DialogContent className="sm:max-w-[520px]">
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) reset();
+      }}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo usuário
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Criar novo usuário</DialogTitle>
+          <DialogTitle>Novo usuário</DialogTitle>
+          <DialogDescription>
+            Preencha os dados para adicionar um novo usuário à organização.
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          {/* Se for platform_admin, escolhe a organização */}
-          {isPlatformAdmin && (
-            <div className="space-y-2">
-              <Label>Organização</Label>
-              <Select value={orgId} onValueChange={setOrgId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a organização" />
-                </SelectTrigger>
-                <SelectContent>
-                  {orgs.map((o) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Nome completo</Label>
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label>Nome</Label>
             <Input
-              id="fullName"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Ex.: Maria Silva"
-              required
+              placeholder="Nome completo"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
+          <div className="grid gap-2">
+            <Label>E‑mail</Label>
             <Input
-              id="email"
               type="email"
-              inputMode="email"
+              placeholder="email@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@dominio.com"
-              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Função na organização</Label>
-            <Select value={orgRole} onValueChange={(v) => setOrgRole(v as any)}>
+          <div className="grid gap-2">
+            <Label>Organização</Label>
+            <Select
+              value={orgId}
+              onValueChange={(v) => setOrgId(v)}
+              disabled={loadingOrgs}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
+                <SelectValue
+                  placeholder={
+                    loadingOrgs ? "Carregando..." : "Selecione uma organização"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="org_admin">org_admin</SelectItem>
-                <SelectItem value="unit_master">unit_master</SelectItem>
-                <SelectItem value="unit_user">unit_user</SelectItem>
+                {orgs.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>
+                    {o.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Unidade (opcional)</Label>
+            <Select
+              value={unitId}
+              onValueChange={(v) => setUnitId(v)}
+              disabled={!orgId || loadingUnits || units.length === 0}>
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    !orgId
+                      ? "Escolha uma organização primeiro"
+                      : loadingUnits
+                      ? "Carregando..."
+                      : units.length === 0
+                      ? "Esta organização não possui unidades"
+                      : "Selecione uma unidade (opcional)"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {units.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Papel na organização</Label>
+            <Select value={orgRole} onValueChange={setOrgRole}>
+              <SelectTrigger>
+                <SelectValue placeholder="Membro (sem privilégios)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Membro (sem privilégios)</SelectItem>
+                <SelectItem value="org_admin">
+                  Administrador da organização
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Papel na unidade</Label>
+            <Select
+              value={unitRole}
+              onValueChange={setUnitRole}
+              disabled={!unitId}>
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    !unitId ? "Selecione uma unidade" : "Membro da unidade"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Membro da unidade</SelectItem>
+                <SelectItem value="unit_master">
+                  Responsável (unit_master)
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -225,18 +264,15 @@ export function NewUserModal({ children }: { children: React.ReactNode }) {
           <div className="flex justify-end gap-2 pt-2">
             <Button
               type="button"
-              variant="outline"
-              onClick={() => {
-                setOpen(false);
-                resetForm();
-              }}>
+              variant="secondary"
+              onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Criando..." : "Criar usuário"}
+            <Button onClick={onSubmit} disabled={!canSubmit}>
+              {submitting ? "Criando..." : "Criar usuário"}
             </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Text, Users } from "lucide-react";
+import MembersTabServer from "@/components/units/members/members-tab.server"; // 👈 ADICIONADO
+
 export default async function UnitPage({
   params,
 }: {
@@ -21,32 +23,22 @@ export default async function UnitPage({
 
   const orgRes = await getOrg(params.slug);
   if (!orgRes.ok) redirect("/orgs");
-  const org = orgRes.data;
+  const org = orgRes.data!;
 
   const unitRes = await getUnitBySlug(org.id, params.unit);
   if (!unitRes.ok) redirect(`/orgs/${org.slug}`);
-  const unit = unitRes.data;
+  const unit = unitRes.data!;
 
   // Server Action para salvar as configurações básicas
   async function saveSettingsAction(formData: FormData) {
     "use server";
     const name = String(formData.get("name") ?? "").trim();
 
-    // Campos já previstos para a segunda etapa (serão persistidos quando criarmos as colunas/metadata)
-    // const phone1 = String(formData.get("phone1") ?? "").trim();
-    // const phone2 = String(formData.get("phone2") ?? "").trim();
-    // const address = String(formData.get("address") ?? "").trim();
-    // const managerName = String(formData.get("managerName") ?? "").trim();
-    // const managerEmail = String(formData.get("managerEmail") ?? "").trim();
-
     if (name && name !== unit.name) {
       await updateUnit(unit.id, name, {
         revalidate: `/orgs/${org.slug}/${unit.slug}`,
       });
     }
-
-    // No futuro, aqui faremos um update extra (metadata/colunas) com os demais campos.
-    // Por ora, apenas revalidamos a rota.
     redirect(`/orgs/${org.slug}/${unit.slug}`);
   }
 
@@ -96,29 +88,30 @@ export default async function UnitPage({
 
               {/* Contatos */}
               <div className="grid gap-2">
-                <Label>Contato</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Input
-                    name="phone1"
-                    type="tel"
-                    placeholder="Telefone 1 (ex.: (11) 90000-0000)"
-                  />
-                  <Input
-                    name="phone2"
-                    type="tel"
-                    placeholder="Telefone 2 (opcional)"
-                  />
-                </div>
+                <Label>Telefone</Label>
+                <Input name="phone" type="tel" placeholder="(11) 90000-0000" />
+              </div>
+
+              {/* CEP */}
+              <div className="grid gap-2">
+                <Label htmlFor="cep">CEP</Label>
+                <Input id="cep" name="cep" placeholder="CEP da unidade" />
               </div>
 
               {/* Endereço */}
               <div className="grid gap-2">
                 <Label htmlFor="address">Endereço</Label>
-                <Textarea
+                <Input
                   id="address"
                   name="address"
                   placeholder="Rua, número, bairro, cidade, UF, CEP"
                 />
+              </div>
+
+              {/* CNPJ */}
+              <div className="grid gap-2">
+                <Label htmlFor="cnpj">CNPJ</Label>
+                <Input id="cnpj" name="cnpj" placeholder="CNPJ da unidade" />
               </div>
 
               {/* Responsável (unit_master) */}
@@ -131,29 +124,20 @@ export default async function UnitPage({
                 />
               </div>
 
-              {/* E-mail do responsável */}
-              <div className="grid gap-2">
-                <Label htmlFor="managerEmail">E-mail do responsável</Label>
-                <Input
-                  id="managerEmail"
-                  name="managerEmail"
-                  type="email"
-                  placeholder="responsavel@exemplo.com"
-                />
-              </div>
-
               <div className="flex justify-end">
                 <Button type="submit">Salvar alterações</Button>
               </div>
             </form>
           </TabsContent>
 
-          {/* === Aba: Membros (placeholder, vamos implementar depois) === */}
+          {/* === Aba: Membros === */}
           <TabsContent value="members" className="mt-6">
-            <p className="text-muted-foreground">
-              Lista de membros da unidade e botão para adicionar/remover
-              usuários.
-            </p>
+            <MembersTabServer
+              orgId={org.id}
+              orgSlug={org.slug}
+              unitId={unit.id}
+              unitSlug={unit.slug}
+            />
           </TabsContent>
         </Tabs>
       </div>
