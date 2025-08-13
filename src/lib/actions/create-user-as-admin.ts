@@ -148,8 +148,12 @@ export async function createUserAsAdmin(
       {
         id: createdUserId,
         email: input.email,
+        // 👇 padroniza com o que a UI lê em /admin/users
+        full_name: input.name,
+        // opcional: manter também 'name' se a tabela tiver esse campo
         name: input.name,
         role: profileRole,
+        updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
     );
@@ -189,13 +193,20 @@ export async function createUserAsAdmin(
     // Rollback seguro
     if (createdNow && createdUserId) {
       try {
-        const isPlatAdmin =
-          (await isPlatformAdminById(createdUserId).then((r) => r ?? false)) ||
-          false;
-        if (!isPlatAdmin) {
+        // nunca delete platform_admin
+        const { data: prof } = await svc
+          .from("profiles")
+          .select("role")
+          .eq("id", createdUserId)
+          .maybeSingle();
+
+        const isPlat = (prof?.role ?? null) === "platform_admin";
+        if (!isPlat) {
           await svc.auth.admin.deleteUser(createdUserId);
         }
-      } catch {}
+      } catch {
+        // silencia rollback
+      }
     }
     return {
       ok: false,

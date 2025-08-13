@@ -5,6 +5,7 @@ import * as React from "react";
 import { useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { CircleCheckBig } from "lucide-react";
 import {
   Dialog,
   DialogTrigger,
@@ -243,7 +244,14 @@ export default function NewUserModal({
 
           <DialogFooter>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Salvando..." : "Criar usuário"}
+              <CircleCheckBig />
+              {submitting ? "Criando..." : "Criar"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}>
+              Cancelar
             </Button>
           </DialogFooter>
         </form>
