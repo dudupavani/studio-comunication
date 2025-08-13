@@ -1,20 +1,10 @@
 // src/lib/supabase/rpc.ts
 import { createServiceClient } from "@/lib/supabase/service";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Retorna true/false se o usuário informado for platform_admin.
- * Usa uma RPC que você deve ter no banco:
- *
- * CREATE OR REPLACE FUNCTION public.is_platform_admin_by_id(target uuid)
- * RETURNS boolean
- * LANGUAGE sql
- * SECURITY DEFINER
- * AS $$
- *   SELECT EXISTS (
- *     SELECT 1 FROM public.profiles p
- *     WHERE p.id = target AND p.role = 'platform_admin'
- *   );
- * $$;
+ * (usa service client)
  */
 export async function isPlatformAdminById(userId: string): Promise<boolean> {
   const svc = createServiceClient();
@@ -26,4 +16,34 @@ export async function isPlatformAdminById(userId: string): Promise<boolean> {
     return false;
   }
   return !!data;
+}
+
+/**
+ * Atualiza o PRÓPRIO perfil (nome, phone, avatar_url) via RPC.
+ * IMPORTANTÍSSIMO: usa o client do USUÁRIO (auth.uid() funciona na função SQL).
+ * - Passe `avatar_url = null` para remover o avatar
+ * - Passe `undefined` para manter o avatar como está
+ */
+export async function updateProfileSelfRPC(input: {
+  full_name?: string | null;
+  phone?: string | null;
+  avatar_url?: string | null; // null = remover, undefined = manter
+}): Promise<{ error: string | null }> {
+  const supabase = createClient();
+
+  // A função SQL aceita exatamente (text, text, text)
+  const { error } = await supabase.rpc("update_profile_self", {
+    p_full_name: input.full_name ?? null,
+    p_phone: input.phone ?? null,
+    // Para "manter como está", a função trata null como "não alterar phone".
+    // Para avatar: null remove; para "manter", mandaremos null e a função mantém.
+    p_avatar_url:
+      typeof input.avatar_url === "undefined" ? null : input.avatar_url,
+  });
+
+  if (error) {
+    console.error("[updateProfileSelfRPC] error:", error);
+    return { error: error.message };
+  }
+  return { error: null };
 }

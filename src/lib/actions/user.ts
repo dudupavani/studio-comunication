@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { Profile } from "../types";
+import { updateProfileSelfRPC } from "@/lib/supabase/rpc";
 
 /** Admin client (service_role) – usar só em Server Actions / Route Handlers */
 async function getAdminClient() {
@@ -70,69 +71,93 @@ async function assertCanManageOrg(targetOrgId: string) {
 /* ===================== SELF SERVICE (usuário edita o próprio perfil) ===================== */
 export async function updateUserProfile(formData: FormData) {
   const supabase = createClient();
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string | null;
-  const phone = formData.get("phone") as string | null;
-  const avatarFile = formData.get("avatar") as File | null;
 
+  const name = (formData.get("name") as string) ?? null;
+  const email = (formData.get("email") as string) ?? null;
+  const phone = (formData.get("phone") as string) ?? null;
+  const avatarInput = formData.get("avatar");
+
+  // sessão
   const {
     data: { user },
+    error: authGetErr,
   } = await supabase.auth.getUser();
-  if (!user) return { error: "You must be logged in to update your profile." };
+  if (!user || authGetErr) {
+    return { error: "You must be logged in to update your profile." };
+  }
 
-  let avatar_url: string | null | undefined;
+  // 1) Upload/remoção do avatar -> definir avatar_url (null = remover; undefined = manter)
+  let avatar_url: string | null | undefined = undefined;
 
-  if (avatarFile && avatarFile.size > 0) {
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(`${user.id}/avatar.jpg`, avatarFile, { upsert: true });
-    if (uploadError) return { error: uploadError.message };
+  if (
+    avatarInput &&
+    avatarInput !== "REMOVE" &&
+    typeof avatarInput !== "string"
+  ) {
+    const file = avatarInput as File;
+    if (file.size > 0) {
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(`${user.id}/avatar.jpg`, file, { upsert: true });
 
-    const { data: publicUrlData } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(uploadData.path);
-    avatar_url = publicUrlData.publicUrl;
-  } else if (formData.get("avatar") === "REMOVE") {
+      if (uploadError) return { error: uploadError.message };
+
+      const { data: publicUrlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(uploadData.path);
+
+      avatar_url = publicUrlData.publicUrl;
+    }
+  } else if (avatarInput === "REMOVE") {
     await supabase.storage.from("avatars").remove([`${user.id}/avatar.jpg`]);
-    avatar_url = null;
+    avatar_url = null; // sinaliza remoção
   }
 
-  const updateAuthData: {
-    data: { name: string; avatar_url?: string | null };
+  // 2) Atualizar dados no Auth (nome/avatar/email)
+  const authPayload: {
+    data: { name?: string; avatar_url?: string | null };
     email?: string;
-  } = { data: { name } };
+  } = { data: {} };
 
-  if (avatar_url !== undefined) updateAuthData.data.avatar_url = avatar_url;
-  if (email) updateAuthData.email = email;
+  if (name) authPayload.data.name = name;
+  if (typeof avatar_url !== "undefined")
+    authPayload.data.avatar_url = avatar_url;
+  if (email) authPayload.email = email;
 
-  const { error: authError } = await supabase.auth.updateUser(updateAuthData);
-  if (authError) return { error: authError.message };
-
-  const updateProfileData: {
-    phone?: string;
-    avatar_url?: string | null;
-    full_name?: string;
-  } = {};
-  if (phone) updateProfileData.phone = phone;
-  if (avatar_url !== undefined) updateProfileData.avatar_url = avatar_url;
-  if (name) updateProfileData.full_name = name;
-
-  if (Object.keys(updateProfileData).length > 0) {
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update(updateProfileData)
-      .eq("id", user.id);
-    if (profileError) return { error: profileError.message };
+  if (Object.keys(authPayload.data).length || authPayload.email) {
+    const { error: authUpdateErr } = await supabase.auth.updateUser(
+      authPayload
+    );
+    if (authUpdateErr) {
+      return { error: authUpdateErr.message };
+    }
   }
 
+  // 3) Atualizar PROFILE via RPC segura (não toca em role/global_role)
+  const { error: rpcError } = await updateProfileSelfRPC({
+    full_name: name,
+    phone,
+    avatar_url, // null = remover; undefined = manter; string = nova URL
+  });
+
+  if (rpcError) {
+    // fallback amigável
+    if (/platform_admin/i.test(rpcError)) {
+      return {
+        error:
+          "Não é possível alterar a role platform_admin por aqui. Seus dados pessoais foram mantidos.",
+      };
+    }
+    return { error: rpcError };
+  }
+
+  // 4) Revalidate
   revalidatePath("/profile");
   return { error: null };
 }
 
-/* ===================== ADMIN: LIST/GET/UPDATE/DELETE (mantidos por enquanto) ===================== */
+/* ===================== ADMIN: LIST/GET ===================== */
 export async function getUsers(): Promise<Profile[]> {
-  // Mantemos como estava (dependendo de RLS e do seu schema atual)
-  const supabase = createClient();
   const supabaseAdmin = await getAdminClient();
 
   const { data: usersData, error } = await supabaseAdmin.auth.admin.listUsers();
@@ -153,10 +178,10 @@ export async function getUsers(): Promise<Profile[]> {
 
   return usersData.users.map((u) => ({
     id: u.id,
-    email: u.email ?? "", // e-mail do Auth
+    email: u.email ?? "",
     full_name:
       map.get(u.id)?.full_name ?? (u.user_metadata as any)?.name ?? "No name",
-    role: map.get(u.id)?.role ?? "user", // ⚠️ legado: ainda lendo de profiles.role
+    role: map.get(u.id)?.role ?? "user", // legado
     created_at: u.created_at,
     phone: map.get(u.id)?.phone ?? null,
     avatar_url: map.get(u.id)?.avatar_url ?? null,
@@ -197,32 +222,65 @@ export async function getUserById(id: string): Promise<Profile | null> {
 
   return {
     id: user.id,
-    email: user.email ?? "", // e-mail do Auth
+    email: user.email ?? "",
     full_name:
       profile?.full_name ?? (user.user_metadata as any)?.name ?? "No name",
-    role: profile?.role ?? "user", // ⚠️ legado
+    role: profile?.role ?? "user", // legado
     created_at: user.created_at,
     phone: profile?.phone ?? null,
     avatar_url: profile?.avatar_url ?? null,
   };
 }
 
+/* ===================== ADMIN: UPDATE ===================== */
 export async function updateUser(formData: FormData) {
   const supabaseAdmin = await getAdminClient();
 
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
-  const role = formData.get("role") as string; // "user" | "master" | "admin" (legado)
+  const role = (formData.get("role") as string) || "user"; // "user" | "master" | "admin"
 
+  if (!id) return { error: "ID do usuário é obrigatório." };
+  if (!name) return { error: "Nome é obrigatório." };
+
+  // 1) NUNCA permitir operações envolvendo platform_admin
+  const { data: target, error: getErr } = await supabaseAdmin
+    .from("profiles")
+    .select("id, role, global_role")
+    .eq("id", id)
+    .single();
+
+  if (getErr || !target) return { error: "Usuário não encontrado." };
+
+  if (
+    target.role === "platform_admin" ||
+    target.global_role === "platform_admin"
+  ) {
+    return {
+      error:
+        "Usuários com role=platform_admin não podem ser editados por esta interface.",
+    };
+  }
+
+  if (role === "platform_admin") {
+    return {
+      error:
+        "Atribuir role=platform_admin só é permitido manualmente pelo owner (postgres).",
+    };
+  }
+
+  // 2) Atualiza metadados (nome) no Auth
   const { error } = await supabaseAdmin.auth.admin.updateUserById(id, {
     user_metadata: { name },
   });
   if (error) return { error: error.message };
 
+  // 3) Atualiza apenas campos permitidos no profile
   const { error: profErr } = await supabaseAdmin
     .from("profiles")
-    .update({ full_name: name, role })
+    .update({ full_name: name, role }) // permitido: user/master/admin
     .eq("id", id);
+
   if (profErr) return { error: profErr.message };
 
   revalidatePath("/admin");
@@ -231,8 +289,26 @@ export async function updateUser(formData: FormData) {
   return { error: null };
 }
 
+/* ===================== ADMIN: DELETE ===================== */
 export async function deleteUser(userId: string) {
   const supabaseAdmin = await getAdminClient();
+
+  // Proteção: NUNCA deletar platform_admin
+  const { data: target } = await supabaseAdmin
+    .from("profiles")
+    .select("role, global_role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (
+    target?.role === "platform_admin" ||
+    target?.global_role === "platform_admin"
+  ) {
+    return {
+      error:
+        "Usuários com role=platform_admin não podem ser deletados automaticamente.",
+    };
+  }
 
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
   if (error) return { error: error.message };
@@ -245,19 +321,7 @@ export async function deleteUser(userId: string) {
   return { error: null };
 }
 
-/* ===================== ADMIN: CREATE (ajustado ao novo modelo) ===================== */
-/**
- * Cria usuário no Auth e vincula à organização em org_members.
- * Permissões:
- *  - platform_admin: pode criar em qualquer organização (orgId obrigatório).
- *  - org_admin: pode criar apenas na própria organização (orgId é ignorado/forçado).
- *
- * Observações:
- *  - Não grava email em profiles (segurança). Usa apenas full_name.
- *  - Se o email já existir no Auth:
- *      - Se o usuário já estiver em outra org, erro.
- *      - Se estiver na mesma org, apenas garante/atualiza o vínculo e nome.
- */
+/* ===================== ADMIN: CREATE (mantido, com regras) ===================== */
 async function findUserIdByEmail(admin: any, email: string) {
   // varre páginas do Auth para localizar pelo email
   for (let page = 1; page <= 5; page++) {
@@ -274,7 +338,7 @@ async function findUserIdByEmail(admin: any, email: string) {
 export async function createUserAsAdmin(input: {
   email: string;
   full_name?: string;
-  orgId?: string; // obrigatório para platform_admin; ignorado para org_admin (usa a própria org)
+  orgId?: string;
   orgRole: "org_admin" | "unit_master" | "unit_user";
   password?: string;
 }) {
