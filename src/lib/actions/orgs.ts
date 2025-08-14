@@ -8,6 +8,12 @@ import { createServiceClient } from "@/lib/supabase/service";
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 export type Org = { id: string; name: string; slug: string };
 
+export type OrgAdmin = {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+};
+
 /** slugify local (igual ao que usamos no banco) */
 function slugify(txt: string) {
   return (txt || "")
@@ -231,5 +237,51 @@ export async function deleteOrg(orgId: string): Promise<Result<null>> {
     return { ok: true, data: null };
   } catch (e: any) {
     return { ok: false, error: e.message ?? "Falha ao excluir Organização." };
+  }
+}
+
+/**
+ * RESPONSÁVEIS DA ORG (org_admin)
+ * Retorna lista de usuários (nome e telefone) que são org_admin da org.
+ * Usa RLS (createClient) e join com profiles.
+ */
+export async function getOrgAdmins(orgId: string): Promise<Result<OrgAdmin[]>> {
+  try {
+    const supabase = createClient();
+    const user = await getSessionUser();
+    if (!user) return { ok: false, error: "Usuário não autenticado." };
+
+    // Faz join em profiles garantindo que só role=org_admin seja retornado
+    // Observação: requer FK org_members.user_id -> profiles.id
+    const { data, error } = await supabase
+      .from("org_members")
+      .select(
+        `
+        role,
+        profiles:profiles!inner (
+          id,
+          full_name,
+          phone
+        )
+      `
+      )
+      .eq("org_id", orgId)
+      .eq("role", "org_admin");
+
+    if (error) return { ok: false, error: error.message };
+
+    const admins: OrgAdmin[] =
+      (data ?? []).map((row: any) => ({
+        id: row.profiles?.id,
+        full_name: row.profiles?.full_name ?? null,
+        phone: row.profiles?.phone ?? null,
+      })) ?? [];
+
+    return { ok: true, data: admins };
+  } catch (e: any) {
+    return {
+      ok: false,
+      error: e.message ?? "Falha ao carregar responsáveis da organização.",
+    };
   }
 }

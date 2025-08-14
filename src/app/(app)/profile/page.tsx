@@ -37,7 +37,7 @@ export default async function ProfilePage() {
   console.log("ProfilePage: userProfile.avatar_url", userProfile.avatar_url);
 
   return (
-    <div className="pt-8 px-12 w-7/12 max-w-3xl">
+    <div className="pt-8 px-6 sm:px-12 w-7/12 w-full sm:max-w-3xl">
       <div>
         <ProfileForm user={userProfile} />
       </div>

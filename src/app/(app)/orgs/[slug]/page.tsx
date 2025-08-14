@@ -3,12 +3,12 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getOrg, updateOrg } from "@/lib/actions/orgs";
+import { getOrg, updateOrg, getOrgAdmins } from "@/lib/actions/orgs"; // ⬅️ adicionado getOrgAdmins
 import { listUnits } from "@/lib/actions/units";
 import { getAuthContext } from "@/lib/auth-context";
 import { createUnitAction } from "@/app/(app)/orgs/unit-actions";
 import { AddUnitModal } from "@/components/units/add-unit-modal";
-import { Pencil } from "lucide-react";
+import { Building2, Pencil } from "lucide-react";
 
 import {
   Table,
@@ -42,6 +42,10 @@ export default async function OrgPage({
   const orgRes = await getOrg(slug);
   if (!orgRes.ok || !orgRes.data) redirect("/orgs");
   const org = orgRes.data;
+
+  // ⬇️ busca responsáveis (org_admin) da organização
+  const adminsRes = await getOrgAdmins(org.id);
+  const admins = adminsRes.ok ? adminsRes.data ?? [] : [];
 
   const unitsRes = await listUnits(org.id);
   const units = unitsRes.ok ? unitsRes.data ?? [] : [];
@@ -102,11 +106,37 @@ export default async function OrgPage({
 
   return (
     <div className="p-6">
-      <div className="flex items-center gap-4 mb-8">
-        <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center text-2xl">
-          🏢
+      <div className="flex items-center gap-4 mb-4">
+        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center text-2xl">
+          <Building2 className="h-5 w-5" />
         </div>
         <h1 className="text-2xl font-bold">{org.name}</h1>
+      </div>
+
+      {/* ⬇️ Bloco dos responsáveis da organização */}
+      <div className="mb-8">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-muted-foreground mr-1">
+            Responsável:
+          </span>
+
+          {admins.length > 0 ? (
+            <ul className="space-y-1">
+              {admins.map((adm: any) => (
+                <li key={adm.id} className="text-sm">
+                  <span className="font-semibold">
+                    {adm.full_name ?? "Sem nome"}
+                  </span>{" "}
+                  - <span>{adm.phone ?? "Telefone não informado"}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Nenhum <code>org_admin</code> definido para esta organização.
+            </p>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue={tab} className="w-full">
