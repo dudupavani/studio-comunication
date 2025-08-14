@@ -13,14 +13,12 @@ export async function createUnitAction(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
 
   if (!orgId || !slug || !name) {
-    // volta para a página sem quebrar
-    redirect(`/orgs/${slug}`);
+    return { ok: false as const, error: "Campos obrigatórios faltando." };
   }
 
   const res = await createUnit(orgId, name, { revalidate: `/orgs/${slug}` });
-
   // independente de ok/erro, voltamos para a página (você pode colocar toast via client, se quiser)
-  redirect(`/orgs/${slug}`);
+  return res;
 }
 
 /**

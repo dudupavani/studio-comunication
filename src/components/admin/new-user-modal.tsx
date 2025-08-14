@@ -2,10 +2,10 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { CircleCheckBig } from "lucide-react";
+import { Plus, CircleCheckBig } from "lucide-react";
 import {
   Dialog,
   DialogTrigger,
@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
+type SimpleOrg = { id: string; name: string };
+
 // ⚠️ org_role aceita apenas "org_admin" (ou nada) e unit_role apenas "unit_master" (ou nada)
 const FormSchema = z.object({
   name: z.string().min(2),
@@ -41,9 +43,14 @@ type FormData = z.infer<typeof FormSchema>;
 export default function NewUserModal({
   orgId,
   defaultMode = "invite",
+  // 👇 novos props Opcionais: só use quando quiser exibir o Select
+  orgs,
+  canChooseOrg = false,
 }: {
   orgId: string;
   defaultMode?: "invite" | "create";
+  orgs?: SimpleOrg[];
+  canChooseOrg?: boolean;
 }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -59,6 +66,17 @@ export default function NewUserModal({
     unit_role: undefined,
     mode: defaultMode,
   });
+
+  // Quando abrir o modal e puder escolher org, garanta um org_id válido
+  useEffect(() => {
+    if (open && canChooseOrg && orgs && orgs.length > 0) {
+      const exists = orgs.some((o) => o.id === form.org_id);
+      if (!exists) {
+        setForm((f) => ({ ...f, org_id: orgs[0].id }));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, canChooseOrg, orgs]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -125,7 +143,10 @@ export default function NewUserModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Novo usuário</Button>
+        <Button>
+          <Plus />
+          Usuário
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -160,15 +181,33 @@ export default function NewUserModal({
 
           <div className="grid gap-2">
             <Label>Organização</Label>
-            {/* permanece como está no seu projeto */}
-            <Input
-              value={form.org_id}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, org_id: e.target.value }))
-              }
-              placeholder="org_id (UUID)"
-              disabled
-            />
+
+            {canChooseOrg && orgs && orgs.length > 0 ? (
+              <Select
+                value={form.org_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, org_id: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a organização" />
+                </SelectTrigger>
+                <SelectContent>
+                  {orgs.map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              // ✅ Comportamento original mantido (input desabilitado)
+              <Input
+                value={form.org_id}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, org_id: e.target.value }))
+                }
+                placeholder="org_id (UUID)"
+                disabled
+              />
+            )}
           </div>
 
           <div className="grid gap-2">

@@ -29,10 +29,7 @@ export default async function AdminUsersPage() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Gerenciar Usuários
-        </h1>
+      <div className="flex items-center justify-end mb-4">
         {isAdmin && auth?.orgId && <NewUserModal orgId={auth.orgId} />}
       </div>
 
@@ -60,7 +57,7 @@ export default async function AdminUsersPage() {
               users.map((user: any) => (
                 <tr key={user.id} className="border-t">
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                       {user.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -79,7 +76,7 @@ export default async function AdminUsersPage() {
                         </div>
                       )}
                       <div>
-                        <div className="font-medium">
+                        <div className="font-semibold text-sm">
                           {user.full_name || "No name"}
                         </div>
                         <div className="text-sm text-muted-foreground">
@@ -98,7 +95,7 @@ export default async function AdminUsersPage() {
                     </Badge>
                   </td>
 
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  <td className="px-4 py-3 text-sm text-primary">
                     {user.created_at
                       ? format(
                           new Date(user.created_at),

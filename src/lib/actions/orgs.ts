@@ -1,7 +1,9 @@
+// src/lib/actions/orgs.ts
 "use server";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 export type Org = { id: string; name: string; slug: string };
@@ -55,9 +57,7 @@ async function isOrgAdmin(orgId: string) {
   return (data?.[0]?.role ?? "") === "org_admin";
 }
 
-/** LIST
- * RLS já restringe por organização. Se for platform_admin, verá todas.
- */
+/** LIST (minhas orgs pela RLS) */
 export async function listMyOrgs(): Promise<Result<Org[]>> {
   try {
     const supabase = createClient();
@@ -76,9 +76,35 @@ export async function listMyOrgs(): Promise<Result<Org[]>> {
   }
 }
 
-/** GET por slug ou id (compatível com URL antiga).
- * RLS garantirá que só retorne se o usuário tiver acesso.
- */
+/** LIST (todas as orgs — apenas platform_admin) */
+export async function listAllOrgsForAdmin(): Promise<Result<Org[]>> {
+  try {
+    const user = await getSessionUser();
+    if (!user) return { ok: false, error: "Usuário não autenticado." };
+
+    const admin = await isPlatformAdmin();
+    if (!admin) {
+      // fallback: se não for admin de plataforma, retorna somente as orgs visíveis pela RLS
+      return await listMyOrgs();
+    }
+
+    const svc = createServiceClient(); // ignora RLS após checar permissão
+    const { data, error } = await svc
+      .from("orgs")
+      .select("id, name, slug")
+      .order("name");
+
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, data: (data ?? []) as Org[] };
+  } catch (e: any) {
+    return {
+      ok: false,
+      error: e.message ?? "Falha ao listar organizações (admin).",
+    };
+  }
+}
+
+/** GET por slug ou id (RLS garante acesso) */
 export async function getOrg(slugOrId: string): Promise<Result<Org>> {
   try {
     const supabase = createClient();
@@ -135,7 +161,6 @@ export async function createOrg(name: string): Promise<Result<Org>> {
         revalidatePath("/orgs");
         return { ok: true, data: data as Org };
       }
-      // código 23505 = unique violation (slug duplicado)
       if (error && (error as any).code !== "23505") {
         return { ok: false, error: error.message };
       }

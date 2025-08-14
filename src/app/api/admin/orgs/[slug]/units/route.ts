@@ -1,12 +1,13 @@
-// src/app/api/admin/orgs/[orgId]/units/route.ts
+// src/app/api/admin/orgs/[slug]/units/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { orgId: string } }
+  { params }: { params: { slug: string } }
 ) {
   const supabase = await createClient();
+  const orgId = params.slug; // alias para manter legibilidade
 
   // 1) Sessão
   const {
@@ -34,7 +35,7 @@ export async function GET(
   const { data, error } = await supabase
     .from("units")
     .select("id, name")
-    .eq("org_id", params.orgId)
+    .eq("org_id", orgId)
     .order("name", { ascending: true });
 
   if (error) {

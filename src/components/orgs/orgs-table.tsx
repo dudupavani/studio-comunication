@@ -20,10 +20,9 @@ export default function OrgsTable({ initialOrgs }: { initialOrgs: Org[] }) {
       </div>
 
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-muted/50 text-left">
           <TableRow>
             <TableHead>Nome</TableHead>
-            <TableHead className="w-[220px]">Slug</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -33,9 +32,6 @@ export default function OrgsTable({ initialOrgs }: { initialOrgs: Org[] }) {
                 <Link href={`/orgs/${org.slug}`} className="underline">
                   {org.name}
                 </Link>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {org.slug}
               </TableCell>
             </TableRow>
           ))}
