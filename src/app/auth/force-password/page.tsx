@@ -1,6 +1,9 @@
 // src/app/auth/force-password/page.tsx
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/button";
+import { CircleCheckBig, KeySquare } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export const dynamic = "force-dynamic";
 
@@ -43,18 +46,26 @@ export default async function ForcePasswordPage() {
   }
 
   return (
-    <form action={setPassword} className="mx-auto max-w-sm p-6 space-y-4">
-      <h1 className="text-xl font-semibold">Defina sua nova senha</h1>
-      <input
-        name="password"
-        type="password"
-        placeholder="Nova senha"
-        className="w-full border rounded-md px-3 py-2"
-        required
-      />
-      <button className="btn btn-primary w-full" type="submit">
-        Salvar e continuar
-      </button>
-    </form>
+    <div className="h-screen flex items-center justify-center">
+      <form action={setPassword} className="mx-auto max-w-sm text-center px-4">
+        <div className="w-full flex flex-col items-center justify-center gap-4">
+          <div className="rounded-lg bg-gray-200 p-2">
+            <KeySquare size={24} />
+          </div>
+          <h1 className="text-xl font-bold mb-8">Defina sua nova senha</h1>
+        </div>
+        <Input
+          name="password"
+          type="password"
+          placeholder="Nova senha"
+          className="w-full border rounded-md px-3 py-2 mb-4"
+          required
+        />
+        <Button type="submit" className="w-full">
+          <CircleCheckBig />
+          Salvar e continuar
+        </Button>
+      </form>
+    </div>
   );
 }
