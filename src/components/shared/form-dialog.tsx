@@ -33,11 +33,11 @@ export default function FormDialog({
       size="md"
       footer={
         <>
-          <Button form="__modal_form" variant="ghost" type="reset">
-            Cancelar
-          </Button>
           <Button form="__modal_form" type="submit">
             {submitText}
+          </Button>
+          <Button form="__modal_form" variant="ghost" type="reset">
+            Cancelar
           </Button>
         </>
       }>

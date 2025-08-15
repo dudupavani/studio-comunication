@@ -52,7 +52,7 @@ export async function signUp(formData: FormData) {
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/login");
+  redirect("/auth/login");
 }
 
 export async function sendPasswordResetEmail(formData: FormData) {

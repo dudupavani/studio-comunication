@@ -1,9 +1,14 @@
 // src/app/(app)/orgs/[slug]/page.tsx
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getOrg, updateOrg, getOrgAdmins } from "@/lib/actions/orgs"; // ⬅️ adicionado getOrgAdmins
+import {
+  getOrgWithDetails,
+  getOrgAdmins,
+  updateOrgDetails,
+} from "@/lib/actions/orgs";
 import { listUnits } from "@/lib/actions/units";
 import { getAuthContext } from "@/lib/auth-context";
 import { createUnitAction } from "@/app/(app)/orgs/unit-actions";
@@ -31,31 +36,36 @@ export default async function OrgPage({
   params,
   searchParams,
 }: {
-  params: { slug: string };
-  searchParams?: { tab?: string; sort?: string; dir?: string };
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ tab?: string; sort?: string; dir?: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
+  const sp = (await searchParams) ?? {};
 
   const auth = await getAuthContext();
   if (!auth) redirect("/");
 
-  const orgRes = await getOrg(slug);
-  if (!orgRes.ok || !orgRes.data) redirect("/orgs");
+  // 🔐 se ainda precisa trocar a senha, redireciona
+  if (auth.user?.user_metadata?.must_reset_password) {
+    redirect("/auth/force-password");
+  }
+
+  const orgRes = await getOrgWithDetails(slug);
+  if (!orgRes.ok || !orgRes.data) {
+    console.error("ORG PAGE — getOrgWithDetails failed:", orgRes);
+    redirect("/orgs");
+  }
   const org = orgRes.data;
 
-  // ⬇️ busca responsáveis (org_admin) da organização
   const adminsRes = await getOrgAdmins(org.id);
   const admins = adminsRes.ok ? adminsRes.data ?? [] : [];
 
   const unitsRes = await listUnits(org.id);
   const units = unitsRes.ok ? unitsRes.data ?? [] : [];
 
-  // ---------------------------
-  // Ordenação (server-side)
-  // ---------------------------
-  const tab = searchParams?.tab === "units" ? "units" : "config";
-  const sortParam = (searchParams?.sort as SortKey) ?? "name";
-  const dirParam = (searchParams?.dir as SortDir) ?? "asc";
+  const tab = sp.tab === "units" ? "units" : "config";
+  const sortParam = (sp.sort as SortKey) ?? "name";
+  const dirParam = (sp.dir as SortDir) ?? "asc";
 
   const sortKey: SortKey = sortParam === "phone" ? "phone" : "name";
   const sortDir: SortDir = dirParam === "desc" ? "desc" : "asc";
@@ -67,15 +77,14 @@ export default async function OrgPage({
     return sortDir === "asc" ? cmp : -cmp;
   });
 
-  // helper para montar links de ordenação mantendo ?tab=units
   function sortHref(key: SortKey) {
     const isActive = sortKey === key;
     const nextDir: SortDir = isActive && sortDir === "asc" ? "desc" : "asc";
-    const sp = new URLSearchParams();
-    sp.set("tab", "units");
-    sp.set("sort", key);
-    sp.set("dir", nextDir);
-    return `?${sp.toString()}`;
+    const usp = new URLSearchParams();
+    usp.set("tab", "units");
+    usp.set("sort", key);
+    usp.set("dir", nextDir);
+    return `?${usp.toString()}`;
   }
 
   function sortIndicator(key: SortKey) {
@@ -86,22 +95,21 @@ export default async function OrgPage({
   // ⬇️ Server Action para salvar configurações da organização
   async function saveOrgConfig(values: OrgFormValues) {
     "use server";
-    try {
-      await updateOrg(org.id, {
-        name: values.name,
-        cnpj: values.cnpj,
-        address: (values as any).address,
-        phone: (values as any).phone,
-        cep: (values as any).cep,
-        cidade: (values as any).cidade,
-        estado: (values as any).estado,
-      } as any);
+    const res = await updateOrgDetails(org.id, {
+      name: values.name,
+      cnpj: values.cnpj,
+      address: values.address,
+      phone: values.phone,
+      cep: values.cep,
+      city: values.city, // antes era cidade
+      state: values.state, // antes era estado
+    });
 
-      return { ok: true as const };
-    } catch (e: any) {
-      console.error("updateOrg error:", e);
-      return { ok: false as const, error: e?.message ?? "Erro ao salvar" };
+    if (!res.ok) {
+      console.error("updateOrgDetails failed:", res.error);
+      return { ok: false as const, error: res.error ?? "Erro ao salvar" };
     }
+    return { ok: true as const };
   }
 
   return (
@@ -113,7 +121,7 @@ export default async function OrgPage({
         <h1 className="text-2xl font-bold">{org.name}</h1>
       </div>
 
-      {/* ⬇️ Bloco dos responsáveis da organização */}
+      {/* Responsáveis */}
       <div className="mb-8">
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium text-muted-foreground mr-1">
@@ -147,29 +155,24 @@ export default async function OrgPage({
 
         {/* Configurações da organização */}
         <TabsContent value="config" className="space-y-6">
-          <div className="mb-2">
-            <h2 className="text-2xl font-semibold mb-1">
-              Dados da organização
-            </h2>
-          </div>
+          <h2 className="text-2xl font-semibold mb-1">Dados da organização</h2>
           <OrgConfigForm
             org={{
               id: org.id,
               name: org.name ?? "",
-              cnpj: (org as any).cnpj ?? "",
-              address: (org as any).address ?? "",
-              phone: (org as any).phone ?? "",
-              cep: (org as any).cep ?? "",
-              cidade: (org as any).cidade ?? "",
-              estado: (org as any).estado ?? "",
+              cnpj: org.cnpj ?? "",
+              address: org.address ?? "",
+              phone: org.phone ?? "",
+              cep: org.cep ?? "",
+              city: org.city ?? "",
+              state: org.state ?? "",
             }}
-            // se tiver checagem de permissão, troque por canManageOrg(auth, org.id)
             canEdit={true}
             onSubmit={saveOrgConfig}
           />
         </TabsContent>
 
-        {/* Unidades da organização */}
+        {/* Unidades */}
         <TabsContent value="units" className="space-y-6">
           <section className="flex justify-between items-center mb-2">
             <h2 className="text-2xl font-semibold">
@@ -227,7 +230,8 @@ export default async function OrgPage({
                     <TableCell>
                       <Link
                         href={`/orgs/${org.slug}/${u.slug}`}
-                        className="font-semibold text-primary hover:underline font-medium">
+                        className="font-semibold text-primary hover:underline font-medium"
+                        prefetch={false}>
                         {u.name}
                       </Link>
                     </TableCell>
@@ -236,7 +240,9 @@ export default async function OrgPage({
                     </TableCell>
                     <TableCell>
                       <Button size="icon" variant="ghost" asChild>
-                        <Link href={`/orgs/${org.slug}/${u.slug}`}>
+                        <Link
+                          href={`/orgs/${org.slug}/${u.slug}`}
+                          prefetch={false}>
                           <Pencil className="h-4 w-4" />
                         </Link>
                       </Button>

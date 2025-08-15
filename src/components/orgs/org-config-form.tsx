@@ -15,21 +15,21 @@ const OrgSchema = z.object({
   address: z.string().min(3, "Informe o endereço"),
   phone: z.string().min(8, "Informe o telefone"),
   cep: z.string().min(8, "Informe o CEP"),
-  cidade: z.string().min(2, "Informe a cidade"),
-  estado: z.string().min(2, "Informe o estado"),
+  city: z.string().min(2, "Informe a cidade"),
+  state: z.string().min(2, "Informe o estado"),
 });
 
-type OrgFormValues = z.infer<typeof OrgSchema>;
+export type OrgFormValues = z.infer<typeof OrgSchema>;
 
 type Org = {
   id: string;
   name: string;
-  cnpj: string;
-  address: string;
-  phone: string;
-  cep: string;
-  cidade: string;
-  estado: string;
+  cnpj: string | null;
+  address: string | null;
+  phone: string | null;
+  cep: string | null;
+  city: string | null;
+  state: string | null;
 };
 
 export default function OrgConfigForm({
@@ -49,8 +49,8 @@ export default function OrgConfigForm({
     address: org.address ?? "",
     phone: org.phone ?? "",
     cep: org.cep ?? "",
-    cidade: org.cidade ?? "",
-    estado: org.estado ?? "",
+    city: org.city ?? "",
+    state: org.state ?? "",
   });
 
   async function handleSubmit(e: React.FormEvent) {
@@ -68,6 +68,8 @@ export default function OrgConfigForm({
     }
     try {
       setPending(true);
+      // depuração opcional
+      // console.log("Form submit payload:", parsed.data);
       const res = await onSubmit(parsed.data);
       if (res.ok) {
         toast({
@@ -143,21 +145,21 @@ export default function OrgConfigForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="cidade">Cidade</Label>
+        <Label htmlFor="city">Cidade</Label>
         <Input
-          id="cidade"
-          value={values.cidade}
-          onChange={(e) => handleChange("cidade", e.target.value)}
+          id="city"
+          value={values.city}
+          onChange={(e) => handleChange("city", e.target.value)}
           disabled={!canEdit || pending}
         />
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="estado">Estado</Label>
+        <Label htmlFor="state">Estado</Label>
         <Input
-          id="estado"
-          value={values.estado}
-          onChange={(e) => handleChange("estado", e.target.value)}
+          id="state"
+          value={values.state}
+          onChange={(e) => handleChange("state", e.target.value)}
           disabled={!canEdit || pending}
         />
       </div>

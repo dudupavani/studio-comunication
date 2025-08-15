@@ -21,6 +21,11 @@ export default async function AdminUsersPage() {
   const auth = await getAuthContext();
   if (!auth) redirect("/");
 
+  // 🔐 NOVO: se ainda precisa definir a senha no primeiro acesso, redireciona
+  if (auth.user?.user_metadata?.must_set_password) {
+    redirect("/auth/force-password");
+  }
+
   const [users, isAdmin] = await Promise.all([getUsers(), isPlatformAdmin()]);
   console.log("DEBUG isAdmin:", isAdmin);
 

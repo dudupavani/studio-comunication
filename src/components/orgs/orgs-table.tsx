@@ -23,16 +23,21 @@ export default function OrgsTable({ initialOrgs }: { initialOrgs: Org[] }) {
         <TableHeader className="bg-muted/50 text-left">
           <TableRow>
             <TableHead>Nome</TableHead>
+            <TableHead>Cidade</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {initialOrgs.map((org) => (
             <TableRow key={org.id}>
               <TableCell>
-                <Link href={`/orgs/${org.slug}`} className="underline">
+                <Link
+                  href={`/orgs/${org.slug}`}
+                  className="underline"
+                  prefetch={false}>
                   {org.name}
                 </Link>
               </TableCell>
+              <TableCell>{org.city ?? "-"}</TableCell>
             </TableRow>
           ))}
           {initialOrgs.length === 0 && (

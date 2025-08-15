@@ -1,3 +1,4 @@
+// src/app/(app)/layout.tsx
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import { UserMenu } from "@/components/user-menu";
 import ModuleTitle from "@/components/modules-title";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -22,7 +25,13 @@ export default async function AppLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // 🔐 exige sessão
   if (!user) redirect("/login");
+
+  // 🔐 força definir senha no primeiro acesso
+  if (user.user_metadata?.must_set_password) {
+    redirect("/auth/force-password");
+  }
 
   const { data: profileData, error: profileError } = await supabase
     .from("profiles")
