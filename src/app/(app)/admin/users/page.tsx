@@ -13,7 +13,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { Trash, Pencil, MoreHorizontal, UserX } from "lucide-react";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -118,9 +119,29 @@ export default async function AdminUsersPage() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          Remover
+                        <DropdownMenuItem>
+                          <Link
+                            href={`/admin/users/${user.id}/edit`}
+                            className="flex items-center gap-2">
+                            <Pencil className="h-4 w-4" />
+                            Editar
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Link
+                            href={`/admin/users/${user.id}/edit`}
+                            className="flex items-center gap-2">
+                            <UserX className="h-4 w-4" />
+                            Desativar
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Link
+                            href={`/admin/users/${user.id}/edit`}
+                            className="flex items-center gap-2 text-destructive">
+                            <Trash className="h-4 w-4" />
+                            Remover
+                          </Link>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
