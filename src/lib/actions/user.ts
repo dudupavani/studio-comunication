@@ -141,7 +141,6 @@ export async function updateUserProfile(formData: FormData) {
   });
 
   if (rpcError) {
-    // fallback amigável
     if (/platform_admin/i.test(rpcError)) {
       return {
         error:
@@ -157,6 +156,14 @@ export async function updateUserProfile(formData: FormData) {
 }
 
 /* ===================== ADMIN: LIST/GET ===================== */
+
+/** Saneia role caso venha de view com cast "'unit_user'::text" */
+function normalizeRole(role: any): string {
+  if (!role) return "user";
+  const s = String(role);
+  return s.replace(/^'+|'+$/g, "").replace(/::text$/i, "") || "user";
+}
+
 export async function getUsers(): Promise<Profile[]> {
   const supabaseAdmin = await getAdminClient();
 
@@ -169,39 +176,56 @@ export async function getUsers(): Promise<Profile[]> {
   const ids = usersData.users.map((u) => u.id);
   if (ids.length === 0) return [];
 
-  const { data: profiles = [] } = await supabaseAdmin
+  console.log("IDs para busca de profiles:", ids); // Log dos IDs
+
+  // Busca profiles relacionados
+  const { data: profiles, error: profilesErr } = await supabaseAdmin
     .from("profiles")
-    .select("*")
+    .select(
+      "id, full_name, phone, avatar_url, role, disabled, created_at" // Removida a coluna 'email'
+    )
     .in("id", ids);
 
-  const map = new Map((profiles as any[]).map((p) => [p.id, p]));
+  if (profilesErr) {
+    console.error("Erro buscando profiles:", profilesErr); // Log detalhado do erro
+  }
 
-  return usersData.users.map((u) => ({
-    id: u.id,
-    email: u.email ?? "",
-    full_name:
-      map.get(u.id)?.full_name ?? (u.user_metadata as any)?.name ?? "No name",
-    role: map.get(u.id)?.role ?? "user", // legado
-    created_at: u.created_at,
-    phone: map.get(u.id)?.phone ?? null,
-    avatar_url: map.get(u.id)?.avatar_url ?? null,
-  }));
+  const safeProfiles: any[] = Array.isArray(profiles) ? profiles : [];
+  const map = new Map(safeProfiles.map((p) => [p.id, p]));
+
+  return usersData.users.map((u) => {
+    const p: any = map.get(u.id) || {};
+    return {
+      id: u.id,
+      email: p.email ?? u.email ?? "",
+      full_name: p.full_name ?? (u.user_metadata as any)?.name ?? "No name",
+      role: normalizeRole(p.role),
+      created_at: p.created_at ?? u.created_at,
+      phone: p.phone ?? null,
+      avatar_url: p.avatar_url ?? null,
+      // novo: expõe disabled para a UI alternar Ativar/Desativar
+      disabled: Boolean(p.disabled ?? false),
+    } as Profile & { disabled?: boolean };
+  });
 }
 
 export async function getAllProfiles(): Promise<Profile[]> {
   const supabaseAdmin = await getAdminClient();
   const { data: profiles, error } = await supabaseAdmin
     .from("profiles")
-    .select("*");
+    .select(
+      "id, email, full_name, role, created_at, phone, avatar_url, disabled"
+    );
   if (error || !profiles) return [];
-  return profiles.map((p) => ({
+  return profiles.map((p: any) => ({
     id: p.id,
     email: p.email ?? "",
     full_name: p.full_name ?? "No name",
-    role: p.role ?? "user",
+    role: normalizeRole(p.role),
     created_at: p.created_at,
     phone: p.phone ?? null,
     avatar_url: p.avatar_url ?? null,
+    disabled: Boolean(p.disabled ?? false),
   }));
 }
 
@@ -216,20 +240,23 @@ export async function getUserById(id: string): Promise<Profile | null> {
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("*")
+    .select(
+      "id, email, full_name, role, created_at, phone, avatar_url, disabled"
+    )
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   return {
     id: user.id,
-    email: user.email ?? "",
+    email: profile?.email ?? user.email ?? "",
     full_name:
       profile?.full_name ?? (user.user_metadata as any)?.name ?? "No name",
-    role: profile?.role ?? "user", // legado
-    created_at: user.created_at,
+    role: normalizeRole(profile?.role),
+    created_at: profile?.created_at ?? user.created_at,
     phone: profile?.phone ?? null,
     avatar_url: profile?.avatar_url ?? null,
-  };
+    disabled: Boolean(profile?.disabled ?? false),
+  } as Profile & { disabled?: boolean };
 }
 
 /* ===================== ADMIN: UPDATE ===================== */
@@ -238,7 +265,7 @@ export async function updateUser(formData: FormData) {
 
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
-  const role = (formData.get("role") as string) || "user"; // "user" | "master" | "admin"
+  const role = normalizeRole((formData.get("role") as string) || "user");
 
   if (!id) return { error: "ID do usuário é obrigatório." };
   if (!name) return { error: "Nome é obrigatório." };
@@ -252,8 +279,9 @@ export async function updateUser(formData: FormData) {
 
   if (getErr || !target) return { error: "Usuário não encontrado." };
 
+  const targetRole = normalizeRole(target.role);
   if (
-    target.role === "platform_admin" ||
+    targetRole === "platform_admin" ||
     target.global_role === "platform_admin"
   ) {
     return {
@@ -278,7 +306,7 @@ export async function updateUser(formData: FormData) {
   // 3) Atualiza apenas campos permitidos no profile
   const { error: profErr } = await supabaseAdmin
     .from("profiles")
-    .update({ full_name: name, role }) // permitido: user/master/admin
+    .update({ full_name: name, role })
     .eq("id", id);
 
   if (profErr) return { error: profErr.message };
@@ -300,8 +328,9 @@ export async function deleteUser(userId: string) {
     .eq("id", userId)
     .maybeSingle();
 
+  const targetRole = normalizeRole(target?.role);
   if (
-    target?.role === "platform_admin" ||
+    targetRole === "platform_admin" ||
     target?.global_role === "platform_admin"
   ) {
     return {
@@ -321,18 +350,5 @@ export async function deleteUser(userId: string) {
   return { error: null };
 }
 
-/* ===================== ADMIN: CREATE (mantido, com regras) ===================== */
-async function findUserIdByEmail(admin: any, email: string) {
-  // varre páginas do Auth para localizar pelo email
-  for (let page = 1; page <= 5; page++) {
-    const { data } = await admin.auth.admin.listUsers({ page, perPage: 200 });
-    const found = data?.users.find(
-      (u: any) => (u.email || "").toLowerCase() === email.toLowerCase()
-    );
-    if (found) return found.id as string;
-    if (!data || (data.users?.length ?? 0) < 200) break;
-  }
-  return null;
-}
-
+/* ===================== ADMIN: CREATE ===================== */
 // Função createUserAsAdmin removida. Use apenas o fluxo de convite por Magic Link.

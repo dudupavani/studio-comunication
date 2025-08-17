@@ -1,4 +1,4 @@
-// src/app/(app)/orgs/[slug]/page.tsx
+// src/app/(app)/orgs/[orgSlug]/page.tsx
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -36,10 +36,10 @@ export default async function OrgPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ orgSlug: string }>;
   searchParams?: Promise<{ tab?: string; sort?: string; dir?: string }>;
 }) {
-  const { slug } = await params;
+  const { orgSlug } = await params;
   const sp = (await searchParams) ?? {};
 
   const auth = await getAuthContext();
@@ -50,7 +50,7 @@ export default async function OrgPage({
     redirect("/auth/force-password");
   }
 
-  const orgRes = await getOrgWithDetails(slug);
+  const orgRes = await getOrgWithDetails(orgSlug);
   if (!orgRes.ok || !orgRes.data) {
     console.error("ORG PAGE — getOrgWithDetails failed:", orgRes);
     redirect("/orgs");

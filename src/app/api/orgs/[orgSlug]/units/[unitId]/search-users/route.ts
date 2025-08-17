@@ -1,13 +1,13 @@
-// src/app/api/orgs/[slug]/units/[unitId]/search-users/route.ts
+// src/app/api/orgs/[orgSlug]/units/[unitId]/search-users/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { slug: string; unitId: string } }
+  { params }: { params: { orgSlug: string; unitId: string } }
 ) {
   const supabase = await createClient();
-  const orgId = params.slug;
+  const orgId = params.orgSlug;
   const unitId = params.unitId;
 
   // sessão

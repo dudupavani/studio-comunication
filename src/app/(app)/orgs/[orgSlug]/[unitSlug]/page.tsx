@@ -1,4 +1,4 @@
-// src/app/(app)/orgs/[slug]/[unit]/page.tsx
+// src/app/(app)/orgs/[orgSlug]/[unitSlug]/page.tsx
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
@@ -16,14 +16,14 @@ import MembersTabServer from "@/components/units/members/members-tab.server";
 export default async function UnitPage({
   params,
 }: {
-  params: Promise<{ slug: string; unit: string }>;
+  params: Promise<{ orgSlug: string; unitSlug: string }>;
 }) {
-  const { slug, unit: unitSlug } = await params;
+  const { orgSlug, unitSlug } = await params;
 
   const auth = await getAuthContext();
   if (!auth) redirect("/");
 
-  const orgRes = await getOrg(slug);
+  const orgRes = await getOrg(orgSlug);
   if (!orgRes.ok) redirect("/orgs");
   const org = orgRes.data!;
 

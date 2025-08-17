@@ -1,4 +1,4 @@
-// src/app/(app)/orgs/[slug]/units/[unitSlug]/page.tsx
+// src/app/(app)/orgs/[orgSlug]/units/[unitSlug]/page.tsx
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -13,12 +13,12 @@ export default async function UnitPage({
   params,
 }: {
   // Next 15+: params é assíncrono
-  params: Promise<{ slug: string; unitSlug: string }>;
+  params: Promise<{ orgSlug: string; unitSlug: string }>;
 }) {
-  const { slug, unitSlug } = await params;
+  const { orgSlug, unitSlug } = await params;
 
   // carrega org + unidade por slug
-  const orgRes = await getOrg(slug);
+  const orgRes = await getOrg(orgSlug);
   if (!orgRes.ok) redirect("/orgs");
   const org = orgRes.data;
 

@@ -1,13 +1,30 @@
-// src/app/api/orgs/[orgId]/available-members/route.ts
+// src/app/api/orgs/[orgSlug]/available-members/route.ts
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
 export async function GET(
   req: Request,
-  ctx: { params: Promise<{ orgId: string }> }
+  ctx: { params: Promise<{ orgSlug: string }> }
 ) {
   try {
-    const { orgId } = await ctx.params;
+    const { orgSlug } = await ctx.params;
+    
+    // Precisamos obter o ID da organização a partir do slug
+    const supabase = createServiceClient();
+    const { data: org, error: orgError } = await supabase
+      .from("orgs")
+      .select("id")
+      .eq("slug", orgSlug)
+      .single();
+      
+    if (orgError || !org) {
+      return NextResponse.json(
+        { ok: false, error: "Organização não encontrada" },
+        { status: 404 }
+      );
+    }
+    
+    const orgId = org.id;
 
     const url = new URL(req.url);
     const unitId = url.searchParams.get("unitId");

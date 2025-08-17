@@ -1,7 +1,7 @@
 // app/(app)/admin/users/page.tsx
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth-context";
-import { getUsers } from "@/lib/actions/user"; // ✅ nome correto
+import { getUsers } from "@/lib/actions/user";
 import { isPlatformAdmin } from "@/lib/actions/admin";
 import NewUserModal from "@/components/admin/new-user-modal";
 import { format } from "date-fns";
@@ -13,8 +13,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Trash, Pencil, MoreHorizontal, UserX } from "lucide-react";
 import Link from "next/link";
+import { Pencil, MoreHorizontal, Trash, UserX, UserCheck } from "lucide-react";
+
+// ⬇️ dialogs (client components)
+import DisableUserDialog from "@/components/admin/disable-user-dialog";
+import EnableUserDialog from "@/components/admin/enable-user-dialog";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 
 export const dynamic = "force-dynamic";
 
@@ -22,15 +34,13 @@ export default async function AdminUsersPage() {
   const auth = await getAuthContext();
   if (!auth) redirect("/");
 
-  // 🔐 NOVO: se ainda precisa definir a senha no primeiro acesso, redireciona
+  // 🔐 se ainda precisa definir a senha no primeiro acesso, redireciona
   if (auth.user?.user_metadata?.must_set_password) {
     redirect("/auth/force-password");
   }
 
   const [users, isAdmin] = await Promise.all([getUsers(), isPlatformAdmin()]);
-  console.log("DEBUG isAdmin:", isAdmin);
-
-  if (!isAdmin) redirect("/profile"); // 🔒 Protege a página
+  if (!isAdmin) redirect("/profile");
 
   return (
     <div className="p-6">
@@ -41,28 +51,28 @@ export default async function AdminUsersPage() {
 
       {/* Tabela */}
       <div className="overflow-hidden rounded-md border">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-muted/50 text-left">
-              <th className="px-4 py-3">Nome</th>
-              <th className="px-4 py-3">Função</th>
-              <th className="px-4 py-3">Registro</th>
-              <th className="px-4 py-3 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full">
+          <TableHeader>
+            <TableRow className="bg-muted/50 text-left">
+              <TableHead className="px-4 py-3">Nome</TableHead>
+              <TableHead className="px-4 py-3">Função</TableHead>
+              <TableHead className="px-4 py-3">Registro</TableHead>
+              <TableHead className="px-4 py-3 text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {!users || users.length === 0 ? (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={4}
                   className="px-4 py-6 text-center text-muted-foreground">
                   Nenhum usuário encontrado.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               users.map((user: any) => (
-                <tr key={user.id} className="border-t">
-                  <td className="px-4 py-3">
+                <TableRow key={user.id} className="border-t">
+                  <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-4">
                       {user.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -90,18 +100,22 @@ export default async function AdminUsersPage() {
                         </div>
                       </div>
                     </div>
-                  </td>
+                  </TableCell>
 
-                  <td className="px-4 py-3">
+                  <TableCell className="px-4 py-3">
                     <Badge
                       variant={
-                        user.role === "platform_admin" ? "default" : "secondary"
+                        user?.disabled
+                          ? "destructive"
+                          : user.role === "platform_admin"
+                          ? "default"
+                          : "secondary"
                       }>
-                      {user.role ?? "user"}
+                      {user?.disabled ? "Desativado" : user.role ?? "user"}
                     </Badge>
-                  </td>
+                  </TableCell>
 
-                  <td className="px-4 py-3 text-sm text-primary">
+                  <TableCell className="px-4 py-3 text-sm text-primary">
                     {user.created_at
                       ? format(
                           new Date(user.created_at),
@@ -109,9 +123,9 @@ export default async function AdminUsersPage() {
                           { locale: ptBR }
                         )
                       : "-"}
-                  </td>
+                  </TableCell>
 
-                  <td className="px-4 py-3 text-right">
+                  <TableCell className="px-4 py-3 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="p-2 hover:bg-muted rounded-md">
@@ -119,38 +133,64 @@ export default async function AdminUsersPage() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        {/* Editar */}
+                        <DropdownMenuItem asChild>
                           <Link
                             href={`/admin/users/${user.id}/edit`}
-                            className="flex items-center gap-2">
+                            className="flex items-center gap-2 cursor-pointer">
                             <Pencil className="h-4 w-4" />
                             Editar
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Link
-                            href={`/admin/users/${user.id}/edit`}
-                            className="flex items-center gap-2">
-                            <UserX className="h-4 w-4" />
-                            Desativar
-                          </Link>
+
+                        {/* Ativar / Desativar (com modal) */}
+                        <DropdownMenuItem asChild>
+                          {user?.disabled ? (
+                            <EnableUserDialog
+                              userId={user.id}
+                              userName={user.full_name ?? user.email}
+                              trigger={
+                                <Link
+                                  href="#"
+                                  className="flex items-center gap-2">
+                                  <UserCheck className="h-4 w-4" />
+                                  Ativar
+                                </Link>
+                              }
+                            />
+                          ) : (
+                            <DisableUserDialog
+                              userId={user.id}
+                              userName={user.full_name ?? user.email}
+                              trigger={
+                                <Link
+                                  href="#"
+                                  className="flex items-center gap-2">
+                                  <UserX className="h-4 w-4" />
+                                  Desativar
+                                </Link>
+                              }
+                            />
+                          )}
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+
+                        {/* Remover (placeholder) */}
+                        <DropdownMenuItem asChild>
                           <Link
-                            href={`/admin/users/${user.id}/edit`}
-                            className="flex items-center gap-2 text-destructive">
-                            <Trash className="h-4 w-4" />
+                            href="#"
+                            className="w-full flex items-center text-destructive cursor-pointer">
+                            <Trash className="h-4 w-4 mr-2" />
                             Remover
                           </Link>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
