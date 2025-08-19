@@ -3,11 +3,13 @@
 
 import { createServiceClient } from "@/lib/supabase/service";
 import { revalidatePath } from "next/cache";
+import type { UnitRole } from "@/lib/types/roles";
+import { UNIT_ROLES } from "@/lib/types/roles";
 
 export type UnitMember = {
   user_id: string;
-  role: "unit_user" | "unit_master" | "org_admin";
-  profiles: { name: string | null; email: string | null } | null;
+  role: UnitRole;
+  profiles: { full_name: string | null; email: string | null } | null;
 };
 
 export async function listUnitMembers(orgId: string, unitId: string) {
@@ -15,7 +17,7 @@ export async function listUnitMembers(orgId: string, unitId: string) {
 
   const { data, error } = await supabase
     .from("unit_members")
-    .select("user_id, role, profiles(name, email)")
+    .select("user_id, role, profiles:profiles!inner(id, full_name, email)")
     .eq("org_id", orgId)
     .eq("unit_id", unitId)
     .order("user_id", { ascending: true }); // ordem estável sem depender de created_at
@@ -31,11 +33,14 @@ type AddUnitMemberResult =
   | { ok: true; data: UnitMember }
   | { ok: false; error: string };
 
+const DEFAULT_UNIT_ROLE: UnitRole = UNIT_USER;
+
 export async function addUnitMember(params: {
   orgId: string;
   unitId: string;
+  unitSlug: string;
   userId: string;
-  role: UnitMember["role"];
+  role: UnitRole;
 }): Promise<AddUnitMemberResult> {
   const supabase = createServiceClient();
 
@@ -78,7 +83,7 @@ export async function addUnitMember(params: {
       user_id: params.userId,
       role: params.role,
     })
-    .select("user_id, role, profiles(name, email)")
+    .select("user_id, role, profiles:profiles!inner(id, full_name, email)")
     .single();
 
   if (error) {
@@ -86,8 +91,8 @@ export async function addUnitMember(params: {
   }
 
   // Revalida as páginas que podem mostrar membros da unidade
-  revalidatePath(`/orgs/[slug]/units/[unitSlug]`);
-  revalidatePath(`/orgs/[slug]/units/[unitSlug]/members`);
+  revalidatePath(`/unidades/${params.unitSlug}`);
+  revalidatePath(`/unidades/${params.unitSlug}/members`);
 
   return {
     ok: true,
@@ -98,6 +103,7 @@ export async function addUnitMember(params: {
 export async function removeUnitMember(params: {
   orgId: string;
   unitId: string;
+  unitSlug: string;
   userId: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const supabase = createServiceClient();
@@ -128,8 +134,6 @@ export async function removeUnitMember(params: {
   }
 
   // Revalida as páginas que podem mostrar membros da unidade
-  revalidatePath(`/orgs/[slug]/units/[unitSlug]`);
-  revalidatePath(`/orgs/[slug]/units/[unitSlug]/members`);
-
-  return { ok: true };
+  revalidatePath(`/unidades/${params.unitSlug}`);
+  revalidatePath(`/unidades/${params.unitSlug}/members`);
 }

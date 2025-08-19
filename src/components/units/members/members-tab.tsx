@@ -17,11 +17,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import type { UnitRole } from "@/lib/types/roles";
+
+const DEFAULT_UNIT_ROLE: UnitRole = "unit_user";
 
 // Fetch para a rota de busca
 async function searchUsersNotInUnit(orgId: string, unitId: string, q: string) {
   const res = await fetch(
-    `/api/orgs/${orgId}/units/${unitId}/search-users?q=${encodeURIComponent(
+    `/api/units/${unitId}/search-users?q=${encodeURIComponent(
       q
     )}`,
     { cache: "no-store" }
@@ -31,14 +34,12 @@ async function searchUsersNotInUnit(orgId: string, unitId: string, q: string) {
 
 interface MembersTabProps {
   orgId: string;
-  orgSlug: string;
   unitId: string;
   unitSlug: string;
 }
 
 export default function MembersTab({
   orgId,
-  orgSlug,
   unitId,
   unitSlug,
 }: MembersTabProps) {
@@ -62,7 +63,12 @@ export default function MembersTab({
     const confirm = window.confirm("Remover este membro da unidade?");
     if (!confirm) return;
 
-    const result = await removeUnitMember({ unit_id: unitId, user_id: userId });
+    const result = await removeUnitMember({
+      orgId: orgId,
+      unitId: unitId,
+      unitSlug: unitSlug,
+      userId: userId,
+    });
 
     if (result.ok) {
       setMembers((prev) => prev.filter((m) => m.user_id !== userId));
@@ -82,10 +88,11 @@ export default function MembersTab({
 
   const handleAdd = async (userId: string) => {
     const result = await addUnitMember({
-      org_id: orgId,
-      unit_id: unitId,
-      user_id: userId,
-      role: "unit_user", // Pode tornar isso selecionável depois
+      orgId: orgId,
+      unitId: unitId,
+      unitSlug: unitSlug,
+      userId: userId,
+      role: DEFAULT_UNIT_ROLE, // Pode tornar isso selecionável depois
     });
 
     if (result.ok) {
@@ -131,7 +138,7 @@ export default function MembersTab({
                     className="flex items-center justify-between border p-2 rounded">
                     <div>
                       <div className="font-medium">
-                        {user.name || "Sem nome"}
+                        {user.full_name || "Sem nome"}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {user.email}
@@ -159,7 +166,7 @@ export default function MembersTab({
                 key={member.user_id}
                 className="flex items-center justify-between border rounded p-3">
                 <div>
-                  <div className="font-medium">{member.name || "Sem nome"}</div>
+                  <div className="font-medium">{member.full_name || "Sem nome"}</div>
                   <div className="text-sm text-muted-foreground">
                     {member.email || "Sem e-mail"} –{" "}
                     <strong>{member.role}</strong>

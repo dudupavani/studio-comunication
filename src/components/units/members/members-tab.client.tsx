@@ -14,10 +14,13 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus } from "lucide-react";
+import type { UnitRole } from "@/lib/types/roles";
+
+const DEFAULT_UNIT_ROLE: UnitRole = "unit_user";
 
 async function searchUsersNotInUnit(orgId: string, unitId: string, q: string) {
   const res = await fetch(
-    `/api/orgs/${orgId}/units/${unitId}/search-users?q=${encodeURIComponent(
+    `/api/units/${unitId}/search-users?q=${encodeURIComponent(
       q
     )}`,
     { cache: "no-store" }
@@ -29,10 +32,12 @@ async function searchUsersNotInUnit(orgId: string, unitId: string, q: string) {
 export default function MembersTabClient({
   orgId,
   unitId,
+  unitSlug,
   initialMembers,
 }: {
   orgId: string;
   unitId: string;
+  unitSlug: string;
   initialMembers: any[];
 }) {
   const { toast } = useToast();
@@ -47,7 +52,12 @@ export default function MembersTabClient({
   const handleRemove = async (userId: string) => {
     if (!confirm("Remover este membro da unidade?")) return;
     setRemovingUserId(userId);
-    const result = await removeUnitMember({ unit_id: unitId, user_id: userId });
+    const result = await removeUnitMember({
+      orgId: orgId,
+      unitId: unitId,
+      unitSlug: unitSlug,
+      userId: userId,
+    });
     setRemovingUserId(null);
 
     if (result.ok) {
@@ -72,10 +82,11 @@ export default function MembersTabClient({
   const handleAdd = async (userId: string) => {
     setAddingUserId(userId);
     const result = await addUnitMember({
-      org_id: orgId,
-      unit_id: unitId,
-      user_id: userId,
-      role: "unit_user", // depois podemos tornar selecionável
+      orgId: orgId,
+      unitId: unitId,
+      unitSlug: unitSlug,
+      userId: userId,
+      role: DEFAULT_UNIT_ROLE, // depois podemos tornar selecionável
     });
     setAddingUserId(null);
 
@@ -85,7 +96,7 @@ export default function MembersTabClient({
         ...prev,
         {
           ...(result.data ?? {}),
-          name: found?.name ?? null,
+          name: found?.full_name ?? null,
           email: found?.email ?? null,
         },
       ]);
@@ -159,7 +170,7 @@ export default function MembersTabClient({
                     className="flex items-center justify-between border rounded p-2">
                     <div>
                       <div className="font-medium">
-                        {user.name || "Sem nome"}
+                        {user.full_name || "Sem nome"}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {user.email}
@@ -196,11 +207,10 @@ export default function MembersTabClient({
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
                     <div className="font-medium">
-                      {member.name || "Sem nome"}
+                      {member.full_name || "Sem nome"}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {member.email || "Sem e-mail"} —{" "}
-                      <strong>{member.role}</strong>
+                      {member.email || "Sem e-mail"} — <strong>{member.role}</strong>
                     </div>
                   </div>
                   <Button

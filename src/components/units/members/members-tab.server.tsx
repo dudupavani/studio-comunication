@@ -4,12 +4,10 @@ import AddUnitMemberModal from "./add-unit-member-modal";
 
 export default async function MembersTabServer({
   orgId,
-  orgSlug,
   unitId,
   unitSlug,
 }: {
   orgId: string;
-  orgSlug: string;
   unitId: string;
   unitSlug: string;
 }) {
