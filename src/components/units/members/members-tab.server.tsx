@@ -36,7 +36,7 @@ export default async function MembersTabServer({
                 className="flex items-center justify-between rounded-md border p-3">
                 <div>
                   <p className="font-medium">
-                    {m.profiles?.name ?? "Sem nome"}
+                    {m.profiles?.full_name ?? "Sem nome"}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {m.profiles?.email}

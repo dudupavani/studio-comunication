@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -40,7 +41,7 @@ export default function AddUnitMemberModal({
   useEffect(() => {
     if (!open) return;
     setLoadingList(true);
-    fetch(`/api/orgs/${orgId}/available-members?unitId=${unitId}`)
+    fetch(`/api/units/${unitId}/available-members`)
       .then(async (r) => {
         const data = await r.json();
         if (!r.ok || !data.ok) {
@@ -56,12 +57,55 @@ export default function AddUnitMemberModal({
         });
       })
       .finally(() => setLoadingList(false));
-  }, [open, orgId, unitId, toast]);
+  }, [open, unitId, toast]);
 
-  function toggle(id: string) {
+    function toggle(id: string) {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+  }
+
+  // Função para buscar usuários com base em uma query
+  async function searchUsers(q: string) {
+    if (!q.trim()) {
+      // Se não houver query, carregamos os usuários disponíveis novamente
+      setLoadingList(true);
+      try {
+        const res = await fetch(`/api/units/${unitId}/available-members`);
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data?.error || `HTTP ${res.status}`);
+        }
+        setUsers(data.users as UserItem[]);
+      } catch (err: any) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar usuários",
+          description: err?.message ?? "Tente novamente.",
+        });
+      } finally {
+        setLoadingList(false);
+      }
+      return;
+    }
+
+    setLoadingList(true);
+    try {
+      const res = await fetch(`/api/units/${unitId}/search-users?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data?.error || `HTTP ${res.status}`);
+      }
+      setUsers(data.users as UserItem[]);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao buscar usuários",
+        description: err?.message ?? "Tente novamente.",
+      });
+    } finally {
+      setLoadingList(false);
+    }
   }
 
   async function handleSave() {
@@ -110,6 +154,14 @@ export default function AddUnitMemberModal({
         <DialogHeader>
           <DialogTitle>Adicionar membros à unidade</DialogTitle>
         </DialogHeader>
+
+        <div className="space-y-2">
+          <Input
+            placeholder="Buscar usuários..."
+            onChange={(e) => searchUsers(e.target.value)}
+            className="mb-2"
+          />
+        </div>
 
         <div className="space-y-2 max-h-[320px] overflow-y-auto">
           {loadingList && (
