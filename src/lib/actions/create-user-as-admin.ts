@@ -5,6 +5,8 @@ import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 import { isPlatformAdminById } from "@/lib/supabase/rpc";
+import { PLATFORM_ADMIN } from "@/lib/types/roles";
+import { safeDeleteUser } from "@/lib/auth/safe-delete";
 
 type AppRole = "platform_admin" | "org_admin" | "unit_master" | "unit_user";
 
@@ -38,9 +40,9 @@ export async function createUserAsAdmin(
 
   // Proteção: nunca aceitar platform_admin via app
   if (
-    (rawInput as any)?.role === "platform_admin" ||
-    (rawInput as any)?.org_role === "platform_admin" ||
-    (rawInput as any)?.unit_role === "platform_admin"
+    (rawInput as any)?.role === PLATFORM_ADMIN ||
+    (rawInput as any)?.org_role === PLATFORM_ADMIN ||
+    (rawInput as any)?.unit_role === PLATFORM_ADMIN
   ) {
     return {
       ok: false,
@@ -69,17 +71,17 @@ export async function createUserAsAdmin(
 
   // Define roles corretamente:
   const profileRole: AppRole =
-    input.org_role === "org_admin"
-      ? "org_admin"
-      : input.unit_role === "unit_master"
-      ? "unit_master"
-      : "unit_user";
+    input.org_role === ORG_ADMIN
+      ? ORG_ADMIN
+      : input.unit_role === UNIT_MASTER
+      ? UNIT_MASTER
+      : UNIT_USER;
 
   const orgMemberRole: AppRole =
-    input.org_role === "org_admin" ? "org_admin" : "unit_user";
+    input.org_role === ORG_ADMIN ? ORG_ADMIN : UNIT_USER;
 
   const unitMemberRole: AppRole =
-    input.unit_role === "unit_master" ? "unit_master" : "unit_user";
+    input.unit_role === UNIT_MASTER ? UNIT_MASTER : UNIT_USER;
 
   try {
     // 1) Criação/convite no Auth
@@ -193,16 +195,9 @@ export async function createUserAsAdmin(
     // Rollback seguro
     if (createdNow && createdUserId) {
       try {
-        // nunca delete platform_admin
-        const { data: prof } = await svc
-          .from("profiles")
-          .select("role")
-          .eq("id", createdUserId)
-          .maybeSingle();
-
-        const isPlat = (prof?.role ?? null) === "platform_admin";
-        if (!isPlat) {
-          await svc.auth.admin.deleteUser(createdUserId);
+        const del = await safeDeleteUser(createdUserId);
+        if (!del.ok) {
+          console.error("safeDeleteUser rollback falhou:", del.error);
         }
       } catch {
         // silencia rollback

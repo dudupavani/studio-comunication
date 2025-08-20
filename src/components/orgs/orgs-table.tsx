@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
 export default function OrgsTable({ initialOrgs }: { initialOrgs: Org[] }) {
   return (
@@ -24,6 +25,7 @@ export default function OrgsTable({ initialOrgs }: { initialOrgs: Org[] }) {
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Cidade</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -38,11 +40,16 @@ export default function OrgsTable({ initialOrgs }: { initialOrgs: Org[] }) {
                 </Link>
               </TableCell>
               <TableCell>{org.city ?? "-"}</TableCell>
+              <TableCell className="text-right">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/orgs/${org.slug}/settings`}>Entrar</Link>
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
           {initialOrgs.length === 0 && (
             <TableRow>
-              <TableCell colSpan={2} className="text-muted-foreground">
+              <TableCell colSpan={3} className="text-muted-foreground">
                 Você ainda não possui organizações.
               </TableCell>
             </TableRow>

@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { Profile } from "../types";
 import { updateProfileSelfRPC } from "@/lib/supabase/rpc";
+import type { PlatformRole, OrgRole, UnitRole, AppRole } from "@/lib/types/roles";
+import { PLATFORM_ROLES, ORG_ROLES, UNIT_ROLES, APP_ROLES } from "@/lib/types/roles";
+import { safeDeleteUser } from "@/lib/auth/safe-delete";
 
 /** Admin client (service_role) – usar só em Server Actions / Route Handlers */
 async function getAdminClient() {
@@ -34,13 +37,13 @@ async function isPlatformAdmin(): Promise<boolean> {
     .eq("id", uid)
     .maybeSingle();
 
-  return data?.global_role === "platform_admin";
+  return data?.global_role === PLATFORM_ADMIN;
 }
 
 /** Retorna { org_id, role } do usuário logado em org_members (modelo 1 usuário -> 1 org) */
 async function getMyOrgMembership(): Promise<{
   org_id: string;
-  role: string;
+  role: OrgRole;
 } | null> {
   const supabase = createClient();
   const uid = await getSessionUserId();
@@ -52,7 +55,7 @@ async function getMyOrgMembership(): Promise<{
     .eq("user_id", uid)
     .maybeSingle();
 
-  return data ?? null;
+  return data ? { org_id: data.org_id, role: data.role as OrgRole } : null;
 }
 
 /** Garante que quem está executando é platform_admin OU org_admin da org alvo */
@@ -63,7 +66,7 @@ async function assertCanManageOrg(targetOrgId: string) {
   ]);
   if (platform) return;
 
-  if (!me || me.org_id !== targetOrgId || me.role !== "org_admin") {
+  if (!me || me.org_id !== targetOrgId || me.role !== ORG_ADMIN) {
     throw new Error("Acesso negado: você não pode gerenciar esta organização.");
   }
 }
@@ -164,7 +167,7 @@ function normalizeRole(role: any): string {
   return s.replace(/^'+|'+$/g, "").replace(/::text$/i, "") || "user";
 }
 
-export async function getUsers(): Promise<Profile[]> {
+export async function getUsers(orgId?: string): Promise<Profile[]> {
   const supabaseAdmin = await getAdminClient();
 
   const { data: usersData, error } = await supabaseAdmin.auth.admin.listUsers();
@@ -179,12 +182,19 @@ export async function getUsers(): Promise<Profile[]> {
   console.log("IDs para busca de profiles:", ids); // Log dos IDs
 
   // Busca profiles relacionados
-  const { data: profiles, error: profilesErr } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("profiles")
     .select(
-      "id, full_name, phone, avatar_url, role, disabled, created_at" // Removida a coluna 'email'
+      "id, full_name, phone, avatar_url, role, disabled, created_at, org_id" // Adicionada a coluna 'org_id'
     )
     .in("id", ids);
+
+  // Filtra por orgId se fornecido
+  if (orgId) {
+    query = query.eq("org_id", orgId);
+  }
+
+  const { data: profiles, error: profilesErr } = await query;
 
   if (profilesErr) {
     console.error("Erro buscando profiles:", profilesErr); // Log detalhado do erro
@@ -281,8 +291,8 @@ export async function updateUser(formData: FormData) {
 
   const targetRole = normalizeRole(target.role);
   if (
-    targetRole === "platform_admin" ||
-    target.global_role === "platform_admin"
+    targetRole === PLATFORM_ADMIN ||
+    target.global_role === PLATFORM_ADMIN
   ) {
     return {
       error:
@@ -290,7 +300,11 @@ export async function updateUser(formData: FormData) {
     };
   }
 
-  if (role === "platform_admin") {
+  const DEFAULT_PLATFORM_ROLE: PlatformRole = PLATFORM_ADMIN;
+  const DEFAULT_ORG_ROLE: OrgRole = ORG_ADMIN;
+  const DEFAULT_UNIT_ROLE: UnitRole = UNIT_USER;
+  
+  if (role === PLATFORM_ADMIN) {
     return {
       error:
         "Atribuir role=platform_admin só é permitido manualmente pelo owner (postgres).",
@@ -330,8 +344,8 @@ export async function deleteUser(userId: string) {
 
   const targetRole = normalizeRole(target?.role);
   if (
-    targetRole === "platform_admin" ||
-    target?.global_role === "platform_admin"
+    targetRole === PLATFORM_ADMIN ||
+    target?.global_role === PLATFORM_ADMIN
   ) {
     return {
       error:
@@ -339,11 +353,8 @@ export async function deleteUser(userId: string) {
     };
   }
 
-  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
-  if (error) return { error: error.message };
-
-  // (opcional) também remover do profiles:
-  // await supabaseAdmin.from("profiles").delete().eq("id", userId);
+  const del = await safeDeleteUser(userId);
+  if (!del.ok) return { error: del.error };
 
   revalidatePath("/admin");
   revalidatePath("/admin/users");

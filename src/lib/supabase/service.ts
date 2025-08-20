@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 export function createServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -6,7 +7,7 @@ export function createServiceClient() {
   if (!url || !serviceKey) {
     throw new Error("Configuração Supabase ausente (URL ou SERVICE ROLE KEY).");
   }
-  return createClient(url, serviceKey, {
+  return createClient<Database>(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }

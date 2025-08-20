@@ -6,6 +6,9 @@ export const runtime = "nodejs";
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import type { PlatformRole } from "@/lib/types/roles";
+
+const PLATFORM_ADMIN: PlatformRole = "platform_admin";
 
 export default async function AdminLayout({
   children,
@@ -34,7 +37,7 @@ export default async function AdminLayout({
   }
 
   // Permite apenas platform_admin
-  if (profileData?.global_role !== "platform_admin") {
+  if (profileData?.global_role !== PLATFORM_ADMIN) {
     return redirect("/profile");
   }
 

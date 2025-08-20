@@ -1,18 +1,42 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-// import { getAuthContext } from "@/lib/auth-context";
-// import { isPlatformAdmin } from "@/lib/actions/admin";
+import { createServiceClient } from "@/lib/supabase/service";
+import { isPlatformAdmin } from "@/lib/auth/guards";
+import { PLATFORM_ADMIN } from "@/lib/types/roles";
 
 export const dynamic = "force-dynamic";
 
 type Params = { params: { id: string } };
 
 export async function POST(_req: Request, { params }: Params) {
+  const isAdmin = await isPlatformAdmin();
+  if (!isAdmin) {
+    return NextResponse.json(
+      { ok: false, error: "Acesso negado: apenas platform_admin." },
+      { status: 403 }
+    );
+  }
+
   const userId = params.id;
   if (!userId) {
     return NextResponse.json(
       { ok: false, error: "missing user id" },
       { status: 400 }
+    );
+  }
+
+  const svc = createServiceClient();
+
+  const { data: prof } = await svc
+    .from("profiles")
+    .select("role, global_role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (prof?.role === PLATFORM_ADMIN || prof?.global_role === PLATFORM_ADMIN) {
+    return NextResponse.json(
+      { ok: false, error: "Não é permitido alterar status de platform_admin." },
+      { status: 403 }
     );
   }
 

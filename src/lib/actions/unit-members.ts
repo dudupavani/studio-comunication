@@ -91,8 +91,8 @@ export async function addUnitMember(params: {
   }
 
   // Revalida as páginas que podem mostrar membros da unidade
-  revalidatePath(`/unidades/${params.unitSlug}`);
-  revalidatePath(`/unidades/${params.unitSlug}/members`);
+  revalidatePath(`/units/${params.unitSlug}`);
+  revalidatePath(`/units/${params.unitSlug}/members`);
 
   return {
     ok: true,
@@ -134,6 +134,6 @@ export async function removeUnitMember(params: {
   }
 
   // Revalida as páginas que podem mostrar membros da unidade
-  revalidatePath(`/unidades/${params.unitSlug}`);
-  revalidatePath(`/unidades/${params.unitSlug}/members`);
+  revalidatePath(`/units/${params.unitSlug}`);
+  revalidatePath(`/units/${params.unitSlug}/members`);
 }

@@ -28,7 +28,7 @@ export default async function UnitPage({
   const org = orgRes.data!;
 
   const unitRes = await getUnitBySlug(org.id, unitSlug);
-  if (!unitRes.ok) redirect(`/orgs/${org.slug}`);
+  if (!unitRes.ok) redirect(`/orgs/${orgSlug}`);
   const unit = unitRes.data!;
 
   // Server Action para salvar as configurações básicas
@@ -38,10 +38,10 @@ export default async function UnitPage({
 
     if (name && name !== unit.name) {
       await updateUnit(unit.id, name, {
-        revalidate: `/orgs/${org.slug}/${unit.slug}`,
+        revalidate: `/orgs/${orgSlug}/${unitSlug}`,
       });
     }
-    redirect(`/orgs/${org.slug}/${unit.slug}`);
+    redirect(`/orgs/${orgSlug}/${unitSlug}`);
   }
 
   return (
@@ -51,7 +51,7 @@ export default async function UnitPage({
           Organizações
         </Link>
         <span className="mx-2">/</span>
-        <Link href={`/orgs/${org.slug}`} className="hover:underline">
+        <Link href={`/orgs/${orgSlug}`} className="hover:underline">
           {org.name}
         </Link>
         <span className="mx-2">/</span>
@@ -65,7 +65,7 @@ export default async function UnitPage({
           <TabsList>
             <TabsTrigger value="settings">
               <Text size={16} />
-              <span className="ml-2">Configurações</span>
+              <span className="ml-2">Detalhes</span>
             </TabsTrigger>
             <TabsTrigger value="members">
               <Users size={16} />
@@ -73,7 +73,7 @@ export default async function UnitPage({
             </TabsTrigger>
           </TabsList>
 
-          {/* === Aba: Configurações === */}
+          {/* === Aba: Detalhes === */}
           <TabsContent value="settings" className="mt-6">
             <form action={saveSettingsAction} className="space-y-6 max-w-2xl">
               {/* Nome */}
@@ -136,9 +136,9 @@ export default async function UnitPage({
           <TabsContent value="members" className="mt-6">
             <MembersTabServer
               orgId={org.id}
-              orgSlug={org.slug}
+              orgSlug={orgSlug}
               unitId={unit.id}
-              unitSlug={unit.slug}
+              unitSlug={unitSlug}
             />
           </TabsContent>
         </Tabs>

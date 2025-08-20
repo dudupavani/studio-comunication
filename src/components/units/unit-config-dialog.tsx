@@ -3,7 +3,7 @@
 import FormDialog from "@/components/shared/form-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updateUnitDetailsAction } from "@/app/(app)/orgs/unit-actions";
+import { updateUnitDetailsAction } from "@/app/(app)/units/unit-actions";
 import { Pencil } from "lucide-react";
 import * as React from "react";
 

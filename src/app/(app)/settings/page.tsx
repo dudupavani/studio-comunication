@@ -14,7 +14,10 @@ export default async function SettingsPage() {
   const auth = await getAuthContext();
   if (process.env.NODE_ENV !== "production") {
     console.log("DEBUG /settings auth:", {
-      userId: auth?.userId, platformRole: auth?.platformRole, orgId: auth?.orgId, orgRole: auth?.orgRole
+      userId: auth?.userId,
+      platformRole: auth?.platformRole,
+      orgId: auth?.orgId,
+      orgRole: auth?.orgRole,
     });
   }
   if (!auth) redirect("/login");
@@ -32,9 +35,14 @@ export default async function SettingsPage() {
   const fullOrg = orgRes.data;
 
   // Guard: apenas org_admin daquela org (platform_admin opcional)
-  const canAdmin = auth.platformRole === "platform_admin" || await isOrgAdminFor(fullOrg.id, auth.userId);
+  const canAdmin =
+    auth.platformRole === "platform_admin" ||
+    (await isOrgAdminFor(fullOrg.id, auth.userId));
   if (process.env.NODE_ENV !== "production") {
-    console.log("DEBUG /settings guards:", { canPlatform: auth.platformRole === "platform_admin", canOrgAdmin: await isOrgAdminFor(fullOrg.id, auth.userId) });
+    console.log("DEBUG /settings guards:", {
+      canPlatform: auth.platformRole === "platform_admin",
+      canOrgAdmin: await isOrgAdminFor(fullOrg.id, auth.userId),
+    });
   }
   if (!canAdmin) redirect("/dashboard");
 
@@ -45,7 +53,7 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8">
       <h1 className="text-2xl font-semibold mb-1">Configuração</h1>
       <OrgConfigForm
         org={{

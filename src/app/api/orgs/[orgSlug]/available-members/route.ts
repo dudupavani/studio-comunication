@@ -10,8 +10,8 @@ export async function GET(
     const { orgSlug } = await ctx.params;
     
     // Precisamos obter o ID da organização a partir do slug
-    const supabase = createServiceClient();
-    const { data: org, error: orgError } = await supabase
+    const supabaseClient = createServiceClient();
+    const { data: org, error: orgError } = await supabaseClient
       .from("orgs")
       .select("id")
       .eq("slug", orgSlug)
@@ -35,10 +35,10 @@ export async function GET(
       );
     }
 
-    const supabase = createServiceClient();
+    const supabase2 = createServiceClient();
 
     // Busca todos os membros da unidade
-    const { data: unitMembers, error: unitError } = await supabase
+    const { data: unitMembers, error: unitError } = await supabase2
       .from("unit_members")
       .select("user_id")
       .eq("unit_id", unitId);
@@ -57,18 +57,18 @@ export async function GET(
     const unitUserIds = (unitMembers || []).map((m: any) => m.user_id);
 
     // Busca todos os membros da organização
-    const { data: orgMembers, error: orgError } = await supabase
+    const { data: orgMembers, error: orgMembersError } = await supabase2
       .from("org_members")
-      .select("user_id, profiles(name, email)")
+      .select("user_id, profiles:profiles!inner(id, full_name)")
       .eq("org_id", orgId);
 
-    if (orgError) {
+    if (orgMembersError) {
       console.error(
         "[/api/orgs/.../available-members] org_members ERROR:",
-        orgError
+        orgMembersError
       );
       return NextResponse.json(
-        { ok: false, error: orgError.message },
+        { ok: false, error: orgMembersError.message },
         { status: 500 }
       );
     }
@@ -78,8 +78,8 @@ export async function GET(
       .filter((item: any) => !unitUserIds.includes(item.user_id))
       .map((item: any) => ({
         id: item.user_id,
-        name: item.profiles?.name ?? null,
-        email: item.profiles?.email ?? null,
+        name: item.profiles?.full_name ?? null,
+        email: null, // Removido temporariamente
       }));
 
     return NextResponse.json({ ok: true, users });

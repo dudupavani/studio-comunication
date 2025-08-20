@@ -1,4 +1,4 @@
-// src/app/(app)/unidades/page.tsx
+// src/app/(app)/units/page.tsx
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
@@ -10,13 +10,13 @@ import { AddUnitModal } from "@/components/units/add-unit-modal";
 import UnitsTable from "@/components/units/units-table";
 import { isOrgAdminFor } from "@/lib/permissions-org";
 
-export default async function UnidadesPage() {
+export default async function UnitsPage() {
   if (process.env.NODE_ENV !== "production") {
-    console.log("DEBUG /unidades enter");
+    console.log("DEBUG /units enter");
   }
   const auth = await getAuthContext();
   if (process.env.NODE_ENV !== "production") {
-    console.log("DEBUG /unidades auth:", {
+    console.log("DEBUG /units auth:", {
       userId: auth?.userId, platformRole: auth?.platformRole, orgId: auth?.orgId, orgRole: auth?.orgRole
     });
   }
@@ -25,7 +25,7 @@ export default async function UnidadesPage() {
   // No modo single-org, usamos o orgId do contexto de autenticação
   const orgId = auth?.orgId;
   if (process.env.NODE_ENV !== "production") {
-    console.log("DEBUG /unidades orgId from auth:", orgId);
+    console.log("DEBUG /units orgId from auth:", orgId);
   }
   if (!orgId) redirect("/dashboard");
 
@@ -35,12 +35,17 @@ export default async function UnidadesPage() {
 
   const canAdmin = auth.platformRole === "platform_admin" || await isOrgAdminFor(fullOrg.id, auth.userId);
   if (process.env.NODE_ENV !== "production") {
-    console.log("DEBUG /unidades guards:", { canAdmin });
+    console.log("DEBUG /units guards:", { canAdmin });
   }
   if (!canAdmin) redirect("/dashboard");
 
   const unitsRes = await listUnits(fullOrg.id);
   const units = unitsRes.ok ? (unitsRes.data ?? []) : [];
+
+  // Se houver unidades, redirecionar para a primeira por padrão
+  if (units.length > 0) {
+    redirect(`/units/${units[0].slug}`);
+  }
 
   return (
     <div className="space-y-6">

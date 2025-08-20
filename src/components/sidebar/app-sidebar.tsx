@@ -2,10 +2,11 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
-import { Building2, ChartArea, UserCog } from "lucide-react";
+import { Building2, AppWindowMac, UserCog, Settings, Building, User } from "lucide-react";
 
 import {
   Sidebar,
@@ -18,7 +19,18 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-export default function AppSidebar() {
+type SidebarProps = {
+  activeOrgSlug?: string | null;
+};
+
+export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
+  const pathname = usePathname();
+  
+  // Extract orgSlug from pathname when in /orgs/[orgSlug]/*
+  const orgSlugMatch = pathname.match(/^\/orgs\/([^/]+)/);
+  const orgSlugFromPath = orgSlugMatch ? orgSlugMatch[1] : null;
+  const effectiveOrgSlug = activeOrgSlug || orgSlugFromPath || null;
+
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader>
@@ -46,22 +58,11 @@ export default function AppSidebar() {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start"
+                  className="w-full justify-start "
                   asChild>
                   <Link href="/dashboard">
-                    <ChartArea />
-                    Dashboard
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  asChild>
-                  <Link href="/orgs">
-                    <Building2 />
-                    Organizações
+                    <AppWindowMac />
+                    Painel
                   </Link>
                 </Button>
               </SidebarMenuItem>
@@ -72,7 +73,36 @@ export default function AppSidebar() {
                   asChild>
                   <Link href="/admin/users">
                     <UserCog />
-                    Gerenciar usuários
+                    <span className="ml-2">Gerenciar usuários</span>
+                  </Link>
+                </Button>
+              </SidebarMenuItem>
+              
+              {/* Módulos de organização — sempre visíveis; rotas estáveis cuidam do redirect */}
+              <SidebarMenuItem>
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link href="/settings">
+                    <Settings />
+                    <span className="ml-2">Configuração</span>
+                  </Link>
+                </Button>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link href="/units">
+                    <Building />
+                    <span className="ml-2">Unidades</span>
+                  </Link>
+                </Button>
+              </SidebarMenuItem>
+              
+              {/* Perfil do usuário */}
+              <SidebarMenuItem>
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link href="/profile">
+                    <User />
+                    <span className="ml-2">Perfil</span>
                   </Link>
                 </Button>
               </SidebarMenuItem>

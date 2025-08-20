@@ -394,7 +394,7 @@ export async function updateOrgDetails(
 
     revalidatePath("/orgs");
     revalidatePath("/settings");
-    revalidatePath("/unidades");
+    revalidatePath("/units");
 
     return { ok: true, data: data as OrgDetails };
   } catch (e: any) {

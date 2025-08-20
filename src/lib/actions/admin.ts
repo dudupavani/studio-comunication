@@ -2,6 +2,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import type { PlatformRole, AppRole, OrgRole, UnitRole } from "@/lib/types/roles";
+import { PLATFORM_ROLES, APP_ROLES } from "@/lib/types/roles";
+
+// Constante tipada para o papel global de plataforma
+const PLATFORM_ADMIN: PlatformRole = "platform_admin";
 
 export async function isPlatformAdmin(): Promise<boolean> {
   const supabase = await createClient();
@@ -27,5 +32,5 @@ export async function isPlatformAdmin(): Promise<boolean> {
     return false;
   }
 
-  return profile.global_role === "platform_admin";
+  return profile.global_role === PLATFORM_ADMIN;
 }

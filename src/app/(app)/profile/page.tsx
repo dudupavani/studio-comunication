@@ -1,26 +1,17 @@
 import { ProfileForm } from "@/components/profile/profile-form";
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import type { Profile } from "@/lib/types";
+import { getLoggedUserProfile } from "@/lib/queries/profile";
 
 export default async function ProfilePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, profile: profileData, error: profileError } = await getLoggedUserProfile();
 
   if (!user) {
     redirect("/login");
   }
 
-  const { data: profileData, error: profileError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
   if (profileError) {
-    console.error("Error fetching profile:", profileError);
+    // Error already logged by getLoggedUserProfile
     // Handle error, maybe redirect to an error page or show a message
   }
 

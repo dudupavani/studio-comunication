@@ -1,6 +1,7 @@
 // src/app/api/units/[unitId]/add-members/route.ts
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import type { UnitRole } from "@/lib/types/roles";
 
 export async function POST(
   req: Request,
@@ -18,11 +19,12 @@ export async function POST(
 
     const supabase = createServiceClient();
 
+    const DEFAULT_UNIT_ROLE: UnitRole = "unit_user";
     const rows = user_ids.map((user_id: string) => ({
       org_id,
       unit_id: params.unitId,
       user_id,
-      role: "unit_user",
+      role: DEFAULT_UNIT_ROLE,
     }));
 
     const { error } = await supabase.from("unit_members").insert(rows);

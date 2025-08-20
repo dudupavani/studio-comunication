@@ -20,7 +20,7 @@ export default async function EditUserPage({
 
   return (
     <div className="container flex flex-col pt-8 pb-12 px-8">
-      <div className="flex items-center gap-4 mb-6 self-start">
+      <div className="flex items-center gap-4 mb-8 self-start">
         <Button variant="outline" size="icon" asChild>
           <Link href="/admin/users">
             <ArrowLeft className="w-4 h-4" />
@@ -30,9 +30,6 @@ export default async function EditUserPage({
           <h1 className="text-2xl font-bold tracking-tight font-headline">
             Detalhes do usuário
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Editar dados e permissão de acesso.
-          </p>
         </div>
       </div>
 

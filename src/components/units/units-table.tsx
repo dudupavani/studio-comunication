@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/components/shared/confirm-dialog";
-import { deleteUnitAction } from "@/app/(app)/orgs/unit-actions";
+import { deleteUnitAction } from "@/app/(app)/units/unit-actions";
 
 type Props = {
   orgId: string;
@@ -37,11 +37,11 @@ export default function UnitsTable({ orgId, orgSlug, units }: Props) {
           {units.map((u) => (
             <TableRow key={u.id}>
               <TableCell className="font-medium">
-                <Link
-                  href={`/orgs/${orgSlug}/units/${u.slug}`}
-                  className="hover:underline">
-                  {u.name}
-                </Link>
+                                  <Link
+                    href={`/units/${u.slug}`}
+                    className="hover:underline">
+                    {u.name}
+                  </Link>
               </TableCell>
               <TableCell>{u.cnpj ?? "-"}</TableCell>
               <TableCell>{u.phone ?? "-"}</TableCell>
@@ -52,7 +52,7 @@ export default function UnitsTable({ orgId, orgSlug, units }: Props) {
                     variant="ghost"
                     size="icon"
                     aria-label="Editar unidade">
-                    <Link href={`/orgs/${orgSlug}/units/${u.slug}`}>
+                    <Link href={`/units/${u.slug}`}>
                       <Pencil className="h-4 w-4" />
                     </Link>
                   </Button>

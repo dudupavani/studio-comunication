@@ -10,10 +10,10 @@ export async function createUnitAction(orgId: string, name: string) {
   // (Opcional) hardening: validar orgId === auth.orgId
   const res = await createUnit(orgId, name);
   // Revalidate sempre a lista slugless
-  revalidatePath("/unidades");
+  revalidatePath("/units");
   // Se criou com sucesso e tem slug, ir direto para o detalhe slugless
   if (res?.ok && res.data?.slug) {
-    redirect(`/unidades/${res.data.slug}`);
+    redirect(`/units/${res.data.slug}`);
   }
   return res;
 }
@@ -23,7 +23,7 @@ export async function deleteUnitAction(unitId: string) {
   if (!auth?.userId) redirect("/login");
   const res = await deleteUnit(unitId);
   // Após excluir, volta para a lista slugless
-  revalidatePath("/unidades");
+  revalidatePath("/units");
   return res;
 }
 
@@ -48,7 +48,7 @@ export async function updateUnitDetailsAction(formData: FormData) {
   
   // Revalida a página da unidade
   if (res.ok && res.data?.slug) {
-    revalidatePath(`/unidades/${res.data.slug}`);
+    revalidatePath(`/units/${res.data.slug}`);
   }
   
   return res;

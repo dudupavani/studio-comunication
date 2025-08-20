@@ -1,68 +1,118 @@
 import { createClient } from "@/lib/supabase/server";
+import type { PlatformRole, OrgRole } from "@/lib/types/roles";
 
-/** Roles conforme nosso modelo */
-export type PlatformRole = "platform_admin" | null;
-export type OrgRole = "org_admin" | "unit_master" | "unit_user" | null;
+const PLATFORM_ADMIN: PlatformRole = "platform_admin";
 
-/** Retrato do usuário logado que o frontend/servidor vai consumir */
 export type AuthContext = {
   userId: string;
-  platformRole: PlatformRole; // vem de profiles.global_role
-  orgRole: OrgRole; // vem de org_members.role
-  orgId: string | null; // org do usuário (um usuário pertence a 1 org)
-  unitIds: string[]; // unidades em que o usuário está vinculado
+  platformRole: PlatformRole | null;
+  orgRole: OrgRole | null;
+  orgId?: string; // ⬅️ Novo: id da org ativa (se única)
+  unitIds: string[];
 };
 
-/**
- * Monta o contexto de autenticação do usuário logado:
- * - Lê o usuário da sessão
- * - Pega a role global (profiles.global_role)
- * - Pega a role e org (org_members)
- * - Pega as unidades (unit_members)
- */
 export async function getAuthContext(): Promise<AuthContext | null> {
   const supabase = createClient();
 
   // 1) Usuário logado
   const { data: userData, error: userErr } = await supabase.auth.getUser();
   if (userErr || !userData?.user) return null;
-  const uid = userData.user.id;
+  const user = userData.user;
 
-  // 2) Role global (platform_admin) em profiles.global_role
-  //    (usamos maybeSingle() para não estourar erro quando não existir)
-  const { data: profile } = await supabase
+  // 2) Perfil do usuário (única fonte de verdade para roles)
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("global_role")
-    .eq("id", uid)
+    .select("global_role, role")
+    .eq("id", user.id)
     .maybeSingle();
 
-  const platformRole: PlatformRole =
-    profile?.global_role === "platform_admin" ? "platform_admin" : null;
+  const isDev = process.env.NODE_ENV !== "production";
+  if (isDev) {
+    console.log("DEBUG getAuthContext — profile data:", {
+      userId: user.id,
+      profile,
+      profileError,
+    });
+  }
 
-  // 3) Role e organização do usuário em org_members
-  //    (modelo: 1 usuário pertence a 1 organização)
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id, role")
-    .eq("user_id", uid)
-    .maybeSingle();
+  // Trata ausência de profile sem derrubar o fluxo
+  let platformRole: PlatformRole | null = null;
+  let orgRole: OrgRole | null = null;
 
-  const orgId: string | null = orgMember?.org_id ?? null;
-  const orgRole: OrgRole = (orgMember?.role as OrgRole) ?? null;
+  if (profile) {
+    platformRole =
+      profile.global_role === PLATFORM_ADMIN ? PLATFORM_ADMIN : null;
 
-  // 4) Unidades do usuário (pode ter várias dentro da mesma org)
-  const { data: unitRows } = await supabase
-    .from("unit_members")
-    .select("unit_id")
-    .eq("user_id", uid);
+    // Se for platform_admin, não atribuimos orgRole
+    orgRole = platformRole ? null : (profile.role as OrgRole | null);
+  } else if (isDev) {
+    console.warn("getAuthContext — profile not found; using safe defaults", {
+      userId: user.id,
+    });
+  }
 
-  const unitIds = (unitRows ?? []).map((r) => r.unit_id as string);
+  // 3) Organização do usuário (se for única)
+  let orgId: string | undefined = undefined;
+  try {
+    const { data: orgRows, error: orgErr } = await supabase
+      .from("org_members")
+      .select("org_id")
+      .eq("user_id", user.id)
+      .limit(2);
 
-  return {
-    userId: uid,
+    if (orgErr) {
+      if (isDev) {
+        console.warn("getAuthContext — org_members error (ignored)", orgErr);
+      }
+    } else if (Array.isArray(orgRows) && orgRows.length === 1) {
+      orgId = orgRows[0].org_id as string;
+    }
+  } catch (e: any) {
+    if (isDev) {
+      console.warn("getAuthContext — org_members exception (ignored)", {
+        message: e?.message,
+      });
+    }
+  }
+
+  // 4) Unidades do usuário — blindado contra erros de RLS/policies
+  let unitIds: string[] = [];
+  try {
+    const { data: unitRows, error: unitErr } = await supabase
+      .from("unit_members")
+      .select("unit_id")
+      .eq("user_id", user.id);
+
+    if (unitErr) {
+      if (isDev) {
+        console.warn("getAuthContext — unit_members error (ignored)", {
+          code: unitErr.code,
+          message: unitErr.message,
+        });
+      }
+    } else {
+      unitIds = (unitRows ?? []).map((r) => r.unit_id as string);
+    }
+  } catch (e: any) {
+    if (isDev) {
+      console.warn("getAuthContext — unit_members exception (ignored)", {
+        message: e?.message,
+      });
+    }
+    unitIds = [];
+  }
+
+  const authContext: AuthContext = {
+    userId: user.id,
     platformRole,
     orgRole,
-    orgId,
+    orgId, // ⬅️ incluído no retorno
     unitIds,
   };
+
+  if (isDev) {
+    console.log("DEBUG getAuthContext — computed:", authContext);
+  }
+
+  return authContext;
 }

@@ -8,15 +8,15 @@ import {
   useEffect,
   useState,
 } from "react";
+import type { PlatformRole, OrgRole } from "@/lib/types/roles";
 
 /** Tipos do contexto (espelhando src/lib/auth-context.ts, mas sem importar server code) */
-export type PlatformRole = "platform_admin" | null;
-export type OrgRole = "org_admin" | "unit_master" | "unit_user" | null;
+export type { PlatformRole, OrgRole };
 
 export type AuthContextData = {
   userId: string;
-  platformRole: PlatformRole;
-  orgRole: OrgRole;
+  platformRole: PlatformRole | null;
+  orgRole: OrgRole | null;
   orgId: string | null;
   unitIds: string[];
 };
