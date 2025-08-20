@@ -2,6 +2,12 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import type { PlatformRole, OrgRole, UnitRole, AppRole } from "@/lib/types/roles";
+import { PLATFORM_ROLES, ORG_ROLES, UNIT_ROLES, APP_ROLES, ORG_ADMIN, UNIT_USER } from "@/lib/types/roles";
+
+const PLATFORM_ADMIN: PlatformRole = "platform_admin";
+const DEFAULT_ORG_ROLE: OrgRole = ORG_ADMIN;
+const DEFAULT_UNIT_ROLE: UnitRole = UNIT_USER;
 
 /** Tipos */
 export type Unit = {
@@ -44,7 +50,7 @@ async function isPlatformAdmin(): Promise<boolean> {
     .eq("id", uid)
     .maybeSingle();
 
-  return data?.global_role === "platform_admin";
+  return data?.global_role === PLATFORM_ADMIN;
 }
 
 /** Retorna { org_id, role } do usuário logado em org_members */
@@ -59,7 +65,7 @@ async function getMyOrgMembership() {
     .eq("user_id", uid)
     .maybeSingle();
 
-  return data as { org_id: string; role: string } | null;
+  return data as { org_id: string; role: OrgRole } | null;
 }
 
 /** Quem pode gerenciar unidades da org? platform_admin OU org_admin da org */
@@ -69,7 +75,7 @@ async function assertCanManageUnits(targetOrgId: string) {
     getMyOrgMembership(),
   ]);
   if (platform) return;
-  if (!me || me.org_id !== targetOrgId || me.role !== "org_admin") {
+  if (!me || me.org_id !== targetOrgId || me.role !== DEFAULT_ORG_ROLE) {
     throw new Error(
       "Acesso negado: você não pode gerenciar unidades desta organização."
     );
@@ -240,6 +246,53 @@ export async function updateUnit(
     return { ok: false, error: "Já existe uma unidade com esse nome." };
   } catch (e: any) {
     return { ok: false, error: e.message ?? "Falha ao atualizar unidade." };
+  }
+}
+
+/** Atualiza detalhes da unidade (endereço, CNPJ, telefone) */
+export async function updateUnitDetails(
+  unitId: string,
+  payload: Partial<Pick<Unit, "name" | "address" | "cnpj" | "phone">>,
+  opts?: { revalidate?: string }
+): Promise<Result<Unit>> {
+  try {
+    const supabase = createClient();
+
+    // pega org da unidade
+    const { data: current, error: readErr } = await supabase
+      .from("units")
+      .select("id, org_id")
+      .eq("id", unitId)
+      .single();
+
+    if (readErr || !current) {
+      return {
+        ok: false,
+        error: readErr?.message || "Unidade não encontrada.",
+      };
+    }
+
+    await assertCanManageUnits(current.org_id);
+
+    // Evita update vazio/crash
+    const toUpdate: Record<string, any> = {};
+    for (const k of ["name", "address", "cnpj", "phone"] as const) {
+      if (k in payload) (toUpdate as any)[k] = (payload as any)[k];
+    }
+
+    const { data, error } = await supabase
+      .from("units")
+      .update(toUpdate)
+      .eq("id", unitId)
+      .select("id, name, slug, org_id, address, cnpj, phone")
+      .single();
+
+    if (error) return { ok: false, error: error.message };
+
+    if (opts?.revalidate) revalidatePath(opts.revalidate);
+    return { ok: true, data: data as Unit };
+  } catch (e: any) {
+    return { ok: false, error: e.message ?? "Falha ao atualizar detalhes da unidade." };
   }
 }
 
