@@ -39,7 +39,10 @@ export default async function UsersPage() {
   const auth = await getAuthContext();
   if (process.env.NODE_ENV !== "production") {
     console.log("DEBUG /users auth:", {
-      userId: auth?.userId, platformRole: auth?.platformRole, orgId: auth?.orgId, orgRole: auth?.orgRole
+      userId: auth?.userId, 
+      platformRole: auth?.platformRole, 
+      orgId: auth?.orgId, 
+      orgRole: auth?.orgRole
     });
   }
   if (!auth) redirect("/");
@@ -54,9 +57,19 @@ export default async function UsersPage() {
   
   if (process.env.NODE_ENV !== "production") {
     console.log("DEBUG /users guards:", { canPlatform, canOrgAdmin });
+    console.log("DEBUG /users auth details:", { 
+      authPlatformRole: auth?.platformRole,
+      authOrgRole: auth?.orgRole,
+      authOrgId: auth?.orgId
+    });
   }
 
-  if (!canPlatform && !canOrgAdmin) redirect("/profile");
+  if (!canPlatform && !canOrgAdmin) {
+    if (process.env.NODE_ENV !== "production") {
+      console.log("DEBUG /users redirecting to /profile - no permissions");
+    }
+    redirect("/profile");
+  }
 
   // escolha do org escopo:
   const effectiveOrgId =
