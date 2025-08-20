@@ -4,6 +4,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import type { PlatformRole, OrgRole } from "@/lib/types/roles";
+import { PLATFORM_ADMIN, ORG_ADMIN } from "@/lib/types/roles";
+import { isPlatformAdmin } from "@/lib/auth/guards";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -48,37 +51,7 @@ async function getSessionUser() {
   return data.user;
 }
 
-/** Checa platform_admin de forma robusta */
-async function isPlatformAdmin(): Promise<boolean> {
-  try {
-    const supabase = createClient();
-    const user = await getSessionUser();
-    if (!user) return false;
-
-    const { data: rpcData, error: rpcErr } = await supabase.rpc(
-      "is_platform_admin"
-    );
-    if (!rpcErr && typeof rpcData === "boolean") return rpcData;
-
-    const { data: p1, error: e1 } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    if (!e1 && p1?.role === "platform_admin") return true;
-
-    const { data: p2, error: e2 } = await supabase
-      .from("profiles")
-      .select("global_role")
-      .eq("id", user.id)
-      .single();
-    if (!e2 && p2?.global_role === "platform_admin") return true;
-
-    return false;
-  } catch {
-    return false;
-  }
-}
+const DEFAULT_ORG_ROLE: OrgRole = ORG_ADMIN;
 
 async function isOrgAdmin(orgId: string) {
   const supabase = createClient();
@@ -93,7 +66,7 @@ async function isOrgAdmin(orgId: string) {
     .limit(1);
 
   if (error) return false;
-  return (data?.[0]?.role ?? "") === "org_admin";
+  return (data?.[0]?.role ?? "") === DEFAULT_ORG_ROLE;
 }
 
 /** Helper: select de detalhes com fallback se colunas não existirem */
@@ -159,9 +132,27 @@ export async function listMyOrgs(): Promise<Result<Org[]>> {
     const user = await getSessionUser();
     if (!user) return { ok: false, error: "Usuário não autenticado." };
 
+    // First, get the user's organization memberships
+    const { data: memberships, error: membershipsError } = await supabase
+      .from("org_members")
+      .select("org_id")
+      .eq("user_id", user.id);
+
+    if (membershipsError) return { ok: false, error: membershipsError.message };
+
+    // Extract org IDs
+    const orgIds = memberships.map(m => m.org_id);
+
+    // If no orgs, return empty array
+    if (orgIds.length === 0) {
+      return { ok: true, data: [] };
+    }
+
+    // Then get the org details
     const { data, error } = await supabase
       .from("orgs")
       .select("id, name, slug, city")
+      .in("id", orgIds)
       .order("name");
 
     if (error) return { ok: false, error: error.message };
@@ -300,6 +291,7 @@ export async function createOrg(name: string): Promise<Result<Org>> {
 
       if (!error && data) {
         revalidatePath("/orgs");
+        revalidatePath("/settings");
         return { ok: true, data: data as Org };
       }
       if (error && (error as any).code !== "23505") {
@@ -343,6 +335,7 @@ export async function updateOrg(
 
       if (!error && data) {
         revalidatePath("/orgs");
+        revalidatePath("/settings");
         return { ok: true, data: data as Org };
       }
       if (error && (error as any).code !== "23505") {
@@ -400,7 +393,8 @@ export async function updateOrgDetails(
     if (error) return { ok: false, error: error.message };
 
     revalidatePath("/orgs");
-    revalidatePath(`/orgs/${data.slug}`);
+    revalidatePath("/settings");
+    revalidatePath("/unidades");
 
     return { ok: true, data: data as OrgDetails };
   } catch (e: any) {
@@ -422,6 +416,7 @@ export async function deleteOrg(orgId: string): Promise<Result<null>> {
     if (error) return { ok: false, error: error.message };
 
     revalidatePath("/orgs");
+    revalidatePath("/settings");
     return { ok: true, data: null };
   } catch (e: any) {
     return { ok: false, error: e.message ?? "Falha ao excluir Organização." };
@@ -448,7 +443,7 @@ export async function getOrgAdmins(orgId: string): Promise<Result<OrgAdmin[]>> {
       `
       )
       .eq("org_id", orgId)
-      .eq("role", "org_admin");
+      .eq("role", DEFAULT_ORG_ROLE);
 
     if (error) return { ok: false, error: error.message };
 
