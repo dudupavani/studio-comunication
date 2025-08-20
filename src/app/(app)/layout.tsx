@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
+import { logError, toLoggableError } from "@/lib/log";
+import { getActiveOrgForSidebar } from "@/lib/active-org";
 
 import AppSidebar from "@/components/sidebar/app-sidebar";
 import {
@@ -20,6 +22,9 @@ export const dynamic = "force-dynamic";
 export default async function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  if (process.env.NODE_ENV !== "production") {
+    console.log("DEBUG AppLayout enter");
+  }
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,14 +38,39 @@ export default async function AppLayout({
     redirect("/auth/force-password");
   }
 
-  const { data: profileData, error: profileError } = await supabase
+  const { data: profileData, error: profileError, status } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (profileError) {
-    console.error("Error fetching profile in AppLayout:", profileError);
+  // Só loga quando houver erro de fato (com conteúdo)
+  const loggableError = toLoggableError(profileError);
+  const hasRealError = 
+    !!profileError && 
+    !!loggableError?.message && 
+    loggableError.message !== "Empty error object";
+    
+  if (hasRealError) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("DEBUG AppLayout profileError:", {
+        message: profileError?.message, code: profileError?.code
+      });
+    }
+    logError("Error fetching profile in AppLayout:", profileError);
+  }
+
+  // Caso comum: status 200/406 e profile === null => sem registro ou bloqueado por RLS
+  const noProfile = !profileData && !hasRealError;
+  if (noProfile) {
+    console.warn("AppLayout — profile not found or blocked by RLS", {
+      status,
+      userId: user.id,
+    });
+    // **Decisão de produto**:
+    //  - redirect para onboarding de perfil
+    //  - OU renderizar UI mínima que gere o profile
+    //  - OU tentar um fallback (ex.: rpc get_profile_self) — se já existir no projeto
   }
 
   const userProfile: Profile = {
@@ -53,9 +83,12 @@ export default async function AppLayout({
     created_at: user.created_at,
   };
 
+  // Get active organization for sidebar
+  const { auth, org } = await getActiveOrgForSidebar();
+
   return (
     <SidebarProvider defaultOpen>
-      <AppSidebar />
+      <AppSidebar activeOrgSlug={org?.slug ?? null} />
 
       <SidebarInset className="min-h-screen">
         {/* Topbar */}
