@@ -4,7 +4,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { revalidatePath } from "next/cache";
 import type { UnitRole } from "@/lib/types/roles";
-import { UNIT_ROLES } from "@/lib/types/roles";
+import { UNIT_ROLES, UNIT_USER } from "@/lib/types/roles";
 
 export type UnitMember = {
   user_id: string;
