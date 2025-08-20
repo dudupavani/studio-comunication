@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth-context";
-import { getActiveOrgForSidebar } from "@/lib/active-org";
 import { getOrgWithDetails } from "@/lib/actions/orgs";
 import { listUnits } from "@/lib/actions/units";
 import { createUnitAction } from "@/app/(app)/units/unit-actions";
@@ -23,13 +22,14 @@ export default async function UnidadesPage() {
   }
   if (!auth) redirect("/login");
 
-  const { org } = await getActiveOrgForSidebar();
+  // No modo single-org, usamos o orgId do contexto de autenticação
+  const orgId = auth?.orgId;
   if (process.env.NODE_ENV !== "production") {
-    console.log("DEBUG /unidades activeOrg:", { id: org?.id, slug: org?.slug, name: org?.name });
+    console.log("DEBUG /unidades orgId from auth:", orgId);
   }
-  if (!org) redirect("/dashboard");
+  if (!orgId) redirect("/dashboard");
 
-  const orgRes = await getOrgWithDetails(org.slug);
+  const orgRes = await getOrgWithDetails(orgId);
   if (!orgRes?.ok || !orgRes?.data) redirect("/dashboard");
   const fullOrg = orgRes.data;
 

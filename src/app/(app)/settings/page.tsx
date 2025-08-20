@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth-context";
-import { getActiveOrgForSidebar } from "@/lib/active-org";
 import { getOrgWithDetails, updateOrgDetails } from "@/lib/actions/orgs"; // ajuste se o nome for outro
 import OrgConfigForm from "@/components/orgs/org-config-form";
 import { isOrgAdminFor } from "@/lib/permissions-org";
@@ -20,14 +19,15 @@ export default async function SettingsPage() {
   }
   if (!auth) redirect("/login");
 
-  const { org } = await getActiveOrgForSidebar();
+  // No modo single-org, usamos o orgId do contexto de autenticação
+  const orgId = auth?.orgId;
   if (process.env.NODE_ENV !== "production") {
-    console.log("DEBUG /settings activeOrg:", { id: org?.id, slug: org?.slug, name: org?.name });
+    console.log("DEBUG /settings orgId from auth:", orgId);
   }
-  if (!org) redirect("/dashboard"); // sem org ativa, volta para o dashboard
+  if (!orgId) redirect("/dashboard"); // sem org ativa, volta para o dashboard
 
-  // Carrega os detalhes completos (reutilizando o helper por slug para não depender de ID no form)
-  const orgRes = await getOrgWithDetails(org.slug);
+  // Carrega os detalhes completos da organização
+  const orgRes = await getOrgWithDetails(orgId);
   if (!orgRes?.ok || !orgRes?.data) redirect("/dashboard");
   const fullOrg = orgRes.data;
 
