@@ -2,7 +2,6 @@
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth-context";
-import { getActiveOrgForSidebar } from "@/lib/active-org";
 import { getUnitBySlug } from "@/lib/actions/units"; // já existe no projeto
 import { getOrgWithDetails } from "@/lib/actions/orgs";
 import { isOrgAdminFor, isUnitMasterFor } from "@/lib/permissions-org";
@@ -12,10 +11,11 @@ export default async function UnidadeDetalhePage({ params }: { params: { unitSlu
   const auth = await getAuthContext();
   if (!auth) redirect("/login");
 
-  const { org } = await getActiveOrgForSidebar();
-  if (!org) redirect("/dashboard");
+  // No modo single-org, usamos o orgId do contexto de autenticação
+  const orgId = auth?.orgId;
+  if (!orgId) redirect("/dashboard");
 
-  const orgRes = await getOrgWithDetails(org.slug);
+  const orgRes = await getOrgWithDetails(orgId);
   if (!orgRes?.ok || !orgRes?.data) redirect("/dashboard");
   const fullOrg = orgRes.data;
 
