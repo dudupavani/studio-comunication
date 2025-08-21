@@ -1,4 +1,4 @@
-// src/components/admin/invite-magic-link.tsx
+// src/components/users/invite-magic-link.tsx
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";

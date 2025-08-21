@@ -1,4 +1,4 @@
-// src/components/admin/new-user-modal.tsx
+// src/components/users/new-user-modal.tsx
 "use client";
 
 import { useState } from "react";

@@ -37,7 +37,6 @@ export async function signUp(formData: FormData) {
       emailRedirectTo: `${origin}/auth/callback`,
       data: {
         full_name, // <-- IMPORTANTE: deve ser full_name
-        role: "user",
       },
     },
   });

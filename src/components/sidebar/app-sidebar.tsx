@@ -109,19 +109,6 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   </Link>
                 </Button>
               </SidebarMenuItem>
-
-              {/* Perfil do usuário */}
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  asChild>
-                  <Link href="/profile">
-                    <User />
-                    <span className="ml-2">Perfil</span>
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

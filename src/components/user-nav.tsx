@@ -16,6 +16,7 @@ import { signOut } from "@/lib/actions/auth";
 import Link from "next/link";
 import type { Profile } from "@/lib/types";
 import { LogOut, CircleUser } from "lucide-react";
+import { getRoleLabel } from "@/lib/role-labels";
 
 export function UserNav({ user }: { user: Profile }) {
   const getInitials = (name: string) => {
@@ -51,7 +52,7 @@ export function UserNav({ user }: { user: Profile }) {
           <DropdownMenuItem asChild>
             <Link href="/profile">Profile</Link>
           </DropdownMenuItem>
-          {(user.role === "admin" || user.role === "master" || user.role === "user") && (
+          {user.global_role && (
             <DropdownMenuItem asChild>
               <Link href="/users">Gerenciar Usuários</Link>
             </DropdownMenuItem>

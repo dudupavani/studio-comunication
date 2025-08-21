@@ -210,7 +210,7 @@ export default function MembersTabClient({
                       {member.full_name || "Sem nome"}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {member.email || "Sem e-mail"} — <strong>{member.role}</strong>
+                      {member.email || "Sem e-mail"} — <strong>{getRoleLabel(member.role)}</strong>
                     </div>
                   </div>
                   <Button

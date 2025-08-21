@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { PlatformRole, OrgRole } from "@/lib/types/roles";
+import type { User } from "@supabase/supabase-js";
 
 const PLATFORM_ADMIN: PlatformRole = "platform_admin";
 
@@ -9,6 +10,7 @@ export type AuthContext = {
   orgRole: OrgRole | null;
   orgId?: string; // ⬅️ Novo: id da org ativa (se única)
   unitIds: string[];
+  user?: User; // ⬅️ Adicionado: objeto do usuário completo
 };
 
 export async function getAuthContext(): Promise<AuthContext | null> {
@@ -19,10 +21,10 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   if (userErr || !userData?.user) return null;
   const user = userData.user;
 
-  // 2) Perfil do usuário (única fonte de verdade para roles)
+  // 2) Perfil do usuário (única fonte de verdade para global_role)
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("global_role, role")
+    .select("global_role")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -42,21 +44,18 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   if (profile) {
     platformRole =
       profile.global_role === PLATFORM_ADMIN ? PLATFORM_ADMIN : null;
-
-    // Se for platform_admin, não atribuimos orgRole
-    orgRole = platformRole ? null : (profile.role as OrgRole | null);
   } else if (isDev) {
     console.warn("getAuthContext — profile not found; using safe defaults", {
       userId: user.id,
     });
   }
 
-  // 3) Organização do usuário (se for única)
+  // 3) Organização do usuário (se for única) - buscar orgRole de org_members
   let orgId: string | undefined = undefined;
   try {
     const { data: orgRows, error: orgErr } = await supabase
       .from("org_members")
-      .select("org_id")
+      .select("org_id, role")
       .eq("user_id", user.id)
       .limit(2);
 
@@ -66,6 +65,10 @@ export async function getAuthContext(): Promise<AuthContext | null> {
       }
     } else if (Array.isArray(orgRows) && orgRows.length === 1) {
       orgId = orgRows[0].org_id as string;
+      // Apenas definir orgRole se não for platform admin
+      if (!platformRole && orgRows[0].role) {
+        orgRole = orgRows[0].role as OrgRole;
+      }
     }
   } catch (e: any) {
     if (isDev) {
@@ -108,6 +111,7 @@ export async function getAuthContext(): Promise<AuthContext | null> {
     orgRole,
     orgId, // ⬅️ incluído no retorno
     unitIds,
+    user, // ⬅️ incluído no retorno
   };
 
   if (isDev) {

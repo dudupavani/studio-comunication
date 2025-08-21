@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { UnitRole } from "@/lib/types/roles";
+import { getRoleLabel } from "@/lib/role-labels";
 
 const DEFAULT_UNIT_ROLE: UnitRole = "unit_user";
 
@@ -59,7 +60,7 @@ export default function MembersTab({
     loadMembers();
   }, [unitId]);
 
-  const handleRemove = async (userId: string) => {
+  const handleRemove = async function(userId: string) {
     const confirm = window.confirm("Remover este membro da unidade?");
     if (!confirm) return;
 
@@ -80,13 +81,13 @@ export default function MembersTab({
 
   const handleSearch = () => {
     startTransition(() => {
-      searchUsersNotInUnit(orgId, unitId, search).then((users) => {
-        setResults(users);
+      searchUsersNotInUnit(orgId, unitId, search).then((data) => {
+        setResults(data.users || []);
       });
     });
   };
 
-  const handleAdd = async (userId: string) => {
+  const handleAdd = async function(userId: string) {
     const result = await addUnitMember({
       orgId: orgId,
       unitId: unitId,
@@ -98,7 +99,7 @@ export default function MembersTab({
     if (result.ok) {
       setMembers((prev) => [...prev, result.data]);
       toast.success("Membro adicionado.");
-      setResults((prev) => prev.filter((u) => u.user_id !== userId));
+      setResults((prev) => prev.filter((u) => u.id !== userId));
     } else {
       toast.error(result.error || "Erro ao adicionar membro.");
     }
@@ -132,9 +133,9 @@ export default function MembersTab({
                   Nenhum resultado.
                 </p>
               ) : (
-                results.map((user) => (
+                results.map((user: any) => (
                   <div
-                    key={user.user_id}
+                    key={user.id}
                     className="flex items-center justify-between border p-2 rounded">
                     <div>
                       <div className="font-medium">
@@ -144,7 +145,7 @@ export default function MembersTab({
                         {user.email}
                       </div>
                     </div>
-                    <Button size="sm" onClick={() => handleAdd(user.user_id)}>
+                    <Button size="sm" onClick={() => handleAdd(user.id)}>
                       Adicionar
                     </Button>
                   </div>
@@ -169,7 +170,7 @@ export default function MembersTab({
                   <div className="font-medium">{member.full_name || "Sem nome"}</div>
                   <div className="text-sm text-muted-foreground">
                     {member.email || "Sem e-mail"} –{" "}
-                    <strong>{member.role}</strong>
+                    <strong>{getRoleLabel(member.role)}</strong>
                   </div>
                 </div>
                 <Button

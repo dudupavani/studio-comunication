@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { NewUserModal } from "@/components/admin/new-user-modal";
+import { NewUserModal } from "@/components/users/new-user-modal";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { permissions } from "@/lib/permissions";
 

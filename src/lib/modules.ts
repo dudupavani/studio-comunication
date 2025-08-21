@@ -3,6 +3,7 @@ export const MODULE_TITLES: Record<string, string> = {
   "/settings": "Configurações",
   "/profile": "Perfil do Usuário",
   "/units": "Unidades",
+  "/users": "Usuários",
   // adicione outros módulos aqui
 };
 

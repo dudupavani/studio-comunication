@@ -15,6 +15,7 @@ import { ArrowUpDown, Pencil } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { getRoleLabel } from "@/lib/role-labels";
 
 interface UsersTableProps {
   users: Profile[];
@@ -76,9 +77,9 @@ export function UsersTable({ users }: UsersTableProps) {
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </div>
           </TableHead>
-          <TableHead onClick={() => handleSort("role")}>
+          <TableHead onClick={() => handleSort("global_role")}>
             <div className="flex items-center cursor-pointer">
-              Role
+              Global Role
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </div>
           </TableHead>
@@ -109,8 +110,8 @@ export function UsersTable({ users }: UsersTableProps) {
             <TableCell>{user.email}</TableCell>
             <TableCell>{user.phone}</TableCell>
             <TableCell>
-              <Badge variant={user.role === "admin" ? "default" : "secondary"}>
-                {user.role}
+              <Badge variant={user.global_role === "platform_admin" ? "default" : "secondary"}>
+                {getRoleLabel(user.global_role)}
               </Badge>
             </TableCell>
             <TableCell>{new Date(user.created_at).toLocaleString()}</TableCell>

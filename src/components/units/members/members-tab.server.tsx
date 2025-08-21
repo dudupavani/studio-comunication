@@ -1,6 +1,7 @@
 // src/components/units/members/members-tab.server.tsx
 import { listUnitMembers } from "@/lib/actions/unit-members";
 import AddUnitMemberModal from "./add-unit-member-modal";
+import { getRoleLabel } from "@/lib/role-labels";
 
 export default async function MembersTabServer({
   orgId,
@@ -41,7 +42,7 @@ export default async function MembersTabServer({
                   </p>
                 </div>
                 <span className="text-xs rounded-full border px-2 py-1">
-                  {m.role}
+                  {getRoleLabel(m.role)}
                 </span>
               </li>
             ))}

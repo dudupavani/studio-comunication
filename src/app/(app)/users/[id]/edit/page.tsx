@@ -2,10 +2,11 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EditUserForm } from "@/components/admin/edit-user-form";
-import { getUserById } from "@/lib/actions/user"; // <-- SINGULAR
+import EditUserForm from "@/components/users/edit-user-form";
+import { getUserById, getUserRoles } from "@/lib/actions/user"; // <-- SINGULAR
 import { getAuthContext } from "@/lib/auth-context";
 import { canManageUsers } from "@/lib/permissions-users";
+import { listUnits } from "@/lib/actions/units";
 
 // Em versões recentes do Next, params pode ser Promise em Server Components
 export default async function EditUserPage({
@@ -23,10 +24,23 @@ export default async function EditUserPage({
     redirect("/profile");
   }
 
-  const user = await getUserById(id);
-  if (!user) {
+  // Verifica se tem orgId
+  if (!auth.orgId) {
+    redirect("/profile");
+  }
+
+  const [userResult, unitsResult, rolesResult] = await Promise.all([
+    getUserById(id),
+    listUnits(auth.orgId),
+    getUserRoles(id, auth.orgId)
+  ]);
+
+  if (!userResult) {
     notFound();
   }
+
+  const units = unitsResult.ok ? unitsResult.data : [];
+  const userRoles = rolesResult.ok ? rolesResult.data : { orgRole: null, unitRoles: [] };
 
   return (
     <div className="container flex flex-col pt-8 pb-12 px-8">
@@ -43,7 +57,15 @@ export default async function EditUserPage({
         </div>
       </div>
 
-      <EditUserForm user={user} />
+      <EditUserForm 
+        userId={id}
+        orgId={auth.orgId}
+        defaultName={userResult.full_name}
+        defaultEmail={userResult.email}
+        units={units}
+        currentOrgRole={userRoles.orgRole}
+        currentUnitRoles={userRoles.unitRoles}
+      />
     </div>
   );
 }
