@@ -118,7 +118,7 @@ export function UsersTable({ users }: UsersTableProps) {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => router.push(`/admin/users/${user.id}/edit`)}
+                onClick={() => router.push(`/users/${user.id}/edit`)}
               >
                 <Pencil className="h-4 w-4" />
               </Button>

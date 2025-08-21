@@ -34,7 +34,7 @@ export default function EnableUserDialog({
   async function onConfirm() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/users/${userId}/enable`, {
+      const res = await fetch(`/api/users/${userId}/enable`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",

@@ -42,10 +42,8 @@ export default async function UnitsPage() {
   const unitsRes = await listUnits(fullOrg.id);
   const units = unitsRes.ok ? (unitsRes.data ?? []) : [];
 
-  // Se houver unidades, redirecionar para a primeira por padrão
-  if (units.length > 0) {
-    redirect(`/units/${units[0].slug}`);
-  }
+  // Removido o redirecionamento automático para a primeira unidade
+  // Agora a página sempre mostra a lista de unidades
 
   return (
     <div className="space-y-6">

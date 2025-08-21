@@ -53,7 +53,7 @@ export function UserNav({ user }: { user: Profile }) {
           </DropdownMenuItem>
           {(user.role === "admin" || user.role === "master" || user.role === "user") && (
             <DropdownMenuItem asChild>
-              <Link href="/admin/users">Gerenciar Usuários</Link>
+              <Link href="/users">Gerenciar Usuários</Link>
             </DropdownMenuItem>
           )}
         </DropdownMenuGroup>

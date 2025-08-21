@@ -63,7 +63,7 @@ export function UserActions({ userId }: { userId: string }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <Link href={`/admin/users/${userId}/edit`}>
+            <Link href={`/users/${userId}/edit`}>
               <Pencil className="w-4 h-4 mr-2" />
               Edit
             </Link>

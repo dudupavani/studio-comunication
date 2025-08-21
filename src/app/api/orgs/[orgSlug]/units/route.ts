@@ -1,11 +1,21 @@
-// src/app/api/admin/orgs/[orgSlug]/units/route.ts
+// src/app/api/orgs/[orgSlug]/units/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthContext } from "@/lib/auth-context";
+import { canManageUsers } from "@/lib/permissions-users";
 
 export async function GET(
   _req: Request,
   { params }: { params: { orgSlug: string } }
 ) {
+  const auth = await getAuthContext();
+  if (!auth || !canManageUsers(auth)) {
+    return NextResponse.json(
+      { error: "Acesso negado: apenas platform_admin ou org_admin." },
+      { status: 403 }
+    );
+  }
+
   const supabase = await createClient();
   const orgId = params.orgSlug; // alias para manter legibilidade
 

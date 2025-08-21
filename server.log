@@ -1,0 +1,16 @@
+
+> nextn@0.1.0 dev /Users/yungas-mac002/Documents/DEV/studio
+> next dev --turbopack -p 9002
+
+   ▲ Next.js 15.3.3 (Turbopack)
+   - Local:        http://localhost:9002
+   - Network:      http://192.168.0.15:9002
+   - Environments: .env.local
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 2.2s
+ ✓ Ready in 7.7s
+[Redirect] HEAD /api/admin/users/invite-magic -> legacy admin path accessed
+[Redirect] HEAD /api/admin/users/123/disable -> legacy admin path accessed
+[?25h

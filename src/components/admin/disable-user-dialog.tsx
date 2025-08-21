@@ -34,7 +34,7 @@ export default function DisableUserDialog({
   async function onConfirm() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/users/${userId}/disable`, {
+      const res = await fetch(`/api/users/${userId}/disable`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",

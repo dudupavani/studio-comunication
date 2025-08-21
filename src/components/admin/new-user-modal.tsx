@@ -24,7 +24,7 @@ export default function NewUserModal() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/admin/users/invite-magic", {
+      const res = await fetch("/api/users/invite-magic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",

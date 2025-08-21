@@ -3,16 +3,18 @@ import { createClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
 import { isPlatformAdmin } from "@/lib/auth/guards";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
+import { getAuthContext } from "@/lib/auth-context";
+import { canManageUsers } from "@/lib/permissions-users";
 
 export const dynamic = "force-dynamic";
 
 type Params = { params: { id: string } };
 
 export async function POST(_req: Request, { params }: Params) {
-  const isAdmin = await isPlatformAdmin();
-  if (!isAdmin) {
+  const auth = await getAuthContext();
+  if (!auth || !canManageUsers(auth)) {
     return NextResponse.json(
-      { ok: false, error: "Acesso negado: apenas platform_admin." },
+      { ok: false, error: "Acesso negado: apenas platform_admin ou org_admin." },
       { status: 403 }
     );
   }
@@ -42,35 +44,32 @@ export async function POST(_req: Request, { params }: Params) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
   const admin = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
   });
 
-  // 1) Marca como habilitado no profiles
   const { error: updateErr } = await admin
     .from("profiles")
     .update({
-      disabled: false,
-      disabled_at: null,
-      // disabled_by: null
+      disabled: true,
+      disabled_at: new Date().toISOString(),
+      // disabled_by: auth?.userId ?? null
     })
     .eq("id", userId);
 
   if (updateErr) {
-    console.error("[enable] profiles update error:", updateErr);
+    console.error("[disable] profiles update error:", updateErr);
     return NextResponse.json(
       { ok: false, error: updateErr.message },
       { status: 500 }
     );
   }
 
-  // 2) (opcional) reflete no user_metadata
   const { error: metaErr } = await admin.auth.admin.updateUserById(userId, {
-    user_metadata: { disabled: false },
+    user_metadata: { disabled: true },
   });
   if (metaErr) {
-    console.warn("[enable] updateUserById meta warning:", metaErr);
+    console.warn("[disable] updateUserById meta warning:", metaErr);
   }
 
   return NextResponse.json({ ok: true });

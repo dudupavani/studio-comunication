@@ -325,9 +325,9 @@ export async function updateUser(formData: FormData) {
 
   if (profErr) return { error: profErr.message };
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/users");
-  revalidatePath(`/admin/users/${id}/edit`);
+  revalidatePath("/users");
+  revalidatePath("/users");
+  revalidatePath(`/users/${id}/edit`);
   return { error: null };
 }
 
@@ -356,8 +356,8 @@ export async function deleteUser(userId: string) {
   const del = await safeDeleteUser(userId);
   if (!del.ok) return { error: del.error };
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/users");
+  revalidatePath("/users");
+  revalidatePath("/users");
   return { error: null };
 }
 

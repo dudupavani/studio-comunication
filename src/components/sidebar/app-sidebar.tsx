@@ -6,7 +6,14 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
-import { Building2, AppWindowMac, UserCog, Settings, Building, User } from "lucide-react";
+import {
+  Building2,
+  AppWindowMac,
+  UserCog,
+  Settings,
+  Building,
+  User,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -25,7 +32,7 @@ type SidebarProps = {
 
 export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
   const pathname = usePathname();
-  
+
   // Extract orgSlug from pathname when in /orgs/[orgSlug]/*
   const orgSlugMatch = pathname.match(/^\/orgs\/([^/]+)/);
   const orgSlugFromPath = orgSlugMatch ? orgSlugMatch[1] : null;
@@ -71,16 +78,19 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   variant="ghost"
                   className="w-full justify-start"
                   asChild>
-                  <Link href="/admin/users">
+                  <Link href="/users">
                     <UserCog />
-                    <span className="ml-2">Gerenciar usuários</span>
+                    <span className="ml-2">Usuários</span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
-              
+
               {/* Módulos de organização — sempre visíveis; rotas estáveis cuidam do redirect */}
               <SidebarMenuItem>
-                <Button variant="ghost" className="w-full justify-start" asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  asChild>
                   <Link href="/settings">
                     <Settings />
                     <span className="ml-2">Configuração</span>
@@ -89,17 +99,23 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <Button variant="ghost" className="w-full justify-start" asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  asChild>
                   <Link href="/units">
                     <Building />
                     <span className="ml-2">Unidades</span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
-              
+
               {/* Perfil do usuário */}
               <SidebarMenuItem>
-                <Button variant="ghost" className="w-full justify-start" asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  asChild>
                   <Link href="/profile">
                     <User />
                     <span className="ml-2">Perfil</span>

@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth-context";
 import { getUsers } from "@/lib/actions/user";
-import { isPlatformAdmin, isOrgAdmin } from "@/lib/permissions";
+import { canManageUsers } from "@/lib/permissions-users";
 import NewUserModal from "@/components/admin/new-user-modal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -19,6 +19,7 @@ import Link from "next/link";
 import { Pencil, MoreHorizontal, Trash, UserX, UserCheck } from "lucide-react";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import { isPlatformAdminProfile } from "@/lib/ui/guards";
+import { isPlatformAdmin } from "@/lib/permissions";
 
 // ⬇️ dialogs (client components)
 import DisableUserDialog from "@/components/admin/disable-user-dialog";
@@ -52,19 +53,8 @@ export default async function UsersPage() {
     redirect("/auth/force-password");
   }
 
-  const canPlatform = isPlatformAdmin(auth);
-  const canOrgAdmin = isOrgAdmin(auth);
-  
-  if (process.env.NODE_ENV !== "production") {
-    console.log("DEBUG /users guards:", { canPlatform, canOrgAdmin });
-    console.log("DEBUG /users auth details:", { 
-      authPlatformRole: auth?.platformRole,
-      authOrgRole: auth?.orgRole,
-      authOrgId: auth?.orgId
-    });
-  }
-
-  if (!canPlatform && !canOrgAdmin) {
+  // 🔐 Verifica permissão para gerenciar usuários
+  if (!canManageUsers(auth)) {
     if (process.env.NODE_ENV !== "production") {
       console.log("DEBUG /users redirecting to /profile - no permissions");
     }
@@ -72,11 +62,12 @@ export default async function UsersPage() {
   }
 
   // escolha do org escopo:
+  const canPlatform = isPlatformAdmin(auth);
   const effectiveOrgId =
     // se platform_admin e tiver org "ativa" use-a, senão sem filtro
-    canPlatform && auth?.orgId ? auth.orgId :
+    canPlatform && auth?.orgId ? auth.orgId : 
     // se org_admin, use org do perfil
-    canOrgAdmin ? auth?.orgId ?? null : null;
+    auth?.orgId ?? null;
 
   const users = await getUsers(effectiveOrgId ?? undefined);
 
@@ -174,7 +165,7 @@ export default async function UsersPage() {
                         {/* Editar */}
                         <DropdownMenuItem asChild>
                           <Link
-                            href={`/admin/users/${user.id}/edit`}
+                            href={`/users/${user.id}/edit`}
                             className="flex items-center gap-2 cursor-pointer">
                             <Pencil className="h-4 w-4" />
                             Editar

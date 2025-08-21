@@ -1,13 +1,23 @@
-// src/app/api/admin/users/invite-magic/route.ts
+// src/app/api/users/invite-magic/route.ts
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
+import { getAuthContext } from "@/lib/auth-context";
+import { canManageUsers } from "@/lib/permissions-users";
 
 export const dynamic = "force-dynamic";
 
 const Body = z.object({ email: z.string().email() });
 
 export async function POST(request: Request) {
+  const auth = await getAuthContext();
+  if (!auth || !canManageUsers(auth)) {
+    return NextResponse.json(
+      { ok: false, error: "Acesso negado: apenas platform_admin ou org_admin." },
+      { status: 403 }
+    );
+  }
+
   const json = await request.json();
   const parsed = Body.safeParse(json);
   if (!parsed.success) {
