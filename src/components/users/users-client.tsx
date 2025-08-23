@@ -79,32 +79,43 @@ export default function UsersClient({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Mantemos apenas o estado do filtro (UI); a lista fica derivada (useMemo)
+  // Estado do filtro (UI)
   const [roleFilter, setRoleFilter] = useState<string | null>(
     initialRoleFilter
+  );
+  const [statusFilter, setStatusFilter] = useState<string>(
+    (searchParams.get("status") as string) || "all"
   );
 
   const filteredUsers = useMemo(() => {
     if (!Array.isArray(initialUsers)) return [];
-    if (!roleFilter || roleFilter === "all") return initialUsers;
 
-    return initialUsers.filter((user) => {
-      // Filtra por roles de unidade (como já fazia antes)
-      if (
-        roleFilter === "unit_master" &&
-        user.unit_roles?.includes("unit_master")
-      )
-        return true;
-      if (roleFilter === "unit_user" && user.unit_roles?.includes("unit_user"))
-        return true;
-      if (roleFilter === "no_role") {
-        // Usuários sem vínculo com unidades (não tem unit_roles)
-        // Podem ter global_role ou org_role
-        return !user.unit_roles || user.unit_roles.length === 0;
-      }
-      return false;
-    });
-  }, [initialUsers, roleFilter]);
+    // 1) Filtro por função (como já fazia antes)
+    let list = initialUsers;
+    if (roleFilter && roleFilter !== "all") {
+      list = list.filter((user) => {
+        const unitRoles: string[] = Array.isArray(user.unit_roles)
+          ? user.unit_roles
+          : [];
+
+        if (roleFilter === "org_admin") return user.org_role === "org_admin";
+        if (roleFilter === "org_master") return user.org_role === "org_master";
+        if (roleFilter === "unit_master")
+          return unitRoles.includes("unit_master");
+        if (roleFilter === "unit_user") return unitRoles.includes("unit_user");
+        return false;
+      });
+    }
+
+    // 2) Filtro por status
+    if (statusFilter === "active") {
+      list = list.filter((u) => !u?.disabled);
+    } else if (statusFilter === "disabled") {
+      list = list.filter((u) => !!u?.disabled);
+    }
+
+    return list;
+  }, [initialUsers, roleFilter, statusFilter]);
 
   const handleRoleChange = (value: string) => {
     setRoleFilter(value);
@@ -119,11 +130,25 @@ export default function UsersClient({
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+
+    // Atualiza a URL com o parâmetro de filtro
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== "all") {
+      params.set("status", value);
+    } else {
+      params.delete("status");
+    }
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
   return (
     <>
       {/* Header */}
       <div className="flex items-center justify-end mb-4 gap-6">
         <div className="flex items-center gap-2">
+          {/* Filtro por Função */}
           <Select value={roleFilter || "all"} onValueChange={handleRoleChange}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Filtrar por função" />
@@ -144,7 +169,20 @@ export default function UsersClient({
               </SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Filtro por Status */}
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filtrar por status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="active">Ativo</SelectItem>
+              <SelectItem value="disabled">Desativado</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
         <div>
           {(canPlatform || authContext?.orgRole === "org_admin") &&
             authContext?.orgId && <NewUserModal />}
@@ -252,7 +290,7 @@ export default function UsersClient({
                     {user?.disabled ? (
                       <Badge variant="destructive">Desativado</Badge>
                     ) : (
-                      <Badge variant="success">Ativo</Badge>
+                      <Badge variant="green">Ativo</Badge>
                     )}
                   </TableCell>
 

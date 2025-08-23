@@ -15,11 +15,11 @@ export default async function EditUserPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  
+
   // 🔐 Verifica permissões
   const auth = await getAuthContext();
   if (!auth) redirect("/");
-  
+
   if (!canManageUsers(auth)) {
     redirect("/profile");
   }
@@ -32,7 +32,7 @@ export default async function EditUserPage({
   const [userResult, unitsResult, rolesResult] = await Promise.all([
     getUserById(id),
     listUnits(auth.orgId),
-    getUserRoles(id, auth.orgId)
+    getUserRoles(id, auth.orgId),
   ]);
 
   if (!userResult) {
@@ -40,14 +40,16 @@ export default async function EditUserPage({
   }
 
   const units = unitsResult.ok ? unitsResult.data : [];
-  const userRoles = rolesResult.ok ? rolesResult.data : { orgRole: null, unitRoles: [] };
+  const userRoles = rolesResult.ok
+    ? rolesResult.data
+    : { orgRole: null, unitRoles: [] };
 
   return (
     <div className="container flex flex-col pt-8 pb-12 px-8">
       <div className="flex items-center gap-4 mb-8 self-start">
-        <Button variant="outline" size="icon" asChild>
+        <Button variant="outline" size="icon-sm" asChild>
           <Link href="/users">
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft />
           </Link>
         </Button>
         <div>
@@ -57,7 +59,7 @@ export default async function EditUserPage({
         </div>
       </div>
 
-      <EditUserForm 
+      <EditUserForm
         userId={id}
         orgId={auth.orgId}
         defaultName={userResult.full_name}
