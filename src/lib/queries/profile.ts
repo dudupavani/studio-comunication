@@ -16,7 +16,7 @@ export async function getLoggedUserProfile() {
 
   const { data: profile, error: profileError, status } = await supabase
     .from("profiles")
-    .select("id, full_name, role, org_id, phone, avatar_url, email, created_at")
+    .select("id, full_name, phone, avatar_url, email, created_at, global_role")
     .eq("id", user.id)
     .maybeSingle<Profile>();
 

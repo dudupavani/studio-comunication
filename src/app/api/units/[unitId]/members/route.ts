@@ -15,7 +15,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ unitId: string }>
 
   const { data, error } = await supabase
     .from("unit_members")
-    .select("id, user_id, role, created_at, profiles:profiles!unit_members_user_id_fkey(full_name,email,avatar_url)")
+    .select("id, user_id, created_at, profiles:profiles!unit_members_user_id_fkey(full_name,email,avatar_url)")
     .eq("unit_id", unitId)
     .order("created_at", { ascending: true });
 

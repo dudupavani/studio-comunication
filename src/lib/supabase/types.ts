@@ -86,7 +86,6 @@ export type Database = {
           full_name: string | null
           email: string | null
           avatar_url: string | null
-          role: Database["public"]["Enums"]["app_role"] | null
         }
         Insert: {
           id: string
@@ -95,7 +94,6 @@ export type Database = {
           full_name?: string | null
           email?: string | null
           avatar_url?: string | null
-          role?: Database["public"]["Enums"]["app_role"] | null
         }
         Update: {
           id?: string
@@ -104,7 +102,6 @@ export type Database = {
           full_name?: string | null
           email?: string | null
           avatar_url?: string | null
-          role?: Database["public"]["Enums"]["app_role"] | null
         }
         Relationships: [
           {
@@ -161,7 +158,6 @@ export type Database = {
           unit_id: string
           org_id: string
           user_id: string
-          role: Database["public"]["Enums"]["app_role"]
         }
         Insert: {
           id?: string
@@ -169,7 +165,6 @@ export type Database = {
           unit_id: string
           org_id: string
           user_id: string
-          role: Database["public"]["Enums"]["app_role"]
         }
         Update: {
           id?: string
@@ -177,7 +172,6 @@ export type Database = {
           unit_id?: string
           org_id?: string
           user_id?: string
-          role?: Database["public"]["Enums"]["app_role"]
         }
         Relationships: [
           {

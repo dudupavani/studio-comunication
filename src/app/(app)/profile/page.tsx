@@ -21,7 +21,6 @@ export default async function ProfilePage() {
     full_name: profileData?.full_name || user.user_metadata.name || "",
     phone: profileData?.phone || "",
     avatar_url: profileData?.avatar_url || "",
-    role: user.user_metadata.role || "user",
     created_at: user.created_at,
   };
 

@@ -31,11 +31,11 @@ export async function POST(_req: Request, { params }: Params) {
 
   const { data: prof } = await svc
     .from("profiles")
-    .select("role, global_role")
+    .select("global_role")
     .eq("id", userId)
     .maybeSingle();
 
-  if (prof?.role === PLATFORM_ADMIN || prof?.global_role === PLATFORM_ADMIN) {
+  if (prof?.global_role === PLATFORM_ADMIN) {
     return NextResponse.json(
       { ok: false, error: "Não é permitido alterar status de platform_admin." },
       { status: 403 }

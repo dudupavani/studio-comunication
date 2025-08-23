@@ -17,7 +17,10 @@ export default async function UnitsPage() {
   const auth = await getAuthContext();
   if (process.env.NODE_ENV !== "production") {
     console.log("DEBUG /units auth:", {
-      userId: auth?.userId, platformRole: auth?.platformRole, orgId: auth?.orgId, orgRole: auth?.orgRole
+      userId: auth?.userId,
+      platformRole: auth?.platformRole,
+      orgId: auth?.orgId,
+      orgRole: auth?.orgRole,
     });
   }
   if (!auth) redirect("/login");
@@ -33,26 +36,32 @@ export default async function UnitsPage() {
   if (!orgRes?.ok || !orgRes?.data) redirect("/dashboard");
   const fullOrg = orgRes.data;
 
-  const canAdmin = auth.platformRole === "platform_admin" || await isOrgAdminFor(fullOrg.id, auth.userId);
+  const canAdmin =
+    auth.platformRole === "platform_admin" ||
+    (await isOrgAdminFor(fullOrg.id, auth.userId));
   if (process.env.NODE_ENV !== "production") {
     console.log("DEBUG /units guards:", { canAdmin });
   }
   if (!canAdmin) redirect("/dashboard");
 
   const unitsRes = await listUnits(fullOrg.id);
-  const units = unitsRes.ok ? (unitsRes.data ?? []) : [];
+  const units = unitsRes.ok ? unitsRes.data ?? [] : [];
 
   // Removido o redirecionamento automático para a primeira unidade
   // Agora a página sempre mostra a lista de unidades
 
   return (
-    <div className="space-y-6">
-      <section className="flex justify-between items-center mb-2">
+    <div className="p-6">
+      <section className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-semibold">
           Unidades{" "}
           <span className="font-light text-gray-500">({units.length})</span>
         </h1>
-        <AddUnitModal orgId={fullOrg.id} slug={fullOrg.slug} action={createUnitAction} />
+        <AddUnitModal
+          orgId={fullOrg.id}
+          slug={fullOrg.slug}
+          action={createUnitAction}
+        />
       </section>
 
       <UnitsTable units={units} orgSlug={fullOrg.slug} orgId={fullOrg.id} />

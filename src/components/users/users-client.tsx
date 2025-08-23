@@ -1,7 +1,7 @@
 // src/components/users/users-client.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -39,23 +39,28 @@ import EnableUserDialog from "@/components/users/enable-user-dialog";
 // Função para determinar a role a ser exibida com base na prioridade
 function getDisplayRole(user: any): string {
   // 1. profile.global_role (se não for null)
-  if (user.global_role && user.global_role !== "" && user.global_role !== null) {
+  if (
+    user.global_role &&
+    user.global_role !== "" &&
+    user.global_role !== null
+  ) {
     const label = getRoleLabel(user.global_role);
     return label;
   }
-
   // 2. org_members.role (quando existir)
   if (user.org_role && user.org_role !== "" && user.org_role !== null) {
     const label = getRoleLabel(user.org_role);
     return label;
   }
-
-  // 3. unit_members.role (quando existir)
-  if (user.unit_roles && user.unit_roles.length > 0 && user.unit_roles[0] !== null) {
+  // 3. unit_roles (quando existir) - papel efetivo vem de org_members.role
+  if (
+    user.unit_roles &&
+    user.unit_roles.length > 0 &&
+    user.unit_roles[0] !== null
+  ) {
     const label = getRoleLabel(user.unit_roles[0]); // Pega o primeiro role de unidade
     return label;
   }
-
   // Fallback
   return "-";
 }
@@ -73,36 +78,33 @@ export default function UsersClient({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [users, setUsers] = useState(initialUsers);
+
+  // Mantemos apenas o estado do filtro (UI); a lista fica derivada (useMemo)
   const [roleFilter, setRoleFilter] = useState<string | null>(
     initialRoleFilter
   );
 
-  // Função para filtrar usuários por role
-  const filterUsersByRole = (usersToFilter: any[], role: string | null) => {
-    if (!role || role === "all") return usersToFilter;
+  const filteredUsers = useMemo(() => {
+    if (!Array.isArray(initialUsers)) return [];
+    if (!roleFilter || roleFilter === "all") return initialUsers;
 
-    return usersToFilter.filter((user) => {
-      // Verifica se o usuário tem o role específico
-      if (role === "unit_master" && user.unit_roles?.includes("unit_master"))
+    return initialUsers.filter((user) => {
+      // Filtra por roles de unidade (como já fazia antes)
+      if (
+        roleFilter === "unit_master" &&
+        user.unit_roles?.includes("unit_master")
+      )
         return true;
-      if (role === "unit_user" && user.unit_roles?.includes("unit_user"))
+      if (roleFilter === "unit_user" && user.unit_roles?.includes("unit_user"))
         return true;
-      if (role === "no_role") {
+      if (roleFilter === "no_role") {
         // Usuários sem vínculo com unidades (não tem unit_roles)
-        // Mas pode ter global_role ou org_role
+        // Podem ter global_role ou org_role
         return !user.unit_roles || user.unit_roles.length === 0;
       }
-
       return false;
     });
-  };
-
-  // Atualiza os usuários filtrados quando o filtro muda
-  useEffect(() => {
-    const filtered = filterUsersByRole(initialUsers, roleFilter);
-    setUsers(filtered);
-  }, [roleFilter, initialUsers]);
+  }, [initialUsers, roleFilter]);
 
   const handleRoleChange = (value: string) => {
     setRoleFilter(value);
@@ -123,14 +125,23 @@ export default function UsersClient({
       <div className="flex items-center justify-end mb-4 gap-6">
         <div className="flex items-center gap-2">
           <Select value={roleFilter || "all"} onValueChange={handleRoleChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filtrar por role" />
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filtrar por função" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas as funções</SelectItem>
-              <SelectItem value="no_role">Matriz</SelectItem>
-              <SelectItem value="unit_master">Unid. Master</SelectItem>
-              <SelectItem value="unit_user">Unid. User</SelectItem>
+              <SelectItem value="org_admin">
+                {getRoleLabel("org_admin")}
+              </SelectItem>
+              <SelectItem value="org_master">
+                {getRoleLabel("org_master")}
+              </SelectItem>
+              <SelectItem value="unit_master">
+                {getRoleLabel("unit_master")}
+              </SelectItem>
+              <SelectItem value="unit_user">
+                {getRoleLabel("unit_user")}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -149,33 +160,35 @@ export default function UsersClient({
               <TableHead className="px-4 py-3">Função</TableHead>
               <TableHead className="px-4 py-3">Unidade</TableHead>
               <TableHead className="px-4 py-3">Registro</TableHead>
+              <TableHead className="px-4 py-3">Status</TableHead>
               <TableHead className="px-4 py-3 text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="px-4 py-6 text-center text-muted-foreground">
                   Nenhum usuário encontrado.
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user: any) => (
+              filteredUsers.map((user: any) => (
                 <TableRow key={user.id} className="border-t">
+                  {/* Nome / Email */}
                   <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-4">
                       {user.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={user.avatar_url}
-                          alt={user.full_name || "Avatar"}
+                          alt={user.full_name || user.email || "Avatar"}
                           className="h-8 w-8 rounded-full"
                         />
                       ) : (
                         <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
-                          {(user.full_name ?? "NN")
+                          {(user.full_name ?? user.email ?? "NN")
                             .split(" ")
                             .map((n: string) => n[0])
                             .join("")
@@ -194,25 +207,25 @@ export default function UsersClient({
                     </div>
                   </TableCell>
 
+                  {/* Função (role) */}
                   <TableCell className="px-4 py-3">
                     <Badge
                       variant={
-                        user?.disabled
-                          ? "destructive"
-                          : user.global_role === PLATFORM_ADMIN
+                        user.global_role === PLATFORM_ADMIN
                           ? "default"
                           : "secondary"
                       }>
-                      {user?.disabled ? "Desativado" : getDisplayRole(user)}
+                      {getDisplayRole(user)}
                     </Badge>
                   </TableCell>
 
+                  {/* Unidade */}
                   <TableCell className="px-4 py-3">
                     {user.unit_names && user.unit_names.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
                         {user.unit_names.map(
                           (unitName: string, index: number) => (
-                            <span>{unitName}</span>
+                            <span key={`${unitName}-${index}`}>{unitName}</span>
                           )
                         )}
                       </div>
@@ -221,16 +234,29 @@ export default function UsersClient({
                     )}
                   </TableCell>
 
+                  {/* Registro */}
                   <TableCell className="px-4 py-3 text-sm text-primary">
                     {user.created_at
                       ? format(
                           new Date(user.created_at),
                           "dd/MM/yyyy - HH:mm",
-                          { locale: ptBR }
+                          {
+                            locale: ptBR,
+                          }
                         )
                       : "-"}
                   </TableCell>
 
+                  {/* Status */}
+                  <TableCell className="px-4 py-3">
+                    {user?.disabled ? (
+                      <Badge variant="destructive">Desativado</Badge>
+                    ) : (
+                      <Badge variant="success">Ativo</Badge>
+                    )}
+                  </TableCell>
+
+                  {/* Ações */}
                   <TableCell className="px-4 py-3 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

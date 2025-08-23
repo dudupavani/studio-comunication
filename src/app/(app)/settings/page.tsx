@@ -53,8 +53,8 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-semibold mb-1">Configuração</h1>
+    <div className="p-4 md:p-8">
+      <h1 className="text-2xl font-semibold mb-8">Dados da organização</h1>
       <OrgConfigForm
         org={{
           id: fullOrg.id,

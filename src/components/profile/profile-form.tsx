@@ -140,7 +140,7 @@ export function ProfileForm({ user }: { user: Profile }) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@example.com" {...field} />
+                    <Input placeholder="name@example.com" {...field} readOnly disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

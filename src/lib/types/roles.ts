@@ -17,8 +17,8 @@ export const APP_ROLES = [
 ] as const;
 
 export type PlatformRole = (typeof PLATFORM_ROLES)[number]; // "platform_admin"
-export type OrgRole = (typeof ORG_ROLES)[number];           // "org_admin" | "org_master"
-export type UnitRole = (typeof UNIT_ROLES)[number];         // "unit_master" | "unit_user"
+export type OrgRole = (typeof ORG_ROLES)[number]; // "org_admin" | "org_master"
+export type UnitRole = (typeof UNIT_ROLES)[number]; // "unit_master" | "unit_user"
 export type AppRole = (typeof APP_ROLES)[number];
 
 // Helpers de validação tipados (opcionalmente úteis):

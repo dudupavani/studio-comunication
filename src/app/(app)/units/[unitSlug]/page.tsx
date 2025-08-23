@@ -37,9 +37,9 @@ export default async function UnitDetailPage({
 
   return (
     <div className="p-8">
-      <div className="mb-6">
+      <div className="mb-6 space-y-1">
         <h1 className="text-xl font-bold">{unit.name}</h1>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Gerencie os detalhes e membros da unidade.
         </p>
       </div>

@@ -127,7 +127,7 @@ export default async function UnitPage({
               </div>
 
               <div className="flex justify-end">
-                <Button type="submit">Salvar alterações</Button>
+                <Button type="submit">Salvar</Button>
               </div>
             </form>
           </TabsContent>

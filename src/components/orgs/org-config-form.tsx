@@ -93,7 +93,7 @@ export default function OrgConfigForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 max-w-2xl">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-xl">
       <div className="grid gap-2">
         <Label htmlFor="name">Nome</Label>
         <Input
@@ -166,7 +166,7 @@ export default function OrgConfigForm({
 
       <div>
         <Button type="submit" disabled={!canEdit || pending}>
-          {pending ? "Salvando..." : "Salvar alterações"}
+          {pending ? "Salvando..." : "Salvar"}
         </Button>
       </div>
     </form>

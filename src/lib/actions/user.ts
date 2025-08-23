@@ -5,8 +5,8 @@ import { revalidatePath } from "next/cache";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { Profile } from "../types";
 import { updateProfileSelfRPC } from "@/lib/supabase/rpc";
-import type { PlatformRole, OrgRole, UnitRole, AppRole } from "@/lib/types/roles";
-import { PLATFORM_ROLES, ORG_ROLES, UNIT_ROLES, APP_ROLES } from "@/lib/types/roles";
+import type { PlatformRole, OrgRole } from "@/lib/types/roles";
+import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import { safeDeleteUser } from "@/lib/auth/safe-delete";
 
 /** Admin client (service_role) – usar só em Server Actions / Route Handlers */
@@ -66,7 +66,7 @@ async function assertCanManageOrg(targetOrgId: string) {
   ]);
   if (platform) return;
 
-  if (!me || me.org_id !== targetOrgId || me.role !== ORG_ADMIN) {
+  if (!me || me.org_id !== targetOrgId || me.role !== "org_admin") {
     throw new Error("Acesso negado: você não pode gerenciar esta organização.");
   }
 }
@@ -76,7 +76,6 @@ export async function updateUserProfile(formData: FormData) {
   const supabase = createClient();
 
   const name = (formData.get("name") as string) ?? null;
-  const email = (formData.get("email") as string) ?? null;
   const phone = (formData.get("phone") as string) ?? null;
   const avatarInput = formData.get("avatar");
 
@@ -116,18 +115,16 @@ export async function updateUserProfile(formData: FormData) {
     avatar_url = null; // sinaliza remoção
   }
 
-  // 2) Atualizar dados no Auth (nome/avatar/email)
+  // 2) Atualizar dados no Auth (nome/avatar)
   const authPayload: {
     data: { name?: string; avatar_url?: string | null };
-    email?: string;
   } = { data: {} };
 
   if (name) authPayload.data.name = name;
   if (typeof avatar_url !== "undefined")
     authPayload.data.avatar_url = avatar_url;
-  if (email) authPayload.email = email;
 
-  if (Object.keys(authPayload.data).length || authPayload.email) {
+  if (Object.keys(authPayload.data).length) {
     const { error: authUpdateErr } = await supabase.auth.updateUser(
       authPayload
     );
@@ -160,84 +157,154 @@ export async function updateUserProfile(formData: FormData) {
 
 /* ===================== ADMIN: LIST/GET ===================== */
 
-export async function getUsers(orgId?: string): Promise<(Profile & { 
-  org_role?: string; 
-  unit_roles?: string[]; 
-  unit_names?: string[]; 
-  disabled?: boolean 
-})[]> {
+export async function getUsers(
+  orgId?: string,
+  opts?: {
+    page?: number;
+    pageSize?: number;
+    orderBy?: string;
+    orderDir?: "asc" | "desc";
+  }
+): Promise<
+  (Profile & {
+    org_role?: string;
+    unit_roles?: string[];
+    unit_names?: string[];
+    disabled?: boolean;
+  })[]
+> {
+  console.time("getUsers");
+
+  // Default options
+  const options = {
+    page: opts?.page || 1,
+    pageSize: opts?.pageSize || 20,
+    orderBy: opts?.orderBy || "full_name",
+    orderDir: opts?.orderDir || "asc",
+  };
+
   const supabaseAdmin = await getAdminClient();
 
-  const { data: usersData, error } = await supabaseAdmin.auth.admin.listUsers();
-  if (error || !usersData) {
-    console.error("Error fetching users:", error);
+  // 1) org_members - buscar user_id e role (pode ser filtrado pela org)
+  let orgMems: { user_id: string; role: string }[] | null = null;
+  let orgMemsError: any = null;
+
+  if (orgId) {
+    const { data, error } = await supabaseAdmin
+      .from("org_members")
+      .select("user_id, role")
+      .eq("org_id", orgId);
+
+    orgMems = data || null;
+    orgMemsError = error;
+  } else {
+    const { data, error } = await supabaseAdmin
+      .from("org_members")
+      .select("user_id, role");
+
+    orgMems = data || null;
+    orgMemsError = error;
+  }
+
+  console.debug("getUsers — org_members count:", orgMems?.length ?? 0);
+
+  if (orgMemsError) {
+    console.error("Erro buscando org_members:", orgMemsError);
+    console.timeEnd("getUsers");
     return [];
   }
 
-  const ids = usersData.users.map((u) => u.id);
-  if (ids.length === 0) return [];
+  const allUserIds = orgMems ? orgMems.map((m) => m.user_id) : [];
 
-  console.log("IDs para busca de profiles:", ids); // Log dos IDs
+  // Se temos orgId mas não temos membros, retornar array vazio
+  if (orgId && allUserIds.length === 0) {
+    console.debug("getUsers — profiles count:", 0);
+    console.timeEnd("getUsers");
+    return [];
+  }
 
-  // Busca profiles relacionados
-  let query = supabaseAdmin
+  // 2) profiles — paginar aqui e só aqui
+  const from = (options.page - 1) * options.pageSize;
+  const to = from + options.pageSize - 1;
+
+  let profilesQuery = supabaseAdmin
     .from("profiles")
     .select(
-      "id, full_name, phone, avatar_url, global_role, disabled, created_at, org_id" // Adicionada a coluna 'org_id'
+      "id, full_name, avatar_url, phone, global_role, created_at, disabled, disabled_at"
     )
-    .in("id", ids);
+    .order(options.orderBy, { ascending: options.orderDir === "asc" })
+    .range(from, to);
 
-  // Filtra por orgId se fornecido
-  if (orgId) {
-    query = query.eq("org_id", orgId);
+  if (allUserIds.length > 0) {
+    profilesQuery = profilesQuery.in("id", allUserIds);
   }
 
-  const { data: profiles, error: profilesErr } = await query;
+  const { data: profiles, error: profilesError } = await profilesQuery;
 
-  if (profilesErr) {
-    console.error("Erro buscando profiles:", profilesErr); // Log detalhado do erro
+  console.debug("getUsers — profiles count:", profiles?.length ?? 0);
+
+  if (profilesError) {
+    console.error("Erro buscando profiles:", profilesError);
+    console.timeEnd("getUsers");
+    return [];
   }
 
-  // Buscar org_roles para todos os usuários
-  const { data: orgMembersData, error: orgMembersErr } = await supabaseAdmin
-    .from("org_members")
-    .select("user_id, role")
-    .in("user_id", ids);
+  const pageUserIds = Array.isArray(profiles)
+    ? profiles.map((p: any) => p.id)
+    : [];
 
-  if (orgMembersErr) {
-    console.error("Erro buscando org_members:", orgMembersErr);
+  // 2.1) Buscar e-mails no Auth APENAS para os users da página
+  const emailMap = new Map<string, string>();
+  if (pageUserIds.length > 0) {
+    const emailResults = await Promise.all(
+      pageUserIds.map(async (id) => {
+        try {
+          const { data, error } = await supabaseAdmin.auth.admin.getUserById(
+            id
+          );
+          if (error || !data?.user) {
+            return { id, email: "" };
+          }
+          return { id, email: data.user.email ?? "" };
+        } catch {
+          return { id, email: "" };
+        }
+      })
+    );
+    emailResults.forEach(({ id, email }) => emailMap.set(id, email));
   }
 
-  // Buscar unit_roles e nomes das unidades para todos os usuários
+  // 3) unit_members + nomes das unidades (somente usuários da página)
   let unitMembersData: any[] = [];
   let unitMembersErr: any = null;
-  
-  if (ids.length > 0) {
-    // Primeiro, buscar os registros de unit_members
+
+  if (pageUserIds.length > 0) {
     const unitMembersResult = await supabaseAdmin
       .from("unit_members")
-      .select("user_id, role, unit_id")
-      .in("user_id", ids);
-      
+      .select("user_id, unit_id")
+      .in("user_id", pageUserIds);
+
     unitMembersErr = unitMembersResult.error;
-    
+
     if (!unitMembersErr && unitMembersResult.data) {
       unitMembersData = unitMembersResult.data;
-      
-      // Depois, buscar os nomes das unidades
-      const unitIds = [...new Set(unitMembersData.map((um: any) => um.unit_id))];
+
+      const unitIds = [
+        ...new Set(unitMembersData.map((um: any) => um.unit_id)),
+      ];
       if (unitIds.length > 0) {
         const unitsResult = await supabaseAdmin
           .from("units")
           .select("id, name")
           .in("id", unitIds);
-          
+
         if (!unitsResult.error && unitsResult.data) {
-          // Mapear os nomes das unidades para os registros de unit_members
-          const unitNameMap = new Map(unitsResult.data.map((unit: any) => [unit.id, unit.name]));
+          const unitNameMap = new Map(
+            unitsResult.data.map((unit: any) => [unit.id, unit.name])
+          );
           unitMembersData = unitMembersData.map((um: any) => ({
             ...um,
-            units: { name: unitNameMap.get(um.unit_id) || null }
+            units: { name: unitNameMap.get(um.unit_id) || null },
           }));
         }
       }
@@ -249,65 +316,88 @@ export async function getUsers(orgId?: string): Promise<(Profile & {
   }
 
   const safeProfiles: any[] = Array.isArray(profiles) ? profiles : [];
-  const profileMap = new Map(safeProfiles.map((p) => [p.id, p]));
-  
   const orgRoleMap = new Map<string, string>();
-  if (Array.isArray(orgMembersData)) {
-    orgMembersData.forEach(orgMember => {
+  if (Array.isArray(orgMems)) {
+    orgMems.forEach((orgMember) => {
       orgRoleMap.set(orgMember.user_id, orgMember.role);
     });
   }
-  
+
   const unitRolesMap = new Map<string, string[]>();
   const unitNamesMap = new Map<string, string[]>();
   if (Array.isArray(unitMembersData)) {
-    unitMembersData.forEach(unitMember => {
+    unitMembersData.forEach((unitMember) => {
       if (!unitRolesMap.has(unitMember.user_id)) {
         unitRolesMap.set(unitMember.user_id, []);
         unitNamesMap.set(unitMember.user_id, []);
       }
-      unitRolesMap.get(unitMember.user_id)?.push(unitMember.role);
-      // Adiciona o nome da unidade se disponível
+      // Papel efetivo vem de org_members.role; usamos "unit_user" como rótulo da vinculação
+      unitRolesMap.get(unitMember.user_id)?.push("unit_user");
       if (unitMember.units?.name) {
         unitNamesMap.get(unitMember.user_id)?.push(unitMember.units.name);
       }
     });
   }
 
-  return usersData.users.map((u) => {
-    const p: any = profileMap.get(u.id) || {};
-    const orgRole = orgRoleMap.get(u.id);
-    const unitRoles = unitRolesMap.get(u.id) || [];
-    const unitNames = unitNamesMap.get(u.id) || [];
-    
+  // ✅ Monta o resultado SOMENTE com os perfis da página
+  const result = safeProfiles.map((p: any) => {
+    const userId = p.id as string;
+    const orgRole = orgRoleMap.get(userId);
+    const unitRoles = unitRolesMap.get(userId) || [];
+    const unitNames = unitNamesMap.get(userId) || [];
+    const email = emailMap.get(userId) ?? "";
+
     return {
-      id: u.id,
-      email: p.email ?? u.email ?? "",
-      full_name: p.full_name ?? (u.user_metadata as any)?.name ?? "No name",
+      id: userId,
+      email,
+      full_name: p.full_name ?? "No name",
       global_role: p.global_role,
       org_role: orgRole,
       unit_roles: unitRoles,
       unit_names: unitNames,
-      created_at: p.created_at ?? u.created_at,
+      created_at: p.created_at ?? new Date().toISOString(),
       phone: p.phone ?? null,
       avatar_url: p.avatar_url ?? null,
-      // novo: expõe disabled para a UI alternar Ativar/Desativar
       disabled: Boolean(p.disabled ?? false),
     };
   });
+
+  console.timeEnd("getUsers");
+  return result;
 }
 
 export async function getAllProfiles(): Promise<Profile[]> {
   const supabaseAdmin = await getAdminClient();
+
   const { data: profiles, error } = await supabaseAdmin
     .from("profiles")
     .select(
-      "id, email, full_name, global_role, created_at, phone, avatar_url, disabled"
+      "id, full_name, global_role, created_at, phone, avatar_url, disabled"
     );
+
   if (error || !profiles) return [];
+
+  const emailMap = new Map<string, string>();
+  await Promise.all(
+    profiles.map(async (p: any) => {
+      try {
+        const { data, error: e } = await supabaseAdmin.auth.admin.getUserById(
+          p.id
+        );
+        if (!e && data?.user) {
+          emailMap.set(p.id, data.user.email ?? "");
+        } else {
+          emailMap.set(p.id, "");
+        }
+      } catch {
+        emailMap.set(p.id, "");
+      }
+    })
+  );
+
   return profiles.map((p: any) => ({
     id: p.id,
-    email: p.email ?? "",
+    email: emailMap.get(p.id) ?? "",
     full_name: p.full_name ?? "No name",
     global_role: p.global_role,
     created_at: p.created_at,
@@ -329,14 +419,14 @@ export async function getUserById(id: string): Promise<Profile | null> {
   const { data: profile } = await supabaseAdmin
     .from("profiles")
     .select(
-      "id, email, full_name, global_role, created_at, phone, avatar_url, disabled"
+      "id, full_name, global_role, created_at, phone, avatar_url, disabled"
     )
     .eq("id", user.id)
     .maybeSingle();
 
   return {
     id: user.id,
-    email: profile?.email ?? user.email ?? "",
+    email: user.email ?? "",
     full_name:
       profile?.full_name ?? (user.user_metadata as any)?.name ?? "No name",
     global_role: profile?.global_role ?? null,
@@ -388,7 +478,6 @@ export async function updateUser(formData: FormData) {
   if (profErr) return { error: profErr.message };
 
   revalidatePath("/users");
-  revalidatePath("/users");
   revalidatePath(`/users/${id}/edit`);
   return { error: null };
 }
@@ -415,7 +504,6 @@ export async function deleteUser(userId: string) {
   if (!del.ok) return { error: del.error };
 
   revalidatePath("/users");
-  revalidatePath("/users");
   return { error: null };
 }
 
@@ -441,12 +529,14 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
   }
 
   // Confere se é org_admin na mesma org ou platform_admin
-  const { data: canDo, error: permErr } = await supabase.rpc("is_platform_admin");
+  const { data: canDo, error: permErr } = await supabase.rpc(
+    "is_platform_admin"
+  );
   if (permErr) return { ok: false, error: permErr.message };
 
-  let isPlatformAdmin = Boolean(canDo);
+  const isPlat = Boolean(canDo);
 
-  if (!isPlatformAdmin) {
+  if (!isPlat) {
     const { data: meIsOrgAdmin, error: orgCheckErr } = await supabase
       .from("org_members")
       .select("role")
@@ -470,11 +560,11 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
   if (omErr) return { ok: false, error: omErr.message };
 
   if (!membership) {
-    // cria vínculo mínimo (org_master por segurança ou o menor poder se você tiver)
+    // cria vínculo mínimo (org_master por segurança)
     const { error: insertOmErr } = await supabase.from("org_members").insert({
       org_id: orgId,
       user_id: userId,
-      role: targetRole === "org_master" ? "org_master" : "org_master", // mantém org_master como padrão
+      role: "org_master",
     });
     if (insertOmErr) return { ok: false, error: insertOmErr.message };
   }
@@ -488,37 +578,38 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
       .eq("user_id", userId);
     if (upOmErr) return { ok: false, error: upOmErr.message };
 
-    // (Opcional) Poderíamos remover papéis de unidade, mas manteremos como está para não quebrar UX.
     return { ok: true };
   }
 
   // Se for unit_master ou unit_user, exige unitId
   if (!unitId) return { ok: false, error: "unitId is required for unit roles" };
 
-  // Upsert em unit_members
-  const { error: upUmErr } = await supabase
-    .from("unit_members")
-    .upsert(
-      {
-        unit_id: unitId,
-        user_id: userId,
-        org_id: orgId,
-        role: targetRole, // "unit_master" | "unit_user"
-      },
-      { onConflict: "unit_id,user_id" }
-    );
+  // Upsert em unit_members (sem role, apenas vínculo)
+  const { error: upUmErr } = await supabase.from("unit_members").upsert(
+    {
+      unit_id: unitId,
+      user_id: userId,
+      org_id: orgId,
+    },
+    { onConflict: "unit_id,user_id" }
+  );
   if (upUmErr) return { ok: false, error: upUmErr.message };
 
   return { ok: true };
 }
 
 /* ===================== GET USER ROLES ===================== */
+type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+
 type UserRoles = {
   orgRole: "org_master" | "org_admin" | null;
-  unitRoles: { unitId: string; role: "unit_master" | "unit_user" }[];
+  unitRoles: { unitId: string }[]; // papel efetivo vem de org_members.role
 };
 
-export async function getUserRoles(userId: string, orgId: string): Promise<Result<UserRoles>> {
+export async function getUserRoles(
+  userId: string,
+  orgId: string
+): Promise<Result<UserRoles>> {
   const supabase = await createClient();
 
   // Get org role
@@ -531,10 +622,10 @@ export async function getUserRoles(userId: string, orgId: string): Promise<Resul
 
   if (orgErr) return { ok: false, error: orgErr.message };
 
-  // Get unit roles
+  // Get unit memberships (sem role)
   const { data: unitMemberships, error: unitErr } = await supabase
     .from("unit_members")
-    .select("unit_id, role")
+    .select("unit_id")
     .eq("org_id", orgId)
     .eq("user_id", userId);
 
@@ -542,15 +633,14 @@ export async function getUserRoles(userId: string, orgId: string): Promise<Resul
 
   const unitRoles = (unitMemberships || []).map((um: any) => ({
     unitId: um.unit_id,
-    role: um.role
   }));
 
   return {
     ok: true,
     data: {
-      orgRole: orgMembership?.role || null,
-      unitRoles
-    }
+      orgRole: (orgMembership?.role as "org_master" | "org_admin") || null,
+      unitRoles,
+    },
   };
 }
 

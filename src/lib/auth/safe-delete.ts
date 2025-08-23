@@ -14,7 +14,7 @@ export async function safeDeleteUser(userId: string): Promise<{ ok: boolean; err
     // 1) Buscar profile para checar role
     const { data: profile, error: pErr } = await admin
       .from("profiles")
-      .select("id, role, global_role")
+      .select("id, global_role")
       .eq("id", userId)
       .single();
 
@@ -24,7 +24,7 @@ export async function safeDeleteUser(userId: string): Promise<{ ok: boolean; err
     }
 
     // 2) Blindagem: se for platform_admin em qualquer campo, nunca deleta
-    if (profile?.role === PLATFORM_ADMIN || profile?.global_role === PLATFORM_ADMIN) {
+    if (profile?.global_role === PLATFORM_ADMIN) {
       return { ok: false, error: "Usuário com role=platform_admin não pode ser deletado por automação." };
     }
 

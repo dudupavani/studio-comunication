@@ -33,21 +33,9 @@ export async function getUserUnitRole(
   userId: string,
   unitId: string
 ): Promise<AppRole | null> {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from("unit_members")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("unit_id", unitId)
-    .single();
-    
-  if (error) {
-    console.error("Erro ao obter papel do usuário na unidade:", error);
-    return null;
-  }
-  
-  return data?.role || null;
+  // Unit members don't have roles, return a default role
+  // Roles should come from org_members
+  return null;
 }
 
 /**
@@ -57,23 +45,9 @@ export async function getUserUnitRoles(
   userId: string,
   orgId: string
 ): Promise<{ unitId: string; role: AppRole }[]> {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from("unit_members")
-    .select("unit_id, role")
-    .eq("user_id", userId)
-    .eq("org_id", orgId);
-    
-  if (error) {
-    console.error("Erro ao obter papéis do usuário nas unidades:", error);
-    return [];
-  }
-  
-  return data.map(item => ({
-    unitId: item.unit_id,
-    role: item.role
-  }));
+  // Unit members don't have roles, return empty array
+  // Roles should come from org_members
+  return [];
 }
 
 /**
