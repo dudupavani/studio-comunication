@@ -197,6 +197,69 @@ export type Database = {
           }
         ]
       }
+      calendar_events: {
+        Row: {
+          id: string
+          org_id: string
+          unit_id: string | null
+          title: string
+          description: string | null
+          start_time: string
+          end_time: string
+          all_day: boolean
+          color: string | null
+          metadata: Json | null
+          created_by: string
+          created_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          unit_id?: string | null
+          title: string
+          description?: string | null
+          start_time: string
+          end_time: string
+          all_day?: boolean
+          color?: string | null
+          metadata?: Json | null
+          created_by: string
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          unit_id?: string | null
+          title?: string
+          description?: string | null
+          start_time?: string
+          end_time?: string
+          all_day?: boolean
+          color?: string | null
+          metadata?: Json | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
