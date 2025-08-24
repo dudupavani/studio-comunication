@@ -511,7 +511,7 @@ export async function deleteUser(userId: string) {
 type UpdateUserRolesInput = {
   userId: string;
   orgId: string;
-  targetRole: "org_master" | "unit_master" | "unit_user";
+  targetRole: "org_admin" | "org_master" | "unit_master" | "unit_user";
   unitId?: string | null;
 };
 
@@ -560,20 +560,22 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
   if (omErr) return { ok: false, error: omErr.message };
 
   if (!membership) {
-    // cria vínculo mínimo (org_master por segurança)
+    // cria vínculo mínimo com papel inicial coerente com o objetivo
+    const initialRole =
+      targetRole === "org_master" ? "org_master" : "org_admin";
     const { error: insertOmErr } = await supabase.from("org_members").insert({
       org_id: orgId,
       user_id: userId,
-      role: "org_master",
+      role: initialRole,
     });
     if (insertOmErr) return { ok: false, error: insertOmErr.message };
   }
 
-  if (targetRole === "org_master") {
-    // Atualiza papel na organização
+  // ===== roles de organização
+  if (targetRole === "org_admin" || targetRole === "org_master") {
     const { error: upOmErr } = await supabase
       .from("org_members")
-      .update({ role: "org_master" })
+      .update({ role: targetRole })
       .eq("org_id", orgId)
       .eq("user_id", userId);
     if (upOmErr) return { ok: false, error: upOmErr.message };
@@ -581,7 +583,7 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
     return { ok: true };
   }
 
-  // Se for unit_master ou unit_user, exige unitId
+  // ===== roles de unidade exigem unitId
   if (!unitId) return { ok: false, error: "unitId is required for unit roles" };
 
   // Upsert em unit_members (sem role, apenas vínculo)

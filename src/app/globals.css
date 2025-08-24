@@ -18,8 +18,8 @@ body {
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220, 14%, 96%;
+    --muted-foreground: 216, 15%, 34%;
     --accent: 220, 13%, 91%;
     --accent-foreground: 220, 43%, 11%;
     /* --accent-foreground: 220, 43%, 11%; */

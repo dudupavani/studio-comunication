@@ -40,7 +40,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
 
   return (
     <Sidebar variant="inset" collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="mb-6">
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/dashboard">
@@ -69,7 +69,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   asChild>
                   <Link href="/dashboard">
                     <AppWindowMac />
-                    Painel
+                    <span className="ml-2"> Painel</span>
                   </Link>
                 </Button>
               </SidebarMenuItem>

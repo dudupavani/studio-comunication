@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -222,10 +223,10 @@ export default function UsersClient({
                         <img
                           src={user.avatar_url}
                           alt={user.full_name || user.email || "Avatar"}
-                          className="h-8 w-8 rounded-full"
+                          className="h-10 w-10 rounded-full"
                         />
                       ) : (
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
                           {(user.full_name ?? user.email ?? "NN")
                             .split(" ")
                             .map((n: string) => n[0])
@@ -249,9 +250,11 @@ export default function UsersClient({
                   <TableCell className="px-4 py-3">
                     <Badge
                       variant={
-                        user.global_role === PLATFORM_ADMIN
+                        user.org_role === "org_admin"
                           ? "default"
-                          : "secondary"
+                          : user.global_role === PLATFORM_ADMIN
+                          ? "secondary"
+                          : "outline"
                       }>
                       {getDisplayRole(user)}
                     </Badge>
@@ -298,9 +301,12 @@ export default function UsersClient({
                   <TableCell className="px-4 py-3 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="p-2 hover:bg-muted rounded-md">
+                        <Button
+                          className="p-2 hover:bg-muted rounded-md"
+                          variant="ghost"
+                          size="icon-sm">
                           <MoreHorizontal className="h-4 w-4" />
-                        </button>
+                        </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {/* Editar */}
