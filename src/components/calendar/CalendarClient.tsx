@@ -18,6 +18,7 @@ import { useCalendarEvents } from "@/lib/calendar/useCalendarEvents";
 import { toRbcEvent } from "@/lib/calendar/adapter";
 import type { RbcEvent, CalendarEventDTO } from "@/lib/calendar/types";
 import NewEventDialog from "@/components/calendar/NewEventDialog";
+import EventDetailsDialog from "@/components/calendar/EventDetailsDialog";
 
 const locales = { "pt-BR": ptBR };
 
@@ -36,15 +37,16 @@ interface CalendarClientProps {
 
 export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
   const [date, setDate] = useState<Date>(new Date());
-  const [view, setView] = useState<View>(Views.MONTH); // <- controle da visão
+  const [view, setView] = useState<View>(Views.MONTH);
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<CalendarEventDTO | null>(null); // <- NOVO
   const [prefill, setPrefill] = useState<{
     start?: Date;
     end?: Date;
     allDay?: boolean;
   }>({});
 
-  // range: ±45 dias (<= 90 dias exigidos pela API)
+  // range: ±45 dias
   const { fromISO, toISO } = useMemo(() => {
     const from = new Date(date);
     from.setDate(from.getDate() - 45);
@@ -78,7 +80,7 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
     };
   }, []);
 
-  // helpers para lzr opcional (corrige TS: lzr possivelmente indefinido)
+  // helpers para lzr opcional
   const fmt = (d: Date, pattern: string, culture?: string, lzr?: any) =>
     lzr
       ? lzr.format(d, pattern, culture)
@@ -91,7 +93,6 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
     lzr?: any
   ) => `${fmt(s, pattern, culture, lzr)} – ${fmt(e, pattern, culture, lzr)}`;
 
-  // Botão manual "Novo evento"
   const openNew = () => {
     const start = new Date(date);
     start.setHours(9, 0, 0, 0);
@@ -101,13 +102,18 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
     setOpen(true);
   };
 
-  // Seleção no grid abre modal com horários pré-preenchidos
   const onSelectSlot = (slot: any) => {
     const start = slot.start as Date;
     const end = slot.end as Date;
     const allDay = !!slot.action && slot.action !== "click";
     setPrefill({ start, end, allDay });
     setOpen(true);
+  };
+
+  // <- NOVO: clique em evento abre modal com DTO do resource
+  const onSelectEvent = (evt: RBCEvent) => {
+    const dto = (evt as any)?.resource as CalendarEventDTO | undefined;
+    if (dto) setSelected(dto);
   };
 
   const onCreated = (_ev: CalendarEventDTO) => refetch();
@@ -149,18 +155,14 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
         events={events}
         startAccessor="start"
         endAccessor="end"
-        // ✅ habilita e controla as visões
         views={{ month: true, week: true, day: true, agenda: true }}
         view={view}
         onView={setView}
-        // navegação por data
         date={date}
         onNavigate={setDate}
-        // seleção de slots
         onSelectSlot={onSelectSlot}
-        // estilos de evento por cor
+        onSelectEvent={onSelectEvent} // <- NOVO
         eventPropGetter={eventPropGetter}
-        // textos pt-BR
         messages={{
           allDay: "Dia inteiro",
           previous: "Anterior",
@@ -176,7 +178,6 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
           noEventsInRange: "Não há eventos neste intervalo.",
           showMore: (total: number) => `+${total} mais`,
         }}
-        // formatações (compatível com lzr opcional)
         formats={{
           dateFormat: "d",
           dayFormat: "dd/MM",
@@ -198,6 +199,7 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
         style={{ minHeight: 500 }}
       />
 
+      {/* criar */}
       <NewEventDialog
         open={open}
         onClose={() => setOpen(false)}
@@ -207,6 +209,13 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
         defaultEnd={prefill.end}
         defaultAllDay={prefill.allDay}
         onCreated={onCreated}
+      />
+
+      {/* detalhes */}
+      <EventDetailsDialog
+        open={!!selected}
+        event={selected}
+        onClose={() => setSelected(null)}
       />
     </div>
   );

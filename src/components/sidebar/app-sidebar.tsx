@@ -7,12 +7,11 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 import {
-  Building2,
   AppWindowMac,
   UserCog,
   Settings,
   Building,
-  User,
+  Calendar,
 } from "lucide-react";
 
 import {
@@ -69,7 +68,18 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   asChild>
                   <Link href="/dashboard">
                     <AppWindowMac />
-                    <span className="ml-2"> Painel</span>
+                    <span className="ml-2">Painel</span>
+                  </Link>
+                </Button>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start "
+                  asChild>
+                  <Link href="/calendar">
+                    <Calendar />
+                    <span className="ml-2">Calendário</span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
