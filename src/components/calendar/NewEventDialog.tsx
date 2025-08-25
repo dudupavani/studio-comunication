@@ -400,7 +400,14 @@ export default function NewEventDialog({
           </div>
 
           {/* ações */}
-          <div className="mt-2 flex items-center justify-end gap-2">
+          <div className="mt-2 flex items-center justify-start gap-2">
+            <Button
+              type="submit"
+              variant="default"
+              className="disabled:opacity-60"
+              disabled={submitting}>
+              {submitting ? "Criando…" : "Criar"}
+            </Button>
             <Button
               type="button"
               onClick={onClose}
@@ -408,13 +415,6 @@ export default function NewEventDialog({
               className="hover:bg-gray-50"
               disabled={submitting}>
               Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="default"
-              className="disabled:opacity-60"
-              disabled={submitting}>
-              {submitting ? "Criando…" : "Criar"}
             </Button>
           </div>
         </form>

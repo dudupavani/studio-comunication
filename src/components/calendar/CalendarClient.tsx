@@ -1,3 +1,4 @@
+// src/components/calendar/CalendarClient.tsx
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
@@ -12,13 +13,14 @@ import { format, parse, startOfWeek, getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Button } from "../ui/button";
+import { Spinner } from "../ui/spinner";
 import { CalendarSync, Plus } from "lucide-react";
 
 import { useCalendarEvents } from "@/lib/calendar/useCalendarEvents";
 import { toRbcEvent } from "@/lib/calendar/adapter";
 import type { RbcEvent, CalendarEventDTO } from "@/lib/calendar/types";
 import NewEventDialog from "@/components/calendar/NewEventDialog";
-import EventDetailsDialog from "@/components/calendar/EventDetailsDialog";
+import { EditEventModal } from "@/components/calendar/EditEventModal";
 
 const locales = { "pt-BR": ptBR };
 
@@ -39,7 +41,11 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [view, setView] = useState<View>(Views.MONTH);
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<CalendarEventDTO | null>(null); // <- NOVO
+
+  // evento selecionado para editar
+  const [selected, setSelected] = useState<CalendarEventDTO | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+
   const [prefill, setPrefill] = useState<{
     start?: Date;
     end?: Date;
@@ -110,18 +116,27 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
     setOpen(true);
   };
 
-  // <- NOVO: clique em evento abre modal com DTO do resource
+  // Clique em evento -> abre modal de edição com o DTO do resource
   const onSelectEvent = (evt: RBCEvent) => {
     const dto = (evt as any)?.resource as CalendarEventDTO | undefined;
-    if (dto) setSelected(dto);
+    if (dto) {
+      setSelected(dto);
+      setEditOpen(true);
+    }
   };
 
-  const onCreated = (_ev: CalendarEventDTO) => refetch();
+  // Depois de salvar no modal, apenas refetch para sincronizar a lista
+  const onUpdated = (_ev: Partial<CalendarEventDTO>) => {
+    setEditOpen(false);
+    setSelected(null);
+    refetch();
+  };
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-64">
-        Carregando calendário...
+      <div className="flex flex-col justify-center items-center h-64">
+        <Spinner className="mr-2" size="lg" color="dark" />
+        <span className="mt-3 text-gray-600">Carregando eventos...</span>
       </div>
     );
   if (error)
@@ -132,8 +147,8 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
     );
 
   return (
-    <div className="flex flex-col p-4 sm:p-0">
-      {/* toolbar simples */}
+    <div className="flex flex-col">
+      {/* toolbar */}
       <div className="mb-3 flex items-center justify-between">
         <div className="text-sm text-gray-500">{`Eventos: ${events.length}`}</div>
         <div className="flex items-center gap-4">
@@ -161,7 +176,7 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
         date={date}
         onNavigate={setDate}
         onSelectSlot={onSelectSlot}
-        onSelectEvent={onSelectEvent} // <- NOVO
+        onSelectEvent={onSelectEvent}
         eventPropGetter={eventPropGetter}
         messages={{
           allDay: "Dia inteiro",
@@ -196,7 +211,7 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
           agendaTimeRangeFormat: ({ start, end }, culture, lzr) =>
             fmtRange(start, end, "HH:mm", culture, lzr),
         }}
-        style={{ minHeight: 500 }}
+        style={{ minHeight: 760 }}
       />
 
       {/* criar */}
@@ -208,14 +223,18 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
         defaultStart={prefill.start}
         defaultEnd={prefill.end}
         defaultAllDay={prefill.allDay}
-        onCreated={onCreated}
+        onCreated={() => refetch()}
       />
 
-      {/* detalhes */}
-      <EventDetailsDialog
-        open={!!selected}
+      {/* editar */}
+      <EditEventModal
+        open={editOpen}
+        onClose={() => {
+          setEditOpen(false);
+          setSelected(null);
+        }}
         event={selected}
-        onClose={() => setSelected(null)}
+        onUpdated={onUpdated}
       />
     </div>
   );
