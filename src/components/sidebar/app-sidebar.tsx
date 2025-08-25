@@ -10,7 +10,7 @@ import {
   AppWindowMac,
   UserCog,
   Settings,
-  Building,
+  Warehouse,
   Calendar,
 } from "lucide-react";
 
@@ -67,7 +67,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   className="w-full justify-start "
                   asChild>
                   <Link href="/dashboard">
-                    <AppWindowMac />
+                    <AppWindowMac size={20} />
                     <span className="ml-2">Painel</span>
                   </Link>
                 </Button>
@@ -78,7 +78,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   className="w-full justify-start "
                   asChild>
                   <Link href="/calendar">
-                    <Calendar />
+                    <Calendar size={20} />
                     <span className="ml-2">Calendário</span>
                   </Link>
                 </Button>
@@ -89,7 +89,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   className="w-full justify-start"
                   asChild>
                   <Link href="/users">
-                    <UserCog />
+                    <UserCog size={20} />
                     <span className="ml-2">Usuários</span>
                   </Link>
                 </Button>
@@ -102,7 +102,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   className="w-full justify-start"
                   asChild>
                   <Link href="/settings">
-                    <Settings />
+                    <Settings size={20} />
                     <span className="ml-2">Configuração</span>
                   </Link>
                 </Button>
@@ -114,7 +114,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   className="w-full justify-start"
                   asChild>
                   <Link href="/units">
-                    <Building />
+                    <Warehouse size={20} />
                     <span className="ml-2">Unidades</span>
                   </Link>
                 </Button>
