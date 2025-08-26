@@ -1,7 +1,6 @@
 // src/app/auth/confirm/route.ts
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClientWithCookies } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -17,27 +16,7 @@ export async function GET(request: Request) {
   // Evita open-redirect
   if (!next.startsWith("/")) next = "/";
 
-  // 👇 AQUI é o ponto crítico: cookies() precisa ser aguardado em Route Handlers
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name: string, options: any) {
-          // usa set com value "" para respeitar path/domain informados pelo Supabase
-          cookieStore.set({ name, value: "", ...options });
-        },
-      },
-    }
-  );
+  const supabase = createServerClientWithCookies(); // Use proper client
 
   let authError: any = null;
 

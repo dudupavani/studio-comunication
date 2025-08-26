@@ -1,11 +1,22 @@
-"use server";
+// src/app/auth/logout/route.ts
 import { signOut } from "@/lib/actions/auth";
-import { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+function absolute(req: Request, path: string) {
+  const { origin } = new URL(req.url);
+  return new URL(path, origin);
+}
+
+async function handle(request: Request) {
   await signOut();
-  return new Response(null, {
-    status: 302,
-    headers: { Location: "/auth/login" },
-  });
+  // garanta redirecionamento correto SEM o /auth no caminho
+  return NextResponse.redirect(absolute(request, "/login"), { status: 302 });
+}
+
+export async function GET(request: Request) {
+  return handle(request);
+}
+
+export async function POST(request: Request) {
+  return handle(request);
 }

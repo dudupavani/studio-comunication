@@ -1,13 +1,13 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createServerClientWithCookies } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function signIn(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const supabase = await createClient();
+  const supabase = createServerClientWithCookies(); // Use write-enabled client
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -28,7 +28,7 @@ export async function signUp(formData: FormData) {
   const full_name = formData.get("full_name") as string;
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const supabase = await createClient();
+  const supabase = createServerClientWithCookies(); // Use write-enabled client
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -49,7 +49,7 @@ export async function signUp(formData: FormData) {
 }
 
 export async function signOut() {
-  const supabase = await createClient();
+  const supabase = createServerClientWithCookies(); // Use write-enabled client
   await supabase.auth.signOut();
   redirect("/auth/login");
 }
@@ -58,7 +58,7 @@ export async function sendPasswordResetEmail(formData: FormData) {
   const hdr = await headers();
   const origin = hdr.get("origin")!;
   const email = formData.get("email") as string;
-  const supabase = await createClient();
+  const supabase = createServerClientWithCookies(); // Use write-enabled client
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/auth/callback?type=password`,
@@ -73,7 +73,7 @@ export async function sendPasswordResetEmail(formData: FormData) {
 
 export async function updatePassword(formData: FormData) {
   const password = formData.get("password") as string;
-  const supabase = await createClient();
+  const supabase = createServerClientWithCookies(); // Use write-enabled client
 
   const { error } = await supabase.auth.updateUser({ password });
 
