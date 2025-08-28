@@ -5,6 +5,7 @@ export const MODULE_TITLES: Record<string, string> = {
   "/units": "Unidades",
   "/users": "Usuários",
   "/calendar": "Calendário",
+  "/groups": "Grupos de usuários",
   // adicione outros módulos aqui
 };
 

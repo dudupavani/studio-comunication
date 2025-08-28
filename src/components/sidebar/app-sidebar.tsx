@@ -12,6 +12,7 @@ import {
   Settings,
   Warehouse,
   Calendar,
+  Group,
 } from "lucide-react";
 
 import {
@@ -91,6 +92,17 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   <Link href="/users">
                     <UserCog size={20} />
                     <span className="ml-2">Usuários</span>
+                  </Link>
+                </Button>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  asChild>
+                  <Link href="/groups">
+                    <Group size={20} />
+                    <span className="ml-2">Grupos</span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
