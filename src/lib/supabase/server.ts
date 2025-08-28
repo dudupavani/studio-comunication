@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import type { Database } from "@/lib/supabase/types";
+// ✅ ajuste: aponte para onde os types foram gerados
+import type { Database } from "@/types/supabase";
 
 function getEnv() {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;

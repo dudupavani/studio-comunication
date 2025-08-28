@@ -1,6 +1,9 @@
 // src/app/(app)/groups/[groupId]/page.tsx
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+import { Group } from "lucide-react";
+import EmailCopy from "@/components/EmailCopy"; // ✅ botão copiar e-mail
 
 export const dynamic = "force-dynamic";
 
@@ -37,13 +40,24 @@ export default async function GroupPage({ params }: Props) {
     .eq("id", params.groupId)
     .single();
 
-  // Membership do usuário
-  const { data: membership } = await supabase
-    .from("user_group_members")
-    .select("group_id, user_id, org_id, unit_id, added_at")
-    .eq("group_id", params.groupId)
-    .eq("user_id", userId!)
-    .maybeSingle();
+  // Membership do usuário — SOMENTE se tiver userId (ajuste mínimo/seguro)
+  let membership: {
+    group_id: string;
+    user_id: string;
+    org_id: string;
+    unit_id: string | null;
+    added_at: string;
+  } | null = null;
+
+  if (userId) {
+    const { data: m } = await supabase
+      .from("user_group_members")
+      .select("group_id, user_id, org_id, unit_id, added_at")
+      .eq("group_id", params.groupId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    membership = m ?? null;
+  }
 
   // Contagem
   const { count: membersCount } = await supabase
@@ -60,14 +74,14 @@ export default async function GroupPage({ params }: Props) {
 
   const userIds = (membersRows ?? []).map((r) => r.user_id);
 
-  // Perfis
+  // Perfis (nome/avatar)
   let profilesMap: Record<
     string,
     {
       id: string;
       full_name: string | null;
       avatar_url: string | null;
-      phone: string | null;
+      phone: string | null; // mantido por compat; não será exibido
     }
   > = {};
   if (userIds.length > 0) {
@@ -93,54 +107,99 @@ export default async function GroupPage({ params }: Props) {
       );
   }
 
+  // ✅ Identidades (email vem de auth.users, via RPC segura)
+  type IdentityRow = {
+    user_id: string;
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+    org_id: string;
+  };
+  let identityById: Record<string, IdentityRow> = {};
+
+  if (userIds.length > 0) {
+    // ← sem genéricos no rpc() para evitar o erro de “2 argumentos de tipo”
+    const { data: identities, error: idErr } = await supabase.rpc(
+      "get_user_identity_many",
+      { p_user_ids: userIds }
+    );
+
+    if (!idErr && Array.isArray(identities)) {
+      const rows = identities as IdentityRow[];
+      identityById = Object.fromEntries(rows.map((r) => [r.user_id, r]));
+    }
+  }
+
   // Enriquecido
   const members = (membersRows ?? []).map((m) => ({
     ...m,
     profile: profilesMap[m.user_id] ?? null,
     role: rolesMap[m.user_id] ?? null,
+    identity: identityById[m.user_id] ?? null, // ✅ contém email
   }));
 
   return (
-    <main className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">{group?.name ?? "Grupo"}</h1>
-      <p className="text-muted-foreground !mt-3">
-        {group?.description ?? "Sem descrição"} • {membersCount ?? 0} membro(s)
-      </p>
+    <main className="p-6 flex flex-col">
+      <div className="flex  gap-4 mb-8 mt-2">
+        <div>
+          <Group size={28} />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold">{group?.name ?? "Grupo"}</h1>
+          <p className="text-sm text-muted-foreground">
+            {group?.description ?? "Sem descrição"}
+          </p>
+        </div>
+      </div>
 
-      <section>
-        <h2 className="text-lg font-semibold mb-3">Membros</h2>
+      <section className="border border-gray-200 bg-muted rounded-lg p-4 ">
+        <h2 className="text-2xl font-bold mb-4">
+          Membros{" "}
+          <span className="font-light text-muted-foreground">
+            ({membersCount ?? 0})
+          </span>
+        </h2>
         <ul className="space-y-3">
           {members.map((m) => {
             const label = roleLabel(m.role);
+            const fullName =
+              m.identity?.full_name ?? m.profile?.full_name ?? "Sem nome";
+            const email = m.identity?.email ?? null;
+
             return (
               <li
                 key={m.user_id}
-                className="flex items-center gap-3 border rounded-lg p-3">
-                {m.profile?.avatar_url ? (
-                  <Image
-                    src={m.profile.avatar_url}
-                    alt={m.profile.full_name ?? "Avatar"}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-300" />
-                )}
-                <div>
-                  <p className="font-medium">
-                    {m.profile?.full_name ?? "Sem nome"}
-                    {label ? (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded bg-gray-200">
-                        {label}
-                      </span>
+                className="flex items-center justify-between gap-3 border rounded-lg py-3 px-4 bg-white">
+                <div className="flex items-center gap-3 ">
+                  <div>
+                    {m.profile?.avatar_url ? (
+                      <Image
+                        src={m.profile.avatar_url}
+                        alt={fullName}
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-300" />
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="font-semibold">{fullName}</p>
+                    {email ? (
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <span>{email}</span>
+                        <span>
+                          {email ? <EmailCopy email={email} /> : null}
+                        </span>
+                      </div>
                     ) : null}
-                  </p>
-                  {(m.profile?.phone ?? "").trim() ? (
-                    <p className="text-sm text-muted-foreground">
-                      {m.profile?.phone}
-                    </p>
-                  ) : null}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {label ? <Badge variant={"secondary"}>{label}</Badge> : null}
                 </div>
               </li>
             );

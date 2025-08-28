@@ -1,10 +1,16 @@
 // src/app/(app)/groups/page.tsx
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-
+import { Users } from "lucide-react";
 export const dynamic = "force-dynamic";
+import { Badge } from "@/components/ui/badge";
 
-type GroupRow = { id: string; name: string; description?: string | null };
+type GroupRow = {
+  id: string;
+  name: string;
+  description?: string | null;
+  membersCount: number;
+};
 
 export default async function GroupsPage() {
   const supabase = createClient();
@@ -21,7 +27,7 @@ export default async function GroupsPage() {
     );
   }
 
-  // Org do usuário (esta tabela existe nos tipos, então mantemos tipado)
+  // Org do usuário
   const { data: orgRow, error: orgErr } = await supabase
     .from("org_members")
     .select("org_id")
@@ -54,9 +60,17 @@ export default async function GroupsPage() {
   // ⚠️ Cast local para destravar tipos enquanto não regeneramos o Database
   const supabaseAny = supabase as any;
 
+  // Traz os grupos + contagem de membros por relação
   const { data: groupsRaw, error: groupsErr } = await supabaseAny
     .from("user_groups")
-    .select("id, name, description")
+    .select(
+      `
+      id,
+      name,
+      description,
+      user_group_members(count)
+    `
+    )
     .eq("org_id", orgId)
     .order("name", { ascending: true });
 
@@ -71,7 +85,14 @@ export default async function GroupsPage() {
   }
 
   // Normaliza para o tipo esperado da UI
-  const groups = (groupsRaw ?? []) as GroupRow[];
+  const groups: GroupRow[] = (groupsRaw ?? []).map((g: any) => ({
+    id: g.id,
+    name: g.name,
+    description: g.description ?? null,
+    membersCount: Array.isArray(g.user_group_members)
+      ? g.user_group_members[0]?.count ?? 0
+      : 0,
+  }));
 
   return (
     <div className="p-6 space-y-4">
@@ -80,20 +101,30 @@ export default async function GroupsPage() {
           Nenhum grupo encontrado.
         </p>
       ) : (
-        <ul className="space-y-2 grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5">
-          {groups.map((g: GroupRow) => (
-            <Link href={`/groups/${g.id}`}>
-              <li
-                key={g.id}
-                className="border rounded-lg p-4 space-y-2 hover:shadow-md hover:border-gray-600 cursor-pointer transition-all duration-300 ease-in-out">
-                <span className="text-lg font-semibold">{g.name}</span>
-                {g.description ? (
-                  <p className="text-sm text-muted-foreground">
-                    {g.description}
-                  </p>
-                ) : null}
-              </li>
-            </Link>
+        <ul className="space-y-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          {groups.map((g) => (
+            <li
+              key={g.id}
+              className="border rounded-lg p-4 space-y-2 hover:shadow-md hover:border-gray-600 cursor-pointer transition-all duration-300 ease-in-out">
+              <Link href={`/groups/${g.id}`}>
+                <div className="space-y-1">
+                  <span className="text-lg font-semibold">{g.name}</span>
+                  {g.description ? (
+                    <p className="text-sm text-muted-foreground">
+                      {g.description}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex items-center pt-2">
+                  <Badge
+                    variant={"secondary"}
+                    className="flex items-center gap-1">
+                    <Users size={14} />
+                    <span>{g.membersCount}</span>
+                  </Badge>
+                </div>
+              </Link>
+            </li>
           ))}
         </ul>
       )}
