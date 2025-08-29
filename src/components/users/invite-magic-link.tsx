@@ -25,7 +25,7 @@ export default function InviteMagicLink() {
         throw new Error(payload?.error || `Falha (HTTP ${res.status})`);
       toast({
         title: "Convite enviado",
-        description: "Enviamos um Magic Link para o e-mail informado.",
+        description: "Verifique o e-mail informado para confirmar a sua conta.",
       });
       setEmail("");
     } catch (err: any) {

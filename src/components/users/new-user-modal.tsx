@@ -44,7 +44,7 @@ export default function NewUserModal() {
       }
       toast({
         title: "Convite enviado",
-        description: `Enviamos um Magic Link para ${email}. Peça ao usuário para verificar a caixa de entrada/spam.`,
+        description: `Verifique o ${email} e confirme a sua conta`,
       });
       setEmail("");
       setOpen(false);
