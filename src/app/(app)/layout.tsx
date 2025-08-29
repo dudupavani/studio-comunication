@@ -17,6 +17,11 @@ import { Separator } from "@/components/ui/separator";
 import { UserMenu } from "@/components/user-menu";
 import ModuleTitle from "@/components/modules-title";
 
+// ✅ SSR: finaliza convite sem mexer na UI
+import FinalizeInviteSSR from "@/components/auth/finalize-invite-ssr";
+// ✅ CSR fallback: garante a finalização mesmo se o SSR não rodar
+import FinalizeInviteCSR from "@/components/auth/finalize-invite-csr";
+
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({
@@ -38,7 +43,11 @@ export default async function AppLayout({
     redirect("/auth/force-password");
   }
 
-  const { data: profileData, error: profileError, status } = await supabase
+  const {
+    data: profileData,
+    error: profileError,
+    status,
+  } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
@@ -46,15 +55,16 @@ export default async function AppLayout({
 
   // Só loga quando houver erro de fato (com conteúdo)
   const loggableError = toLoggableError(profileError);
-  const hasRealError = 
-    !!profileError && 
-    !!loggableError?.message && 
+  const hasRealError =
+    !!profileError &&
+    !!loggableError?.message &&
     loggableError.message !== "Empty error object";
-    
+
   if (hasRealError) {
     if (process.env.NODE_ENV !== "production") {
       console.warn("DEBUG AppLayout profileError:", {
-        message: profileError?.message, code: profileError?.code
+        message: profileError?.message,
+        code: profileError?.code,
       });
     }
     logError("Error fetching profile in AppLayout:", profileError);
@@ -67,10 +77,7 @@ export default async function AppLayout({
       status,
       userId: user.id,
     });
-    // **Decisão de produto**:
-    //  - redirect para onboarding de perfil
-    //  - OU renderizar UI mínima que gere o profile
-    //  - OU tentar um fallback (ex.: rpc get_profile_self) — se já existir no projeto
+    // decisão de produto fica como comentário
   }
 
   const userProfile: Profile = {
@@ -91,6 +98,10 @@ export default async function AppLayout({
       <AppSidebar activeOrgSlug={org?.slug ?? null} />
 
       <SidebarInset className="min-h-screen">
+        {/* 🔄 Finalização automática do convite (SSR) + fallback em cliente (CSR) */}
+        <FinalizeInviteSSR />
+        <FinalizeInviteCSR />
+
         {/* Topbar */}
         <header className="flex py-2 shrink-0 items-center gap-2 border-b">
           <div className="flex items-center gap-2 px-4 w-full">
