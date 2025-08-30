@@ -147,11 +147,11 @@ export default function UsersClient({
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-end mb-4 gap-6">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end mb-4 gap-6">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
           {/* Filtro por Função */}
           <Select value={roleFilter || "all"} onValueChange={handleRoleChange}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Filtrar por função" />
             </SelectTrigger>
             <SelectContent>
@@ -173,7 +173,7 @@ export default function UsersClient({
 
           {/* Filtro por Status */}
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
@@ -184,7 +184,7 @@ export default function UsersClient({
           </Select>
         </div>
 
-        <div>
+        <div className="flex justify-end">
           {(canPlatform || authContext?.orgRole === "org_admin") &&
             authContext?.orgId && <NewUserModal />}
         </div>

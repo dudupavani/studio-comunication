@@ -128,7 +128,7 @@ export default function MembersTable({ rows, totalCount }: Props) {
                 Adicionado{" "}
                 {sortBy === "addedAt" ? (sortDir === "asc" ? "↑" : "↓") : ""}
               </TableHead>
-              <TableHead className="w-[160px] text-right">Ações</TableHead>
+              <TableHead className="w-[160px] text-right">Função</TableHead>
             </TableRow>
           </TableHeader>
 

@@ -4,11 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 import { Users } from "lucide-react";
 export const dynamic = "force-dynamic";
 import { Badge } from "@/components/ui/badge";
+import GroupColorSquare from "@/components/groups/GroupColorSquare";
+import NewGroupModal from "@/components/groups/new-group-modal";
+import { createGroupAction } from "./actions";
 
 type GroupRow = {
   id: string;
   name: string;
   description?: string | null;
+  color?: string | null;
   membersCount: number;
 };
 
@@ -60,7 +64,7 @@ export default async function GroupsPage() {
   // ⚠️ Cast local para destravar tipos enquanto não regeneramos o Database
   const supabaseAny = supabase as any;
 
-  // Traz os grupos + contagem de membros por relação
+  // Traz os grupos + contagem de membros + cor
   const { data: groupsRaw, error: groupsErr } = await supabaseAny
     .from("user_groups")
     .select(
@@ -68,6 +72,7 @@ export default async function GroupsPage() {
       id,
       name,
       description,
+      color,
       user_group_members(count)
     `
     )
@@ -89,6 +94,7 @@ export default async function GroupsPage() {
     id: g.id,
     name: g.name,
     description: g.description ?? null,
+    color: g.color ?? null,
     membersCount: Array.isArray(g.user_group_members)
       ? g.user_group_members[0]?.count ?? 0
       : 0,
@@ -96,28 +102,51 @@ export default async function GroupsPage() {
 
   return (
     <div className="p-6 space-y-4">
+      {/* botão novo grupo de usuários */}
+      <div>
+        <div className="flex items-center justify-end">
+          {/* Passamos o orgId do usuário */}
+          <NewGroupModal orgId={orgId} onSubmit={createGroupAction} />
+        </div>
+
+        {!groups.length ? (
+          <p className="text-sm text-muted-foreground">
+            Nenhum grupo encontrado.
+          </p>
+        ) : (
+          <ul className="space-y-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+            {/* ...lista de grupos */}
+          </ul>
+        )}
+      </div>
+
       {!groups.length ? (
         <p className="text-sm text-muted-foreground">
           Nenhum grupo encontrado.
         </p>
       ) : (
-        <ul className="space-y-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+        <ul className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 items-stretch gap-2 lg:gap-4">
           {groups.map((g) => (
-            <li
-              key={g.id}
-              className="border rounded-lg p-4 space-y-2 hover:shadow-md hover:border-gray-600 cursor-pointer transition-all duration-300 ease-in-out">
-              <Link href={`/groups/${g.id}`}>
-                <div className="space-y-1">
-                  <span className="text-lg font-semibold">{g.name}</span>
-                  {g.description ? (
-                    <p className="text-sm text-muted-foreground">
-                      {g.description}
-                    </p>
-                  ) : null}
+            <li key={g.id}>
+              <Link
+                href={`/groups/${g.id}`}
+                className="grid grid-cols-1 gap-2 p-6 items-stretch flex-col h-full content-between border rounded-lg hover:shadow-md hover:border-gray-600 cursor-pointer transition-all duration-300 ease-in-out">
+                <div className="flex flex-col gap-3">
+                  <GroupColorSquare color={g.color} width="100%" height="6px" />
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg/6 font-semibold">{g.name}</span>
+                    </div>
+                    {g.description ? (
+                      <p className="text-sm text-muted-foreground">
+                        {g.description}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="flex items-center pt-2">
+                <div className="flex items-center mt-2">
                   <Badge
-                    variant={"secondary"}
+                    variant={"outline"}
                     className="flex items-center gap-1">
                     <Users size={14} />
                     <span>{g.membersCount}</span>

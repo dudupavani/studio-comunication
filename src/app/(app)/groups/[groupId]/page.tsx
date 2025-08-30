@@ -1,14 +1,14 @@
 // src/app/(app)/groups/[groupId]/page.tsx
 import { createClient } from "@/lib/supabase/server";
-import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Group } from "lucide-react";
-import EmailCopy from "@/components/EmailCopy";
-import MembersTable from "./MembersTable"; // ✅ nova tabela
+import MembersTable from "./MembersTable";
+import GroupColorSquare from "@/components/groups/GroupColorSquare";
+import HeaderEditButton from "@/components/groups/HeaderEditButton";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: { groupId: string } };
+// Next 15 pode entregar params como Promise — tipamos para os dois casos
+type Params = { groupId: string };
+type Props = { params: Params } | { params: Promise<Params> };
 
 function roleLabel(role?: string | null) {
   switch (role) {
@@ -27,7 +27,10 @@ function roleLabel(role?: string | null) {
   }
 }
 
-export default async function GroupPage({ params }: Props) {
+export default async function GroupPage(props: Props) {
+  // ✅ Resolva params antes de usar (corrige os avisos "params should be awaited")
+  const { groupId } = await Promise.resolve((props as any).params as Params);
+
   const supabase = createClient();
 
   // Sessão
@@ -38,7 +41,7 @@ export default async function GroupPage({ params }: Props) {
   const { data: group } = await supabase
     .from("user_groups")
     .select("id, org_id, name, description, color, created_at")
-    .eq("id", params.groupId)
+    .eq("id", groupId)
     .single();
 
   // Membership do usuário
@@ -54,7 +57,7 @@ export default async function GroupPage({ params }: Props) {
     const { data: m } = await supabase
       .from("user_group_members")
       .select("group_id, user_id, org_id, unit_id, added_at")
-      .eq("group_id", params.groupId)
+      .eq("group_id", groupId)
       .eq("user_id", userId)
       .maybeSingle();
     membership = m ?? null;
@@ -64,13 +67,13 @@ export default async function GroupPage({ params }: Props) {
   const { count: membersCount } = await supabase
     .from("user_group_members")
     .select("*", { count: "exact", head: true })
-    .eq("group_id", params.groupId);
+    .eq("group_id", groupId);
 
   // Lista de membros (IDs)
   const { data: membersRows } = await supabase
     .from("user_group_members")
     .select("user_id, unit_id, added_at")
-    .eq("group_id", params.groupId)
+    .eq("group_id", groupId)
     .order("added_at", { ascending: true });
 
   const userIds = (membersRows ?? []).map((r) => r.user_id);
@@ -148,21 +151,41 @@ export default async function GroupPage({ params }: Props) {
   });
 
   return (
-    <main className="p-6 flex flex-col">
-      <div className="flex gap-4 mb-8 mt-2">
-        <div>
-          <Group size={28} />
+    <main className="p-4 sm:p-6 flex flex-col">
+      {/* ===== Header do grupo ===== */}
+      <div className="flex items-center justify-between gap-4 mb-8 border border-gray-200 rounded-md p-4 sm:p-4 sm:pr-6">
+        <div className="flex gap-3">
+          <div>
+            {group?.color ? (
+              <GroupColorSquare color={group.color} width="6px" height="100%" />
+            ) : null}
+          </div>
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+              {group?.name ?? "Grupo"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {group?.description ?? "Sem descrição"}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold">{group?.name ?? "Grupo"}</h1>
-          <p className="text-sm text-muted-foreground">
-            {group?.description ?? "Sem descrição"}
-          </p>
-        </div>
+        {/* Botão que abre o modal de edição */}
+        {group && (
+          <HeaderEditButton
+            group={{
+              id: group.id,
+              orgId: group.org_id,
+              name: group.name ?? "",
+              description: group.description ?? null,
+              color: group.color ?? null,
+            }}
+          />
+        )}
       </div>
 
-      <section className="border border-gray-200 rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-4">
+      {/* ===== Membros ===== */}
+      <section>
+        <h2 className="text-lg sm:text-xl font-bold mb-6">
           Membros{" "}
           <span className="font-light text-muted-foreground">
             ({membersCount ?? rows.length})
