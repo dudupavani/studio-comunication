@@ -2,8 +2,9 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
-function isUUID(v: string | null | undefined) {
-  return !!v && /^[0-9a-fA-F-]{36}$/.test(v);
+// Torna-se um type predicate para o TS estreitar para string
+function isUUID(v: unknown): v is string {
+  return typeof v === "string" && /^[0-9a-fA-F-]{36}$/.test(v);
 }
 
 export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
@@ -11,13 +12,14 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
     const supabase = createServiceClient();
 
     // params
-    const unitId = ctx?.params?.unitId ?? null;
+    const unitId = ctx?.params?.unitId;
     if (!isUUID(unitId)) {
       return NextResponse.json(
         { ok: false, error: "unitId inválido" },
         { status: 400 }
       );
     }
+    // A partir daqui, unitId é string (narrowing do TS)
 
     // query
     const { searchParams } = new URL(req.url);
@@ -28,12 +30,13 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
         { status: 400 }
       );
     }
+    // A partir daqui, orgId é string (narrowing do TS)
 
     // usuários já vinculados na unidade
     const { data: existingRows, error: existingErr } = await supabase
       .from("unit_members")
       .select("user_id")
-      .eq("unit_id", unitId);
+      .eq("unit_id", unitId); // unitId agora é string garantida
 
     if (existingErr) {
       return NextResponse.json(
@@ -50,7 +53,7 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
     const { data: orgUsers, error: orgErr } = await supabase
       .from("org_members")
       .select("user_id, profiles!inner(full_name)")
-      .eq("org_id", orgId);
+      .eq("org_id", orgId); // orgId agora é string garantida
 
     if (orgErr) {
       return NextResponse.json(
