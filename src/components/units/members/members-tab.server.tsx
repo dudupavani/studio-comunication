@@ -1,6 +1,7 @@
 // src/components/units/members/members-tab.server.tsx
 import { listUnitMembers } from "@/lib/actions/unit-members";
 import AddUnitMemberModal from "./add-unit-member-modal";
+import RemoveUnitMemberButton from "./remove-unit-member-button";
 import { UserRoundX } from "lucide-react";
 import {
   Table,
@@ -30,7 +31,7 @@ export default async function MembersTabServer({
         <AddUnitMemberModal orgId={orgId} unitId={unitId} />
       </div>
 
-      <div className="rounded-lg border border-dashed p-0">
+      <div className="rounded-lg border border-gray-200 p-0">
         {members.length === 0 ? (
           <div className="p-8 mx-auto">
             <div className="flex flex-col items-center justify-center">
@@ -47,21 +48,30 @@ export default async function MembersTabServer({
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                {/* Quando houver role no schema/retorno, basta descomentar: */}
                 {/* <TableHead>Função</TableHead> */}
-                {/* <TableHead className="w-[120px] text-right">Ações</TableHead> */}
+                <TableHead className="w-[80px] text-right">Ação</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {members.map((m) => (
-                <TableRow key={m.user_id}>
-                  <TableCell className="font-medium">
-                    {m.profiles?.full_name ?? "Sem nome"}
-                  </TableCell>
-                  {/* <TableCell>{m.role ?? "-"}</TableCell> */}
-                  {/* <TableCell className="text-right">...</TableCell> */}
-                </TableRow>
-              ))}
+              {members.map((m) => {
+                const userId = m.user_id as string;
+                const userName = m.profiles?.full_name ?? "Sem nome";
+
+                return (
+                  <TableRow key={userId}>
+                    <TableCell className="font-medium">{userName}</TableCell>
+                    {/* <TableCell>{m.role ?? "-"}</TableCell> */}
+                    <TableCell className="text-right">
+                      <RemoveUnitMemberButton
+                        orgId={orgId}
+                        unitId={unitId}
+                        userId={userId}
+                        userName={userName}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}
