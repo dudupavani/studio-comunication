@@ -41,7 +41,7 @@ export default function AddUnitMemberModal({
   useEffect(() => {
     if (!open) return;
     setLoadingList(true);
-    fetch(`/api/units/${unitId}/available-members`)
+    fetch(`/api/units/${unitId}/available-members?org_id=${orgId}`)
       .then(async (r) => {
         const data = await r.json();
         if (!r.ok || !data.ok) {
@@ -59,7 +59,7 @@ export default function AddUnitMemberModal({
       .finally(() => setLoadingList(false));
   }, [open, unitId, toast]);
 
-    function toggle(id: string) {
+  function toggle(id: string) {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
@@ -91,7 +91,9 @@ export default function AddUnitMemberModal({
 
     setLoadingList(true);
     try {
-      const res = await fetch(`/api/units/${unitId}/search-users?q=${encodeURIComponent(q)}`);
+      const res = await fetch(
+        `/api/units/${unitId}/search-users?q=${encodeURIComponent(q)}`
+      );
       const data = await res.json();
       if (!res.ok || !data.ok) {
         throw new Error(data?.error || `HTTP ${res.status}`);
@@ -194,7 +196,7 @@ export default function AddUnitMemberModal({
 
         <DialogFooter>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar"}
+            {saving ? "Adicionando..." : "Adicionar"}
           </Button>
         </DialogFooter>
       </DialogContent>

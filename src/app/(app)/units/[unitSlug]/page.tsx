@@ -13,8 +13,11 @@ import UnitDetailsForm from "@/components/units/unit-details-form";
 export default async function UnitDetailPage({
   params,
 }: {
-  params: { unitSlug: string };
+  params: Promise<{ unitSlug: string }>;
 }) {
+  // In newer versions of Next.js, params is a Promise that must be awaited
+  const { unitSlug } = await params;
+  
   const auth = await getAuthContext();
   if (!auth) redirect("/login");
 
@@ -26,7 +29,7 @@ export default async function UnitDetailPage({
   if (!orgRes?.ok || !orgRes?.data) redirect("/dashboard");
   const fullOrg = orgRes.data;
 
-  const unitRes = await getUnitBySlug(fullOrg.id, params.unitSlug);
+  const unitRes = await getUnitBySlug(fullOrg.id, unitSlug);
   if (!unitRes?.ok || !unitRes?.data) redirect("/units");
   const unit = unitRes.data;
 

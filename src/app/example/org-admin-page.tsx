@@ -2,9 +2,12 @@
 import { requireOrgAdmin } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function OrgAdminPage({ params }: { params: { orgId: string } }) {
+export default async function OrgAdminPage({ params }: { params: Promise<{ orgId: string }> }) {
+  // In newer versions of Next.js, params is a Promise that must be awaited
+  const { orgId } = await params;
+  
   // Protege a página - só org_admin ou platform_admin podem acessar
-  const auth = await requireOrgAdmin(params.orgId);
+  const auth = await requireOrgAdmin(orgId);
   
   const supabase = createClient();
   
@@ -12,7 +15,7 @@ export default async function OrgAdminPage({ params }: { params: { orgId: string
   const { data: org, error } = await supabase
     .from("orgs")
     .select("name, slug")
-    .eq("id", params.orgId)
+    .eq("id", orgId)
     .single();
   
   if (error) {

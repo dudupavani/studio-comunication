@@ -4,53 +4,94 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { revalidatePath } from "next/cache";
 import type { UnitRole } from "@/lib/types/roles";
-import { UNIT_ROLES, UNIT_USER } from "@/lib/types/roles";
+
+// ============================
+// Tipos públicos
+// ============================
 
 export type UnitMember = {
   user_id: string;
-  role: UnitRole;
+  // ⚠️ Em seu schema atual, unit_members NÃO tem 'role'.
+  // Mantemos o campo por compatibilidade de tipos, preenchendo como null.
+  role: UnitRole | null;
+  // ⚠️ Em seu schema atual, profiles NÃO tem 'email'.
+  // Mantemos o campo por compatibilidade de tipos, preenchendo como null.
   profiles: { full_name: string | null; email: string | null } | null;
 };
+
+// ============================
+// Listar membros da unidade
+// ============================
 
 export async function listUnitMembers(orgId: string, unitId: string) {
   const supabase = createServiceClient();
 
+  // ⚠️ Importante:
+  // - NÃO selecionar profiles.email (não existe na sua tabela profiles)
+  // - NÃO selecionar unit_members.role (sua tabela unit_members não tem essa coluna)
   const { data, error } = await supabase
     .from("unit_members")
-    .select("user_id, role, profiles:profiles!inner(id, full_name, email)")
+    .select(
+      `
+      user_id,
+      profiles:profiles!inner (
+        id,
+        full_name
+      )
+    `
+    )
     .eq("org_id", orgId)
     .eq("unit_id", unitId)
-    .order("user_id", { ascending: true }); // ordem estável sem depender de created_at
+    .order("user_id", { ascending: true }); // ordem estável
 
   if (error) {
     return { ok: false as const, error: error.message };
   }
 
-  return { ok: true as const, data: (data as unknown as UnitMember[]) ?? [] };
+  // Achatar o shape para compatibilidade com a UI (role/email = null)
+  const mapped =
+    (data ?? []).map((r: any) => ({
+      user_id: r.user_id as string,
+      role: null as UnitRole | null,
+      profiles: {
+        full_name: (r.profiles?.full_name as string | null) ?? null,
+        email: null as string | null,
+      },
+    })) ?? [];
+
+  return { ok: true as const, data: mapped as UnitMember[] };
 }
+
+// ============================
+// Adicionar membro à unidade
+// ============================
 
 type AddUnitMemberResult =
   | { ok: true; data: UnitMember }
   | { ok: false; error: string };
-
-const DEFAULT_UNIT_ROLE: UnitRole = UNIT_USER;
 
 export async function addUnitMember(params: {
   orgId: string;
   unitId: string;
   unitSlug: string;
   userId: string;
+  // Mantemos o parâmetro 'role' por compatibilidade de chamadas,
+  // mas ele será ignorado no INSERT (não existe no schema atual).
   role: UnitRole;
 }): Promise<AddUnitMemberResult> {
   const supabase = createServiceClient();
 
-  // Verifica se usuário pertence à organização
-  const { data: orgMember } = await supabase
+  // 1) Verifica se usuário pertence à organização
+  const { data: orgMember, error: orgErr } = await supabase
     .from("org_members")
     .select("role")
     .eq("org_id", params.orgId)
     .eq("user_id", params.userId)
     .single();
+
+  if (orgErr) {
+    return { ok: false, error: orgErr.message };
+  }
 
   if (!orgMember) {
     return {
@@ -59,13 +100,17 @@ export async function addUnitMember(params: {
     };
   }
 
-  // Verifica se já está vinculado à unidade
-  const { data: existing } = await supabase
+  // 2) Verifica se já está vinculado à unidade
+  const { data: existing, error: existErr } = await supabase
     .from("unit_members")
     .select("*")
     .eq("unit_id", params.unitId)
     .eq("user_id", params.userId)
-    .single();
+    .maybeSingle();
+
+  if (existErr) {
+    return { ok: false, error: existErr.message };
+  }
 
   if (existing) {
     return {
@@ -74,31 +119,52 @@ export async function addUnitMember(params: {
     };
   }
 
-  // Insere vínculo
+  // 3) Insere vínculo (SEM 'role', pois a tabela não possui essa coluna)
   const { data, error } = await supabase
     .from("unit_members")
     .insert({
       org_id: params.orgId,
       unit_id: params.unitId,
       user_id: params.userId,
-      role: params.role,
     })
-    .select("user_id, role, profiles:profiles!inner(id, full_name, email)")
+    .select(
+      `
+      user_id,
+      profiles:profiles!inner (
+        id,
+        full_name
+      )
+    `
+    )
     .single();
 
   if (error) {
     return { ok: false, error: error.message };
   }
 
-  // Revalida as páginas que podem mostrar membros da unidade
+  // 4) Revalida as páginas que podem mostrar membros da unidade
   revalidatePath(`/units/${params.unitSlug}`);
   revalidatePath(`/units/${params.unitSlug}/members`);
 
+  // 5) Monta o retorno compatível (role/email = null)
+  const payload: UnitMember = {
+    user_id: data.user_id as string,
+    role: null,
+    profiles: {
+      full_name: (data.profiles?.full_name as string | null) ?? null,
+      email: null,
+    },
+  };
+
   return {
     ok: true,
-    data: data as unknown as UnitMember,
+    data: payload,
   };
 }
+
+// ============================
+// Remover membro da unidade
+// ============================
 
 export async function removeUnitMember(params: {
   orgId: string;
@@ -108,13 +174,17 @@ export async function removeUnitMember(params: {
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const supabase = createServiceClient();
 
-  // Verifica se usuário está vinculado à unidade
-  const { data: existing } = await supabase
+  // 1) Verifica se usuário está vinculado à unidade
+  const { data: existing, error: existErr } = await supabase
     .from("unit_members")
     .select("*")
     .eq("unit_id", params.unitId)
     .eq("user_id", params.userId)
-    .single();
+    .maybeSingle();
+
+  if (existErr) {
+    return { ok: false, error: existErr.message };
+  }
 
   if (!existing) {
     return {
@@ -123,6 +193,7 @@ export async function removeUnitMember(params: {
     };
   }
 
+  // 2) Remove vínculo
   const { error } = await supabase
     .from("unit_members")
     .delete()
@@ -133,7 +204,9 @@ export async function removeUnitMember(params: {
     return { ok: false, error: error.message };
   }
 
-  // Revalida as páginas que podem mostrar membros da unidade
+  // 3) Revalida as páginas relacionadas
   revalidatePath(`/units/${params.unitSlug}`);
   revalidatePath(`/units/${params.unitSlug}/members`);
+
+  return { ok: true };
 }

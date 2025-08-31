@@ -1,7 +1,7 @@
 // src/components/units/members/members-tab.server.tsx
 import { listUnitMembers } from "@/lib/actions/unit-members";
 import AddUnitMemberModal from "./add-unit-member-modal";
-import { getRoleLabel } from "@/lib/role-labels";
+import { UserRoundX } from "lucide-react";
 
 export default async function MembersTabServer({
   orgId,
@@ -15,6 +15,15 @@ export default async function MembersTabServer({
   const membersRes = await listUnitMembers(orgId, unitId);
   const members = membersRes.ok ? membersRes.data : [];
 
+  // 🔎 DEBUG (apenas em dev)
+  const showDebug = process.env.NODE_ENV !== "production";
+  const debugInfo = {
+    ok: membersRes.ok,
+    error: membersRes.ok ? null : membersRes.error,
+    length: Array.isArray(members) ? members.length : null,
+    sample: Array.isArray(members) && members.length > 0 ? members[0] : null,
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -22,11 +31,24 @@ export default async function MembersTabServer({
         <AddUnitMemberModal orgId={orgId} unitId={unitId} />
       </div>
 
+      {showDebug && (
+        <pre className="text-xs p-3 rounded border bg-muted/40 overflow-x-auto">
+          {JSON.stringify(debugInfo, null, 2)}
+        </pre>
+      )}
+
       <div className="rounded-lg border border-dashed p-8">
         {members.length === 0 ? (
-          <p className="text-center text-muted-foreground">
-            Nenhum membro vinculado ainda.
-          </p>
+          <div className="mx-auto">
+            <div className="flex flex-col items-center jutify-center">
+              <div className="mb-4 w-12 h-12 text-gray-700 border border-muted shadow-lg flex items-center justify-center rounded-lg bg-white">
+                <UserRoundX />
+              </div>
+              <p className="text-muted-foreground">
+                Nenhum membro vinculado ainda.
+              </p>
+            </div>
+          </div>
         ) : (
           <ul className="space-y-3">
             {members.map((m) => (
@@ -37,13 +59,8 @@ export default async function MembersTabServer({
                   <p className="font-medium">
                     {m.profiles?.full_name ?? "Sem nome"}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {m.profiles?.email}
-                  </p>
+                  {/* Sem e-mail e sem badge de role no schema atual */}
                 </div>
-                <span className="text-xs rounded-full border px-2 py-1">
-                  {getRoleLabel(m.role)}
-                </span>
               </li>
             ))}
           </ul>
