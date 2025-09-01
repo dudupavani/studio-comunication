@@ -1,5 +1,5 @@
 // src/components/units/members/members-tab.server.tsx
-import { listUnitMembers } from "@/lib/actions/unit-members";
+import { listUnitMembersWithEmail } from "@/lib/actions/unit-members";
 import AddUnitMemberModal from "./add-unit-member-modal";
 import RemoveUnitMemberButton from "./remove-unit-member-button";
 import { UserRoundX } from "lucide-react";
@@ -11,6 +11,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import EmailCopy from "@/components/EmailCopy"; // usado para copiar e-mail (já existente no projeto)
 
 export default async function MembersTabServer({
   orgId,
@@ -21,7 +22,8 @@ export default async function MembersTabServer({
   unitId: string;
   unitSlug: string;
 }) {
-  const membersRes = await listUnitMembers(orgId, unitId);
+  // Agora usamos a variante que agrega e-mail via Admin API (lado servidor)
+  const membersRes = await listUnitMembersWithEmail(orgId, unitId);
   const members = membersRes.ok ? membersRes.data : [];
 
   return (
@@ -48,6 +50,7 @@ export default async function MembersTabServer({
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
+                <TableHead>E-mail</TableHead>
                 {/* <TableHead>Função</TableHead> */}
                 <TableHead className="w-[80px] text-right">Ação</TableHead>
               </TableRow>
@@ -56,10 +59,23 @@ export default async function MembersTabServer({
               {members.map((m) => {
                 const userId = m.user_id as string;
                 const userName = m.profiles?.full_name ?? "Sem nome";
+                const email = m.email ?? m.profiles?.email ?? null;
 
                 return (
                   <TableRow key={userId}>
                     <TableCell className="font-medium">{userName}</TableCell>
+
+                    <TableCell>
+                      {email ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm">{email}</span>
+                          <EmailCopy email={email} />
+                        </div>
+                      ) : (
+                        <span className="text-sm ">—</span>
+                      )}
+                    </TableCell>
+
                     {/* <TableCell>{m.role ?? "-"}</TableCell> */}
                     <TableCell className="text-right">
                       <RemoveUnitMemberButton

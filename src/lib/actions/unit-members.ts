@@ -19,8 +19,49 @@ export type UnitMember = {
   profiles: { full_name: string | null; email: string | null } | null;
 };
 
+export type UnitMemberWithEmail = UnitMember & {
+  // Campo redundante para facilitar consumo direto na UI (opcional),
+  // mantendo compatibilidade com o shape atual.
+  email: string | null;
+};
+
 // ============================
-// Listar membros da unidade
+// Helper: buscar e-mails via Admin API (em lotes)
+// ============================
+
+/**
+ * Busca e-mails no auth.users usando a Admin API do Supabase, em lotes.
+ * - Executa APENAS no servidor (usa service role).
+ * - Não lança erro no conjunto inteiro se um usuário falhar: preenche null.
+ */
+async function fetchEmailsByUserIds(
+  userIds: string[]
+): Promise<Map<string, string | null>> {
+  const supabase = createServiceClient();
+  const emailById = new Map<string, string | null>();
+  const ids = Array.from(new Set(userIds)); // unique
+  const chunkSize = 25;
+
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const slice = ids.slice(i, i + chunkSize);
+    await Promise.all(
+      slice.map(async (id) => {
+        try {
+          const res = await supabase.auth.admin.getUserById(id);
+          const email = res?.data?.user?.email ?? null;
+          emailById.set(id, email);
+        } catch {
+          emailById.set(id, null);
+        }
+      })
+    );
+  }
+
+  return emailById;
+}
+
+// ============================
+// Listar membros da unidade (BASE, sem e-mail)
 // ============================
 
 export async function listUnitMembers(orgId: string, unitId: string) {
@@ -60,6 +101,38 @@ export async function listUnitMembers(orgId: string, unitId: string) {
     })) ?? [];
 
   return { ok: true as const, data: mapped as UnitMember[] };
+}
+
+// ============================
+// Listar membros da unidade (ENRIQUECIDO com e-mail)
+// ============================
+
+/**
+ * Variante segura que reaproveita a base (listUnitMembers) e agrega e-mail do auth.users
+ * via Admin API. Não altera DB nem policies.
+ */
+export async function listUnitMembersWithEmail(orgId: string, unitId: string) {
+  const base = await listUnitMembers(orgId, unitId);
+  if (!base.ok) return base; // repassa erro
+
+  const rows = base.data ?? [];
+  if (rows.length === 0) {
+    return { ok: true as const, data: [] as UnitMemberWithEmail[] };
+  }
+
+  const ids = rows.map((r) => r.user_id);
+  const emailById = await fetchEmailsByUserIds(ids);
+
+  const enriched: UnitMemberWithEmail[] = rows.map((r) => ({
+    ...r,
+    email: emailById.get(r.user_id) ?? null,
+    // opcionalmente também poderíamos preencher profiles.email para simplificar consumo:
+    profiles: r.profiles
+      ? { ...r.profiles, email: emailById.get(r.user_id) ?? null }
+      : { full_name: null, email: emailById.get(r.user_id) ?? null },
+  }));
+
+  return { ok: true as const, data: enriched };
 }
 
 // ============================

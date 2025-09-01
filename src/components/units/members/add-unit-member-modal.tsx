@@ -30,11 +30,12 @@ import {
 } from "@/components/ui/table";
 
 import { Spinner } from "@/components/ui/spinner";
+import EmailCopy from "@/components/EmailCopy";
 
 type UserItem = {
   id: string;
   name: string | null;
-  email: string | null;
+  email: string | null; // vem de auth.users pelo backend
 };
 
 export default function AddUnitMemberModal({
@@ -79,7 +80,7 @@ export default function AddUnitMemberModal({
     );
   }
 
-  // Busca de usuários por query (mantida)
+  // Busca de usuários por query
   async function searchUsers(q: string) {
     if (!q.trim()) {
       setLoadingList(true);
@@ -183,7 +184,7 @@ export default function AddUnitMemberModal({
             <Input
               placeholder="Buscar usuários..."
               onChange={(e) => searchUsers(e.target.value)}
-              className="mb-2"
+              className="mb-2 max-w-md"
             />
           </div>
 
@@ -202,11 +203,11 @@ export default function AddUnitMemberModal({
             )}
 
             {!loadingList && users.length > 0 && (
-              <Table className="border border-gray-200 rounded-lg opacity-0 translate-y-4 animate-fade-in-up">
+              <Table className="border border-gray-200 rounded-lg">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>E-mail</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -214,6 +215,9 @@ export default function AddUnitMemberModal({
                     <TableRow key={u.id}>
                       <TableCell className="flex items-center gap-3">
                         <Checkbox
+                          aria-label={`Selecionar ${
+                            u.name ?? u.email ?? "usuário"
+                          }`}
                           checked={selected.includes(u.id)}
                           onCheckedChange={() => toggle(u.id)}
                         />
@@ -222,7 +226,18 @@ export default function AddUnitMemberModal({
                         </span>
                       </TableCell>
 
-                      <TableCell>{u.email}</TableCell>
+                      <TableCell>
+                        {u.email ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm truncate">{u.email}</span>
+                            <EmailCopy email={u.email} />
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
