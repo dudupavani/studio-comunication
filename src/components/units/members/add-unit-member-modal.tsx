@@ -4,18 +4,22 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+
+// SUBSTITUI Dialog por Drawer
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+  DrawerClose,
+  DrawerDescription,
+} from "@/components/ui/drawer";
 
 type UserItem = {
   id: string;
@@ -57,7 +61,7 @@ export default function AddUnitMemberModal({
         });
       })
       .finally(() => setLoadingList(false));
-  }, [open, unitId, toast]);
+  }, [open, unitId, orgId, toast]);
 
   function toggle(id: string) {
     setSelected((prev) =>
@@ -65,13 +69,14 @@ export default function AddUnitMemberModal({
     );
   }
 
-  // Função para buscar usuários com base em uma query
+  // Busca de usuários por query (mantida)
   async function searchUsers(q: string) {
     if (!q.trim()) {
-      // Se não houver query, carregamos os usuários disponíveis novamente
       setLoadingList(true);
       try {
-        const res = await fetch(`/api/units/${unitId}/available-members`);
+        const res = await fetch(
+          `/api/units/${unitId}/available-members?org_id=${orgId}`
+        );
         const data = await res.json();
         if (!res.ok || !data.ok) {
           throw new Error(data?.error || `HTTP ${res.status}`);
@@ -148,58 +153,69 @@ export default function AddUnitMemberModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
         <Button>+ Adicionar</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Adicionar membros à unidade</DialogTitle>
-        </DialogHeader>
+      </DrawerTrigger>
 
-        <div className="space-y-2">
-          <Input
-            placeholder="Buscar usuários..."
-            onChange={(e) => searchUsers(e.target.value)}
-            className="mb-2"
-          />
+      <DrawerContent className="max-h-[85vh] px-6">
+        <DrawerHeader className="p-0">
+          <DrawerTitle className="text-xl">
+            Adicionar membros à unidade
+          </DrawerTitle>
+          <DrawerDescription>
+            Selecione um ou mais usuários para vincular com esta unidade.
+          </DrawerDescription>
+        </DrawerHeader>
+
+        <div className="py-6">
+          <div className="pb-2">
+            <Input
+              placeholder="Buscar usuários..."
+              onChange={(e) => searchUsers(e.target.value)}
+              className="mb-2"
+            />
+          </div>
+
+          <div className="space-y-2 max-h-[90vh] overflow-y-auto pr-1">
+            {loadingList && (
+              <p className="text-sm text-muted-foreground">
+                Carregando usuários…
+              </p>
+            )}
+            {!loadingList && users.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhum usuário disponível para vincular.
+              </p>
+            )}
+            {users.map((u) => (
+              <label
+                key={u.id}
+                className="flex items-center gap-3 rounded-md border p-2">
+                <Checkbox
+                  checked={selected.includes(u.id)}
+                  onCheckedChange={() => toggle(u.id)}
+                />
+                <div className="text-left">
+                  <p className="font-medium leading-none">
+                    {u.name || "Sem nome"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{u.email}</p>
+                </div>
+              </label>
+            ))}
+          </div>
         </div>
 
-        <div className="space-y-2 max-h-[320px] overflow-y-auto">
-          {loadingList && (
-            <p className="text-sm text-muted-foreground">
-              Carregando usuários…
-            </p>
-          )}
-          {!loadingList && users.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhum usuário disponível para vincular.
-            </p>
-          )}
-          {users.map((u) => (
-            <label
-              key={u.id}
-              className="flex items-center gap-3 rounded-md border p-2">
-              <Checkbox
-                checked={selected.includes(u.id)}
-                onCheckedChange={() => toggle(u.id)}
-              />
-              <div className="text-left">
-                <p className="font-medium leading-none">
-                  {u.name || "Sem nome"}
-                </p>
-                <p className="text-sm text-muted-foreground">{u.email}</p>
-              </div>
-            </label>
-          ))}
-        </div>
-
-        <DialogFooter>
+        <DrawerFooter className="p-0 pb-8">
+          <DrawerClose asChild>
+            <Button variant="ghost">Cancelar</Button>
+          </DrawerClose>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? "Adicionando..." : "Adicionar"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }
