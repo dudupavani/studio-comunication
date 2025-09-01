@@ -14,7 +14,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { Pencil, MoreHorizontal, Trash, UserX, UserCheck } from "lucide-react";
+import {
+  Pencil,
+  MoreHorizontal,
+  Trash,
+  UserX,
+  UserCheck,
+  UserRoundX,
+} from "lucide-react";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import { isPlatformAdminProfile } from "@/lib/ui/guards";
 import { getRoleLabel } from "@/lib/role-labels";
@@ -209,7 +216,12 @@ export default function UsersClient({
                 <TableCell
                   colSpan={6}
                   className="px-4 py-6 text-center text-muted-foreground">
-                  Nenhum usuário encontrado.
+                  <div className="flex flex-col items-center gap-2 justify-center">
+                    <div className="flex items-center justify-center text-muted-foreground bg-white border border-muted rounded-lg shadow-md h-12 w-12 mb-3">
+                      <UserRoundX />
+                    </div>
+                    <span>Nenhum usuário encontrado.</span>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (

@@ -13,7 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/components/shared/confirm-dialog";
-import { deleteUnitAction } from "@/app/(app)/units/unit-actions";
+// ✅ use a versão "form-friendly" (assinatura FormData) para o ConfirmDialog
+import { deleteUnitFormAction } from "@/app/(app)/units/unit-actions";
 
 type Props = {
   orgId: string;
@@ -23,8 +24,8 @@ type Props = {
 
 export default function UnitsTable({ orgId, orgSlug, units }: Props) {
   return (
-    <div className="w-full overflow-x-auto">
-      <Table>
+    <div className="w-full overflow-x-auto rounded-lg">
+      <Table className="min-w-[600px] border border-gray-200">
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
@@ -37,11 +38,9 @@ export default function UnitsTable({ orgId, orgSlug, units }: Props) {
           {units.map((u) => (
             <TableRow key={u.id}>
               <TableCell className="font-medium">
-                                  <Link
-                    href={`/units/${u.slug}`}
-                    className="hover:underline">
-                    {u.name}
-                  </Link>
+                <Link href={`/units/${u.slug}`} className="hover:underline">
+                  {u.name}
+                </Link>
               </TableCell>
               <TableCell>{u.cnpj ?? "-"}</TableCell>
               <TableCell>{u.phone ?? "-"}</TableCell>
@@ -50,8 +49,8 @@ export default function UnitsTable({ orgId, orgSlug, units }: Props) {
                   <Button
                     asChild
                     variant="ghost"
-                    size="icon"
-                    aria-label="Editar unidade">
+                    size="icon-sm"
+                    aria-label={`Editar unidade ${u.name}`}>
                     <Link href={`/units/${u.slug}`}>
                       <Pencil className="h-4 w-4" />
                     </Link>
@@ -61,16 +60,18 @@ export default function UnitsTable({ orgId, orgSlug, units }: Props) {
                     trigger={
                       <Button
                         variant="ghost"
-                        size="icon"
-                        aria-label="Excluir unidade">
+                        size="icon-sm"
+                        aria-label={`Excluir unidade ${u.name}`}>
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Excluir</span>
                       </Button>
                     }
                     title="Excluir unidade?"
                     description={`Esta ação removerá "${u.name}". Você tem certeza?`}
-                    action={deleteUnitAction}
-                    hidden={{ orgId, unitId: u.id }} // delete por ID continua OK
+                    // ✅ Agora a assinatura bate com o ConfirmDialog: (formData) => Promise<any>
+                    action={deleteUnitFormAction}
+                    // Esses campos irão como FormData.hidden pelo ConfirmDialog
+                    hidden={{ orgId, unitId: u.id }}
                     confirmText="Excluir"
                     danger
                   />
@@ -78,9 +79,13 @@ export default function UnitsTable({ orgId, orgSlug, units }: Props) {
               </TableCell>
             </TableRow>
           ))}
+
           {units.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-muted-foreground">
+              {/* ✅ colSpan ajustado para 4 colunas */}
+              <TableCell
+                colSpan={4}
+                className="text-muted-foreground text-center py-6">
                 Nenhuma unidade encontrada.
               </TableCell>
             </TableRow>

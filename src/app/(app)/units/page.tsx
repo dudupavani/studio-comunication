@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth-context";
 import { getOrgWithDetails } from "@/lib/actions/orgs";
 import { listUnits } from "@/lib/actions/units";
-import { createUnitAction } from "@/app/(app)/units/unit-actions";
+// ✅ Renomeamos a importação para evitar conflito de nome com o wrapper local
+import { createUnitAction as createUnit } from "@/app/(app)/units/unit-actions";
 import { AddUnitModal } from "@/components/units/add-unit-modal";
 import UnitsTable from "@/components/units/units-table";
 import { isOrgAdminFor } from "@/lib/permissions-org";
@@ -47,6 +48,25 @@ export default async function UnitsPage() {
   const unitsRes = await listUnits(fullOrg.id);
   const units = unitsRes.ok ? unitsRes.data ?? [] : [];
 
+  // ✅ Wrapper com a assinatura que o AddUnitModal espera: (formData) => Promise<void>
+  //    Ele extrai "name" do form, usa orgId do contexto e chama sua action original (orgId, name).
+  async function createUnitFormAction(formData: FormData): Promise<void> {
+    "use server";
+
+    const name = String(formData.get("name") ?? "").trim();
+    if (!name) {
+      throw new Error("Nome da unidade é obrigatório.");
+    }
+
+    const res = await createUnit(fullOrg.id, name);
+    if (!res?.ok) {
+      throw new Error(res?.error ?? "Erro ao criar unidade");
+    }
+
+    // Se a sua createUnit já faz revalidatePath, não precisa repetir aqui.
+    // Caso contrário, podemos revalidar aqui futuramente.
+  }
+
   // Removido o redirecionamento automático para a primeira unidade
   // Agora a página sempre mostra a lista de unidades
 
@@ -60,7 +80,7 @@ export default async function UnitsPage() {
         <AddUnitModal
           orgId={fullOrg.id}
           slug={fullOrg.slug}
-          action={createUnitAction}
+          action={createUnitFormAction} // ✅ assinatura correta
         />
       </section>
 
