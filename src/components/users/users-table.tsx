@@ -1,3 +1,4 @@
+// src/components/users/users-table.tsx
 "use client";
 
 import { useState } from "react";
@@ -16,6 +17,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { getRoleLabel } from "@/lib/role-labels";
+import EmailCopy from "@/components/EmailCopy"; // ⬅️ novo import
 
 interface UsersTableProps {
   users: Profile[];
@@ -38,8 +40,8 @@ export function UsersTable({ users }: UsersTableProps) {
   const sortedUsers = [...users].sort((a, b) => {
     if (!sortColumn) return 0;
 
-    const aValue = a[sortColumn];
-    const bValue = b[sortColumn];
+    const aValue = a[sortColumn] as unknown;
+    const bValue = b[sortColumn] as unknown;
 
     if (typeof aValue === "string" && typeof bValue === "string") {
       return sortDirection === "asc"
@@ -107,20 +109,43 @@ export function UsersTable({ users }: UsersTableProps) {
               )}
               {user.full_name}
             </TableCell>
-            <TableCell>{user.email}</TableCell>
-            <TableCell>{user.phone}</TableCell>
+
             <TableCell>
-              <Badge variant={user.global_role === "platform_admin" ? "default" : "secondary"}>
+              {user.email ? (
+                <div className="flex items-center gap-1 max-w-[260px] sm:max-w-[320px]">
+                  <span className="truncate" title={user.email}>
+                    {user.email}
+                  </span>
+                  <EmailCopy email={user.email} />
+                </div>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
+            </TableCell>
+
+            <TableCell>{user.phone}</TableCell>
+
+            <TableCell>
+              <Badge
+                variant={
+                  user.global_role === "platform_admin"
+                    ? "default"
+                    : "secondary"
+                }>
                 {getRoleLabel(user.global_role)}
               </Badge>
             </TableCell>
+
             <TableCell>{new Date(user.created_at).toLocaleString()}</TableCell>
+
             <TableCell>
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => router.push(`/users/${user.id}/edit`)}
-              >
+                aria-label={`Editar usuário ${
+                  user.full_name ?? user.email ?? ""
+                }`}
+                onClick={() => router.push(`/users/${user.id}/edit`)}>
                 <Pencil className="h-4 w-4" />
               </Button>
             </TableCell>

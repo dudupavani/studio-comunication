@@ -1,45 +1,29 @@
 // src/app/api/units/[unitId]/available-members/route.ts
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getAuthContext } from "@/lib/auth-context";
+import { isOrgAdminFor, isUnitMasterFor } from "@/lib/permissions-org";
+import { fetchEmailsByUserIds } from "@/lib/email-admin";
 
-// Torna-se um type predicate para o TS estreitar para string
+// type guard simples
 function isUUID(v: unknown): v is string {
   return typeof v === "string" && /^[0-9a-fA-F-]{36}$/.test(v);
-}
-
-// Busca e-mails no auth.users via Admin API em lotes
-async function fetchEmailsByUserIds(
-  supabase: ReturnType<typeof createServiceClient>,
-  userIds: string[]
-): Promise<Map<string, string | null>> {
-  const emailById = new Map<string, string | null>();
-  const ids = Array.from(new Set(userIds)); // unique
-  const chunkSize = 25;
-
-  for (let i = 0; i < ids.length; i += chunkSize) {
-    const slice = ids.slice(i, i + chunkSize);
-    await Promise.all(
-      slice.map(async (id) => {
-        try {
-          const res = await supabase.auth.admin.getUserById(id);
-          const email = res?.data?.user?.email ?? null;
-          emailById.set(id, email);
-        } catch {
-          // Se falhar para um usuário, seguimos com null
-          emailById.set(id, null);
-        }
-      })
-    );
-  }
-
-  return emailById;
 }
 
 export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
   try {
     const supabase = createServiceClient();
 
-    // params
+    // 1) Autenticação obrigatória
+    const auth = await getAuthContext();
+    if (!auth?.userId) {
+      return NextResponse.json(
+        { ok: false, error: "Não autenticado" },
+        { status: 401 }
+      );
+    }
+
+    // 2) Params
     const unitId = ctx?.params?.unitId;
     if (!isUUID(unitId)) {
       return NextResponse.json(
@@ -48,17 +32,62 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
       );
     }
 
-    // query
+    // 3) Derivar orgId real da unidade (server-side)
+    const { data: unitRow, error: unitErr } = await supabase
+      .from("units")
+      .select("id, org_id")
+      .eq("id", unitId)
+      .single();
+
+    if (unitErr) {
+      return NextResponse.json(
+        { ok: false, error: unitErr.message },
+        { status: 500 }
+      );
+    }
+    if (!unitRow?.org_id) {
+      return NextResponse.json(
+        { ok: false, error: "Unidade não encontrada" },
+        { status: 404 }
+      );
+    }
+    const orgIdFromUnit = unitRow.org_id as string;
+
+    // 4) Query param org_id (compat) — precisa bater com a unidade
     const { searchParams } = new URL(req.url);
-    const orgId = searchParams.get("org_id");
-    if (!isUUID(orgId)) {
+    const orgIdParam = searchParams.get("org_id");
+    if (!isUUID(orgIdParam)) {
       return NextResponse.json(
         { ok: false, error: "org_id é obrigatório" },
         { status: 400 }
       );
     }
+    if (orgIdParam !== orgIdFromUnit) {
+      return NextResponse.json(
+        { ok: false, error: "org_id inválido para a unidade informada" },
+        { status: 403 }
+      );
+    }
 
-    // usuários já vinculados na unidade
+    // 5) Gate de permissão (admin de plataforma, admin da org, ou master da unidade)
+    const isPlatformAdmin = auth.platformRole === "platform_admin";
+    const isOrgAdmin = await isOrgAdminFor(orgIdFromUnit, auth.userId);
+    const isUnitMaster = await (async () => {
+      try {
+        return await isUnitMasterFor(orgIdFromUnit, unitId, auth.userId);
+      } catch {
+        return false;
+      }
+    })();
+
+    if (!(isPlatformAdmin || isOrgAdmin || isUnitMaster)) {
+      return NextResponse.json(
+        { ok: false, error: "Acesso negado" },
+        { status: 403 }
+      );
+    }
+
+    // 6) Usuários já vinculados na unidade
     const { data: existingRows, error: existingErr } = await supabase
       .from("unit_members")
       .select("user_id")
@@ -75,11 +104,11 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
       (existingRows ?? []).map((r) => r.user_id as string)
     );
 
-    // membros da organização (com nome em profiles)
+    // 7) Membros da organização (com nome em profiles)
     const { data: orgUsers, error: orgErr } = await supabase
       .from("org_members")
       .select("user_id, profiles!inner(full_name)")
-      .eq("org_id", orgId);
+      .eq("org_id", orgIdFromUnit);
 
     if (orgErr) {
       return NextResponse.json(
@@ -88,13 +117,13 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
       );
     }
 
-    // Candidatos: quem pertence à org e ainda NÃO está na unidade
+    // 8) Candidatos: pertencem à org e NÃO estão na unidade
     const baseUsers =
       (orgUsers ?? [])
         .map((r: any) => ({
           id: r.user_id as string,
           name: (r.profiles?.full_name as string | null) ?? null,
-          email: null as string | null, // será preenchido abaixo
+          email: null as string | null, // preenchido abaixo
         }))
         .filter((u) => !alreadyIds.has(u.id)) ?? [];
 
@@ -102,7 +131,7 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
       return NextResponse.json({ ok: true, users: [] });
     }
 
-    // Enriquecer com e-mails (auth.users via Admin API)
+    // 9) Enriquecer com e-mails (auth.users via Admin API)
     const emailMap = await fetchEmailsByUserIds(
       supabase,
       baseUsers.map((u) => u.id)
@@ -113,7 +142,6 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
         ...u,
         email: emailMap.get(u.id) ?? null,
       }))
-      // ordenação simples por nome (opcional)
       .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt-BR"));
 
     return NextResponse.json({ ok: true, users });

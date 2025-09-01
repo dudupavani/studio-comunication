@@ -30,7 +30,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={cn("font-body antialiased h-full bg-background")}>
+      <body className={cn("font-body antialiased h-screen bg-background")}>
         {/* Provider de auth precisa envolver a árvore para disponibilizar o contexto */}
         <AuthProvider>
           <div className="flex flex-col min-h-screen">

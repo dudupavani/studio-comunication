@@ -17,7 +17,7 @@ export default async function UnitDetailPage({
 }) {
   // In newer versions of Next.js, params is a Promise that must be awaited
   const { unitSlug } = await params;
-  
+
   const auth = await getAuthContext();
   if (!auth) redirect("/login");
 
@@ -35,13 +35,19 @@ export default async function UnitDetailPage({
 
   const canPlatform = auth.platformRole === "platform_admin";
   const canOrgAdmin = await isOrgAdminFor(fullOrg.id, auth.userId);
-  const canUnitMaster = await isUnitMasterFor(fullOrg.id, unit.id, auth.userId);
+
+  // ✅ só consulta isUnitMasterFor se realmente necessário
+  let canUnitMaster = false;
+  if (!canPlatform && !canOrgAdmin) {
+    canUnitMaster = await isUnitMasterFor(fullOrg.id, unit.id, auth.userId);
+  }
+
   if (!canPlatform && !canOrgAdmin && !canUnitMaster) redirect("/units");
 
   return (
     <div className="p-8">
       <div className="mb-6 space-y-1">
-        <h1 className="text-xl font-bold">{unit.name}</h1>
+        <h1 className="text-2xl font-bold">{unit.name}</h1>
         <p className="text-sm text-muted-foreground">
           Gerencie os detalhes e membros da unidade.
         </p>

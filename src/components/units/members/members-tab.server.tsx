@@ -11,7 +11,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import EmailCopy from "@/components/EmailCopy"; // usado para copiar e-mail (já existente no projeto)
+import UserLineItem from "@/components/users/user-line-item"; // ⬅️ novo padrão
 
 export default async function MembersTabServer({
   orgId,
@@ -27,8 +27,8 @@ export default async function MembersTabServer({
   const members = membersRes.ok ? membersRes.data : [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div>
+      <div className="flex items-end justify-between mb-4">
         <h2 className="text-xl font-semibold">Membros da unidade</h2>
         <AddUnitMemberModal orgId={orgId} unitId={unitId} />
       </div>
@@ -49,8 +49,7 @@ export default async function MembersTabServer({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
+                <TableHead>Membro</TableHead>
                 {/* <TableHead>Função</TableHead> */}
                 <TableHead className="w-[80px] text-right">Ação</TableHead>
               </TableRow>
@@ -63,17 +62,16 @@ export default async function MembersTabServer({
 
                 return (
                   <TableRow key={userId}>
-                    <TableCell className="font-medium">{userName}</TableCell>
-
-                    <TableCell>
-                      {email ? (
-                        <div className="flex items-center gap-1">
-                          <span className="text-sm">{email}</span>
-                          <EmailCopy email={email} />
-                        </div>
-                      ) : (
-                        <span className="text-sm ">—</span>
-                      )}
+                    <TableCell className="py-2">
+                      <UserLineItem
+                        id={userId}
+                        name={userName}
+                        email={email}
+                        // avatarUrl: se no futuro vier no payload, é só passar aqui
+                        size="md"
+                        orientation="stacked"
+                        withCopy
+                      />
                     </TableCell>
 
                     {/* <TableCell>{m.role ?? "-"}</TableCell> */}

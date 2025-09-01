@@ -4,7 +4,6 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -30,12 +29,13 @@ import {
 } from "@/components/ui/table";
 
 import { Spinner } from "@/components/ui/spinner";
-import EmailCopy from "@/components/EmailCopy";
+import UserLineItem from "@/components/users/user-line-item";
 
 type UserItem = {
   id: string;
   name: string | null;
-  email: string | null; // vem de auth.users pelo backend
+  email: string | null;
+  // avatarUrl?: string | null; // (se no futuro vier do endpoint, já suportamos)
 };
 
 export default function AddUnitMemberModal({
@@ -80,7 +80,7 @@ export default function AddUnitMemberModal({
     );
   }
 
-  // Busca de usuários por query
+  // Busca de usuários por query (mantida)
   async function searchUsers(q: string) {
     if (!q.trim()) {
       setLoadingList(true);
@@ -169,7 +169,7 @@ export default function AddUnitMemberModal({
         <Button>+ Adicionar</Button>
       </DrawerTrigger>
 
-      <DrawerContent className="max-h-[85vh] px-6">
+      <DrawerContent className="min-h-[70vh] max-h-[85vh] px-6">
         <DrawerHeader className="p-0">
           <DrawerTitle className="text-xl">
             Adicionar membros à unidade
@@ -203,40 +203,32 @@ export default function AddUnitMemberModal({
             )}
 
             {!loadingList && users.length > 0 && (
-              <Table className="border border-gray-200 rounded-lg">
+              <Table className="border border-gray-200 rounded-lg opacity-0 translate-y-4 animate-fade-in-up">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>E-mail</TableHead>
+                    <TableHead>Usuários</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users.map((u) => (
                     <TableRow key={u.id}>
-                      <TableCell className="flex items-center gap-3">
-                        <Checkbox
-                          aria-label={`Selecionar ${
-                            u.name ?? u.email ?? "usuário"
-                          }`}
-                          checked={selected.includes(u.id)}
-                          onCheckedChange={() => toggle(u.id)}
+                      <TableCell className="py-2">
+                        <UserLineItem
+                          id={u.id}
+                          name={u.name}
+                          email={u.email}
+                          // avatarUrl={u.avatarUrl ?? null} // quando vier no payload
+                          size="md"
+                          orientation="stacked"
+                          withCopy
+                          checkbox={{
+                            checked: selected.includes(u.id),
+                            onCheckedChange: () => toggle(u.id),
+                            ariaLabel: `Selecionar ${
+                              u.name ?? u.email ?? "usuário"
+                            }`,
+                          }}
                         />
-                        <span className="font-medium">
-                          {u.name || "Sem nome"}
-                        </span>
-                      </TableCell>
-
-                      <TableCell>
-                        {u.email ? (
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm truncate">{u.email}</span>
-                            <EmailCopy email={u.email} />
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">
-                            —
-                          </span>
-                        )}
                       </TableCell>
                     </TableRow>
                   ))}

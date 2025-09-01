@@ -1,4 +1,5 @@
 // src/components/users/users-client.tsx
+// src/components/users/users-client.tsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -43,6 +44,7 @@ import {
 import NewUserModal from "@/components/users/new-user-modal";
 import DisableUserDialog from "@/components/users/disable-user-dialog";
 import EnableUserDialog from "@/components/users/enable-user-dialog";
+import EmailCopy from "@/components/EmailCopy"; // ⬅️ novo import
 
 // Função para determinar a role a ser exibida com base na prioridade
 function getDisplayRole(user: any): string {
@@ -155,7 +157,7 @@ export default function UsersClient({
     <>
       {/* Header */}
       <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end mb-4 gap-6">
-        <div className="flex flex-col sm:flex-row items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-4">
           {/* Filtro por Função */}
           <Select value={roleFilter || "all"} onValueChange={handleRoleChange}>
             <SelectTrigger className="w-full sm:w-[200px]">
@@ -247,12 +249,22 @@ export default function UsersClient({
                             .slice(0, 2)}
                         </div>
                       )}
+
                       <div>
                         <div className="font-semibold text-sm">
                           {user.full_name || "No name"}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {user.email}
+                          {user.email ? (
+                            <div className="flex items-center gap-1 max-w-[260px] sm:max-w-[320px]">
+                              <span className="truncate" title={user.email}>
+                                {user.email}
+                              </span>
+                              <EmailCopy email={user.email} />
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </div>
                       </div>
                     </div>
