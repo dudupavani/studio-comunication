@@ -200,8 +200,8 @@ export default function UsersClient({
       </div>
 
       {/* Tabela */}
-      <div className="overflow-hidden rounded-md border">
-        <Table className="w-full">
+      <div className="rounded-md border">
+        <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 text-left">
               <TableHead className="px-4 py-3">Nome</TableHead>

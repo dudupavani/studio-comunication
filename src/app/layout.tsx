@@ -34,7 +34,7 @@ export default function RootLayout({
         {/* Provider de auth precisa envolver a árvore para disponibilizar o contexto */}
         <AuthProvider>
           <div className="flex flex-col min-h-screen">
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 overflow-x-hidden">{children}</main>
           </div>
         </AuthProvider>
 

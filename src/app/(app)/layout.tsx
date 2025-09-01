@@ -119,7 +119,7 @@ export default async function AppLayout({
         </header>
 
         {/* Conteúdo */}
-        <div className={cn("flex flex-1 flex-col")}>{children}</div>
+        <div className={cn("flex flex-col")}>{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

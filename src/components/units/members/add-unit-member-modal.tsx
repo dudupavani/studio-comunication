@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 
 import {
   Drawer,
@@ -166,7 +167,10 @@ export default function AddUnitMemberModal({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button>+ Adicionar</Button>
+        <Button>
+          <Plus size={22} />
+          Adicionar
+        </Button>
       </DrawerTrigger>
 
       <DrawerContent className="min-h-[70vh] max-h-[85vh] px-6">

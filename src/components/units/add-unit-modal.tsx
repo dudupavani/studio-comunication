@@ -35,7 +35,7 @@ export function AddUnitModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button type="button">
-          <Plus />
+          <Plus size={22} />
           Adicionar
         </Button>
       </DialogTrigger>

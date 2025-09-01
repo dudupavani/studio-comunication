@@ -25,11 +25,15 @@ export default async function MembersTabServer({
   // Agora usamos a variante que agrega e-mail via Admin API (lado servidor)
   const membersRes = await listUnitMembersWithEmail(orgId, unitId);
   const members = membersRes.ok ? membersRes.data : [];
+  const total = members.length;
 
   return (
     <div>
       <div className="flex items-end justify-between mb-4">
-        <h2 className="text-xl font-semibold">Membros da unidade</h2>
+        <h2 className="text-xl font-semibold">
+          Membros da unidade{" "}
+          <span className="font-light text-muted-foreground">({total})</span>
+        </h2>
         <AddUnitMemberModal orgId={orgId} unitId={unitId} />
       </div>
 

@@ -24,8 +24,8 @@ type Props = {
 
 export default function UnitsTable({ orgId, orgSlug, units }: Props) {
   return (
-    <div className="w-full overflow-x-auto rounded-lg">
-      <Table className="min-w-[600px] border border-gray-200">
+    <div className=" rounded-lg">
+      <Table className="min-w-[600px] !overflow-x-auto border border-gray-200">
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
