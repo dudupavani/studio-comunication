@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
-// SUBSTITUI Dialog por Drawer
 import {
   Drawer,
   DrawerTrigger,
@@ -20,6 +19,17 @@ import {
   DrawerClose,
   DrawerDescription,
 } from "@/components/ui/drawer";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import { Spinner } from "@/components/ui/spinner";
 
 type UserItem = {
   id: string;
@@ -179,31 +189,45 @@ export default function AddUnitMemberModal({
 
           <div className="space-y-2 max-h-[90vh] overflow-y-auto pr-1">
             {loadingList && (
-              <p className="text-sm text-muted-foreground">
-                Carregando usuários…
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 gap-3 text-muted-foreground">
+                <Spinner className="h-12 w-12" />
+                <span className="text-sm">Carregando usuários...</span>
+              </div>
             )}
+
             {!loadingList && users.length === 0 && (
               <p className="text-sm text-muted-foreground">
                 Nenhum usuário disponível para vincular.
               </p>
             )}
-            {users.map((u) => (
-              <label
-                key={u.id}
-                className="flex items-center gap-3 rounded-md border p-2">
-                <Checkbox
-                  checked={selected.includes(u.id)}
-                  onCheckedChange={() => toggle(u.id)}
-                />
-                <div className="text-left">
-                  <p className="font-medium leading-none">
-                    {u.name || "Sem nome"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">{u.email}</p>
-                </div>
-              </label>
-            ))}
+
+            {!loadingList && users.length > 0 && (
+              <Table className="border border-gray-200 rounded-lg opacity-0 translate-y-4 animate-fade-in-up">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((u) => (
+                    <TableRow key={u.id}>
+                      <TableCell className="flex items-center gap-3">
+                        <Checkbox
+                          checked={selected.includes(u.id)}
+                          onCheckedChange={() => toggle(u.id)}
+                        />
+                        <span className="font-medium">
+                          {u.name || "Sem nome"}
+                        </span>
+                      </TableCell>
+
+                      <TableCell>{u.email}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </div>
 
