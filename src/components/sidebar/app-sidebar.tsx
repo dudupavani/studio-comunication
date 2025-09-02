@@ -13,6 +13,7 @@ import {
   Warehouse,
   Calendar,
   Group,
+  PenTool,
 } from "lucide-react";
 
 import {
@@ -81,6 +82,17 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   <Link href="/calendar">
                     <Calendar size={20} />
                     <span className="ml-2">Calendário</span>
+                  </Link>
+                </Button>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start "
+                  asChild>
+                  <Link href="/design-editor">
+                    <PenTool size={20} />
+                    <span className="ml-2">Designer</span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
