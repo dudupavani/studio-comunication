@@ -1,8 +1,10 @@
+// src/components/design-editor/TextPropertiesPanel.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import TextFontControl from "./TextFontControl"; // ✅ usamos o componente que funciona
 
 type Align = "left" | "center" | "right" | "justify";
 type FontStyle = "normal" | "bold" | "italic" | "bold italic";
@@ -29,7 +31,7 @@ type SelectionTextProps = {
   letterSpacing?: number;
   padding?: number;
   width?: number; // wrap
-  height?: number; // exibido como informativo
+  height?: number; // informativo
 };
 
 export default function TextPropertiesPanel() {
@@ -56,7 +58,7 @@ export default function TextPropertiesPanel() {
       );
   }, []);
 
-  // Envia patches para o Canvas
+  // Mantemos o canal original do painel para os demais campos
   function update(patch: Partial<SelectionTextProps>) {
     if (!state?.id) return;
     const { id, type, name, ...safe } = patch as any;
@@ -94,21 +96,16 @@ export default function TextPropertiesPanel() {
         />
       </div>
 
-      {/* Família da fonte */}
+      {/* Fonte (usando o componente que já funciona) */}
       <div className="flex flex-col">
-        <Label htmlFor="txt-family" className="text-[11px]">
-          Fonte
-        </Label>
-        <Input
-          id="txt-family"
-          className="h-8"
-          placeholder="Ex.: Inter, Arial"
-          value={state.fontFamily ?? ""}
-          onChange={(e) => {
-            const fontFamily = e.target.value;
-            setState((s) => (s ? { ...s, fontFamily } : s));
-            update({ fontFamily });
-          }}
+        <Label className="text-[11px]">Fonte</Label>
+        <TextFontControl 
+          selection={state ? {
+            id: state.id,
+            type: state.type,
+            fontFamily: state.fontFamily,
+            fontStyle: state.fontStyle,
+          } : null}
         />
       </div>
 
@@ -197,12 +194,7 @@ export default function TextPropertiesPanel() {
       {/* Altura (informativo) */}
       <div className="flex flex-col">
         <Label className="text-[11px]">Altura</Label>
-        <Input
-          disabled
-          className="h-8"
-          value={state.height ?? 40}
-          onChange={() => {}}
-        />
+        <Input disabled className="h-8" value={state.height ?? 40} />
       </div>
 
       {/* Line height */}

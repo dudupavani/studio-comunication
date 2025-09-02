@@ -22,8 +22,10 @@ import {
   AlignCenter,
   AlignRight,
   AlignJustify,
-  SlidersHorizontal as IconSliders, // ⬅️ novo ícone para o dropdown de espaçamentos
+  SlidersHorizontal as IconSliders,
 } from "lucide-react";
+import { requestFont } from "@/lib/design-editor/fonts/font-loader";
+import TextFontControl from "./TextFontControl";
 
 /** Tipos que chegam do Canvas via `design-editor:selection-props` */
 type SelectionCommon = {
@@ -31,7 +33,6 @@ type SelectionCommon = {
   type: "rect" | "text" | "circle" | "triangle" | "line" | "star";
   name?: string;
 
-  // comuns
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
@@ -77,28 +78,7 @@ export default function PropertiesPanel() {
   }, []);
 
   // enviar PATCH p/ Canvas
-  function updateProps(
-    patch: Partial<
-      Pick<
-        SelectionCommon,
-        | "fill"
-        | "stroke"
-        | "strokeWidth"
-        | "opacity"
-        | "shadowBlur"
-        | "shadowOffsetX"
-        | "shadowOffsetY"
-      > & {
-        // texto
-        fontFamily?: string;
-        fontSize?: number;
-        fontStyle?: "normal" | "bold" | "italic" | "bold italic";
-        align?: "left" | "center" | "right" | "justify";
-        lineHeight?: number;
-        letterSpacing?: number;
-      }
-    >
-  ) {
+  function updateProps(patch: Partial<SelectionCommon & SelectionText>) {
     if (!sel) return;
     window.dispatchEvent(
       new CustomEvent("design-editor:update-props", {
@@ -118,7 +98,8 @@ export default function PropertiesPanel() {
     isText(sel) &&
     (sel.fontStyle === "italic" || sel.fontStyle === "bold italic");
 
-  const setBold = () => {
+  // alternar bold e já garantir variante
+  const setBold = async () => {
     if (!isText(sel)) return;
     const next = boldActive
       ? italicActive
@@ -127,9 +108,27 @@ export default function PropertiesPanel() {
       : italicActive
       ? ("bold italic" as const)
       : ("bold" as const);
+
+    const nextWeight = next.includes("bold") ? 700 : 400;
+    const nextStyle: "normal" | "italic" = next.includes("italic")
+      ? "italic"
+      : "normal";
+
+    if (sel.fontFamily) {
+      try {
+        await requestFont({
+          family: sel.fontFamily,
+          weight: nextWeight,
+          style: nextStyle,
+          subset: "latin",
+        });
+      } catch {}
+    }
     updateProps({ fontStyle: next });
   };
-  const setItalic = () => {
+
+  // alternar italic e já garantir variante
+  const setItalic = async () => {
     if (!isText(sel)) return;
     const next = italicActive
       ? boldActive
@@ -138,13 +137,29 @@ export default function PropertiesPanel() {
       : boldActive
       ? ("bold italic" as const)
       : ("italic" as const);
+
+    const nextWeight = next.includes("bold") ? 700 : 400;
+    const nextStyle: "normal" | "italic" = next.includes("italic")
+      ? "italic"
+      : "normal";
+
+    if (sel.fontFamily) {
+      try {
+        await requestFont({
+          family: sel.fontFamily,
+          weight: nextWeight,
+          style: nextStyle,
+          subset: "latin",
+        });
+      } catch {}
+    }
     updateProps({ fontStyle: next });
   };
 
   if (!sel) {
     return (
-      <div className="text-sm text-muted-foreground">
-        Nenhum elemento selecionado.
+      <div className="flex items-center justify-center p-1">
+        <Button variant={"ghost"}>Sair do editor</Button>
       </div>
     );
   }
@@ -221,7 +236,7 @@ export default function PropertiesPanel() {
         </PopoverContent>
       </Popover>
 
-      {/* ----- Sombra (popover com 3 sliders) ----- */}
+      {/* ----- Sombra (3 sliders) ----- */}
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" title="Sombra (blur, X, Y)">
@@ -266,14 +281,16 @@ export default function PropertiesPanel() {
       {/* ======================== TEXTO ======================== */}
       {isText(sel) && (
         <>
-          {/* Fonte */}
+          {/* Fonte — agora passa a seleção atual por props (render imediato) */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Fonte</span>
-            <Input
-              placeholder="Font family"
-              className="h-8 w-36"
-              value={sel.fontFamily ?? ""}
-              onChange={(e) => updateProps({ fontFamily: e.target.value })}
+            <TextFontControl
+              selection={{
+                id: sel.id,
+                type: sel.type,
+                fontFamily: sel.fontFamily,
+                fontStyle: sel.fontStyle,
+              }}
             />
           </div>
 
@@ -351,7 +368,7 @@ export default function PropertiesPanel() {
             </Button>
           </div>
 
-          {/* ===== Dropdown de Line-height + Letter-spacing ===== */}
+          {/* Espaçamentos (linha/letras) */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -363,7 +380,6 @@ export default function PropertiesPanel() {
             </PopoverTrigger>
             <PopoverContent className="w-80" align="start">
               <div className="space-y-6">
-                {/* Line Height */}
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
                     <div className="text-sm font-medium">Altura da linha</div>
@@ -393,7 +409,6 @@ export default function PropertiesPanel() {
                   />
                 </div>
 
-                {/* Letter Spacing */}
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
                     <div className="text-sm font-medium">
