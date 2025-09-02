@@ -14,6 +14,7 @@ import {
   Star as KonvaStar,
 } from "react-konva";
 import type Konva from "konva";
+import { Text as KonvaTextNode } from "konva/lib/shapes/Text"; // ⬅️ para type-guard de Text
 
 // ========= Constantes =========
 const DND_MIME = "application/x-design-editor";
@@ -118,6 +119,11 @@ type AnyShape =
 
 function isShapeText(s: AnyShape): s is ShapeText {
   return s.type === "text";
+}
+
+// === Helper para identificar nó Text do Konva de forma segura
+function isKonvaTextNode(n: Konva.Node | null | undefined): n is KonvaTextNode {
+  return !!n && (n as any).className === "Text";
 }
 
 // ========= Helper DnD / Normalização =========
@@ -427,8 +433,6 @@ export default function Canvas() {
     if (clickedOnEmpty) setSelectedId(null);
   };
 
-  // (SEM duplo-clique para criar texto)
-
   // ---------- DnD: listeners no container do Stage ----------
   useEffect(() => {
     const stage = stageRef.current;
@@ -444,12 +448,10 @@ export default function Canvas() {
       e.preventDefault();
       const { type } = parseDropData(e.dataTransfer || null);
 
-      // posição relativa ao Stage
       const rect = container.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      // garante que caiu dentro do Stage
       if (x < 0 || y < 0 || x > stage.width() || y > stage.height()) return;
 
       addShapeAt(type, x, y);
@@ -473,7 +475,6 @@ export default function Canvas() {
       const stage = stageRef.current;
       if (!stage) return;
 
-      // usa posição informada, ou ponteiro atual se sobre o canvas, senão centro
       const pointer = stage.getPointerPosition();
       const x =
         typeof e?.detail?.x === "number"
@@ -492,7 +493,6 @@ export default function Canvas() {
       onCreate as EventListener
     );
 
-    // API global alternativa (opcional)
     (globalThis as any).designEditor = {
       ...(globalThis as any).designEditor,
       create: (type: ShapeKind, coords?: { x?: number; y?: number }) => {
@@ -628,59 +628,92 @@ export default function Canvas() {
 
   // ---------- Atualização de propriedades (genérica + texto) ----------
   useEffect(() => {
-    type Patch = Partial<
-      ShapeText &
-        ShapeRect &
-        ShapeCircle &
-        ShapeTriangle &
-        ShapeLine &
-        ShapeStar &
-        ShapeBase
-    >;
+    // Patch é uma união, mas NÃO permitimos alterar 'type'/'id'
+    type Patch =
+      | Partial<Omit<ShapeText, "id" | "type">>
+      | Partial<Omit<ShapeRect, "id" | "type">>
+      | Partial<Omit<ShapeCircle, "id" | "type">>
+      | Partial<Omit<ShapeTriangle, "id" | "type">>
+      | Partial<Omit<ShapeLine, "id" | "type">>
+      | Partial<Omit<ShapeStar, "id" | "type">>
+      | Partial<Omit<ShapeBase, "id" | "type">>;
 
-    const applyPatch = (id: string, patch: Patch) => {
+    const applyPatch = (id: string, incoming: Patch | undefined) => {
+      const p = (incoming ?? {}) as Patch;
+
       setShapes((prev) =>
         prev.map((s) => {
           if (s.id !== id) return s;
-          
-          // Se for uma atualização de fonte, limpa o cache
-          if (patch.fontFamily && s.type === "text") {
-            const node = shapeRefs.current[id];
-            if (node) {
-              // Limpa o cache para forçar re-renderização
-              if (typeof node.clearCache === 'function') {
-                node.clearCache();
+
+          // Atualização específica por tipo para manter o discriminated union
+          switch (s.type) {
+            case "text": {
+              const node = shapeRefs.current[id];
+              const pt = p as Partial<Omit<ShapeText, "id" | "type">>;
+              // aplica no nó para efeito imediato + redraw
+              if (isKonvaTextNode(node)) {
+                if (pt.fontFamily !== undefined) node.fontFamily(pt.fontFamily);
+                if (pt.fontSize !== undefined) node.fontSize(pt.fontSize);
+                if (pt.fontStyle !== undefined) node.fontStyle(pt.fontStyle);
+                if (pt.letterSpacing !== undefined)
+                  node.letterSpacing(pt.letterSpacing);
+                if (pt.lineHeight !== undefined) node.lineHeight(pt.lineHeight);
+                if (pt.align !== undefined) node.align(pt.align);
+                if (pt.width !== undefined) node.width(pt.width);
+                if (pt.height !== undefined) node.height(pt.height);
+                if (pt.padding !== undefined) node.padding(pt.padding);
+                if (pt.text !== undefined) node.text(pt.text);
+
+                node.clearCache?.();
+                node.getLayer()?.batchDraw?.();
               }
-              // Atualiza o nó diretamente para garantir aplicação imediata
-              if (typeof node.fontFamily === 'function') {
-                node.fontFamily(patch.fontFamily);
-              }
-              // Redesenha a camada
-              if (typeof node.getLayer === 'function' && typeof node.getLayer()?.batchDraw === 'function') {
-                node.getLayer()?.batchDraw();
-              }
+              return { ...s, ...pt } as ShapeText;
             }
+
+            case "rect": {
+              const pr = p as Partial<Omit<ShapeRect, "id" | "type">>;
+              return { ...s, ...pr } as ShapeRect;
+            }
+
+            case "circle": {
+              const pc = p as Partial<Omit<ShapeCircle, "id" | "type">>;
+              return { ...s, ...pc } as ShapeCircle;
+            }
+
+            case "triangle": {
+              const ptg = p as Partial<Omit<ShapeTriangle, "id" | "type">>;
+              return { ...s, ...ptg } as ShapeTriangle;
+            }
+
+            case "line": {
+              const pl = p as Partial<Omit<ShapeLine, "id" | "type">>;
+              return { ...s, ...pl } as ShapeLine;
+            }
+
+            case "star": {
+              const ps = p as Partial<Omit<ShapeStar, "id" | "type">>;
+              return { ...s, ...ps } as ShapeStar;
+            }
+
+            default:
+              return s;
           }
-          
-          return { ...s, ...patch };
         })
       );
     };
 
     const onUpdateProps = (ev: Event) => {
-      const e = ev as CustomEvent<{ id?: string; patch: Patch }>;
+      const e = ev as CustomEvent<{ id?: string; patch?: Patch }>;
       const id = e.detail?.id ?? selectedRef.current;
       if (!id) return;
-      const patch = e.detail?.patch || {};
-      applyPatch(id, patch);
+      applyPatch(id, e.detail?.patch);
     };
 
     const onUpdateText = (ev: Event) => {
-      const e = ev as CustomEvent<{ id?: string; patch: Patch }>;
+      const e = ev as CustomEvent<{ id?: string; patch?: Patch }>;
       const id = e.detail?.id ?? selectedRef.current;
       if (!id) return;
-      const patch = e.detail?.patch || {};
-      applyPatch(id, patch);
+      applyPatch(id, e.detail?.patch);
     };
 
     window.addEventListener(
@@ -750,7 +783,6 @@ export default function Canvas() {
             onTouchStart={handleStagePointerDown}>
             <Layer>
               {shapes.map((s) => {
-                // refs por shape
                 const setRef = (node: any) => {
                   shapeRefs.current[s.id] = node;
                 };

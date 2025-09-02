@@ -1,7 +1,7 @@
 // src/components/design-editor/TextFontControl.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -9,7 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useFonts, requestFont, ensureFontLoaded } from "@/lib/design-editor/fonts/font-loader";
+import {
+  useFonts,
+  ensureFontLoaded,
+} from "@/lib/design-editor/fonts/font-loader";
 
 type FontStyle = "normal" | "bold" | "italic" | "bold italic";
 
@@ -43,6 +46,11 @@ const FALLBACK_FONTS = [
 export default function TextFontControl({ selection }: Props) {
   const [sel, setSel] = useState<SelectionDetail | null>(selection ?? null);
   const isText = sel?.type === "text";
+
+  // Guard “latest-only” por elemento selecionado (evita corrida entre trocas rápidas)
+  const guardsRef = useRef<
+    Map<string, { id: number; ctrl: AbortController | null }>
+  >(new Map());
 
   // fontes vindas do loader (com fallback)
   const { families } = useFonts();
@@ -81,8 +89,18 @@ export default function TextFontControl({ selection }: Props) {
       );
   }, []);
 
-  async function handleChangeFont(value: string) {
+  // Aplica troca de fonte com estratégia “latest-only” por elemento
+  async function handleChangeFont(nextFamily: string) {
     if (!isText || !sel?.id) return;
+
+    const elementId = sel.id;
+    const guards = guardsRef.current;
+    const prev = guards.get(elementId);
+    prev?.ctrl?.abort?.(); // cancela requisição anterior desse mesmo elemento
+
+    const reqId = (prev?.id ?? 0) + 1;
+    const ctrl = new AbortController();
+    guards.set(elementId, { id: reqId, ctrl });
 
     // deduz variante (peso/estilo) a partir do estado atual
     const bold = sel.fontStyle?.includes("bold");
@@ -90,21 +108,39 @@ export default function TextFontControl({ selection }: Props) {
     const weight = bold ? 700 : 400;
     const style: "normal" | "italic" = italic ? "italic" : "normal";
 
-    // Garante que a fonte esteja carregada antes de aplicar
-    await ensureFontLoaded(value, weight, style);
+    try {
+      // 1) garante que a fonte esteja carregada (pode demorar; cancelável)
+      await ensureFontLoaded(nextFamily, weight, style, ctrl.signal);
 
-    // Canal padrão
-    window.dispatchEvent(
-      new CustomEvent("design-editor:update-props", {
-        detail: { id: sel.id, patch: { fontFamily: value } },
-      })
-    );
-    // Compatibilidade (se houver listeners legados)
-    window.dispatchEvent(
-      new CustomEvent("design-editor:update-text", {
-        detail: { id: sel.id, patch: { fontFamily: value } },
-      })
-    );
+      // 2) confirma que esta ainda é a última requisição válida para este elemento
+      const still = guards.get(elementId);
+      if (!still || still.id !== reqId) return;
+
+      // 3) dispara o canal oficial para atualização (Canvas aplica no nó + batchDraw)
+      window.dispatchEvent(
+        new CustomEvent("design-editor:update-props", {
+          detail: { id: elementId, patch: { fontFamily: nextFamily } },
+        })
+      );
+      // Compat: listeners legados
+      window.dispatchEvent(
+        new CustomEvent("design-editor:update-text", {
+          detail: { id: elementId, patch: { fontFamily: nextFamily } },
+        })
+      );
+    } catch (err: any) {
+      if (err?.name === "AbortError") {
+        // abortado por uma troca mais recente — silencioso
+        return;
+      }
+      console.warn("TextFontControl: falha ao carregar/aplicar fonte:", err);
+    } finally {
+      // limpa apenas o controller, preserva id (evita regressão de corrida)
+      const cur = guards.get(elementId);
+      if (cur && cur.id === reqId) {
+        guards.set(elementId, { id: reqId, ctrl: null });
+      }
+    }
   }
 
   // Esconde quando não for texto

@@ -1,9 +1,10 @@
 // src/components/design-editor/PropertiesPanel.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ArrowLeft, ImageDown } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -24,7 +25,7 @@ import {
   AlignJustify,
   SlidersHorizontal as IconSliders,
 } from "lucide-react";
-import { requestFont } from "@/lib/design-editor/fonts/font-loader";
+import { ensureFontLoaded } from "@/lib/design-editor/fonts/font-loader";
 import TextFontControl from "./TextFontControl";
 
 /** Tipos que chegam do Canvas via `design-editor:selection-props` */
@@ -63,6 +64,11 @@ function isText(sel: SelectionProps | null): sel is SelectionText {
 export default function PropertiesPanel() {
   const [sel, setSel] = useState<SelectionProps | null>(null);
 
+  // Guarda requests “latest-only” por elemento (para bold/italic)
+  const fontGuardsRef = useRef<
+    Map<string, { id: number; ctrl: AbortController | null }>
+  >(new Map());
+
   // ouvir dados da seleção vindo do Canvas
   useEffect(() => {
     const onProps = (e: any) => setSel(e.detail ?? null);
@@ -98,9 +104,10 @@ export default function PropertiesPanel() {
     isText(sel) &&
     (sel.fontStyle === "italic" || sel.fontStyle === "bold italic");
 
-  // alternar bold e já garantir variante
+  // alternar bold com “latest-only” + garantir variante carregada
   const setBold = async () => {
     if (!isText(sel)) return;
+
     const next = boldActive
       ? italicActive
         ? ("italic" as const)
@@ -115,21 +122,43 @@ export default function PropertiesPanel() {
       : "normal";
 
     if (sel.fontFamily) {
+      const elementId = sel.id;
+      const guards = fontGuardsRef.current;
+      const prev = guards.get(elementId);
+      prev?.ctrl?.abort?.();
+
+      const reqId = (prev?.id ?? 0) + 1;
+      const ctrl = new AbortController();
+      guards.set(elementId, { id: reqId, ctrl });
+
       try {
-        await requestFont({
-          family: sel.fontFamily,
-          weight: nextWeight,
-          style: nextStyle,
-          subset: "latin",
-        });
-      } catch {}
+        await ensureFontLoaded(
+          sel.fontFamily,
+          nextWeight,
+          nextStyle,
+          ctrl.signal
+        );
+        const still = guards.get(elementId);
+        if (!still || still.id !== reqId) return; // foi superado por outra ação
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          console.warn("PropertiesPanel:setBold ensureFontLoaded error", err);
+        }
+        return;
+      } finally {
+        const cur = guards.get(elementId);
+        if (cur && cur.id === reqId)
+          guards.set(elementId, { id: reqId, ctrl: null });
+      }
     }
+
     updateProps({ fontStyle: next });
   };
 
-  // alternar italic e já garantir variante
+  // alternar italic com “latest-only” + garantir variante carregada
   const setItalic = async () => {
     if (!isText(sel)) return;
+
     const next = italicActive
       ? boldActive
         ? ("bold" as const)
@@ -144,22 +173,59 @@ export default function PropertiesPanel() {
       : "normal";
 
     if (sel.fontFamily) {
+      const elementId = sel.id;
+      const guards = fontGuardsRef.current;
+      const prev = guards.get(elementId);
+      prev?.ctrl?.abort?.();
+
+      const reqId = (prev?.id ?? 0) + 1;
+      const ctrl = new AbortController();
+      guards.set(elementId, { id: reqId, ctrl });
+
       try {
-        await requestFont({
-          family: sel.fontFamily,
-          weight: nextWeight,
-          style: nextStyle,
-          subset: "latin",
-        });
-      } catch {}
+        await ensureFontLoaded(
+          sel.fontFamily,
+          nextWeight,
+          nextStyle,
+          ctrl.signal
+        );
+        const still = guards.get(elementId);
+        if (!still || still.id !== reqId) return;
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          console.warn("PropertiesPanel:setItalic ensureFontLoaded error", err);
+        }
+        return;
+      } finally {
+        const cur = guards.get(elementId);
+        if (cur && cur.id === reqId)
+          guards.set(elementId, { id: reqId, ctrl: null });
+      }
     }
+
     updateProps({ fontStyle: next });
   };
 
   if (!sel) {
     return (
-      <div className="flex items-center justify-center p-1">
-        <Button variant={"ghost"}>Sair do editor</Button>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant={"outline"} size={"sm"}>
+            <ArrowLeft />
+            Sair do editor
+          </Button>
+          <h3 className="text-base font-medium">Nome do arquivo</h3>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant={"secondary"} size={"sm"}>
+            <ImageDown size={18} />
+            Exportar
+          </Button>
+          <Button variant={"default"} size={"sm"}>
+            Salvar
+          </Button>
+        </div>
       </div>
     );
   }
@@ -283,7 +349,6 @@ export default function PropertiesPanel() {
         <>
           {/* Fonte — agora passa a seleção atual por props (render imediato) */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Fonte</span>
             <TextFontControl
               selection={{
                 id: sel.id,
@@ -296,7 +361,6 @@ export default function PropertiesPanel() {
 
           {/* Tamanho */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Tamanho</span>
             <Input
               type="number"
               inputMode="numeric"

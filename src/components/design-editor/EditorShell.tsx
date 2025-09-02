@@ -15,13 +15,6 @@ import {
   Minus as IconMinus,
   Star as IconStar,
   X as IconX,
-  Eye as IconEye,
-  EyeOff as IconEyeOff,
-  Lock as IconLock,
-  Unlock as IconUnlock,
-  Trash2 as IconTrash,
-  ChevronUp,
-  ChevronDown,
 } from "lucide-react";
 
 import {
@@ -30,33 +23,21 @@ import {
   ResizableHandle,
 } from "@/components/ui/resizable";
 
+import { useDesignEditor } from "@/hooks/design-editor/use-design-editor";
+import LayersPanel from "@/components/design-editor/LayersPanel";
+
 const Canvas = dynamic(() => import("./Canvas"), { ssr: false });
 
-// 🔧 removi "texto" do tipo Panel
 type Panel = "none" | "formas" | "imagens";
 const DND_MIME = "application/x-design-editor";
-
-type LayerItem = {
-  id: string;
-  type: "rect" | "text" | "circle" | "triangle" | "line" | "star";
-  name?: string;
-  isHidden?: boolean;
-  isLocked?: boolean;
-};
 
 export default function EditorShell() {
   const PROP_BAR_H = 72;
 
   const [panel, setPanel] = useState<Panel>("none");
-  const [layers, setLayers] = useState<LayerItem[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // ---------- helpers ----------
-  function dispatch(name: string) {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent(name));
-    }
-  }
+  const { create } = useDesignEditor();
+
   function cmd(name: string, detail: any) {
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent(name, { detail }));
@@ -64,10 +45,9 @@ export default function EditorShell() {
   }
   const clearSelection = () => cmd("design-editor:select", { id: null });
 
-  // 🔧 Texto: agora apenas INSERE texto
   function handleAddText() {
     setPanel("none");
-    dispatch("design-editor:add-text");
+    create("text");
   }
 
   function handleToggleImagens() {
@@ -77,14 +57,12 @@ export default function EditorShell() {
     setPanel((p) => (p === "formas" ? "none" : "formas"));
   }
 
-  // clique dos itens do submenu de formas
-  const addRect = () => dispatch("design-editor:add-rect");
-  const addCircle = () => dispatch("design-editor:add-circle");
-  const addTriangle = () => dispatch("design-editor:add-triangle");
-  const addLine = () => dispatch("design-editor:add-line");
-  const addStar = () => dispatch("design-editor:add-star");
+  const addRect = () => create("rect");
+  const addCircle = () => create("circle");
+  const addTriangle = () => create("triangle");
+  const addLine = () => create("line");
+  const addStar = () => create("star");
 
-  // drag do submenu -> canvas
   const onDragStart =
     (type: string) => (e: React.DragEvent<HTMLButtonElement>) => {
       e.dataTransfer.effectAllowed = "copy";
@@ -92,7 +70,6 @@ export default function EditorShell() {
       e.dataTransfer.setData("text/plain", type);
     };
 
-  // ESC fecha painel
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setPanel("none");
@@ -101,42 +78,8 @@ export default function EditorShell() {
     return () => window.removeEventListener("keydown", onEsc);
   }, []);
 
-  // ouvir estado vindo do Canvas
-  useEffect(() => {
-    const onState = (e: any) => {
-      const d = e.detail || {};
-      setLayers(d.shapes || []);
-      setSelectedId(d.selectedId ?? null);
-    };
-    window.addEventListener("design-editor:state", onState as EventListener);
-    return () =>
-      window.removeEventListener(
-        "design-editor:state",
-        onState as EventListener
-      );
-  }, []);
+  const columns = panel === "formas" ? "100px 120px 1fr" : "100px 1fr";
 
-  const columns = panel === "formas" ? "100px 220px 1fr" : "100px 1fr";
-
-  // mapping para ícone por tipo
-  const TypeIcon = (t: LayerItem["type"]) =>
-    t === "rect" ? (
-      <IconSquare className="h-3.5 w-3.5" />
-    ) : t === "circle" ? (
-      <IconCircle className="h-3.5 w-3.5" />
-    ) : t === "triangle" ? (
-      <IconTriangle className="h-3.5 w-3.5" />
-    ) : t === "line" ? (
-      <IconMinus className="h-3.5 w-3.5" />
-    ) : t === "star" ? (
-      <IconStar className="h-3.5 w-3.5" />
-    ) : (
-      <IconType className="h-3.5 w-3.5" />
-    );
-
-  const orderedLayers = [...layers].reverse();
-
-  // handler que só dispara quando clica no "fundo" do container (não em filhos)
   const onEmptyAreaMouseDown = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       clearSelection();
@@ -145,14 +88,14 @@ export default function EditorShell() {
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Barra de propriedades global (topo) */}
+      {/* Barra de propriedades (topo) */}
       <header
         className="border-b border-gray-200 bg-white p-3 sticky top-0 z-50"
         onMouseDown={onEmptyAreaMouseDown}>
         <PropertiesPanel />
       </header>
 
-      {/* Grade principal abaixo da barra (3 colunas) */}
+      {/* Grade principal */}
       <div
         className="grid flex-1"
         style={{
@@ -169,7 +112,9 @@ export default function EditorShell() {
               variant="outline"
               className="text-xs flex flex-col items-center h-auto py-4"
               onClick={handleAddText}
-              title="Inserir texto">
+              draggable
+              onDragStart={onDragStart("text")}
+              title="Arraste ou clique para inserir texto">
               <IconType size={28} />
               Texto
             </Button>
@@ -211,7 +156,7 @@ export default function EditorShell() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-2">
               <Button
                 variant="outline"
                 className="justify-center items-center p-8 cursor-grab"
@@ -259,14 +204,18 @@ export default function EditorShell() {
               </Button>
             </div>
 
-            <p className="mt-6 text-xs text-center text-gray-500">
-              Arraste a forma para o canvas, ou clique para inserir. — Pressione
-              ESC para fechar a coluna.
-            </p>
+            <div className="flex flex-col items-center gap-2 mt-4">
+              <span className="text-xs text-center text-gray-500">
+                Arraste ou clique para inserir.
+              </span>
+              <span className="text-xs text-center text-gray-500">
+                ESC para fechar a coluna.
+              </span>
+            </div>
           </aside>
         )}
 
-        {/* Área redimensionável (centro | handle | camadas) */}
+        {/* Área redimensionável */}
         <ResizablePanelGroup
           direction="horizontal"
           className="overflow-hidden"
@@ -275,8 +224,7 @@ export default function EditorShell() {
             <section className="flex h-full flex-col">
               <main
                 className="bg-muted p-3 flex-1 overflow-auto"
-                onMouseDown={onEmptyAreaMouseDown} // clica no fundo (fora do Canvas) limpa seleção
-              >
+                onMouseDown={onEmptyAreaMouseDown}>
                 <Canvas />
               </main>
             </section>
@@ -284,121 +232,10 @@ export default function EditorShell() {
 
           <ResizableHandle withHandle />
 
-          {/* Painel Camadas */}
+          {/* Painel Camadas (agora via componente dedicado) */}
           <ResizablePanel defaultSize={25} minSize={16} maxSize={50}>
-            <aside
-              className="p-3 bg-white h-full overflow-y-auto"
-              onMouseDown={onEmptyAreaMouseDown} // clique no espaço vazio das camadas limpa seleção
-            >
-              <div className="text-lg font-semibold mb-2">Camadas</div>
-
-              <div className="space-y-1">
-                {orderedLayers.map((layer) => {
-                  const isSelected = layer.id === selectedId;
-                  return (
-                    <div
-                      key={layer.id}
-                      className={`flex items-center justify-between rounded-md border px-2 py-1.5 text-xs ${
-                        isSelected ? "bg-gray-100 border-gray-300" : "bg-white"
-                      }`}
-                      onClick={() =>
-                        cmd("design-editor:select", { id: layer.id })
-                      }
-                      role="button">
-                      <div className="flex items-center gap-2">
-                        {TypeIcon(layer.type)}
-                        <span className="truncate max-w-[160px]">
-                          {layer.name || layer.id}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            cmd("design-editor:send-backward", {
-                              id: layer.id,
-                            });
-                          }}
-                          title="Enviar para trás">
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            cmd("design-editor:bring-forward", {
-                              id: layer.id,
-                            });
-                          }}
-                          title="Trazer para frente">
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            cmd("design-editor:toggle-hidden", {
-                              id: layer.id,
-                            });
-                          }}
-                          title={layer.isHidden ? "Mostrar" : "Ocultar"}>
-                          {layer.isHidden ? (
-                            <IconEyeOff className="h-3.5 w-3.5" />
-                          ) : (
-                            <IconEye className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            cmd("design-editor:toggle-locked", {
-                              id: layer.id,
-                            });
-                          }}
-                          title={layer.isLocked ? "Desbloquear" : "Bloquear"}>
-                          {layer.isLocked ? (
-                            <IconUnlock className="h-3.5 w-3.5" />
-                          ) : (
-                            <IconLock className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-red-600 hover:text-red-700"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            cmd("design-editor:delete", { id: layer.id });
-                          }}
-                          title="Excluir">
-                          <IconTrash className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {orderedLayers.length === 0 && (
-                  <div className="text-[11px] text-muted-foreground">
-                    Nenhuma camada ainda. Adicione formas/texto no painel
-                    esquerdo.
-                  </div>
-                )}
-              </div>
+            <aside onMouseDown={onEmptyAreaMouseDown}>
+              <LayersPanel />
             </aside>
           </ResizablePanel>
         </ResizablePanelGroup>

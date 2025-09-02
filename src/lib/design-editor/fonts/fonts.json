@@ -1,0 +1,257 @@
+[
+  {
+    "family": "Inter",
+    "category": "sans",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 500, "style": "normal" },
+      { "weight": 600, "style": "normal" },
+      { "weight": 700, "style": "normal" },
+      { "weight": 400, "style": "italic" },
+      { "weight": 600, "style": "italic" }
+    ]
+  },
+  {
+    "family": "Roboto",
+    "category": "sans",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 500, "style": "normal" },
+      { "weight": 700, "style": "normal" },
+      { "weight": 400, "style": "italic" },
+      { "weight": 700, "style": "italic" }
+    ]
+  },
+  {
+    "family": "Open Sans",
+    "category": "sans",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 600, "style": "normal" },
+      { "weight": 700, "style": "normal" },
+      { "weight": 400, "style": "italic" },
+      { "weight": 700, "style": "italic" }
+    ]
+  },
+  {
+    "family": "Montserrat",
+    "category": "sans",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 500, "style": "normal" },
+      { "weight": 600, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+  {
+    "family": "Poppins",
+    "category": "sans",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 500, "style": "normal" },
+      { "weight": 600, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+  {
+    "family": "Lato",
+    "category": "sans",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 700, "style": "normal" },
+      { "weight": 400, "style": "italic" }
+    ]
+  },
+  {
+    "family": "Nunito",
+    "category": "sans",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 600, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+  {
+    "family": "Work Sans",
+    "category": "sans",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 500, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+
+  {
+    "family": "Merriweather",
+    "category": "serif",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 700, "style": "normal" },
+      { "weight": 400, "style": "italic" },
+      { "weight": 700, "style": "italic" }
+    ]
+  },
+  {
+    "family": "Playfair Display",
+    "category": "serif",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 600, "style": "normal" },
+      { "weight": 700, "style": "normal" },
+      { "weight": 400, "style": "italic" },
+      { "weight": 700, "style": "italic" }
+    ]
+  },
+  {
+    "family": "Lora",
+    "category": "serif",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 600, "style": "normal" },
+      { "weight": 700, "style": "normal" },
+      { "weight": 400, "style": "italic" }
+    ]
+  },
+  {
+    "family": "EB Garamond",
+    "category": "serif",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 600, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+
+  {
+    "family": "Oswald",
+    "category": "display",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 500, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+  {
+    "family": "Bebas Neue",
+    "category": "display",
+    "defaultSubset": "latin",
+    "supportsLatinExt": false,
+    "variants": [{ "weight": 400, "style": "normal" }]
+  },
+  {
+    "family": "DM Sans",
+    "category": "display",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 500, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+  {
+    "family": "Raleway",
+    "category": "display",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 600, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+  {
+    "family": "Anton",
+    "category": "display",
+    "defaultSubset": "latin",
+    "supportsLatinExt": false,
+    "variants": [{ "weight": 400, "style": "normal" }]
+  },
+
+  {
+    "family": "Pacifico",
+    "category": "handwriting",
+    "defaultSubset": "latin",
+    "supportsLatinExt": false,
+    "variants": [{ "weight": 400, "style": "normal" }]
+  },
+  {
+    "family": "Caveat",
+    "category": "handwriting",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+  {
+    "family": "Dancing Script",
+    "category": "handwriting",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+
+  {
+    "family": "Roboto Mono",
+    "category": "mono",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 500, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+  {
+    "family": "JetBrains Mono",
+    "category": "mono",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 600, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  },
+  {
+    "family": "Fira Code",
+    "category": "mono",
+    "defaultSubset": "latin",
+    "supportsLatinExt": true,
+    "variants": [
+      { "weight": 400, "style": "normal" },
+      { "weight": 700, "style": "normal" }
+    ]
+  }
+]
