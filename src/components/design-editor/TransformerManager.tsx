@@ -6,44 +6,59 @@ import { Transformer } from "react-konva";
 import type Konva from "konva";
 
 type Props = {
-  selectedId: string | null;
+  /** compat: seleção única */
+  selectedId?: string | null;
+  /** novo: múltipla seleção */
+  selectedIds?: string[];
   shapeRefs: React.MutableRefObject<Record<string, Konva.Node | null>>;
-  rotateEnabled?: boolean;
-  enabledAnchors?: string[]; // opcional para customizações futuras
 };
 
 export default function TransformerManager({
   selectedId,
+  selectedIds,
   shapeRefs,
-  rotateEnabled = true,
-  enabledAnchors,
 }: Props) {
   const trRef = useRef<Konva.Transformer>(null);
 
   useEffect(() => {
-    const tr = trRef.current;
-    if (!tr) return;
+    const tr = trRef.current as any;
+    if (!tr || typeof tr.nodes !== "function") return;
 
-    const node = selectedId ? shapeRefs.current[selectedId] : null;
-    if (node) {
-      tr.nodes([node]);
-    } else {
-      tr.nodes([]);
-    }
-    tr.getLayer()?.batchDraw?.();
-  }, [selectedId, shapeRefs, shapeRefs.current[selectedId ?? ""]]);
+    const ids =
+      (selectedIds && selectedIds.length
+        ? selectedIds
+        : selectedId
+        ? [selectedId]
+        : []) ?? [];
+
+    const nodes: Konva.Node[] = ids
+      .map((id) => shapeRefs.current[id!])
+      .filter(
+        (n): n is Konva.Node =>
+          !!n && !(n as any).isDestroyed?.() && !!n.getStage()
+      );
+
+    tr.nodes(nodes);
+    tr.getLayer()?.batchDraw();
+  }, [selectedId, selectedIds, shapeRefs]);
 
   return (
     <Transformer
       ref={trRef}
-      rotateEnabled={rotateEnabled}
       padding={4}
-      borderStroke={"#2b7fff"}
-      anchorStroke={"#2b7fff"}
-      anchorCornerRadius={4}
-      rotateAnchorOffset={22}
-      rotateAnchorCursor={"ew-resize"}
-      enabledAnchors={enabledAnchors}
+      rotateEnabled
+      anchorSize={8}
+      anchorCornerRadius={2}
+      enabledAnchors={[
+        "top-left",
+        "top-center",
+        "top-right",
+        "middle-left",
+        "middle-right",
+        "bottom-left",
+        "bottom-center",
+        "bottom-right",
+      ]}
     />
   );
 }

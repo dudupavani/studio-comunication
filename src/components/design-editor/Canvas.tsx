@@ -2,14 +2,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Stage, Layer } from "react-konva";
+import { Stage, Layer, Rect } from "react-konva";
 import type Konva from "konva";
 import ShapesLayer from "./ShapesLayer";
 import EventBridge from "./EventBridge";
 import TransformerManager from "./TransformerManager";
 import HintOverlay from "./HintOverlay";
 import DnDContainer from "./DnDContainer";
-import ZoomControls from "./ZoomControls"; // ⬅️ novo
+import ZoomControls from "./ZoomControls";
 
 // 🔹 existentes
 import { useSelectionSync } from "@/components/design-editor/hooks/useSelectionSync";
@@ -80,11 +80,7 @@ type ShapeBase = {
   shadowOffsetY?: number;
 };
 
-type ShapeRect = ShapeBase & {
-  type: "rect";
-  width: number;
-  height: number;
-};
+type ShapeRect = ShapeBase & { type: "rect"; width: number; height: number };
 type ShapeCircle = ShapeBase & { type: "circle"; radius: number };
 type ShapeTriangle = ShapeBase & { type: "triangle"; radius: number };
 type ShapeLine = ShapeBase & {
@@ -131,33 +127,37 @@ function normalizeType(t: string): ShapeKind {
 
 export default function Canvas() {
   // ---------- refs ----------
-  const containerRef = useRef<HTMLDivElement>(null); // container que ocupa 100%
+  const containerRef = useRef<HTMLDivElement>(null); // container 100%
   const stageRef = useRef<Konva.Stage>(null);
 
-  // 🔹 Tamanho do viewport (Stage ocupa 100% disso)
+  // 🔹 viewport
   const [viewport, setViewport] = useState({ width: 800, height: 600 });
 
-  // 🔹 Zoom e posição do Stage (x/y centralizam a artboard)
+  // 🔹 zoom/posicionamento
   const [scale, setScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
 
   // shapes/seleção
   const [shapes, setShapes] = useState<AnyShape[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null); // primário (compat)
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); // multi
+
   const shapeRefs = useRef<Record<string, Konva.Node | null>>({});
 
-  // Artboard (Hook que escuta eventos de template)
+  // Artboard
   const { artboard } = useArtboard();
 
-  // refs para evitar closures “stale”
+  // refs anti-stale
   const shapesRef = useRef<AnyShape[]>(shapes);
   const selectedRef = useRef<string | null>(selectedId);
+  const selectedIdsRef = useRef<string[]>(selectedIds);
   useEffect(() => {
     shapesRef.current = shapes;
     selectedRef.current = selectedId;
-  }, [shapes, selectedId]);
+    selectedIdsRef.current = selectedIds;
+  }, [shapes, selectedId, selectedIds]);
 
-  // ---------- medir container e reagir a resize ----------
+  // medir container
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -174,32 +174,29 @@ export default function Canvas() {
     return () => ro.disconnect();
   }, []);
 
-  // ---------- FIT: centralizar e ajustar escala para caber na tela ----------
+  // FIT
   const fitScale = useMemo(() => {
     if (artboard.width === 0 || artboard.height === 0) return 1;
     const s = Math.min(
       viewport.width / artboard.width,
       viewport.height / artboard.height
     );
-    // margem leve
     return s * 0.98;
   }, [viewport.width, viewport.height, artboard.width, artboard.height]);
 
   const applyCenterFromScale = (s: number) => {
-    // centraliza a artboard no viewport
     const x = (viewport.width - artboard.width * s) / 2;
     const y = (viewport.height - artboard.height * s) / 2;
     setScale(s);
     setStagePos({ x, y });
   };
 
-  // Aplica FIT ao entrar e quando template/viewport mudarem
   useEffect(() => {
     applyCenterFromScale(fitScale);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artboard.width, artboard.height, fitScale]);
 
-  // ---------- emitir estado p/ camada lateral ----------
+  // emitir estado p/ lateral (inalterado)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const payload = {
@@ -217,14 +214,14 @@ export default function Canvas() {
     );
   }, [shapes, selectedId]);
 
-  // ---------- sincroniza propriedades da seleção (hook) ----------
+  // sincroniza propriedades da seleção (usa selectedId como primário)
   useSelectionSync<AnyShape>({
     selectedId,
     shapes,
     defaults: DEFAULTS,
   });
 
-  // ---------- helpers coords: Stage -> Artboard local ----------
+  // helpers coords: Stage -> espaço local (artboard)
   function stageToLocal(sx: number, sy: number) {
     return {
       x: (sx - stagePos.x) / scale,
@@ -232,7 +229,7 @@ export default function Canvas() {
     };
   }
 
-  // ---------- add shape util (usa coords locais da artboard) ----------
+  // add shape
   function addShapeAt(type: AnyShape["type"], sx: number, sy: number) {
     const rid = (p: string) => `${p}-${crypto.randomUUID().slice(0, 8)}`;
     const { x, y } = stageToLocal(sx, sy);
@@ -373,10 +370,11 @@ export default function Canvas() {
     }
 
     setShapes((prev) => [...prev, newShape]);
-    setSelectedId(newShape.id);
+    setSelectedIds([newShape.id]); // multi
+    setSelectedId(newShape.id); // primário (compat)
   }
 
-  // ---------- Atualização de propriedades (genérica + texto) ----------
+  // update props
   useEffect(() => {
     type Patch =
       | Partial<Omit<ShapeText, "id" | "type">>
@@ -401,14 +399,8 @@ export default function Canvas() {
               }
               return { ...s, ...pt } as any;
             }
-            case "rect":
-            case "circle":
-            case "triangle":
-            case "line":
-            case "star":
-              return { ...s, ...(p as any) } as any;
             default:
-              return s;
+              return { ...s, ...(p as any) } as any;
           }
         })
       );
@@ -449,15 +441,10 @@ export default function Canvas() {
     };
   }, []);
 
-  // ---------- Pan com espaço (move o Stage; sem scrollbars) ----------
+  // pan com espaço
   const isPanningRef = useRef(false);
   const spacePressedRef = useRef(false);
-  const panStartRef = useRef({
-    x: 0,
-    y: 0,
-    stageX: 0,
-    stageY: 0,
-  });
+  const panStartRef = useRef({ x: 0, y: 0, stageX: 0, stageY: 0 });
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -483,10 +470,8 @@ export default function Canvas() {
   }, []);
 
   const onContainerMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    // botão do meio (1) sempre pode pan; botão esquerdo (0) somente com espaço
     const allow = e.button === 1 || (e.button === 0 && spacePressedRef.current);
     if (!allow) return;
-
     isPanningRef.current = true;
     panStartRef.current = {
       x: e.clientX,
@@ -514,7 +499,7 @@ export default function Canvas() {
     document.body.style.cursor = spacePressedRef.current ? "grab" : "";
   };
 
-  // ---------- Exclusão por teclado (robusta) e ESC para limpar seleção ----------
+  // delete/esc
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -524,19 +509,20 @@ export default function Canvas() {
         tag === "input" ||
         tag === "textarea" ||
         tag === "select";
-
       if (isEditable) return;
 
       if (e.key === "Escape") {
+        setSelectedIds([]);
         setSelectedId(null);
         return;
       }
 
       if (e.key === "Delete" || e.key === "Backspace") {
-        const sid = selectedRef.current;
-        if (!sid) return;
+        const ids = selectedIdsRef.current;
+        if (!ids.length) return;
         e.preventDefault();
-        setShapes((prev) => prev.filter((s) => s.id !== sid));
+        setShapes((prev) => prev.filter((s) => !ids.includes(s.id)));
+        setSelectedIds([]);
         setSelectedId(null);
       }
     };
@@ -545,13 +531,76 @@ export default function Canvas() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // ---------- Handlers de ZoomControls ----------
-  const handleChangeScale = (s: number) => {
-    applyCenterFromScale(s);
+  // marquee
+  type Marquee = {
+    active: boolean;
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
   };
-  const handleFit = () => {
-    applyCenterFromScale(fitScale);
+  const [marquee, setMarquee] = useState<Marquee>({
+    active: false,
+    x1: 0,
+    y1: 0,
+    x2: 0,
+    y2: 0,
+  });
+
+  const rectsIntersect = (
+    a: { x: number; y: number; width: number; height: number },
+    b: { x: number; y: number; width: number; height: number }
+  ) =>
+    a.x <= b.x + b.width &&
+    a.x + a.width >= b.x &&
+    a.y <= b.y + b.height &&
+    a.y + a.height >= b.y;
+
+  const beginMarquee = (lx: number, ly: number) => {
+    setMarquee({ active: true, x1: lx, y1: ly, x2: lx, y2: ly });
+    setSelectedIds([]);
+    setSelectedId(null);
   };
+
+  const updateMarquee = (lx: number, ly: number) => {
+    setMarquee((m) => (m.active ? { ...m, x2: lx, y2: ly } : m));
+  };
+
+  const finishMarquee = () => {
+    setMarquee((m) => {
+      if (!m.active) return m;
+      const x = Math.min(m.x1, m.x2);
+      const y = Math.min(m.y1, m.y2);
+      const width = Math.abs(m.x2 - m.x1);
+      const height = Math.abs(m.y2 - m.y1);
+
+      if (width < 2 && height < 2) {
+        return { active: false, x1: 0, y1: 0, x2: 0, y2: 0 };
+      }
+
+      const candidates = new Set<string>();
+      for (const s of shapesRef.current) {
+        const node = shapeRefs.current[s.id] as Konva.Node | null;
+        if (!node || (node as any).isDestroyed?.() || !node.getStage())
+          continue;
+        const bb = node.getClientRect(); // já considera transformações
+        if (rectsIntersect({ x, y, width, height }, bb)) candidates.add(s.id);
+      }
+
+      // seleciona todos, mantém o “primário” como o do topo
+      const ordered = shapesRef.current
+        .filter((s) => candidates.has(s.id))
+        .map((s) => s.id);
+      setSelectedIds(ordered);
+      setSelectedId(ordered.length ? ordered[ordered.length - 1] : null);
+
+      return { active: false, x1: 0, y1: 0, x2: 0, y2: 0 };
+    });
+  };
+
+  // zoom controls
+  const handleChangeScale = (s: number) => applyCenterFromScale(s);
+  const handleFit = () => applyCenterFromScale(fitScale);
 
   return (
     <div
@@ -569,9 +618,7 @@ export default function Canvas() {
 
           const t = normalizeType(type);
 
-          // ⬇️ NOVA LÓGICA:
-          // Se coords não vier (caso de clique nos botões do menu),
-          // criamos no CENTRO da ARTBOARD (independe de pan/zoom).
+          // Se coords não vier (clique nos botões do menu), cria no centro da ARTBOARD
           let sx: number, sy: number;
           if (typeof coords?.x === "number" && typeof coords?.y === "number") {
             sx = coords.x;
@@ -585,17 +632,22 @@ export default function Canvas() {
         }}
         onSelect={(id) => {
           if (!id) {
+            setSelectedIds([]);
             setSelectedId(null);
             return;
           }
           const exists = shapesRef.current.some((s) => s.id === id);
-          if (exists) setSelectedId(id);
+          if (exists) {
+            setSelectedIds([id]);
+            setSelectedId(id);
+          }
         }}
         onDelete={(id) => {
-          const targetId = id ?? selectedRef.current ?? null;
-          if (!targetId) return;
-          setShapes((prev) => prev.filter((s) => s.id !== targetId));
-          setSelectedId((sid) => (sid === targetId ? null : sid));
+          const targetIds = id ? [id] : selectedIdsRef.current;
+          if (!targetIds.length) return;
+          setShapes((prev) => prev.filter((s) => !targetIds.includes(s.id)));
+          setSelectedIds([]);
+          setSelectedId(null);
         }}
         onToggleHidden={(id) => {
           setShapes((prev) =>
@@ -627,7 +679,7 @@ export default function Canvas() {
         }}
       />
 
-      {/* 🔹 DnD extraído (continua criando na posição de drop) */}
+      {/* 🔹 DnD */}
       <DnDContainer
         stageRef={stageRef}
         onDropShape={(type, sx, sy) => addShapeAt(type, sx, sy)}
@@ -643,17 +695,50 @@ export default function Canvas() {
         x={stagePos.x}
         y={stagePos.y}
         onMouseDown={(e: any) => {
+          // Início de marquee: botão esquerdo, clique em vazio e sem Space (pan)
           const clickedOnEmpty = e.target === e.target.getStage();
-          if (clickedOnEmpty) setSelectedId(null);
+          if (
+            e.evt.button === 0 &&
+            clickedOnEmpty &&
+            !spacePressedRef.current
+          ) {
+            const stage: Konva.Stage = e.target.getStage();
+            const p = stage.getPointerPosition();
+            if (p) {
+              const l = stageToLocal(p.x, p.y);
+              beginMarquee(l.x, l.y);
+            }
+            return;
+          }
+          // clique simples em vazio
+          if (clickedOnEmpty) {
+            setSelectedIds([]);
+            setSelectedId(null);
+          }
+        }}
+        onMouseMove={(e: any) => {
+          if (!marquee.active) return;
+          const stage: Konva.Stage = e.target.getStage();
+          const p = stage.getPointerPosition();
+          if (p) {
+            const l = stageToLocal(p.x, p.y);
+            updateMarquee(l.x, l.y);
+          }
+        }}
+        onMouseUp={() => {
+          if (marquee.active) finishMarquee();
         }}
         onTouchStart={(e: any) => {
           const clickedOnEmpty = e.target === e.target.getStage();
-          if (clickedOnEmpty) setSelectedId(null);
+          if (clickedOnEmpty) {
+            setSelectedIds([]);
+            setSelectedId(null);
+          }
         }}>
         {/* 🔹 Artboard na ORIGEM (0,0) */}
         <ArtboardLayer
           artboard={{ width: artboard.width, height: artboard.height }}
-          stageSize={viewport} // assinatura preservada
+          stageSize={viewport}
           pad={0}
         />
 
@@ -661,18 +746,42 @@ export default function Canvas() {
         <Layer>
           <ShapesLayer
             shapes={shapes}
-            selectedId={selectedId}
-            onSelectShape={setSelectedId}
+            selectedId={selectedId} // compat: realce de 1 item
+            onSelectShape={(id) => {
+              setSelectedIds(id ? [id] : []);
+              setSelectedId(id ?? null);
+            }}
             shapeRefs={shapeRefs}
           />
 
-          <TransformerManager selectedId={selectedId} shapeRefs={shapeRefs} />
+          {/* 🔹 Transformer em grupo/único */}
+          <TransformerManager
+            selectedId={selectedId}
+            selectedIds={selectedIds}
+            shapeRefs={shapeRefs}
+          />
 
           <HintOverlay selectedId={selectedId} canvasHeight={viewport.height} />
         </Layer>
+
+        {/* 🔹 Marquee overlay */}
+        {marquee.active && (
+          <Layer listening={false}>
+            <Rect
+              x={Math.min(marquee.x1, marquee.x2)}
+              y={Math.min(marquee.y1, marquee.y2)}
+              width={Math.abs(marquee.x2 - marquee.x1)}
+              height={Math.abs(marquee.y2 - marquee.y1)}
+              fill="rgba(59,130,246,0.08)"
+              stroke="#3b82f6"
+              strokeWidth={1}
+              dash={[4, 4]}
+            />
+          </Layer>
+        )}
       </Stage>
 
-      {/* 🔹 Controles de Zoom (canto inferior esquerdo) */}
+      {/* 🔹 Controles de Zoom */}
       <ZoomControls
         scale={scale}
         onChangeScale={handleChangeScale}
