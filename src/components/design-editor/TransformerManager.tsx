@@ -37,6 +37,12 @@ export default function TransformerManager({
     <Transformer
       ref={trRef}
       rotateEnabled={rotateEnabled}
+      padding={4}
+      borderStroke={"#2b7fff"}
+      anchorStroke={"#2b7fff"}
+      anchorCornerRadius={4}
+      rotateAnchorOffset={22}
+      rotateAnchorCursor={"ew-resize"}
       enabledAnchors={enabledAnchors}
     />
   );

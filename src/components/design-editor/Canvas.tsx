@@ -514,9 +514,39 @@ export default function Canvas() {
     document.body.style.cursor = spacePressedRef.current ? "grab" : "";
   };
 
+  // ---------- Exclusão por teclado (robusta) e ESC para limpar seleção ----------
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const isEditable =
+        target?.isContentEditable ||
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select";
+
+      if (isEditable) return;
+
+      if (e.key === "Escape") {
+        setSelectedId(null);
+        return;
+      }
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        const sid = selectedRef.current;
+        if (!sid) return;
+        e.preventDefault();
+        setShapes((prev) => prev.filter((s) => s.id !== sid));
+        setSelectedId(null);
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // ---------- Handlers de ZoomControls ----------
   const handleChangeScale = (s: number) => {
-    // centraliza a cada mudança de zoom (mais simples e previsível)
     applyCenterFromScale(s);
   };
   const handleFit = () => {
@@ -538,15 +568,18 @@ export default function Canvas() {
           if (!stage) return;
 
           const t = normalizeType(type);
-          const pointer = stage.getPointerPosition();
-          const sx =
-            typeof coords?.x === "number"
-              ? coords.x
-              : pointer?.x ?? viewport.width / 2;
-          const sy =
-            typeof coords?.y === "number"
-              ? coords.y
-              : pointer?.y ?? viewport.height / 2;
+
+          // ⬇️ NOVA LÓGICA:
+          // Se coords não vier (caso de clique nos botões do menu),
+          // criamos no CENTRO da ARTBOARD (independe de pan/zoom).
+          let sx: number, sy: number;
+          if (typeof coords?.x === "number" && typeof coords?.y === "number") {
+            sx = coords.x;
+            sy = coords.y;
+          } else {
+            sx = stagePos.x + (artboard.width * scale) / 2;
+            sy = stagePos.y + (artboard.height * scale) / 2;
+          }
 
           addShapeAt(t, sx, sy);
         }}
@@ -594,7 +627,7 @@ export default function Canvas() {
         }}
       />
 
-      {/* 🔹 DnD extraído */}
+      {/* 🔹 DnD extraído (continua criando na posição de drop) */}
       <DnDContainer
         stageRef={stageRef}
         onDropShape={(type, sx, sy) => addShapeAt(type, sx, sy)}
