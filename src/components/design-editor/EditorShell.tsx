@@ -15,6 +15,11 @@ import {
   Minus as IconMinus,
   Star as IconStar,
   X as IconX,
+  LayoutGrid as IconLayoutGrid,
+  Instagram,
+  Linkedin,
+  Facebook,
+  Youtube,
 } from "lucide-react";
 
 import {
@@ -28,7 +33,7 @@ import LayersPanel from "@/components/design-editor/LayersPanel";
 
 const Canvas = dynamic(() => import("./Canvas"), { ssr: false });
 
-type Panel = "none" | "formas" | "imagens";
+type Panel = "none" | "formas" | "imagens" | "templates"; // ⬅️ adicionamos "templates"
 const DND_MIME = "application/x-design-editor";
 
 export default function EditorShell() {
@@ -56,6 +61,9 @@ export default function EditorShell() {
   function handleToggleFormas() {
     setPanel((p) => (p === "formas" ? "none" : "formas"));
   }
+  function handleToggleTemplates() {
+    setPanel((p) => (p === "templates" ? "none" : "templates"));
+  }
 
   const addRect = () => create("rect");
   const addCircle = () => create("circle");
@@ -78,7 +86,10 @@ export default function EditorShell() {
     return () => window.removeEventListener("keydown", onEsc);
   }, []);
 
-  const columns = panel === "formas" ? "100px 120px 1fr" : "100px 1fr";
+  const columns =
+    panel === "formas" || panel === "templates"
+      ? "100px 120px 1fr"
+      : "80px 1fr";
 
   const onEmptyAreaMouseDown = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -110,29 +121,39 @@ export default function EditorShell() {
           <div className="flex flex-col gap-2">
             <Button
               variant="outline"
-              className="text-xs flex flex-col items-center h-auto py-4"
+              className="text-xs flex flex-col items-center h-auto py-3"
               onClick={handleAddText}
               draggable
               onDragStart={onDragStart("text")}
               title="Arraste ou clique para inserir texto">
-              <IconType size={28} />
+              <IconType size={20} />
               Texto
             </Button>
             <Button
               variant="outline"
-              className="text-xs flex flex-col items-center h-auto py-4"
+              className="text-xs flex flex-col items-center h-auto py-3"
               onClick={handleToggleImagens}
               title="Ferramentas de imagens">
-              <IconImage size={28} />
+              <IconImage size={20} />
               Imagens
             </Button>
             <Button
               variant="outline"
-              className="text-xs flex flex-col items-center h-auto py-4"
+              className="text-xs flex flex-col items-center h-auto py-3"
               onClick={handleToggleFormas}
               title="Abrir/fechar submenu de formas">
-              <IconCircle size={28} />
+              <IconCircle size={20} />
               Formas
+            </Button>
+
+            {/* ⬇️ Novo botão: Templates (posição marcada em verde no wireframe) */}
+            <Button
+              variant="outline"
+              className="text-xs flex flex-col items-center h-auto py-3"
+              onClick={handleToggleTemplates}
+              title="Abrir/fechar submenu de templates">
+              <IconLayoutGrid size={20} />
+              Templates
             </Button>
           </div>
         </aside>
@@ -205,10 +226,86 @@ export default function EditorShell() {
             </div>
 
             <div className="flex flex-col items-center gap-2 mt-4">
-              <span className="text-xs text-center text-gray-500">
+              <span className="text-[11px] leading-none text-left text-gray-400">
                 Arraste ou clique para inserir.
               </span>
-              <span className="text-xs text-center text-gray-500">
+              <span className="text-[11px] leading-none text-left text-gray-400">
+                ESC para fechar a coluna.
+              </span>
+            </div>
+          </aside>
+        )}
+
+        {/* Submenu Templates (somente UI por enquanto) */}
+        {panel === "templates" && (
+          <aside
+            className="border-r border-gray-200 p-2 bg-white overflow-y-auto"
+            style={{ height: `calc(100vh - ${PROP_BAR_H}px)` }}
+            onMouseDown={onEmptyAreaMouseDown}>
+            <div className="flex items-center justify-between mt-1 mb-3">
+              <div className="text-base font-semibold">Templates</div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 rounded-md"
+                onClick={() => setPanel("none")}
+                aria-label="Fechar painel de templates"
+                title="Fechar (Esc)">
+                <IconX className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Placeholder inicial – apenas UI, sem lógica de artboard ainda */}
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                <Instagram />
+                1080×1080px
+              </Button>
+              <Button
+                variant="outline"
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                <Instagram />
+                1080×1350px
+                <br />
+                Retrato
+              </Button>
+              <Button
+                variant="outline"
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                <Instagram />
+                1080×1920px <br />
+                Storie
+              </Button>
+              <Button
+                variant="outline"
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                <Linkedin />
+                1584x396px
+                <br />
+                Capa
+              </Button>
+              <Button
+                variant="outline"
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                <Facebook />
+                1200×630px
+                <br />
+                Paisagem
+              </Button>
+              <Button
+                variant="outline"
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                <Youtube />
+                1920×1080px
+                <br />
+                Capa vídeo
+              </Button>
+            </div>
+
+            <div className="flex flex-col items-start gap-2 mt-4">
+              <span className="text-[11px] leading-none text-left text-gray-400">
                 ESC para fechar a coluna.
               </span>
             </div>

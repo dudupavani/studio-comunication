@@ -19,6 +19,7 @@ import {
   Star as IconStar,
   ChevronUp,
   ChevronDown,
+  Layers2,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -118,9 +119,14 @@ export default function LayersPanel({ className }: Props) {
       <div className="min-h-0 flex-1 overflow-auto">
         <ul className="flex flex-col gap-1">
           {items.length === 0 && (
-            <li className="px-2 py-6 text-center text-xs text-muted-foreground">
-              Sem camadas ainda — adicione elementos no canvas.
-            </li>
+            <div className="flex flex-col items-center gap-4 px-2 py-4 text-center text-xs text-muted-foreground">
+              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white shadow-md">
+                <Layers2 size={18} />
+              </div>
+              <span className="text-gray-500">
+                Adicione elementos na área de trabalho
+              </span>
+            </div>
           )}
 
           {items.map((it) => {
@@ -178,7 +184,7 @@ export default function LayersPanel({ className }: Props) {
                   />
                   <span
                     className={clsx(
-                      "truncate text-xs",
+                      "truncate text-sm font-medium",
                       it.isHidden ? "text-muted-foreground" : "text-foreground"
                     )}>
                     {it.name || it.id}
@@ -190,45 +196,45 @@ export default function LayersPanel({ className }: Props) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-6 w-6"
                     title={it.isHidden ? "Mostrar" : "Ocultar"}
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleHidden(it.id);
                     }}>
                     {it.isHidden ? (
-                      <Eye size={15} className="opacity-80" />
+                      <Eye size={14} className="opacity-80" />
                     ) : (
-                      <EyeOff size={15} className="opacity-80" />
+                      <EyeOff size={14} className="opacity-80" />
                     )}
                   </Button>
 
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-6 w-6"
                     title={it.isLocked ? "Desbloquear" : "Bloquear"}
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleLocked(it.id);
                     }}>
                     {it.isLocked ? (
-                      <Unlock size={15} className="opacity-80" />
+                      <Unlock size={14} className="opacity-80" />
                     ) : (
-                      <Lock size={15} className="opacity-80" />
+                      <Lock size={14} className="opacity-80" />
                     )}
                   </Button>
 
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 hover:text-red-600"
+                    className="h-6 w-6 hover:text-red-600"
                     title="Remover"
                     onClick={(e) => {
                       e.stopPropagation();
                       remove(it.id);
                     }}>
-                    <Trash2 size={15} />
+                    <Trash2 size={14} />
                   </Button>
                 </div>
               </li>

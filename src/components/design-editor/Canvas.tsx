@@ -1,24 +1,27 @@
 // src/components/design-editor/Canvas.tsx
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Stage,
-  Layer,
-  Rect,
-  Text as KonvaText,
-  Transformer,
-  Circle as KonvaCircle,
-  RegularPolygon as KonvaRegularPolygon,
-  Line as KonvaLine,
-  Star as KonvaStar,
-} from "react-konva";
+import { useEffect, useRef, useState } from "react";
+import { Stage, Layer } from "react-konva";
 import type Konva from "konva";
-import { Text as KonvaTextNode } from "konva/lib/shapes/Text"; // ⬅️ para type-guard de Text
+import ShapesLayer from "./ShapesLayer";
+import EventBridge from "./EventBridge";
+import TransformerManager from "./TransformerManager";
+import HintOverlay from "./HintOverlay";
+import DnDContainer from "./DnDContainer";
+
+// 🔹 novos (já existentes no seu projeto)
+import { useSelectionSync } from "@/components/design-editor/hooks/useSelectionSync";
+import {
+  isKonvaTextNode,
+  applyTextPatchToNode,
+} from "@/components/design-editor/utils/konvaCache";
+
+// 🔹 novos (artboard)
+import { useArtboard } from "@/hooks/design-editor/use-artboard";
+import ArtboardLayer from "@/components/design-editor/ArtboardLayer";
 
 // ========= Constantes =========
-const DND_MIME = "application/x-design-editor";
-
 const DEFAULTS = {
   fill: "#000000",
   stroke: "#000000",
@@ -54,6 +57,9 @@ const DEFAULTS = {
   },
 } as const;
 
+// Padding visual ao redor da artboard dentro do Stage
+const ARTBOARD_PAD = 200;
+
 // ========= Tipos =========
 type ShapeKind = "rect" | "text" | "circle" | "triangle" | "line" | "star";
 
@@ -80,7 +86,6 @@ type ShapeRect = ShapeBase & {
   type: "rect";
   width: number;
   height: number;
-  cornerRadius?: number;
 };
 type ShapeCircle = ShapeBase & { type: "circle"; radius: number };
 type ShapeTriangle = ShapeBase & { type: "triangle"; radius: number };
@@ -121,12 +126,7 @@ function isShapeText(s: AnyShape): s is ShapeText {
   return s.type === "text";
 }
 
-// === Helper para identificar nó Text do Konva de forma segura
-function isKonvaTextNode(n: Konva.Node | null | undefined): n is KonvaTextNode {
-  return !!n && (n as any).className === "Text";
-}
-
-// ========= Helper DnD / Normalização =========
+// ========= Helper Normalização (usado por EventBridge.create)
 function normalizeType(t: string): ShapeKind {
   let v = (t || "").toLowerCase();
   if (v === "polygon" || v === "tri") v = "triangle";
@@ -136,35 +136,22 @@ function normalizeType(t: string): ShapeKind {
   return v as ShapeKind;
 }
 
-function parseDropData(dt: DataTransfer | null): { type: ShapeKind } {
-  if (!dt) return { type: "text" };
-  const raw =
-    dt.getData(DND_MIME) ||
-    dt.getData("application/json") ||
-    dt.getData("text/plain") ||
-    "";
-  let t = "";
-  try {
-    const obj = raw ? JSON.parse(raw) : {};
-    t = (obj?.type || obj?.shape || "").toString().toLowerCase();
-  } catch {
-    t = (raw || "").toString().toLowerCase();
-  }
-  return { type: normalizeType(t) };
-}
-
 export default function Canvas() {
   // ---------- refs ----------
   const outerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
 
-  const [size, setSize] = useState({ width: 600, height: 450 });
+  // 🔹 Tamanho do Stage (agora baseado no container + artboard)
+  const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
+
   const [shapes, setShapes] = useState<AnyShape[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const shapeRefs = useRef<Record<string, Konva.Node | null>>({});
-  const trRef = useRef<Konva.Transformer>(null);
+
+  // 🔹 Artboard (controlado pelo hook que escuta o evento de Templates)
+  const { artboard } = useArtboard();
 
   // refs para evitar closures “stale”
   const shapesRef = useRef<AnyShape[]>(shapes);
@@ -175,37 +162,32 @@ export default function Canvas() {
   }, [shapes, selectedId]);
 
   // ---------- responsivo ----------
+  // Ajusta o Stage para caber a artboard + padding, respeitando o espaço visível
   useEffect(() => {
     const el = measureRef.current;
     if (!el) return;
-    const update = () => {
-      const w = Math.max(320, Math.floor(el.clientWidth));
-      setSize((prev) => {
-        if (prev.width === w) return prev;
-        const h = Math.max(360, Math.round((w * 9) / 16));
-        return { width: w, height: h };
+
+    const compute = () => {
+      const vw = Math.max(320, Math.floor(el.clientWidth));
+      const vh = Math.max(360, Math.floor(el.clientHeight || 0));
+      const minW = artboard.width + ARTBOARD_PAD * 2;
+      const minH = artboard.height + ARTBOARD_PAD * 2;
+
+      setStageSize({
+        width: Math.max(vw, minW),
+        height: Math.max(vh, minH),
       });
     };
-    const ro = new ResizeObserver(update);
+
+    const ro = new ResizeObserver(compute);
     ro.observe(el);
-    update();
+    compute();
+
     return () => ro.disconnect();
-  }, []);
+  }, [artboard.width, artboard.height]);
 
-  // ---------- transformer ----------
+  // ---------- emitir estado p/ camada lateral ----------
   useEffect(() => {
-    const tr = trRef.current;
-    if (!tr) return;
-    if (selectedId && shapeRefs.current[selectedId]) {
-      tr.nodes([shapeRefs.current[selectedId]!]);
-    } else {
-      tr.nodes([]);
-    }
-    tr.getLayer()?.batchDraw();
-  }, [selectedId, shapes.length]);
-
-  // ---------- emitir estado p/ camadas ----------
-  function emitState() {
     if (typeof window === "undefined") return;
     const payload = {
       selectedId,
@@ -220,68 +202,14 @@ export default function Canvas() {
     window.dispatchEvent(
       new CustomEvent("design-editor:state", { detail: payload })
     );
-  }
-  useEffect(() => {
-    emitState();
   }, [shapes, selectedId]);
 
-  // ---------- emitir props p/ painel ----------
-  function emitSelectionProps() {
-    if (typeof window === "undefined") return;
-    const sel =
-      (selectedId &&
-        (shapes.find((s) => s.id === selectedId) as AnyShape | undefined)) ||
-      null;
-
-    let detail: any = null;
-    if (sel) {
-      const base = {
-        id: sel.id,
-        type: sel.type,
-        name: sel.name || sel.id,
-        fill: sel.type === "line" ? undefined : sel.fill ?? DEFAULTS.fill,
-        stroke:
-          sel.type === "text"
-            ? undefined
-            : sel.stroke ??
-              (sel.type === "line" ? DEFAULTS.line.stroke : DEFAULTS.stroke),
-        strokeWidth:
-          sel.strokeWidth ??
-          (sel.type === "line"
-            ? DEFAULTS.line.strokeWidth
-            : DEFAULTS.strokeWidth),
-        opacity: sel.opacity ?? DEFAULTS.opacity,
-        shadowBlur: sel.shadowBlur ?? DEFAULTS.shadowBlur,
-        shadowOffsetX: sel.shadowOffsetX ?? DEFAULTS.shadowOffsetX,
-        shadowOffsetY: sel.shadowOffsetY ?? DEFAULTS.shadowOffsetY,
-      };
-
-      if (isShapeText(sel)) {
-        detail = {
-          ...base,
-          text: sel.text ?? DEFAULTS.text.text,
-          fontFamily: sel.fontFamily ?? DEFAULTS.text.fontFamily,
-          fontSize: sel.fontSize ?? DEFAULTS.text.fontSize,
-          fontStyle: sel.fontStyle ?? DEFAULTS.text.fontStyle,
-          align: sel.align ?? DEFAULTS.text.align,
-          lineHeight: sel.lineHeight ?? DEFAULTS.text.lineHeight,
-          letterSpacing: sel.letterSpacing ?? DEFAULTS.text.letterSpacing,
-          width: sel.width ?? DEFAULTS.text.width,
-          height: sel.height ?? DEFAULTS.text.height,
-          padding: sel.padding ?? DEFAULTS.text.padding,
-        };
-      } else {
-        detail = base;
-      }
-    }
-
-    window.dispatchEvent(
-      new CustomEvent("design-editor:selection-props", { detail })
-    );
-  }
-  useEffect(() => {
-    emitSelectionProps();
-  }, [selectedId, shapes]);
+  // ---------- sincroniza propriedades da seleção (hook) ----------
+  useSelectionSync<AnyShape>({
+    selectedId,
+    shapes,
+    defaults: DEFAULTS,
+  });
 
   // ---------- add shape util ----------
   function addShapeAt(type: AnyShape["type"], x: number, y: number) {
@@ -302,7 +230,6 @@ export default function Canvas() {
           fill: DEFAULTS.fill,
           stroke: DEFAULTS.stroke,
           strokeWidth: DEFAULTS.strokeWidth,
-          cornerRadius: 10,
           opacity: DEFAULTS.opacity,
           shadowBlur: 0,
           shadowOffsetX: 0,
@@ -427,208 +354,9 @@ export default function Canvas() {
     setSelectedId(newShape.id);
   }
 
-  // ---------- stage handlers ----------
-  const handleStagePointerDown = (e: any) => {
-    const clickedOnEmpty = e.target === e.target.getStage();
-    if (clickedOnEmpty) setSelectedId(null);
-  };
-
-  // ---------- DnD: listeners no container do Stage ----------
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const container = stage.container();
-
-    const onDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
-    };
-
-    const onDrop = (e: DragEvent) => {
-      e.preventDefault();
-      const { type } = parseDropData(e.dataTransfer || null);
-
-      const rect = container.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      if (x < 0 || y < 0 || x > stage.width() || y > stage.height()) return;
-
-      addShapeAt(type, x, y);
-    };
-
-    container.addEventListener("dragover", onDragOver);
-    container.addEventListener("drop", onDrop);
-
-    return () => {
-      container.removeEventListener("dragover", onDragOver);
-      container.removeEventListener("drop", onDrop);
-    };
-  }, [size.width, size.height]);
-
-  // ---------- Criação por clique no menu ----------
-  useEffect(() => {
-    const onCreate = (ev: Event) => {
-      const e = ev as CustomEvent<any>;
-      const t = normalizeType(e?.detail?.type ?? "text");
-
-      const stage = stageRef.current;
-      if (!stage) return;
-
-      const pointer = stage.getPointerPosition();
-      const x =
-        typeof e?.detail?.x === "number"
-          ? e.detail.x
-          : pointer?.x ?? stage.width() / 2;
-      const y =
-        typeof e?.detail?.y === "number"
-          ? e.detail.y
-          : pointer?.y ?? stage.height() / 2;
-
-      addShapeAt(t, x, y);
-    };
-
-    window.addEventListener(
-      "design-editor:create-shape",
-      onCreate as EventListener
-    );
-
-    (globalThis as any).designEditor = {
-      ...(globalThis as any).designEditor,
-      create: (type: ShapeKind, coords?: { x?: number; y?: number }) => {
-        const stage = stageRef.current;
-        if (!stage) return;
-        const t = normalizeType(type);
-        const x = typeof coords?.x === "number" ? coords!.x : stage.width() / 2;
-        const y =
-          typeof coords?.y === "number" ? coords!.y : stage.height() / 2;
-        addShapeAt(t, x, y);
-      },
-    };
-
-    return () => {
-      window.removeEventListener(
-        "design-editor:create-shape",
-        onCreate as EventListener
-      );
-    };
-  }, []);
-
-  // ---------- Comandos vindos do EditorShell ----------
-  useEffect(() => {
-    const onSelect = (ev: Event) => {
-      const e = ev as CustomEvent<any>;
-      const id = (e.detail?.id ?? null) as string | null;
-      if (!id) {
-        setSelectedId(null);
-        return;
-      }
-      const exists = shapesRef.current.some((s) => s.id === id);
-      if (exists) setSelectedId(id);
-    };
-
-    const onDelete = (ev: Event) => {
-      const e = ev as CustomEvent<any>;
-      const id = (e.detail?.id ?? selectedRef.current ?? null) as string | null;
-      if (!id) return;
-      setShapes((prev) => prev.filter((s) => s.id !== id));
-      setSelectedId((sid) => (sid === id ? null : sid));
-    };
-
-    const onToggleHidden = (ev: Event) => {
-      const e = ev as CustomEvent<any>;
-      const id = e.detail?.id as string | undefined;
-      if (!id) return;
-      setShapes((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, isHidden: !s.isHidden } : s))
-      );
-    };
-
-    const onToggleLocked = (ev: Event) => {
-      const e = ev as CustomEvent<any>;
-      const id = e.detail?.id as string | undefined;
-      if (!id) return;
-      setShapes((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, isLocked: !s.isLocked } : s))
-      );
-    };
-
-    const onBringForward = (ev: Event) => {
-      const e = ev as CustomEvent<any>;
-      const id = e.detail?.id as string | undefined;
-      if (!id) return;
-      setShapes((prev) => {
-        const idx = prev.findIndex((s) => s.id === id);
-        if (idx === -1 || idx === prev.length - 1) return prev;
-        const copy = [...prev];
-        [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
-        return copy;
-      });
-    };
-
-    const onSendBackward = (ev: Event) => {
-      const e = ev as CustomEvent<any>;
-      const id = e.detail?.id as string | undefined;
-      if (!id) return;
-      setShapes((prev) => {
-        const idx = prev.findIndex((s) => s.id === id);
-        if (idx <= 0) return prev;
-        const copy = [...prev];
-        [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-        return copy;
-      });
-    };
-
-    window.addEventListener("design-editor:select", onSelect as EventListener);
-    window.addEventListener("design-editor:delete", onDelete as EventListener);
-    window.addEventListener(
-      "design-editor:toggle-hidden",
-      onToggleHidden as EventListener
-    );
-    window.addEventListener(
-      "design-editor:toggle-locked",
-      onToggleLocked as EventListener
-    );
-    window.addEventListener(
-      "design-editor:bring-forward",
-      onBringForward as EventListener
-    );
-    window.addEventListener(
-      "design-editor:send-backward",
-      onSendBackward as EventListener
-    );
-
-    return () => {
-      window.removeEventListener(
-        "design-editor:select",
-        onSelect as EventListener
-      );
-      window.removeEventListener(
-        "design-editor:delete",
-        onDelete as EventListener
-      );
-      window.removeEventListener(
-        "design-editor:toggle-hidden",
-        onToggleHidden as EventListener
-      );
-      window.removeEventListener(
-        "design-editor:toggle-locked",
-        onToggleLocked as EventListener
-      );
-      window.removeEventListener(
-        "design-editor:bring-forward",
-        onBringForward as EventListener
-      );
-      window.removeEventListener(
-        "design-editor:send-backward",
-        onSendBackward as EventListener
-      );
-    };
-  }, []);
-
   // ---------- Atualização de propriedades (genérica + texto) ----------
   useEffect(() => {
-    // Patch é uma união, mas NÃO permitimos alterar 'type'/'id'
+    // Patch é uma união, mas NÃO permitimos alterar 'id'/'type'
     type Patch =
       | Partial<Omit<ShapeText, "id" | "type">>
       | Partial<Omit<ShapeRect, "id" | "type">>
@@ -645,56 +373,35 @@ export default function Canvas() {
         prev.map((s) => {
           if (s.id !== id) return s;
 
-          // Atualização específica por tipo para manter o discriminated union
           switch (s.type) {
             case "text": {
               const node = shapeRefs.current[id];
               const pt = p as Partial<Omit<ShapeText, "id" | "type">>;
-              // aplica no nó para efeito imediato + redraw
               if (isKonvaTextNode(node)) {
-                if (pt.fontFamily !== undefined) node.fontFamily(pt.fontFamily);
-                if (pt.fontSize !== undefined) node.fontSize(pt.fontSize);
-                if (pt.fontStyle !== undefined) node.fontStyle(pt.fontStyle);
-                if (pt.letterSpacing !== undefined)
-                  node.letterSpacing(pt.letterSpacing);
-                if (pt.lineHeight !== undefined) node.lineHeight(pt.lineHeight);
-                if (pt.align !== undefined) node.align(pt.align);
-                if (pt.width !== undefined) node.width(pt.width);
-                if (pt.height !== undefined) node.height(pt.height);
-                if (pt.padding !== undefined) node.padding(pt.padding);
-                if (pt.text !== undefined) node.text(pt.text);
-
-                node.clearCache?.();
-                node.getLayer()?.batchDraw?.();
+                applyTextPatchToNode(node, pt);
               }
               return { ...s, ...pt } as ShapeText;
             }
-
             case "rect": {
               const pr = p as Partial<Omit<ShapeRect, "id" | "type">>;
               return { ...s, ...pr } as ShapeRect;
             }
-
             case "circle": {
               const pc = p as Partial<Omit<ShapeCircle, "id" | "type">>;
               return { ...s, ...pc } as ShapeCircle;
             }
-
             case "triangle": {
               const ptg = p as Partial<Omit<ShapeTriangle, "id" | "type">>;
               return { ...s, ...ptg } as ShapeTriangle;
             }
-
             case "line": {
               const pl = p as Partial<Omit<ShapeLine, "id" | "type">>;
               return { ...s, ...pl } as ShapeLine;
             }
-
             case "star": {
               const ps = p as Partial<Omit<ShapeStar, "id" | "type">>;
               return { ...s, ...ps } as ShapeStar;
             }
-
             default:
               return s;
           }
@@ -764,200 +471,123 @@ export default function Canvas() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // ---------- dica ----------
-  const hint = useMemo(() => {
-    if (selectedId)
-      return "Dica: selecione para mover/transformar. Delete/Backspace remove o elemento.";
-    return "Dica: arraste itens do painel para o canvas, ou clique no menu para criar. Clique para selecionar; arraste para mover; use as alças para redimensionar/rotacionar.";
-  }, [selectedId]);
-
   return (
-    <div ref={outerRef} className="w-full">
-      <div className="border p-3 bg-white w-full overflow-hidden">
-        <div ref={measureRef} className="w-full relative">
+    <div ref={outerRef} className="w-full h-full">
+      {/* ⬇️ removemos border/padding para não parecer “outro canvas” */}
+      <div className="w-full h-full overflow-auto">
+        <div
+          ref={measureRef}
+          className="w-full h-full relative"
+          style={{ minHeight: 360 }}>
+          {/* Bridge centraliza listeners e API global */}
+          <EventBridge
+            onCreate={(type, coords) => {
+              const stage = stageRef.current;
+              if (!stage) return;
+
+              const t = normalizeType(type);
+              const pointer = stage.getPointerPosition();
+              const x =
+                typeof coords?.x === "number"
+                  ? coords.x
+                  : pointer?.x ?? stage.width() / 2;
+              const y =
+                typeof coords?.y === "number"
+                  ? coords.y
+                  : pointer?.y ?? stage.height() / 2;
+
+              addShapeAt(t, x, y);
+            }}
+            onSelect={(id) => {
+              if (!id) {
+                setSelectedId(null);
+                return;
+              }
+              const exists = shapesRef.current.some((s) => s.id === id);
+              if (exists) setSelectedId(id);
+            }}
+            onDelete={(id) => {
+              const targetId = id ?? selectedRef.current ?? null;
+              if (!targetId) return;
+              setShapes((prev) => prev.filter((s) => s.id !== targetId));
+              setSelectedId((sid) => (sid === targetId ? null : sid));
+            }}
+            onToggleHidden={(id) => {
+              setShapes((prev) =>
+                prev.map((s) =>
+                  s.id === id ? { ...s, isHidden: !s.isHidden } : s
+                )
+              );
+            }}
+            onToggleLocked={(id) => {
+              setShapes((prev) =>
+                prev.map((s) =>
+                  s.id === id ? { ...s, isLocked: !s.isLocked } : s
+                )
+              );
+            }}
+            onBringForward={(id) => {
+              setShapes((prev) => {
+                const idx = prev.findIndex((s) => s.id === id);
+                if (idx === -1 || idx === prev.length - 1) return prev;
+                const copy = [...prev];
+                [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
+                return copy;
+              });
+            }}
+            onSendBackward={(id) => {
+              setShapes((prev) => {
+                const idx = prev.findIndex((s) => s.id === id);
+                if (idx <= 0) return prev;
+                const copy = [...prev];
+                [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+                return copy;
+              });
+            }}
+          />
+
+          {/* 🔹 DnD extraído */}
+          <DnDContainer
+            stageRef={stageRef}
+            onDropShape={(type, x, y) => addShapeAt(type, x, y)}
+          />
+
           <Stage
             ref={stageRef}
-            width={size.width}
-            height={size.height}
-            onMouseDown={handleStagePointerDown}
-            onTouchStart={handleStagePointerDown}>
+            width={stageSize.width}
+            height={stageSize.height}
+            onMouseDown={(e: any) => {
+              const clickedOnEmpty = e.target === e.target.getStage();
+              if (clickedOnEmpty) setSelectedId(null);
+            }}
+            onTouchStart={(e: any) => {
+              const clickedOnEmpty = e.target === e.target.getStage();
+              if (clickedOnEmpty) setSelectedId(null);
+            }}>
+            {/* 🔹 Artboard ao fundo (não captura eventos) */}
+            <ArtboardLayer
+              artboard={{ width: artboard.width, height: artboard.height }}
+              stageSize={stageSize}
+              pad={ARTBOARD_PAD}
+            />
+
+            {/* 🔹 Suas camadas existentes */}
             <Layer>
-              {shapes.map((s) => {
-                const setRef = (node: any) => {
-                  shapeRefs.current[s.id] = node;
-                };
+              <ShapesLayer
+                shapes={shapes}
+                selectedId={selectedId}
+                onSelectShape={setSelectedId}
+                shapeRefs={shapeRefs}
+              />
 
-                if (s.type === "rect") {
-                  const rect = s as ShapeRect;
-                  return (
-                    <Rect
-                      key={s.id}
-                      ref={setRef}
-                      x={s.x}
-                      y={s.y}
-                      rotation={s.rotation}
-                      visible={!s.isHidden}
-                      listening={!s.isLocked}
-                      draggable={!s.isLocked}
-                      opacity={s.opacity}
-                      shadowBlur={s.shadowBlur}
-                      shadowOffsetX={s.shadowOffsetX}
-                      shadowOffsetY={s.shadowOffsetY}
-                      onClick={() => setSelectedId(s.id)}
-                      onTap={() => setSelectedId(s.id)}
-                      width={rect.width}
-                      height={rect.height}
-                      fill={s.fill}
-                      stroke={s.stroke}
-                      strokeWidth={s.strokeWidth}
-                    />
-                  );
-                }
-                if (s.type === "circle") {
-                  const c = s as ShapeCircle;
-                  return (
-                    <KonvaCircle
-                      key={s.id}
-                      ref={setRef}
-                      x={s.x}
-                      y={s.y}
-                      rotation={s.rotation}
-                      visible={!s.isHidden}
-                      listening={!s.isLocked}
-                      draggable={!s.isLocked}
-                      opacity={s.opacity}
-                      shadowBlur={s.shadowBlur}
-                      shadowOffsetX={s.shadowOffsetX}
-                      shadowOffsetY={s.shadowOffsetY}
-                      onClick={() => setSelectedId(s.id)}
-                      onTap={() => setSelectedId(s.id)}
-                      radius={c.radius}
-                      fill={s.fill}
-                      stroke={s.stroke}
-                      strokeWidth={s.strokeWidth}
-                    />
-                  );
-                }
-                if (s.type === "triangle") {
-                  const t = s as ShapeTriangle;
-                  return (
-                    <KonvaRegularPolygon
-                      key={s.id}
-                      ref={setRef}
-                      x={s.x}
-                      y={s.y}
-                      rotation={s.rotation}
-                      visible={!s.isHidden}
-                      listening={!s.isLocked}
-                      draggable={!s.isLocked}
-                      opacity={s.opacity}
-                      shadowBlur={s.shadowBlur}
-                      shadowOffsetX={s.shadowOffsetX}
-                      shadowOffsetY={s.shadowOffsetY}
-                      onClick={() => setSelectedId(s.id)}
-                      onTap={() => setSelectedId(s.id)}
-                      sides={3}
-                      radius={t.radius}
-                      fill={s.fill}
-                      stroke={s.stroke}
-                      strokeWidth={s.strokeWidth}
-                    />
-                  );
-                }
-                if (s.type === "line") {
-                  const l = s as ShapeLine;
-                  return (
-                    <KonvaLine
-                      key={s.id}
-                      ref={setRef}
-                      x={s.x}
-                      y={s.y}
-                      rotation={s.rotation}
-                      visible={!s.isHidden}
-                      listening={!s.isLocked}
-                      draggable={!s.isLocked}
-                      opacity={s.opacity}
-                      shadowBlur={s.shadowBlur}
-                      shadowOffsetX={s.shadowOffsetX}
-                      shadowOffsetY={s.shadowOffsetY}
-                      onClick={() => setSelectedId(s.id)}
-                      onTap={() => setSelectedId(s.id)}
-                      points={l.points}
-                      stroke={s.stroke}
-                      strokeWidth={s.strokeWidth}
-                      lineCap={l.lineCap}
-                    />
-                  );
-                }
-                if (s.type === "star") {
-                  const st = s as ShapeStar;
-                  return (
-                    <KonvaStar
-                      key={s.id}
-                      ref={setRef}
-                      x={s.x}
-                      y={s.y}
-                      rotation={s.rotation}
-                      visible={!s.isHidden}
-                      listening={!s.isLocked}
-                      draggable={!s.isLocked}
-                      opacity={s.opacity}
-                      shadowBlur={s.shadowBlur}
-                      shadowOffsetX={s.shadowOffsetX}
-                      shadowOffsetY={s.shadowOffsetY}
-                      onClick={() => setSelectedId(s.id)}
-                      onTap={() => setSelectedId(s.id)}
-                      numPoints={st.numPoints}
-                      innerRadius={st.innerRadius}
-                      outerRadius={st.outerRadius}
-                      fill={s.fill}
-                      stroke={s.stroke}
-                      strokeWidth={s.strokeWidth}
-                    />
-                  );
-                }
-                if (s.type === "text") {
-                  const tx = s as ShapeText;
-                  return (
-                    <KonvaText
-                      key={s.id}
-                      ref={setRef}
-                      x={s.x}
-                      y={s.y}
-                      rotation={s.rotation}
-                      visible={!s.isHidden}
-                      listening={!s.isLocked}
-                      draggable={!s.isLocked}
-                      opacity={s.opacity}
-                      shadowBlur={s.shadowBlur}
-                      shadowOffsetX={s.shadowOffsetX}
-                      shadowOffsetY={s.shadowOffsetY}
-                      onClick={() => setSelectedId(s.id)}
-                      onTap={() => setSelectedId(s.id)}
-                      text={tx.text}
-                      fontFamily={tx.fontFamily}
-                      fontSize={tx.fontSize}
-                      fontStyle={tx.fontStyle}
-                      align={tx.align}
-                      lineHeight={tx.lineHeight}
-                      letterSpacing={tx.letterSpacing}
-                      width={tx.width}
-                      height={tx.height}
-                      padding={tx.padding ?? 0}
-                      fill={s.fill}
-                    />
-                  );
-                }
-                return null;
-              })}
+              <TransformerManager
+                selectedId={selectedId}
+                shapeRefs={shapeRefs}
+              />
 
-              <Transformer ref={trRef} rotateEnabled />
-              <KonvaText
-                text={hint}
-                x={16}
-                y={size.height - 28}
-                fontSize={14}
-                fill="#374151"
+              <HintOverlay
+                selectedId={selectedId}
+                canvasHeight={stageSize.height}
               />
             </Layer>
           </Stage>

@@ -64,10 +64,8 @@ function isText(sel: SelectionProps | null): sel is SelectionText {
 export default function PropertiesPanel() {
   const [sel, setSel] = useState<SelectionProps | null>(null);
 
-  // Guarda requests “latest-only” por elemento (para bold/italic)
-  const fontGuardsRef = useRef<
-    Map<string, { id: number; ctrl: AbortController | null }>
-  >(new Map());
+  // Guard “latest-only” por elemento (sequência incremental)
+  const fontSeqRef = useRef<Map<string, number>>(new Map());
 
   // ouvir dados da seleção vindo do Canvas
   useEffect(() => {
@@ -122,33 +120,16 @@ export default function PropertiesPanel() {
       : "normal";
 
     if (sel.fontFamily) {
-      const elementId = sel.id;
-      const guards = fontGuardsRef.current;
-      const prev = guards.get(elementId);
-      prev?.ctrl?.abort?.();
-
-      const reqId = (prev?.id ?? 0) + 1;
-      const ctrl = new AbortController();
-      guards.set(elementId, { id: reqId, ctrl });
+      const seq = (fontSeqRef.current.get(sel.id) ?? 0) + 1;
+      fontSeqRef.current.set(sel.id, seq);
 
       try {
-        await ensureFontLoaded(
-          sel.fontFamily,
-          nextWeight,
-          nextStyle,
-          ctrl.signal
-        );
-        const still = guards.get(elementId);
-        if (!still || still.id !== reqId) return; // foi superado por outra ação
-      } catch (err: any) {
-        if (err?.name !== "AbortError") {
-          console.warn("PropertiesPanel:setBold ensureFontLoaded error", err);
-        }
-        return;
-      } finally {
-        const cur = guards.get(elementId);
-        if (cur && cur.id === reqId)
-          guards.set(elementId, { id: reqId, ctrl: null });
+        await ensureFontLoaded(sel.fontFamily, nextWeight, nextStyle);
+        // se outra ação ocorreu enquanto aguardávamos, aborta aplicação
+        if (fontSeqRef.current.get(sel.id) !== seq) return;
+      } catch (err) {
+        console.warn("ensureFontLoaded (bold) falhou:", err);
+        // seguimos aplicando o estilo para manter UX consistente
       }
     }
 
@@ -173,33 +154,14 @@ export default function PropertiesPanel() {
       : "normal";
 
     if (sel.fontFamily) {
-      const elementId = sel.id;
-      const guards = fontGuardsRef.current;
-      const prev = guards.get(elementId);
-      prev?.ctrl?.abort?.();
-
-      const reqId = (prev?.id ?? 0) + 1;
-      const ctrl = new AbortController();
-      guards.set(elementId, { id: reqId, ctrl });
+      const seq = (fontSeqRef.current.get(sel.id) ?? 0) + 1;
+      fontSeqRef.current.set(sel.id, seq);
 
       try {
-        await ensureFontLoaded(
-          sel.fontFamily,
-          nextWeight,
-          nextStyle,
-          ctrl.signal
-        );
-        const still = guards.get(elementId);
-        if (!still || still.id !== reqId) return;
-      } catch (err: any) {
-        if (err?.name !== "AbortError") {
-          console.warn("PropertiesPanel:setItalic ensureFontLoaded error", err);
-        }
-        return;
-      } finally {
-        const cur = guards.get(elementId);
-        if (cur && cur.id === reqId)
-          guards.set(elementId, { id: reqId, ctrl: null });
+        await ensureFontLoaded(sel.fontFamily, nextWeight, nextStyle);
+        if (fontSeqRef.current.get(sel.id) !== seq) return;
+      } catch (err) {
+        console.warn("ensureFontLoaded (italic) falhou:", err);
       }
     }
 
@@ -347,7 +309,7 @@ export default function PropertiesPanel() {
       {/* ======================== TEXTO ======================== */}
       {isText(sel) && (
         <>
-          {/* Fonte — agora passa a seleção atual por props (render imediato) */}
+          {/* Fonte — passa a seleção atual por props (render imediato) */}
           <div className="flex items-center gap-2">
             <TextFontControl
               selection={{
