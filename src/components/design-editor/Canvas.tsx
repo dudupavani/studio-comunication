@@ -1,7 +1,7 @@
 // src/components/design-editor/Canvas.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Stage, Layer } from "react-konva";
 import type Konva from "konva";
 import ShapesLayer from "./ShapesLayer";
@@ -9,15 +9,16 @@ import EventBridge from "./EventBridge";
 import TransformerManager from "./TransformerManager";
 import HintOverlay from "./HintOverlay";
 import DnDContainer from "./DnDContainer";
+import ZoomControls from "./ZoomControls"; // ⬅️ novo
 
-// 🔹 novos (já existentes no seu projeto)
+// 🔹 existentes
 import { useSelectionSync } from "@/components/design-editor/hooks/useSelectionSync";
 import {
   isKonvaTextNode,
   applyTextPatchToNode,
 } from "@/components/design-editor/utils/konvaCache";
 
-// 🔹 novos (artboard)
+// 🔹 artboard
 import { useArtboard } from "@/hooks/design-editor/use-artboard";
 import ArtboardLayer from "@/components/design-editor/ArtboardLayer";
 
@@ -56,9 +57,6 @@ const DEFAULTS = {
     padding: 0,
   },
 } as const;
-
-// Padding visual ao redor da artboard dentro do Stage
-const ARTBOARD_PAD = 200;
 
 // ========= Tipos =========
 type ShapeKind = "rect" | "text" | "circle" | "triangle" | "line" | "star";
@@ -122,11 +120,6 @@ type AnyShape =
   | ShapeStar
   | ShapeText;
 
-function isShapeText(s: AnyShape): s is ShapeText {
-  return s.type === "text";
-}
-
-// ========= Helper Normalização (usado por EventBridge.create)
 function normalizeType(t: string): ShapeKind {
   let v = (t || "").toLowerCase();
   if (v === "polygon" || v === "tri") v = "triangle";
@@ -138,19 +131,22 @@ function normalizeType(t: string): ShapeKind {
 
 export default function Canvas() {
   // ---------- refs ----------
-  const outerRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null); // container que ocupa 100%
   const stageRef = useRef<Konva.Stage>(null);
 
-  // 🔹 Tamanho do Stage (agora baseado no container + artboard)
-  const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
+  // 🔹 Tamanho do viewport (Stage ocupa 100% disso)
+  const [viewport, setViewport] = useState({ width: 800, height: 600 });
 
+  // 🔹 Zoom e posição do Stage (x/y centralizam a artboard)
+  const [scale, setScale] = useState(1);
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+
+  // shapes/seleção
   const [shapes, setShapes] = useState<AnyShape[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
   const shapeRefs = useRef<Record<string, Konva.Node | null>>({});
 
-  // 🔹 Artboard (controlado pelo hook que escuta o evento de Templates)
+  // Artboard (Hook que escuta eventos de template)
   const { artboard } = useArtboard();
 
   // refs para evitar closures “stale”
@@ -161,30 +157,47 @@ export default function Canvas() {
     selectedRef.current = selectedId;
   }, [shapes, selectedId]);
 
-  // ---------- responsivo ----------
-  // Ajusta o Stage para caber a artboard + padding, respeitando o espaço visível
+  // ---------- medir container e reagir a resize ----------
   useEffect(() => {
-    const el = measureRef.current;
+    const el = containerRef.current;
     if (!el) return;
 
     const compute = () => {
-      const vw = Math.max(320, Math.floor(el.clientWidth));
-      const vh = Math.max(360, Math.floor(el.clientHeight || 0));
-      const minW = artboard.width + ARTBOARD_PAD * 2;
-      const minH = artboard.height + ARTBOARD_PAD * 2;
-
-      setStageSize({
-        width: Math.max(vw, minW),
-        height: Math.max(vh, minH),
-      });
+      const w = Math.max(320, el.clientWidth);
+      const h = Math.max(360, el.clientHeight);
+      setViewport({ width: w, height: h });
     };
 
     const ro = new ResizeObserver(compute);
     ro.observe(el);
     compute();
-
     return () => ro.disconnect();
-  }, [artboard.width, artboard.height]);
+  }, []);
+
+  // ---------- FIT: centralizar e ajustar escala para caber na tela ----------
+  const fitScale = useMemo(() => {
+    if (artboard.width === 0 || artboard.height === 0) return 1;
+    const s = Math.min(
+      viewport.width / artboard.width,
+      viewport.height / artboard.height
+    );
+    // margem leve
+    return s * 0.98;
+  }, [viewport.width, viewport.height, artboard.width, artboard.height]);
+
+  const applyCenterFromScale = (s: number) => {
+    // centraliza a artboard no viewport
+    const x = (viewport.width - artboard.width * s) / 2;
+    const y = (viewport.height - artboard.height * s) / 2;
+    setScale(s);
+    setStagePos({ x, y });
+  };
+
+  // Aplica FIT ao entrar e quando template/viewport mudarem
+  useEffect(() => {
+    applyCenterFromScale(fitScale);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [artboard.width, artboard.height, fitScale]);
 
   // ---------- emitir estado p/ camada lateral ----------
   useEffect(() => {
@@ -211,9 +224,18 @@ export default function Canvas() {
     defaults: DEFAULTS,
   });
 
-  // ---------- add shape util ----------
-  function addShapeAt(type: AnyShape["type"], x: number, y: number) {
+  // ---------- helpers coords: Stage -> Artboard local ----------
+  function stageToLocal(sx: number, sy: number) {
+    return {
+      x: (sx - stagePos.x) / scale,
+      y: (sy - stagePos.y) / scale,
+    };
+  }
+
+  // ---------- add shape util (usa coords locais da artboard) ----------
+  function addShapeAt(type: AnyShape["type"], sx: number, sy: number) {
     const rid = (p: string) => `${p}-${crypto.randomUUID().slice(0, 8)}`;
+    const { x, y } = stageToLocal(sx, sy);
     let newShape: AnyShape;
 
     switch (type) {
@@ -236,7 +258,7 @@ export default function Canvas() {
           shadowOffsetY: 0,
           isHidden: false,
           isLocked: false,
-        } as ShapeRect;
+        } as any;
         break;
       case "circle":
         newShape = {
@@ -256,7 +278,7 @@ export default function Canvas() {
           shadowOffsetY: 0,
           isHidden: false,
           isLocked: false,
-        } as ShapeCircle;
+        } as any;
         break;
       case "triangle":
         newShape = {
@@ -276,7 +298,7 @@ export default function Canvas() {
           shadowOffsetY: 0,
           isHidden: false,
           isLocked: false,
-        } as ShapeTriangle;
+        } as any;
         break;
       case "line":
         newShape = {
@@ -296,7 +318,7 @@ export default function Canvas() {
           lineCap: "round",
           isHidden: false,
           isLocked: false,
-        } as ShapeLine;
+        } as any;
         break;
       case "star":
         newShape = {
@@ -318,7 +340,7 @@ export default function Canvas() {
           shadowOffsetY: 0,
           isHidden: false,
           isLocked: false,
-        } as ShapeStar;
+        } as any;
         break;
       default:
         newShape = {
@@ -346,7 +368,7 @@ export default function Canvas() {
           shadowOffsetY: 0,
           isHidden: false,
           isLocked: false,
-        } as ShapeText;
+        } as any;
         break;
     }
 
@@ -356,7 +378,6 @@ export default function Canvas() {
 
   // ---------- Atualização de propriedades (genérica + texto) ----------
   useEffect(() => {
-    // Patch é uma união, mas NÃO permitimos alterar 'id'/'type'
     type Patch =
       | Partial<Omit<ShapeText, "id" | "type">>
       | Partial<Omit<ShapeRect, "id" | "type">>
@@ -368,11 +389,9 @@ export default function Canvas() {
 
     const applyPatch = (id: string, incoming: Patch | undefined) => {
       const p = (incoming ?? {}) as Patch;
-
       setShapes((prev) =>
         prev.map((s) => {
           if (s.id !== id) return s;
-
           switch (s.type) {
             case "text": {
               const node = shapeRefs.current[id];
@@ -380,28 +399,14 @@ export default function Canvas() {
               if (isKonvaTextNode(node)) {
                 applyTextPatchToNode(node, pt);
               }
-              return { ...s, ...pt } as ShapeText;
+              return { ...s, ...pt } as any;
             }
-            case "rect": {
-              const pr = p as Partial<Omit<ShapeRect, "id" | "type">>;
-              return { ...s, ...pr } as ShapeRect;
-            }
-            case "circle": {
-              const pc = p as Partial<Omit<ShapeCircle, "id" | "type">>;
-              return { ...s, ...pc } as ShapeCircle;
-            }
-            case "triangle": {
-              const ptg = p as Partial<Omit<ShapeTriangle, "id" | "type">>;
-              return { ...s, ...ptg } as ShapeTriangle;
-            }
-            case "line": {
-              const pl = p as Partial<Omit<ShapeLine, "id" | "type">>;
-              return { ...s, ...pl } as ShapeLine;
-            }
-            case "star": {
-              const ps = p as Partial<Omit<ShapeStar, "id" | "type">>;
-              return { ...s, ...ps } as ShapeStar;
-            }
+            case "rect":
+            case "circle":
+            case "triangle":
+            case "line":
+            case "star":
+              return { ...s, ...(p as any) } as any;
             default:
               return s;
           }
@@ -444,155 +449,205 @@ export default function Canvas() {
     };
   }, []);
 
-  // ---------- Delete/Backspace ----------
+  // ---------- Pan com espaço (move o Stage; sem scrollbars) ----------
+  const isPanningRef = useRef(false);
+  const spacePressedRef = useRef(false);
+  const panStartRef = useRef({
+    x: 0,
+    y: 0,
+    stageX: 0,
+    stageY: 0,
+  });
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const sid = selectedRef.current;
-      if (!sid) return;
-
-      const target = e.target as HTMLElement | null;
-      const tag = target?.tagName?.toLowerCase();
-      const isEditable =
-        target?.isContentEditable ||
-        tag === "input" ||
-        tag === "textarea" ||
-        tag === "select";
-
-      if (isEditable) return;
-
-      if (e.key === "Delete" || e.key === "Backspace") {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        spacePressedRef.current = true;
+        document.body.style.cursor = "grab";
         e.preventDefault();
-        setShapes((prev) => prev.filter((s) => s.id !== sid));
-        setSelectedId(null);
       }
     };
-
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        spacePressedRef.current = false;
+        if (!isPanningRef.current) document.body.style.cursor = "";
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      document.body.style.cursor = "";
+    };
   }, []);
 
+  const onContainerMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // botão do meio (1) sempre pode pan; botão esquerdo (0) somente com espaço
+    const allow = e.button === 1 || (e.button === 0 && spacePressedRef.current);
+    if (!allow) return;
+
+    isPanningRef.current = true;
+    panStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      stageX: stagePos.x,
+      stageY: stagePos.y,
+    };
+    document.body.style.cursor = "grabbing";
+    e.preventDefault();
+  };
+
+  const onContainerMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isPanningRef.current) return;
+    const dx = e.clientX - panStartRef.current.x;
+    const dy = e.clientY - panStartRef.current.y;
+    setStagePos({
+      x: panStartRef.current.stageX + dx,
+      y: panStartRef.current.stageY + dy,
+    });
+  };
+
+  const onContainerMouseUp = () => {
+    if (!isPanningRef.current) return;
+    isPanningRef.current = false;
+    document.body.style.cursor = spacePressedRef.current ? "grab" : "";
+  };
+
+  // ---------- Handlers de ZoomControls ----------
+  const handleChangeScale = (s: number) => {
+    // centraliza a cada mudança de zoom (mais simples e previsível)
+    applyCenterFromScale(s);
+  };
+  const handleFit = () => {
+    applyCenterFromScale(fitScale);
+  };
+
   return (
-    <div ref={outerRef} className="w-full h-full">
-      {/* ⬇️ removemos border/padding para não parecer “outro canvas” */}
-      <div className="w-full h-full overflow-auto">
-        <div
-          ref={measureRef}
-          className="w-full h-full relative"
-          style={{ minHeight: 360 }}>
-          {/* Bridge centraliza listeners e API global */}
-          <EventBridge
-            onCreate={(type, coords) => {
-              const stage = stageRef.current;
-              if (!stage) return;
+    <div
+      ref={containerRef}
+      className="w-full h-full relative"
+      onMouseDown={onContainerMouseDown}
+      onMouseMove={onContainerMouseMove}
+      onMouseUp={onContainerMouseUp}
+      onMouseLeave={onContainerMouseUp}>
+      {/* Bridge centraliza listeners e API global */}
+      <EventBridge
+        onCreate={(type, coords) => {
+          const stage = stageRef.current;
+          if (!stage) return;
 
-              const t = normalizeType(type);
-              const pointer = stage.getPointerPosition();
-              const x =
-                typeof coords?.x === "number"
-                  ? coords.x
-                  : pointer?.x ?? stage.width() / 2;
-              const y =
-                typeof coords?.y === "number"
-                  ? coords.y
-                  : pointer?.y ?? stage.height() / 2;
+          const t = normalizeType(type);
+          const pointer = stage.getPointerPosition();
+          const sx =
+            typeof coords?.x === "number"
+              ? coords.x
+              : pointer?.x ?? viewport.width / 2;
+          const sy =
+            typeof coords?.y === "number"
+              ? coords.y
+              : pointer?.y ?? viewport.height / 2;
 
-              addShapeAt(t, x, y);
-            }}
-            onSelect={(id) => {
-              if (!id) {
-                setSelectedId(null);
-                return;
-              }
-              const exists = shapesRef.current.some((s) => s.id === id);
-              if (exists) setSelectedId(id);
-            }}
-            onDelete={(id) => {
-              const targetId = id ?? selectedRef.current ?? null;
-              if (!targetId) return;
-              setShapes((prev) => prev.filter((s) => s.id !== targetId));
-              setSelectedId((sid) => (sid === targetId ? null : sid));
-            }}
-            onToggleHidden={(id) => {
-              setShapes((prev) =>
-                prev.map((s) =>
-                  s.id === id ? { ...s, isHidden: !s.isHidden } : s
-                )
-              );
-            }}
-            onToggleLocked={(id) => {
-              setShapes((prev) =>
-                prev.map((s) =>
-                  s.id === id ? { ...s, isLocked: !s.isLocked } : s
-                )
-              );
-            }}
-            onBringForward={(id) => {
-              setShapes((prev) => {
-                const idx = prev.findIndex((s) => s.id === id);
-                if (idx === -1 || idx === prev.length - 1) return prev;
-                const copy = [...prev];
-                [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
-                return copy;
-              });
-            }}
-            onSendBackward={(id) => {
-              setShapes((prev) => {
-                const idx = prev.findIndex((s) => s.id === id);
-                if (idx <= 0) return prev;
-                const copy = [...prev];
-                [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-                return copy;
-              });
-            }}
+          addShapeAt(t, sx, sy);
+        }}
+        onSelect={(id) => {
+          if (!id) {
+            setSelectedId(null);
+            return;
+          }
+          const exists = shapesRef.current.some((s) => s.id === id);
+          if (exists) setSelectedId(id);
+        }}
+        onDelete={(id) => {
+          const targetId = id ?? selectedRef.current ?? null;
+          if (!targetId) return;
+          setShapes((prev) => prev.filter((s) => s.id !== targetId));
+          setSelectedId((sid) => (sid === targetId ? null : sid));
+        }}
+        onToggleHidden={(id) => {
+          setShapes((prev) =>
+            prev.map((s) => (s.id === id ? { ...s, isHidden: !s.isHidden } : s))
+          );
+        }}
+        onToggleLocked={(id) => {
+          setShapes((prev) =>
+            prev.map((s) => (s.id === id ? { ...s, isLocked: !s.isLocked } : s))
+          );
+        }}
+        onBringForward={(id) => {
+          setShapes((prev) => {
+            const idx = prev.findIndex((s) => s.id === id);
+            if (idx === -1 || idx === prev.length - 1) return prev;
+            const copy = [...prev];
+            [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
+            return copy;
+          });
+        }}
+        onSendBackward={(id) => {
+          setShapes((prev) => {
+            const idx = prev.findIndex((s) => s.id === id);
+            if (idx <= 0) return prev;
+            const copy = [...prev];
+            [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+            return copy;
+          });
+        }}
+      />
+
+      {/* 🔹 DnD extraído */}
+      <DnDContainer
+        stageRef={stageRef}
+        onDropShape={(type, sx, sy) => addShapeAt(type, sx, sy)}
+      />
+
+      <Stage
+        ref={stageRef}
+        width={viewport.width}
+        height={viewport.height}
+        // zoom/posicionamento
+        scaleX={scale}
+        scaleY={scale}
+        x={stagePos.x}
+        y={stagePos.y}
+        onMouseDown={(e: any) => {
+          const clickedOnEmpty = e.target === e.target.getStage();
+          if (clickedOnEmpty) setSelectedId(null);
+        }}
+        onTouchStart={(e: any) => {
+          const clickedOnEmpty = e.target === e.target.getStage();
+          if (clickedOnEmpty) setSelectedId(null);
+        }}>
+        {/* 🔹 Artboard na ORIGEM (0,0) */}
+        <ArtboardLayer
+          artboard={{ width: artboard.width, height: artboard.height }}
+          stageSize={viewport} // assinatura preservada
+          pad={0}
+        />
+
+        {/* 🔹 Conteúdo + transformer */}
+        <Layer>
+          <ShapesLayer
+            shapes={shapes}
+            selectedId={selectedId}
+            onSelectShape={setSelectedId}
+            shapeRefs={shapeRefs}
           />
 
-          {/* 🔹 DnD extraído */}
-          <DnDContainer
-            stageRef={stageRef}
-            onDropShape={(type, x, y) => addShapeAt(type, x, y)}
-          />
+          <TransformerManager selectedId={selectedId} shapeRefs={shapeRefs} />
 
-          <Stage
-            ref={stageRef}
-            width={stageSize.width}
-            height={stageSize.height}
-            onMouseDown={(e: any) => {
-              const clickedOnEmpty = e.target === e.target.getStage();
-              if (clickedOnEmpty) setSelectedId(null);
-            }}
-            onTouchStart={(e: any) => {
-              const clickedOnEmpty = e.target === e.target.getStage();
-              if (clickedOnEmpty) setSelectedId(null);
-            }}>
-            {/* 🔹 Artboard ao fundo (não captura eventos) */}
-            <ArtboardLayer
-              artboard={{ width: artboard.width, height: artboard.height }}
-              stageSize={stageSize}
-              pad={ARTBOARD_PAD}
-            />
+          <HintOverlay selectedId={selectedId} canvasHeight={viewport.height} />
+        </Layer>
+      </Stage>
 
-            {/* 🔹 Suas camadas existentes */}
-            <Layer>
-              <ShapesLayer
-                shapes={shapes}
-                selectedId={selectedId}
-                onSelectShape={setSelectedId}
-                shapeRefs={shapeRefs}
-              />
-
-              <TransformerManager
-                selectedId={selectedId}
-                shapeRefs={shapeRefs}
-              />
-
-              <HintOverlay
-                selectedId={selectedId}
-                canvasHeight={stageSize.height}
-              />
-            </Layer>
-          </Stage>
-        </div>
-      </div>
+      {/* 🔹 Controles de Zoom (canto inferior esquerdo) */}
+      <ZoomControls
+        scale={scale}
+        onChangeScale={handleChangeScale}
+        onFit={handleFit}
+        min={0.1}
+        max={4}
+        step={0.01}
+      />
     </div>
   );
 }

@@ -87,9 +87,7 @@ export default function EditorShell() {
   }, []);
 
   const columns =
-    panel === "formas" || panel === "templates"
-      ? "100px 120px 1fr"
-      : "80px 1fr";
+    panel === "formas" || panel === "templates" ? "90px 120px 1fr" : "90px 1fr";
 
   const onEmptyAreaMouseDown = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -146,7 +144,7 @@ export default function EditorShell() {
               Formas
             </Button>
 
-            {/* ⬇️ Novo botão: Templates (posição marcada em verde no wireframe) */}
+            {/* ⬇️ Botão: Templates */}
             <Button
               variant="outline"
               className="text-xs flex flex-col items-center h-auto py-3"
@@ -236,7 +234,7 @@ export default function EditorShell() {
           </aside>
         )}
 
-        {/* Submenu Templates (somente UI por enquanto) */}
+        {/* Submenu Templates */}
         {panel === "templates" && (
           <aside
             className="border-r border-gray-200 p-2 bg-white overflow-y-auto"
@@ -255,48 +253,101 @@ export default function EditorShell() {
               </Button>
             </div>
 
-            {/* Placeholder inicial – apenas UI, sem lógica de artboard ainda */}
+            {/* Agora com onClick emitindo o evento global */}
             <div className="flex flex-col gap-2">
               <Button
                 variant="outline"
-                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3"
+                title="Instagram 1080×1080"
+                onClick={() =>
+                  cmd("design-editor:artboard:set", {
+                    templateId: "instagram-square",
+                    width: 1080,
+                    height: 1080,
+                  })
+                }>
                 <Instagram />
                 1080×1080px
               </Button>
+
               <Button
                 variant="outline"
-                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3"
+                title="Instagram 1080×1350 (Retrato)"
+                onClick={() =>
+                  cmd("design-editor:artboard:set", {
+                    templateId: "instagram-portrait",
+                    width: 1080,
+                    height: 1350,
+                  })
+                }>
                 <Instagram />
                 1080×1350px
                 <br />
                 Retrato
               </Button>
+
               <Button
                 variant="outline"
-                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3"
+                title="Instagram 1080×1920 (Story)"
+                onClick={() =>
+                  cmd("design-editor:artboard:set", {
+                    templateId: "instagram-story",
+                    width: 1080,
+                    height: 1920,
+                  })
+                }>
                 <Instagram />
                 1080×1920px <br />
                 Storie
               </Button>
+
               <Button
                 variant="outline"
-                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3"
+                title="LinkedIn 1584×396 (Capa)"
+                onClick={() =>
+                  cmd("design-editor:artboard:set", {
+                    templateId: "linkedin-cover",
+                    width: 1584,
+                    height: 396,
+                  })
+                }>
                 <Linkedin />
                 1584x396px
                 <br />
                 Capa
               </Button>
+
               <Button
                 variant="outline"
-                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3"
+                title="Facebook 1200×630 (Paisagem)"
+                onClick={() =>
+                  cmd("design-editor:artboard:set", {
+                    templateId: "facebook-link",
+                    width: 1200,
+                    height: 630,
+                  })
+                }>
                 <Facebook />
                 1200×630px
                 <br />
                 Paisagem
               </Button>
+
               <Button
                 variant="outline"
-                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3">
+                className="flex flex-col items-center h-auto text-xs text-muted-foreground py-3"
+                title="YouTube 1920×1080 (Capa vídeo)"
+                onClick={() =>
+                  cmd("design-editor:artboard:set", {
+                    templateId: "youtube-cover",
+                    width: 1920,
+                    height: 1080,
+                  })
+                }>
                 <Youtube />
                 1920×1080px
                 <br />
@@ -320,7 +371,7 @@ export default function EditorShell() {
           <ResizablePanel defaultSize={75} minSize={40}>
             <section className="flex h-full flex-col">
               <main
-                className="bg-muted p-3 flex-1 overflow-auto"
+                className="bg-gray-200 p-3 flex-1 overflow-auto"
                 onMouseDown={onEmptyAreaMouseDown}>
                 <Canvas />
               </main>

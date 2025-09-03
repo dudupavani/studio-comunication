@@ -25,7 +25,7 @@ const buttonVariants = cva(
         sm: "h-8 rounded-md px-3",
         lg: "h-12 rounded-md px-8",
         icon: "h-10 w-10",
-        "icon-xs": "h-6 w-6 [&_svg]:size-4", // Tamanho para ícone pequeno
+        "icon-xs": "h-6 w-6 [&_svg]:size-3.5", // Tamanho para ícone pequeno
         "icon-sm": "h-8 w-8 [&_svg]:size-4.2", // Tamanho para ícone pequeno
         "icon-md": "h-10 w-10 [&_svg]:size-5", // Tamanho para ícone médio
         "icon-lg": "h-12 w-12 [&_svg]:size-7", // Tamanho para ícone grande
