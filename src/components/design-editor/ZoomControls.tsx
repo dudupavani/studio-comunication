@@ -43,13 +43,13 @@ export default function ZoomControls({
   return (
     <div
       className={
-        "absolute left-1 bottom-1 z-50 bg-white rounded-lg shadow px-3 py-2 flex items-center gap-3 " +
+        "absolute left-1 bottom-1 z-50 bg-white rounded-lg shadow px-1 py-1 flex items-center gap-3 " +
         className
       }>
       {/* Campo % */}
       <div className="flex items-center gap-1">
         <Input
-          className="w-12 h-8 text-sm"
+          className="w-14 h-8 text-sm"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onBlur={commitFromText}

@@ -178,48 +178,48 @@ export default function EditorShell() {
             <div className="grid gap-2">
               <Button
                 variant="outline"
-                className="justify-center items-center p-8 cursor-grab"
+                className="justify-center items-center p-6 cursor-grab"
                 onClick={addRect}
                 draggable
                 onDragStart={onDragStart("rect")}
                 title="Arraste ou clique">
-                <IconSquare className="h-10 w-10" />
+                <IconSquare size={34} />
               </Button>
               <Button
                 variant="outline"
-                className="justify-center items-center p-8 cursor-grab"
+                className="justify-center items-center p-6 cursor-grab"
                 onClick={addCircle}
                 draggable
                 onDragStart={onDragStart("circle")}
                 title="Arraste ou clique">
-                <IconCircle className="h-10 w-10" />
+                <IconCircle size={34} />
               </Button>
               <Button
                 variant="outline"
-                className="justify-center items-center p-8 cursor-grab"
+                className="justify-center items-center p-6 cursor-grab"
                 onClick={addTriangle}
                 draggable
                 onDragStart={onDragStart("triangle")}
                 title="Arraste ou clique">
-                <IconTriangle className="h-10 w-10" />
+                <IconTriangle size={34} />
               </Button>
               <Button
                 variant="outline"
-                className="justify-center items-center p-8 cursor-grab"
+                className="justify-center items-center p-6 cursor-grab"
                 onClick={addLine}
                 draggable
                 onDragStart={onDragStart("line")}
                 title="Arraste ou clique">
-                <IconMinus className="h-10 w-10" />
+                <IconMinus size={34} />
               </Button>
               <Button
                 variant="outline"
-                className="justify-center items-center p-8 cursor-grab"
+                className="justify-center items-center p-6 cursor-grab"
                 onClick={addStar}
                 draggable
                 onDragStart={onDragStart("star")}
                 title="Arraste ou clique">
-                <IconStar className="h-10 w-10" />
+                <IconStar size={34} />
               </Button>
             </div>
 
