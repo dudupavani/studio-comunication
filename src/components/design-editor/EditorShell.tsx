@@ -31,9 +31,14 @@ import {
 import { useDesignEditor } from "@/hooks/design-editor/use-design-editor";
 import LayersPanel from "@/components/design-editor/LayersPanel";
 
+// ✅ painel de imagens
+import ImagesPanel from "./images/ImagesPanel";
+// ✅ hook de auth
+import { useAuthContext } from "@/hooks/use-auth-context";
+
 const Canvas = dynamic(() => import("./Canvas"), { ssr: false });
 
-type Panel = "none" | "formas" | "imagens" | "templates"; // ⬅️ adicionamos "templates"
+type Panel = "none" | "formas" | "imagens" | "templates";
 const DND_MIME = "application/x-design-editor";
 
 export default function EditorShell() {
@@ -42,6 +47,15 @@ export default function EditorShell() {
   const [panel, setPanel] = useState<Panel>("none");
 
   const { create } = useDesignEditor();
+
+  // ✅ extrai orgId/userId de auth (formas alternativas para compatibilidade)
+  const { auth } = useAuthContext();
+  const orgId =
+    (auth as any)?.orgId ??
+    (auth as any)?.org?.id ??
+    (auth as any)?.organizationId ??
+    null;
+  const userId = (auth as any)?.userId ?? (auth as any)?.user?.id ?? null;
 
   function cmd(name: string, detail: any) {
     if (typeof window !== "undefined") {
@@ -86,8 +100,11 @@ export default function EditorShell() {
     return () => window.removeEventListener("keydown", onEsc);
   }, []);
 
+  // inclui "imagens" para abrir a coluna extra
   const columns =
-    panel === "formas" || panel === "templates" ? "90px 120px 1fr" : "90px 1fr";
+    panel === "formas" || panel === "templates" || panel === "imagens"
+      ? "90px 220px 1fr"
+      : "90px 1fr";
 
   const onEmptyAreaMouseDown = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -155,6 +172,35 @@ export default function EditorShell() {
             </Button>
           </div>
         </aside>
+
+        {/* Submenu Imagens */}
+        {panel === "imagens" && (
+          <aside
+            className="border-r border-gray-200 p-2 bg-white overflow-y-auto"
+            style={{ height: `calc(100vh - ${PROP_BAR_H}px)` }}
+            onMouseDown={onEmptyAreaMouseDown}>
+            <div className="flex items-center justify-between mt-1 mb-3">
+              <div className="text-base font-semibold">Imagens</div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 rounded-md"
+                onClick={() => setPanel("none")}
+                aria-label="Fechar painel de imagens"
+                title="Fechar (Esc)">
+                <IconX className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {orgId && userId ? (
+              <ImagesPanel orgId={orgId} userId={userId} />
+            ) : (
+              <div className="text-xs text-gray-500">
+                Faça login para carregar suas imagens.
+              </div>
+            )}
+          </aside>
+        )}
 
         {/* Submenu Formas */}
         {panel === "formas" && (
@@ -380,7 +426,7 @@ export default function EditorShell() {
 
           <ResizableHandle withHandle />
 
-          {/* Painel Camadas (agora via componente dedicado) */}
+          {/* Painel Camadas */}
           <ResizablePanel defaultSize={25} minSize={16} maxSize={50}>
             <aside onMouseDown={onEmptyAreaMouseDown}>
               <LayersPanel />

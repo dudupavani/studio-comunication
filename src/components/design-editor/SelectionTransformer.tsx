@@ -1,42 +1,118 @@
+// src/components/design-editor/SelectionTransformer.tsx
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Transformer } from "react-konva";
 import type Konva from "konva";
 
-type Props = {
-  selectedNode?: Konva.Node | null;
+type SelectionOptions = {
   enabledAnchors?: string[];
   rotateEnabled?: boolean;
+  keepRatio?: boolean;
   boundBoxFunc?: (oldBox: any, newBox: any) => any;
+};
+
+type Props = {
+  /**
+   * Compat: seleção única (uso antigo)
+   */
+  selectedNode?: Konva.Node | null;
+
+  /**
+   * Novo: múltiplos nós selecionados (substitui selectedNode quando fornecido)
+   */
+  selectedNodes?: (Konva.Node | null | undefined)[] | null;
+
+  /**
+   * Opções estáticas (defaults) — usadas quando getOptionsForSelection não retorna algo
+   */
+  enabledAnchors?: string[];
+  rotateEnabled?: boolean;
+  keepRatio?: boolean;
+  boundBoxFunc?: (oldBox: any, newBox: any) => any;
+
+  /**
+   * Opções dinâmicas por seleção atual (tem precedência sobre as estáticas acima)
+   */
+  getOptionsForSelection?: (nodes: Konva.Node[]) => SelectionOptions | void;
 };
 
 export default function SelectionTransformer({
   selectedNode,
-  enabledAnchors = ["top-left","top-right","bottom-left","bottom-right","middle-left","middle-right","top-center","bottom-center"],
+  selectedNodes,
+  enabledAnchors = [
+    "top-left",
+    "top-right",
+    "bottom-left",
+    "bottom-right",
+    "middle-left",
+    "middle-right",
+    "top-center",
+    "bottom-center",
+  ],
   rotateEnabled = true,
+  keepRatio = false,
   boundBoxFunc,
+  getOptionsForSelection,
 }: Props) {
   const trRef = useRef<Konva.Transformer>(null);
 
+  // Lista final de nós válidos (prioriza selectedNodes; cai para selectedNode)
+  const nodes: Konva.Node[] = useMemo(() => {
+    const base =
+      (selectedNodes && selectedNodes.length
+        ? selectedNodes
+        : selectedNode
+        ? [selectedNode]
+        : []) ?? [];
+
+    return base.filter(
+      (n): n is Konva.Node =>
+        !!n && !(n as any).isDestroyed?.() && !!n.getStage()
+    );
+  }, [selectedNodes, selectedNode]);
+
+  // Opções dinâmicas baseadas na seleção atual
+  const dynamicOpts = useMemo<SelectionOptions>(() => {
+    try {
+      return getOptionsForSelection ? getOptionsForSelection(nodes) || {} : {};
+    } catch {
+      // Em caso de erro no callback do chamador, mantemos as opções estáticas
+      return {};
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getOptionsForSelection, nodes]);
+
+  // Opções finais: dinâmicas têm precedência sobre estáticas
+  const finalEnabledAnchors = dynamicOpts.enabledAnchors ?? enabledAnchors;
+  const finalRotateEnabled = dynamicOpts.rotateEnabled ?? rotateEnabled;
+  const finalKeepRatio = dynamicOpts.keepRatio ?? keepRatio;
+  const finalBoundBoxFunc = dynamicOpts.boundBoxFunc ?? boundBoxFunc;
+
+  // Atualiza os nós no Transformer
   useEffect(() => {
     const tr = trRef.current;
     if (!tr) return;
 
-    if (selectedNode) {
-      tr.nodes([selectedNode]);
-    } else {
-      tr.nodes([]);
-    }
+    tr.nodes(nodes);
     tr.getLayer()?.batchDraw();
-  }, [selectedNode]);
+  }, [nodes]);
 
   return (
     <Transformer
       ref={trRef}
-      enabledAnchors={enabledAnchors}
-      rotateEnabled={rotateEnabled}
-      boundBoxFunc={boundBoxFunc}
+      enabledAnchors={finalEnabledAnchors}
+      rotateEnabled={finalRotateEnabled}
+      keepRatio={finalKeepRatio}
+      boundBoxFunc={finalBoundBoxFunc}
+      padding={4}
+      anchorSize={8}
+      anchorCornerRadius={1}
+      rotateAnchorOffset={20}
+      anchorStrokeWidth={1}
+      borderStrokeWidth={1}
+      borderStroke={"#2b7fff"}
+      anchorStroke={"#2b7fff"}
     />
   );
 }

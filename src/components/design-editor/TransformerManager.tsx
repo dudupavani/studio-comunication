@@ -48,7 +48,12 @@ export default function TransformerManager({
       padding={4}
       rotateEnabled
       anchorSize={8}
-      anchorCornerRadius={2}
+      anchorCornerRadius={1}
+      rotateAnchorOffset={20}
+      anchorStrokeWidth={1}
+      borderStrokeWidth={1}
+      borderStroke={"#2b7fff"}
+      anchorStroke={"#2b7fff"}
       enabledAnchors={[
         "top-left",
         "top-center",

@@ -11,6 +11,9 @@ import { useEffect, useRef } from "react";
  */
 type ShapeKind = "rect" | "text" | "circle" | "triangle" | "line" | "star";
 
+// ✅ Payload do evento de inserção de imagem
+type InsertImageDetail = { url: string; path: string };
+
 type Props = {
   onCreate: (
     type: ShapeKind | string,
@@ -22,6 +25,8 @@ type Props = {
   onToggleLocked: (id: string) => void;
   onBringForward: (id: string) => void;
   onSendBackward: (id: string) => void;
+  // ✅ Novo: callback opcional para inserção de imagem
+  onInsertImage?: (payload: InsertImageDetail) => void;
 };
 
 export default function EventBridge({
@@ -32,6 +37,7 @@ export default function EventBridge({
   onToggleLocked,
   onBringForward,
   onSendBackward,
+  onInsertImage,
 }: Props) {
   // Sequência para ordenar logs de debug
   const seqRef = useRef(0);
@@ -99,6 +105,15 @@ export default function EventBridge({
       onCreate(e.detail?.type ?? "text", { x: e.detail?.x, y: e.detail?.y });
     };
 
+    // ✅ Inserção de imagem vinda do painel (ImagesPanel)
+    const onInsertImageEv = (ev: Event) => {
+      const e = ev as CustomEvent<InsertImageDetail>;
+      if (e?.detail?.url) {
+        dlog("insert-image", e.detail);
+        onInsertImage?.(e.detail);
+      }
+    };
+
     window.addEventListener(
       "design-editor:select",
       onSelectEv as EventListener
@@ -126,6 +141,10 @@ export default function EventBridge({
     window.addEventListener(
       "design-editor:create-shape",
       onCreateShape as EventListener
+    );
+    window.addEventListener(
+      "design-editor:insert-image",
+      onInsertImageEv as EventListener
     );
 
     // ===== API Global =====
@@ -229,6 +248,10 @@ export default function EventBridge({
         "design-editor:create-shape",
         onCreateShape as EventListener
       );
+      window.removeEventListener(
+        "design-editor:insert-image",
+        onInsertImageEv as EventListener
+      );
 
       window.removeEventListener(
         "design-editor:update-props",
@@ -255,6 +278,7 @@ export default function EventBridge({
     onToggleLocked,
     onBringForward,
     onSendBackward,
+    onInsertImage,
   ]);
 
   return null;

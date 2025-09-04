@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ImageDown } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -179,10 +179,10 @@ export default function PropertiesPanel() {
           <h3 className="text-base font-medium">Nome do arquivo</h3>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button variant={"secondary"} size={"sm"}>
-            <ImageDown size={18} />
-            Exportar
+            <Download size={16} />
+            Baixar
           </Button>
           <Button variant={"default"} size={"sm"}>
             Salvar
