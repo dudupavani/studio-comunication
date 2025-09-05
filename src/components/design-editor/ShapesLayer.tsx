@@ -83,8 +83,8 @@ export default function ShapesLayer({
             );
           };
 
+        // ⚠️ sem "key" aqui — key deve ir direto no JSX
         const common = {
-          key: s.id,
           ref: setRef as any,
           x: s.x,
           y: s.y,
@@ -108,6 +108,7 @@ export default function ShapesLayer({
             const r = s as ShapeRect;
             return (
               <Rect
+                key={s.id}
                 {...common}
                 width={r.width}
                 height={r.height}
@@ -121,6 +122,7 @@ export default function ShapesLayer({
             const c = s as ShapeCircle;
             return (
               <KonvaCircle
+                key={s.id}
                 {...common}
                 radius={c.radius}
                 fill={s.fill}
@@ -133,6 +135,7 @@ export default function ShapesLayer({
             const t = s as ShapeTriangle;
             return (
               <KonvaRegularPolygon
+                key={s.id}
                 {...common}
                 sides={3}
                 radius={t.radius}
@@ -146,6 +149,7 @@ export default function ShapesLayer({
             const l = s as ShapeLine;
             return (
               <KonvaLine
+                key={s.id}
                 {...common}
                 points={l.points}
                 stroke={s.stroke}
@@ -160,6 +164,7 @@ export default function ShapesLayer({
             const st = s as ShapeStar;
             return (
               <KonvaStar
+                key={s.id}
                 {...common}
                 numPoints={st.numPoints}
                 innerRadius={st.innerRadius}
@@ -174,6 +179,7 @@ export default function ShapesLayer({
             const tx = s as ShapeText;
             return (
               <KonvaText
+                key={s.id}
                 {...common}
                 text={tx.text}
                 fontFamily={tx.fontFamily}

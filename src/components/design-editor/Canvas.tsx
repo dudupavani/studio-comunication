@@ -1123,14 +1123,40 @@ export default function Canvas() {
         x={stagePos.x}
         y={stagePos.y}
         onMouseDown={(e: any) => {
-          // Só inicia marquee/deseleção se: clique ESQUERDO, em área vazia e sem “space”.
-          const clickedOnEmpty = e.target === e.target.getStage();
+          // Só inicia marquee/deseleção se: clique ESQUERDO, em área vazia (Stage/Artboard) e sem “space”.
+          const target: Konva.Node = e.target;
+          const stage = target.getStage();
+          if (!stage) return;
+
+          const isDescendantOfAny = (
+            node: Konva.Node | null,
+            list: Array<Konva.Node | null>
+          ) => {
+            if (!node) return false;
+            for (const t of list) {
+              if (!t) continue;
+              let n: Konva.Node | null = node;
+              while (n) {
+                if (n === t) return true;
+                n = n.getParent();
+              }
+            }
+            return false;
+          };
+
+          const allInteractive = [
+            ...Object.values(shapeRefs.current),
+            ...Object.values(imageRefs.current),
+          ];
+
+          const clickedOnEmpty =
+            target === stage || !isDescendantOfAny(target, allInteractive);
+
           if (
             e.evt?.button === 0 &&
             clickedOnEmpty &&
             !spacePressedRef.current
           ) {
-            const stage: Konva.Stage = e.target.getStage();
             const p = stage.getPointerPosition();
             if (p) {
               const l = stageToLocal(p.x, p.y);
@@ -1140,7 +1166,8 @@ export default function Canvas() {
         }}
         onMouseMove={(e: any) => {
           if (!marquee.active) return;
-          const stage: Konva.Stage = e.target.getStage();
+          const stage = e.target.getStage();
+          if (!stage) return;
           const p = stage.getPointerPosition();
           if (p) {
             const l = stageToLocal(p.x, p.y);
@@ -1151,7 +1178,34 @@ export default function Canvas() {
           if (marquee.active) finishMarquee();
         }}
         onTouchStart={(e: any) => {
-          const clickedOnEmpty = e.target === e.target.getStage();
+          const target: Konva.Node = e.target;
+          const stage = target.getStage();
+          if (!stage) return;
+
+          const isDescendantOfAny = (
+            node: Konva.Node | null,
+            list: Array<Konva.Node | null>
+          ) => {
+            if (!node) return false;
+            for (const t of list) {
+              if (!t) continue;
+              let n: Konva.Node | null = node;
+              while (n) {
+                if (n === t) return true;
+                n = n.getParent();
+              }
+            }
+            return false;
+          };
+
+          const allInteractive = [
+            ...Object.values(shapeRefs.current),
+            ...Object.values(imageRefs.current),
+          ];
+
+          const clickedOnEmpty =
+            target === stage || !isDescendantOfAny(target, allInteractive);
+
           if (clickedOnEmpty) {
             sel.clear();
             applySelectionToLegacy(sel.get());
@@ -1229,51 +1283,29 @@ export default function Canvas() {
           />
         </TextLayer>
 
-        {/* 🔧 Transformer para seleção SOMENTE de textos */}
-        {hasOnlyTextSelection && selectedNodes.length > 0 && (
-          <Layer name="TextTransformerLayer">
-            <SelectionTransformer
-              selectedNodes={selectedNodes}
-              getOptionsForSelection={() => ({
-                keepRatio: false,
-                rotateEnabled: true,
-                enabledAnchors: [
-                  "top-left",
-                  "top-right",
-                  "bottom-left",
-                  "bottom-right",
-                  "middle-left",
-                  "middle-right",
-                  "top-center",
-                  "bottom-center",
-                ],
-              })}
-            />
-          </Layer>
-        )}
-
-        {/* 🔧 Transformer UNIFICADO (seleção mista) */}
-        {hasMixedSelection && selectedNodes.length > 0 && (
-          <Layer name="UnifiedTransformerLayer">
-            <SelectionTransformer
-              selectedNodes={selectedNodes}
-              getOptionsForSelection={() => ({
-                keepRatio: false,
-                rotateEnabled: true,
-                enabledAnchors: [
-                  "top-left",
-                  "top-right",
-                  "bottom-left",
-                  "bottom-right",
-                  "middle-left",
-                  "middle-right",
-                  "top-center",
-                  "bottom-center",
-                ],
-              })}
-            />
-          </Layer>
-        )}
+        {/* 🔧 Transformer UNIFICADO (textos e seleção mista) */}
+        {(hasOnlyTextSelection || hasMixedSelection) &&
+          selectedNodes.length > 0 && (
+            <Layer name="UnifiedTransformerLayer">
+              <SelectionTransformer
+                selectedNodes={selectedNodes}
+                getOptionsForSelection={() => ({
+                  keepRatio: false,
+                  rotateEnabled: true,
+                  enabledAnchors: [
+                    "top-left",
+                    "top-right",
+                    "bottom-left",
+                    "bottom-right",
+                    "middle-left",
+                    "middle-right",
+                    "top-center",
+                    "bottom-center",
+                  ],
+                })}
+              />
+            </Layer>
+          )}
 
         <MarqueeOverlay marquee={marquee} />
       </Stage>
