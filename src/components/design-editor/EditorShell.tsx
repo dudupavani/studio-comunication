@@ -15,7 +15,7 @@ import {
   Minus as IconMinus,
   Star as IconStar,
   X as IconX,
-  LayoutGrid as IconLayoutGrid,
+  Frame,
   Instagram,
   Linkedin,
   Facebook,
@@ -167,8 +167,8 @@ export default function EditorShell() {
               className="text-xs flex flex-col items-center h-auto py-3"
               onClick={handleToggleTemplates}
               title="Abrir/fechar submenu de templates">
-              <IconLayoutGrid size={20} />
-              Templates
+              <Frame size={20} />
+              Artboard
             </Button>
           </div>
         </aside>

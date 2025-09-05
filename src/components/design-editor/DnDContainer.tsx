@@ -3,6 +3,7 @@
 
 import { useEffect } from "react";
 import type Konva from "konva";
+import { normalizeType } from "@/components/design-editor/types/shapes"; // ✅ usar a versão oficial
 
 /** Mesmo contrato de tipos usado no Canvas */
 type ShapeKind = "rect" | "text" | "circle" | "triangle" | "line" | "star";
@@ -14,16 +15,6 @@ type Props = {
   stageRef: React.RefObject<Konva.Stage>;
   onDropShape: (type: ShapeKind, x: number, y: number) => void;
 };
-
-/** Normaliza strings vindas do DnD para nosso discriminated union */
-function normalizeType(t: string): ShapeKind {
-  let v = (t || "").toLowerCase();
-  if (v === "polygon" || v === "tri") v = "triangle";
-  if (!["rect", "text", "circle", "triangle", "line", "star"].includes(v)) {
-    v = "text";
-  }
-  return v as ShapeKind;
-}
 
 function parseDropData(dt: DataTransfer | null): { type: ShapeKind } {
   if (!dt) return { type: "text" };
@@ -39,7 +30,7 @@ function parseDropData(dt: DataTransfer | null): { type: ShapeKind } {
   } catch {
     t = (raw || "").toString().toLowerCase();
   }
-  return { type: normalizeType(t) };
+  return { type: normalizeType(t) }; // ✅ usa a função oficial
 }
 
 /**

@@ -1,7 +1,8 @@
 // src/lib/design-editor/shape-factory.ts
 "use client";
 
-import { DEFAULTS } from "./defaults";
+import { DESIGN_DEFAULTS as DEFAULTS } from "@/components/design-editor/constants/design-defaults";
+
 import {
   AnyShape,
   ShapeKind,
@@ -11,7 +12,8 @@ import {
   ShapeLine,
   ShapeStar,
   ShapeText,
-} from "./types";
+} from "@/components/design-editor/types/shapes";
+import { normalizeType } from "@/components/design-editor/types/shapes";
 
 function rid(prefix: string) {
   if (
@@ -24,23 +26,13 @@ function rid(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-/** Normaliza strings externas para um ShapeKind conhecido */
-export function normalizeType(t: string): ShapeKind {
-  let v = (t || "").toLowerCase();
-  if (v === "polygon" || v === "tri") v = "triangle";
-  if (!["rect", "text", "circle", "triangle", "line", "star"].includes(v)) {
-    v = "text";
-  }
-  return v as ShapeKind;
-}
-
 /** Cria um shape inicial com base nos defaults centralizados */
 export function createShape(type: ShapeKind, x: number, y: number): AnyShape {
-  switch (type) {
+  switch (normalizeType(type)) {
     case "rect":
       return {
         id: rid("rect"),
-        type,
+        type: "rect",
         name: "Retângulo",
         x: x - 70,
         y: y - 50,
@@ -61,7 +53,7 @@ export function createShape(type: ShapeKind, x: number, y: number): AnyShape {
     case "circle":
       return {
         id: rid("circle"),
-        type,
+        type: "circle",
         name: "Círculo",
         x,
         y,
@@ -81,7 +73,7 @@ export function createShape(type: ShapeKind, x: number, y: number): AnyShape {
     case "triangle":
       return {
         id: rid("triangle"),
-        type,
+        type: "triangle",
         name: "Triângulo",
         x,
         y,
@@ -101,7 +93,7 @@ export function createShape(type: ShapeKind, x: number, y: number): AnyShape {
     case "line":
       return {
         id: rid("line"),
-        type,
+        type: "line",
         name: "Linha",
         x,
         y,
@@ -121,7 +113,7 @@ export function createShape(type: ShapeKind, x: number, y: number): AnyShape {
     case "star":
       return {
         id: rid("star"),
-        type,
+        type: "star",
         name: "Estrela",
         x,
         y,

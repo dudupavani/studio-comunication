@@ -2,88 +2,24 @@
 "use client";
 
 import { useEffect } from "react";
+import {
+  AnyShape,
+  isTextShapeStrict,
+} from "@/components/design-editor/types/shapes";
+import { DESIGN_DEFAULTS } from "@/components/design-editor/constants/design-defaults";
 
-// Tipos mínimos que espelham o Canvas (estruturais)
-type ShapeKind = "rect" | "text" | "circle" | "triangle" | "line" | "star";
-
-type ShapeBase = {
-  id: string;
-  type: ShapeKind;
-  name?: string;
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
-  opacity?: number;
-  shadowBlur?: number;
-  shadowOffsetX?: number;
-  shadowOffsetY?: number;
-};
-
-type ShapeText = ShapeBase & {
-  type: "text";
-  text?: string;
-  fontFamily?: string;
-  fontSize?: number;
-  fontStyle?: "normal" | "bold" | "italic" | "bold italic";
-  align?: "left" | "center" | "right" | "justify";
-  lineHeight?: number;
-  letterSpacing?: number;
-  width?: number;
-  height?: number;
-  padding?: number;
-};
-
-function isShapeText(s: any): s is ShapeText {
-  return s && s.type === "text";
-}
-
-type Defaults = {
-  fill: string;
-  stroke: string;
-  strokeWidth: number;
-  opacity: number;
-  shadowBlur: number;
-  shadowOffsetX: number;
-  shadowOffsetY: number;
-  line: {
-    stroke: string;
-    strokeWidth: number;
-    opacity: number;
-    shadowBlur: number;
-    shadowOffsetX: number;
-    shadowOffsetY: number;
-  };
-  text: {
-    fill: string;
-    opacity: number;
-    text: string;
-    fontFamily: string;
-    fontSize: number;
-    fontStyle: "normal" | "bold" | "italic" | "bold italic";
-    align: "left" | "center" | "right" | "justify";
-    lineHeight: number;
-    letterSpacing: number;
-    width: number;
-    height: number;
-    padding: number;
-  };
-};
-
-type UseSelectionSyncArgs<TShape> = {
+type UseSelectionSyncArgs = {
   selectedId: string | null;
-  shapes: TShape[];
-  defaults: Defaults;
+  shapes: AnyShape[];
 };
 
-export function useSelectionSync<
-  TShape extends { id: string; type: ShapeKind }
->({ selectedId, shapes, defaults }: UseSelectionSyncArgs<TShape>) {
+export function useSelectionSync({ selectedId, shapes }: UseSelectionSyncArgs) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const sel =
       (selectedId &&
-        (shapes.find((s) => s.id === selectedId) as any | undefined)) ||
+        (shapes.find((s) => s.id === selectedId) as AnyShape | undefined)) ||
       null;
 
     let detail: any = null;
@@ -92,36 +28,40 @@ export function useSelectionSync<
         id: sel.id,
         type: sel.type,
         name: sel.name || sel.id,
-        fill: sel.type === "line" ? undefined : sel.fill ?? defaults.fill,
+        fill:
+          sel.type === "line" ? undefined : sel.fill ?? DESIGN_DEFAULTS.fill,
         stroke:
           sel.type === "text"
             ? undefined
             : sel.stroke ??
-              (sel.type === "line" ? defaults.line.stroke : defaults.stroke),
+              (sel.type === "line"
+                ? DESIGN_DEFAULTS.line.stroke
+                : DESIGN_DEFAULTS.stroke),
         strokeWidth:
           sel.strokeWidth ??
           (sel.type === "line"
-            ? defaults.line.strokeWidth
-            : defaults.strokeWidth),
-        opacity: sel.opacity ?? defaults.opacity,
-        shadowBlur: sel.shadowBlur ?? defaults.shadowBlur,
-        shadowOffsetX: sel.shadowOffsetX ?? defaults.shadowOffsetX,
-        shadowOffsetY: sel.shadowOffsetY ?? defaults.shadowOffsetY,
+            ? DESIGN_DEFAULTS.line.strokeWidth
+            : DESIGN_DEFAULTS.strokeWidth),
+        opacity: sel.opacity ?? DESIGN_DEFAULTS.opacity,
+        shadowBlur: sel.shadowBlur ?? DESIGN_DEFAULTS.shadowBlur,
+        shadowOffsetX: sel.shadowOffsetX ?? DESIGN_DEFAULTS.shadowOffsetX,
+        shadowOffsetY: sel.shadowOffsetY ?? DESIGN_DEFAULTS.shadowOffsetY,
       };
 
-      if (isShapeText(sel)) {
+      if (isTextShapeStrict(sel)) {
         detail = {
           ...base,
-          text: sel.text ?? defaults.text.text,
-          fontFamily: sel.fontFamily ?? defaults.text.fontFamily,
-          fontSize: sel.fontSize ?? defaults.text.fontSize,
-          fontStyle: sel.fontStyle ?? defaults.text.fontStyle,
-          align: sel.align ?? defaults.text.align,
-          lineHeight: sel.lineHeight ?? defaults.text.lineHeight,
-          letterSpacing: sel.letterSpacing ?? defaults.text.letterSpacing,
-          width: sel.width ?? defaults.text.width,
-          height: sel.height ?? defaults.text.height,
-          padding: sel.padding ?? defaults.text.padding,
+          text: sel.text ?? DESIGN_DEFAULTS.text.text,
+          fontFamily: sel.fontFamily ?? DESIGN_DEFAULTS.text.fontFamily,
+          fontSize: sel.fontSize ?? DESIGN_DEFAULTS.text.fontSize,
+          fontStyle: sel.fontStyle ?? DESIGN_DEFAULTS.text.fontStyle,
+          align: sel.align ?? DESIGN_DEFAULTS.text.align,
+          lineHeight: sel.lineHeight ?? DESIGN_DEFAULTS.text.lineHeight,
+          letterSpacing:
+            sel.letterSpacing ?? DESIGN_DEFAULTS.text.letterSpacing,
+          width: sel.width ?? DESIGN_DEFAULTS.text.width,
+          height: sel.height ?? DESIGN_DEFAULTS.text.height,
+          padding: sel.padding ?? DESIGN_DEFAULTS.text.padding,
         };
       } else {
         detail = base;
@@ -131,5 +71,5 @@ export function useSelectionSync<
     window.dispatchEvent(
       new CustomEvent("design-editor:selection-props", { detail })
     );
-  }, [selectedId, shapes, defaults]);
+  }, [selectedId, shapes]);
 }

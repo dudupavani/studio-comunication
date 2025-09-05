@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { on } from "@/components/design-editor/utils/event-bus";
 
 /**
  * Bridge centraliza:
@@ -11,8 +12,8 @@ import { useEffect, useRef } from "react";
  */
 type ShapeKind = "rect" | "text" | "circle" | "triangle" | "line" | "star";
 
-// ✅ Payload do evento de inserção de imagem
-type InsertImageDetail = { url: string; path: string };
+// ✅ Payload do evento de inserção de imagem (path opcional para alinhar ao contrato tipado)
+type InsertImageDetail = { url: string; path?: string };
 
 type Props = {
   onCreate: (
@@ -96,24 +97,7 @@ export default function EventBridge({
       if (e.detail?.id) onSendBackward(e.detail.id);
     };
 
-    const onCreateShape = (ev: Event) => {
-      const e = ev as CustomEvent<{
-        type: ShapeKind | string;
-        x?: number;
-        y?: number;
-      }>;
-      onCreate(e.detail?.type ?? "text", { x: e.detail?.x, y: e.detail?.y });
-    };
-
-    // ✅ Inserção de imagem vinda do painel (ImagesPanel)
-    const onInsertImageEv = (ev: Event) => {
-      const e = ev as CustomEvent<InsertImageDetail>;
-      if (e?.detail?.url) {
-        dlog("insert-image", e.detail);
-        onInsertImage?.(e.detail);
-      }
-    };
-
+    // ===== Listeners baseados em window (mantidos) =====
     window.addEventListener(
       "design-editor:select",
       onSelectEv as EventListener
@@ -138,14 +122,20 @@ export default function EventBridge({
       "design-editor:send-backward",
       onSendBackwardEv as EventListener
     );
-    window.addEventListener(
-      "design-editor:create-shape",
-      onCreateShape as EventListener
-    );
-    window.addEventListener(
-      "design-editor:insert-image",
-      onInsertImageEv as EventListener
-    );
+
+    // ===== NOVO: listeners tipados via event-bus =====
+    const offCreate = on("design-editor:create-shape", (ev) => {
+      const { type, x, y } = ev.detail;
+      onCreate(type ?? "text", { x, y });
+    });
+
+    const offInsertImage = on("design-editor:insert-image", (ev) => {
+      const detail = ev.detail as InsertImageDetail;
+      if (detail?.url) {
+        dlog("insert-image", detail);
+        onInsertImage?.(detail);
+      }
+    });
 
     // ===== API Global =====
     (globalThis as any).designEditor = {
@@ -244,14 +234,6 @@ export default function EventBridge({
         "design-editor:send-backward",
         onSendBackwardEv as EventListener
       );
-      window.removeEventListener(
-        "design-editor:create-shape",
-        onCreateShape as EventListener
-      );
-      window.removeEventListener(
-        "design-editor:insert-image",
-        onInsertImageEv as EventListener
-      );
 
       window.removeEventListener(
         "design-editor:update-props",
@@ -269,6 +251,10 @@ export default function EventBridge({
         "design-editor:font-error",
         onFontError as EventListener
       );
+
+      // Cleanup dos listeners tipados
+      offCreate();
+      offInsertImage();
     };
   }, [
     onCreate,

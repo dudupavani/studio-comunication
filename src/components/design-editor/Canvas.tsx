@@ -2,15 +2,18 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Stage, Layer, Rect, Image as KonvaImage, Group } from "react-konva";
 import type Konva from "konva";
-import ShapesLayer from "./ShapesLayer";
 import EventBridge from "./EventBridge";
-import TransformerManager from "./TransformerManager";
-import HintOverlay from "./HintOverlay";
 import DnDContainer from "./DnDContainer";
 import ZoomControls from "./ZoomControls";
 import SelectionTransformer from "./SelectionTransformer";
+import ImagesLayer from "@/components/design-editor/layers/ImagesLayer";
+import ShapesLayerWrapper from "@/components/design-editor/layers/ShapesLayerWrapper";
+import TextLayer from "@/components/design-editor/layers/TextLayer";
+import ShapesLayer from "@/components/design-editor/ShapesLayer";
+
+import { Stage, Layer } from "react-konva";
+import MarqueeOverlay from "@/components/design-editor/layers/MarqueeOverlay";
 
 // 🔹 existentes
 import { useSelectionSync } from "@/components/design-editor/hooks/useSelectionSync";
@@ -19,213 +22,42 @@ import {
   applyTextPatchToNode,
 } from "@/components/design-editor/utils/konvaCache";
 
+// 🔹 utils (guard de teclado unificado)
+import { isInputLike } from "@/components/design-editor/utils/is-input-like";
+
 // 🔹 artboard
 import { useArtboard } from "@/hooks/design-editor/use-artboard";
 import ArtboardLayer from "@/components/design-editor/ArtboardLayer";
 
-// 🔹 imagens (hook para carregar HTMLImageElement)
-import useImage from "use-image";
+import { DESIGN_DEFAULTS as DEFAULTS } from "@/components/design-editor/constants/design-defaults";
+import {
+  normalizeType,
+  AnyShape,
+  ShapeBase,
+  ShapeRect,
+  ShapeCircle,
+  ShapeTriangle,
+  ShapeLine,
+  ShapeStar,
+  ShapeText,
+  isTextShapeStrict,
+} from "@/components/design-editor/types/shapes";
 
-// ========= Constantes =========
-const DEFAULTS = {
-  fill: "#000000",
-  stroke: "#000000",
-  strokeWidth: 0,
-  opacity: 1,
-  shadowBlur: 0,
-  shadowOffsetX: 0,
-  shadowOffsetY: 0,
-  line: {
-    stroke: "#000000",
-    strokeWidth: 2,
-    opacity: 1,
-    shadowBlur: 0,
-    shadowOffsetX: 0,
-    shadowOffsetY: 0,
-  },
-  text: {
-    fill: "#000000",
-    opacity: 1,
-    shadowBlur: 0,
-    shadowOffsetX: 0,
-    shadowOffsetY: 0,
-    text: "Seu texto aqui",
-    fontFamily: "Arial",
-    fontSize: 28,
-    fontStyle: "bold" as "normal" | "bold" | "italic" | "bold italic",
-    align: "left" as "left" | "center" | "right" | "justify",
-    lineHeight: 1.2,
-    letterSpacing: 0,
-    width: 240,
-    height: 40,
-    padding: 0,
-  },
-} as const;
-
-// ========= Tipos =========
-type ShapeKind = "rect" | "text" | "circle" | "triangle" | "line" | "star";
-
-type ShapeBase = {
-  id: string;
-  type: ShapeKind;
-  x: number;
-  y: number;
-  rotation: number;
-  name?: string;
-  isHidden?: boolean;
-  isLocked?: boolean;
-
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
-  opacity?: number;
-  shadowBlur?: number;
-  shadowOffsetX?: number;
-  shadowOffsetY?: number;
-};
-
-type ShapeRect = ShapeBase & { type: "rect"; width: number; height: number };
-type ShapeCircle = ShapeBase & { type: "circle"; radius: number };
-type ShapeTriangle = ShapeBase & { type: "triangle"; radius: number };
-type ShapeLine = ShapeBase & {
-  type: "line";
-  points: number[];
-  lineCap?: "butt" | "round" | "square";
-};
-type ShapeStar = ShapeBase & {
-  type: "star";
-  numPoints: number;
-  innerRadius: number;
-  outerRadius: number;
-};
-type ShapeText = ShapeBase & {
-  type: "text";
-  text: string;
-  fontFamily?: string;
-  fontSize: number;
-  fontStyle?: "normal" | "bold" | "italic" | "bold italic";
-  align?: "left" | "center" | "right" | "justify";
-  lineHeight?: number;
-  letterSpacing?: number;
-  width?: number;
-  height?: number;
-  padding?: number;
-};
-
-type AnyShape =
-  | ShapeRect
-  | ShapeCircle
-  | ShapeTriangle
-  | ShapeLine
-  | ShapeStar
-  | ShapeText;
-
-function normalizeType(t: string): ShapeKind {
-  let v = (t || "").toLowerCase();
-  if (v === "polygon" || v === "tri") v = "triangle";
-  if (!["rect", "text", "circle", "triangle", "line", "star"].includes(v)) {
-    v = "text";
-  }
-  return v as ShapeKind;
-}
+// ✅ Selection Manager (base recém-adicionada)
+import { useSelectionManager } from "@/hooks/design-editor/use-selection-manager";
+import type { Selection } from "@/components/design-editor/types/selection";
 
 // ========= Imagens inseridas =========
 type InsertedImage = {
   id: string;
-  url: string; // signed URL
-  path: string; // storage path
-  name?: string;
-  x: number; // coordenadas locais (artboard)
+  url: string;
+  path: string;
+  x: number;
   y: number;
-  scaleX?: number; // escala do Group (relativa ao autoFit)
+  scaleX?: number;
   scaleY?: number;
   rotation?: number;
-  isHidden?: boolean;
-  isLocked?: boolean;
 };
-
-function InsertedImageNode({
-  data,
-  selected,
-  onSelect,
-  onMove,
-  onTransform,
-  registerRef,
-}: {
-  data: InsertedImage;
-  selected: boolean;
-  onSelect: (id: string) => void;
-  onMove: (id: string, x: number, y: number) => void;
-  onTransform: (id: string, next: Partial<InsertedImage>) => void;
-  registerRef: (id: string, node: Konva.Group | null) => void;
-}) {
-  const [image] = useImage(data.url, "anonymous");
-
-  // Autoresize inicial para não explodir a artboard
-  const maxDim = 512;
-  let baseScale = 1;
-  let imgW = 0;
-  let imgH = 0;
-  if (image && image.width && image.height) {
-    imgW = image.width;
-    imgH = image.height;
-    baseScale = Math.min(maxDim / imgW, maxDim / imgH, 1);
-  }
-
-  const sx = (data.scaleX ?? 1) * baseScale;
-  const sy = (data.scaleY ?? 1) * baseScale;
-  const rot = data.rotation ?? 0;
-
-  return (
-    <Group
-      ref={(n) => registerRef(data.id, n)}
-      x={data.x}
-      y={data.y}
-      scaleX={sx}
-      scaleY={sy}
-      rotation={rot}
-      draggable={!data.isLocked}
-      visible={!data.isHidden}
-      onMouseDown={(e) => {
-        // evita que o Transformer atual capture o clique e trave a troca de seleção
-        (e as any).cancelBubble = true;
-        onSelect(data.id);
-      }}
-      onTap={(e) => {
-        (e as any).cancelBubble = true;
-        onSelect(data.id);
-      }}
-      onDragEnd={(e) => onMove(data.id, e.target.x(), e.target.y())}
-      onTransformEnd={(e) => {
-        const node = e.target as Konva.Group;
-        const newScaleX = node.scaleX() / baseScale;
-        const newScaleY = node.scaleY() / baseScale;
-        const newRot = node.rotation();
-        onTransform(data.id, {
-          scaleX: newScaleX,
-          scaleY: newScaleY,
-          rotation: newRot,
-          x: node.x(),
-          y: node.y(),
-        });
-      }}>
-      <KonvaImage image={image || undefined} x={0} y={0} />
-      {/* Outline de seleção */}
-      {selected && imgW > 0 && imgH > 0 && (
-        <Rect
-          x={0}
-          y={0}
-          width={imgW}
-          height={imgH}
-          stroke="#3b82f6"
-          strokeWidth={1}
-          dash={[4, 4]}
-          listening={false}
-        />
-      )}
-    </Group>
-  );
-}
 
 export default function Canvas() {
   // ---------- refs ----------
@@ -246,11 +78,11 @@ export default function Canvas() {
 
   // 🔹 seleção de imagem
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [selectedImageIds, setSelectedImageIds] = useState<string[]>([]);
 
   const shapeRefs = useRef<Record<string, Konva.Node | null>>({});
   const selectedImageIdRef = useRef<string | null>(null);
-
-  // refs de imagem (Group) para o Transformer
+  const selectedImageIdsRef = useRef<string[]>([]);
   const imageRefs = useRef<Record<string, Konva.Group | null>>({});
 
   // Artboard
@@ -259,10 +91,77 @@ export default function Canvas() {
   // 🔹 imagens inseridas
   const [insertedImages, setInsertedImages] = useState<InsertedImage[]>([]);
 
+  // 🔁 versions para forçar remount nos layers ao reordenar
+  const [imagesVersion, setImagesVersion] = useState(0);
+  const [shapesVersion, setShapesVersion] = useState(0);
+
+  // ✅ Selection Manager — inicialização
+  const sel = useSelectionManager();
+
+  // ✅ Handlers para mover itens (com guarda para multi-drag)
+  const handleMoveShape = (id: string, x: number, y: number) => {
+    if (multiDragRef.current.active) return;
+    setShapes((prev) => prev.map((s) => (s.id === id ? { ...s, x, y } : s)));
+  };
+
+  const handleMoveImage = (id: string, x: number, y: number) => {
+    if (multiDragRef.current.active) return;
+    setInsertedImages((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, x, y } : it))
+    );
+  };
+
+  // 🔧 helper: aplicar seleção unificada no estado legado (compat)
+  const applySelectionToLegacy = useCallback((s: Selection) => {
+    switch (s.kind) {
+      case "none": {
+        setSelectedIds([]);
+        setSelectedId(null);
+        setSelectedImageId(null);
+        setSelectedImageIds([]);
+        break;
+      }
+      case "image": {
+        const last = s.ids.length ? s.ids[s.ids.length - 1] : null;
+        setSelectedImageId(last);
+        setSelectedImageIds(s.ids);
+        setSelectedIds([]);
+        setSelectedId(null);
+        break;
+      }
+      case "shape":
+      case "text": {
+        const ids = s.ids;
+        const last = ids.length ? ids[ids.length - 1] : null;
+        setSelectedIds(ids);
+        setSelectedId(last);
+        setSelectedImageId(null);
+        setSelectedImageIds([]);
+        break;
+      }
+      case "mixed": {
+        const shapeIds = [...s.shapeIds, ...(s.textIds ?? [])];
+        const lastShape = shapeIds.length
+          ? shapeIds[shapeIds.length - 1]
+          : null;
+        const lastImage = s.imageIds.length
+          ? s.imageIds[s.imageIds.length - 1]
+          : null;
+        setSelectedIds(shapeIds);
+        setSelectedId(lastShape);
+        setSelectedImageId(lastImage);
+        setSelectedImageIds(s.imageIds);
+        break;
+      }
+    }
+  }, []);
+
   // refs anti-stale
   const shapesRef = useRef<AnyShape[]>(shapes);
   const selectedRef = useRef<string | null>(selectedId);
   const selectedIdsRef = useRef<string[]>(selectedIds);
+  const insertedImagesRef = useRef<InsertedImage[]>(insertedImages);
+
   useEffect(() => {
     shapesRef.current = shapes;
     selectedRef.current = selectedId;
@@ -272,6 +171,13 @@ export default function Canvas() {
   useEffect(() => {
     selectedImageIdRef.current = selectedImageId;
   }, [selectedImageId]);
+  useEffect(() => {
+    selectedImageIdsRef.current = selectedImageIds;
+  }, [selectedImageIds]);
+
+  useEffect(() => {
+    insertedImagesRef.current = insertedImages;
+  }, [insertedImages]);
 
   // medir container
   useEffect(() => {
@@ -311,28 +217,24 @@ export default function Canvas() {
     applyCenterFromScale(fitScale);
   }, [artboard.width, artboard.height, fitScale]);
 
-  // ========= helpers =========
-  const filenameFromPath = (p?: string) => {
-    if (!p) return "Imagem";
-    const base = p.split("/").pop() || "Imagem";
-    return base || "Imagem";
-  };
-  const isImageId = (id: string) => insertedImages.some((im) => im.id === id);
-  const isShapeId = (id: string) => shapes.some((s) => s.id === id);
-
   // ========= Evento de estado p/ painel de camadas =========
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // z-order refletindo a ordem de renderização do Stage:
-    // - ImagesLayer fica abaixo de ShapesLayer → imagens vêm primeiro
+    const filenameFromPath = (p?: string) => {
+      if (!p) return "Imagem";
+      const base = p.split("/").pop() || "Imagem";
+      return base || "Imagem";
+    };
+
+    // z-order conforme render: ImagesLayer abaixo de ShapesLayer
     const imageItems = insertedImages.map((img, idx) => ({
       id: img.id,
       kind: "image" as const,
       type: "image" as const,
-      name: img.name ?? filenameFromPath(img.path),
-      isHidden: !!img.isHidden,
-      isLocked: !!img.isLocked,
+      name: filenameFromPath(img.path),
+      isHidden: false,
+      isLocked: false,
       z: idx,
       layer: "ImagesLayer" as const,
     }));
@@ -350,18 +252,13 @@ export default function Canvas() {
 
     const items = [...imageItems, ...shapeItems];
 
-    const selectedItemIds = [
-      ...selectedIds, // múltiplos shapes
-      ...(selectedImageId ? [selectedImageId] : []), // 1 imagem (modelo atual)
-    ];
+    const selectedItemIds = [...selectedIds, ...selectedImageIds];
 
-    // Payload NOVO (unificado) + legado (retrocompat)
     const payload = {
-      // ✅ NOVO
       items,
       selectedItemIds,
 
-      // 🔁 Legado (para não quebrar nada enquanto atualizamos o painel)
+      // 🔁 Legado
       selectedId,
       shapes: shapes.map((s) => ({
         id: s.id,
@@ -373,24 +270,30 @@ export default function Canvas() {
       images: insertedImages.map((img) => ({
         id: img.id,
         type: "image" as const,
-        name: img.name ?? filenameFromPath(img.path),
-        isHidden: !!img.isHidden,
-        isLocked: !!img.isLocked,
+        name: filenameFromPath(img.path),
+        isHidden: false,
+        isLocked: false,
       })),
       selectedImageId,
-      selectedImageIds: selectedImageId ? [selectedImageId] : [],
+      selectedImageIds,
     };
 
     window.dispatchEvent(
       new CustomEvent("design-editor:state", { detail: payload })
     );
-  }, [shapes, selectedId, selectedIds, insertedImages, selectedImageId]);
+  }, [
+    shapes,
+    selectedId,
+    selectedIds,
+    insertedImages,
+    selectedImageId,
+    selectedImageIds,
+  ]);
 
   // sincroniza propriedades da seleção (usa selectedId como primário)
-  useSelectionSync<AnyShape>({
+  useSelectionSync({
     selectedId,
     shapes,
-    defaults: DEFAULTS,
   });
 
   // helpers coords: Stage -> espaço local (artboard)
@@ -542,9 +445,10 @@ export default function Canvas() {
     }
 
     setShapes((prev) => [...prev, newShape]);
-    setSelectedIds([newShape.id]);
-    setSelectedId(newShape.id);
-    setSelectedImageId(null);
+
+    // ✅ Seleção via manager (compat com legado)
+    sel.select("shape", newShape.id);
+    applySelectionToLegacy(sel.get());
   }
 
   // update props
@@ -614,13 +518,14 @@ export default function Canvas() {
     };
   }, []);
 
-  // pan com espaço
+  // pan com espaço (com guard unificado)
   const isPanningRef = useRef(false);
   const spacePressedRef = useRef(false);
   const panStartRef = useRef({ x: 0, y: 0, stageX: 0, stageY: 0 });
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (isInputLike(e.target)) return;
       if (e.code === "Space") {
         spacePressedRef.current = true;
         document.body.style.cursor = "grab";
@@ -628,6 +533,7 @@ export default function Canvas() {
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
+      if (isInputLike(e.target)) return;
       if (e.code === "Space") {
         spacePressedRef.current = false;
         if (!isPanningRef.current) document.body.style.cursor = "";
@@ -672,45 +578,40 @@ export default function Canvas() {
     document.body.style.cursor = spacePressedRef.current ? "grab" : "";
   };
 
-  // delete/esc — PRIORIDADE: imagem selecionada; senão, shapes
+  // delete/esc — PRIORIDADE: imagens selecionadas; senão, shapes (guard unificado)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      const tag = target?.tagName?.toLowerCase();
-      const isEditable =
-        target?.isContentEditable ||
-        tag === "input" ||
-        tag === "textarea" ||
-        tag === "select";
-      if (isEditable) return;
+      if (isInputLike(e.target)) return;
 
       if (e.key === "Escape") {
-        setSelectedIds([]);
-        setSelectedId(null);
-        setSelectedImageId(null);
+        sel.clear();
+        applySelectionToLegacy(sel.get());
         return;
       }
 
       if (e.key === "Delete" || e.key === "Backspace") {
-        const imgId = selectedImageIdRef.current;
-        if (imgId) {
+        const imgIds = selectedImageIdsRef.current;
+        if (imgIds.length > 0) {
           e.preventDefault();
-          setInsertedImages((prev) => prev.filter((it) => it.id !== imgId));
-          setSelectedImageId(null);
+          setInsertedImages((prev) =>
+            prev.filter((it) => !imgIds.includes(it.id))
+          );
+          sel.clear();
+          applySelectionToLegacy(sel.get());
           return;
         }
         const ids = selectedIdsRef.current;
         if (!ids.length) return;
         e.preventDefault();
         setShapes((prev) => prev.filter((s) => !ids.includes(s.id)));
-        setSelectedIds([]);
-        setSelectedId(null);
+        sel.clear();
+        applySelectionToLegacy(sel.get());
       }
     };
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [applySelectionToLegacy, sel]);
 
   // marquee
   type Marquee = {
@@ -728,20 +629,10 @@ export default function Canvas() {
     y2: 0,
   });
 
-  const rectsIntersect = (
-    a: { x: number; y: number; width: number; height: number },
-    b: { x: number; y: number; width: number; height: number }
-  ) =>
-    a.x <= b.x + b.width &&
-    a.x + a.width >= b.x &&
-    a.y <= b.y + b.height &&
-    a.y + a.height >= b.y;
-
   const beginMarquee = (lx: number, ly: number) => {
     setMarquee({ active: true, x1: lx, y1: ly, x2: lx, y2: ly });
-    setSelectedIds([]);
-    setSelectedId(null);
-    setSelectedImageId(null);
+    sel.clear();
+    applySelectionToLegacy(sel.get());
   };
 
   const updateMarquee = (lx: number, ly: number) => {
@@ -760,10 +651,12 @@ export default function Canvas() {
 
       // clique curto: limpa e sai
       if (wLocal < 2 && hLocal < 2) {
+        sel.clear();
+        applySelectionToLegacy(sel.get());
         return { active: false, x1: 0, y1: 0, x2: 0, y2: 0 };
       }
 
-      // 🔄 converte retângulo local -> stage (para comparar com getClientRect)
+      // 🔄 local -> stage
       const aStage = {
         x: stagePos.x + xLocal * scale,
         y: stagePos.y + yLocal * scale,
@@ -780,21 +673,22 @@ export default function Canvas() {
         A.y <= B.y + B.height &&
         A.y + A.height >= B.y;
 
-      // 🔹 Shapes
-      const shapeIds = new Set<string>();
+      // 🔹 Shapes (ordem consistente)
+      const shapeIdSet = new Set<string>();
       for (const s of shapesRef.current) {
-        if (s.isHidden) continue; // não considere shapes ocultos
         const node = shapeRefs.current[s.id] as Konva.Node | null;
         if (!node || (node as any).isDestroyed?.() || !node.getStage())
           continue;
         const bb = node.getClientRect(); // stage space
-        if (intersects(aStage, bb)) shapeIds.add(s.id);
+        if (intersects(aStage, bb)) shapeIdSet.add(s.id);
       }
+      const orderedShapeIds = shapesRef.current
+        .filter((s) => shapeIdSet.has(s.id))
+        .map((s) => s.id);
 
-      // 🔹 Imagens
+      // 🔹 Imagens — agora pega TODAS
       const imageIds: string[] = [];
-      for (const img of insertedImages) {
-        if (img.isHidden) continue; // não considere imagens ocultas
+      for (const img of insertedImagesRef.current) {
         const node = imageRefs.current[img.id];
         if (!node || (node as any).isDestroyed?.() || !node.getStage())
           continue;
@@ -802,20 +696,24 @@ export default function Canvas() {
         if (intersects(aStage, bb)) imageIds.push(img.id);
       }
 
-      // 📌 Prioridade atual (paliativo): imagens têm seleção única
-      if (imageIds.length) {
-        setSelectedImageId(imageIds[imageIds.length - 1]);
-        setSelectedIds([]);
-        setSelectedId(null);
+      // 🎯 Seleção (agora sem “apenas a última”)
+      if (imageIds.length && orderedShapeIds.length) {
+        sel.replace({
+          kind: "mixed",
+          shapeIds: orderedShapeIds,
+          imageIds,
+        });
+      } else if (imageIds.length) {
+        sel.replace({ kind: "image", ids: imageIds });
       } else {
-        const ordered = shapesRef.current
-          .filter((s) => shapeIds.has(s.id))
-          .map((s) => s.id);
-        setSelectedIds(ordered);
-        setSelectedId(ordered.length ? ordered[ordered.length - 1] : null);
-        setSelectedImageId(null);
+        if (orderedShapeIds.length) {
+          sel.replace({ kind: "shape", ids: orderedShapeIds });
+        } else {
+          sel.clear();
+        }
       }
 
+      applySelectionToLegacy(sel.get());
       return { active: false, x1: 0, y1: 0, x2: 0, y2: 0 };
     });
   };
@@ -826,7 +724,7 @@ export default function Canvas() {
 
   // ✅ Inserir imagem recebida do EventBridge no centro da artboard
   const handleInsertImage = useCallback(
-    ({ url, path }: { url: string; path: string }) => {
+    ({ url, path }: { url: string; path?: string }) => {
       const id = `img-${crypto.randomUUID().slice(0, 8)}`;
 
       // centro da artboard em coordenadas de STAGE
@@ -834,7 +732,7 @@ export default function Canvas() {
       const cy = stagePos.y + (artboard.height * scale) / 2;
 
       // 🔸 offset incremental para evitar sobreposição total
-      const n = insertedImages.length;
+      const n = insertedImagesRef.current.length;
       const step = 24; // px em espaço LOCAL
       const oxLocal = (n % 5) * step;
       const oyLocal = (n % 5) * step;
@@ -845,25 +743,15 @@ export default function Canvas() {
 
       const { x, y } = stageToLocal(sx, sy);
 
+      const pathSafe = path ?? "";
+
       setInsertedImages((prev) => [
         ...prev,
-        {
-          id,
-          url,
-          path,
-          name: filenameFromPath(path),
-          x,
-          y,
-          scaleX: 1,
-          scaleY: 1,
-          rotation: 0,
-          isHidden: false,
-          isLocked: false,
-        },
+        { id, url, path: pathSafe, x, y, scaleX: 1, scaleY: 1, rotation: 0 },
       ]);
-      setSelectedImageId(id);
-      setSelectedIds([]);
-      setSelectedId(null);
+
+      sel.select("image", id);
+      applySelectionToLegacy(sel.get());
     },
     [
       stagePos.x,
@@ -871,24 +759,208 @@ export default function Canvas() {
       artboard.width,
       artboard.height,
       scale,
-      insertedImages.length,
+      sel,
+      applySelectionToLegacy,
     ]
   );
 
-  // ===== Config do transformer de imagem via SelectionTransformer =====
-  const MIN_IMG_SIZE = 8;
-  const imageBoundBox = useCallback((oldBox: any, newBox: any) => {
-    const w = Math.abs(newBox.width);
-    const h = Math.abs(newBox.height);
-    if (w < MIN_IMG_SIZE || h < MIN_IMG_SIZE) return oldBox;
-    return newBox;
+  // ===== Seleção combinada (para transformer unificado) =====
+  const selectedNodes = useMemo(() => {
+    const nodes: (Konva.Node | null)[] = [];
+    for (const id of selectedImageIds)
+      nodes.push(imageRefs.current[id] ?? null);
+    for (const id of selectedIds) nodes.push(shapeRefs.current[id] ?? null);
+    return nodes.filter(Boolean) as Konva.Node[];
+  }, [selectedIds, selectedImageIds]);
+
+  const hasMixedSelection =
+    selectedIds.length > 0 && selectedImageIds.length > 0;
+  const hasOnlyShapes = selectedIds.length > 0 && selectedImageIds.length === 0;
+
+  // 🔎 Seleção somente de textos
+  const hasOnlyTextSelection = useMemo(() => {
+    if (selectedImageIds.length > 0 || selectedIds.length === 0) return false;
+    for (const id of selectedIds) {
+      const s = shapesRef.current.find((sh) => sh.id === id);
+      if (!s || s.type !== "text") return false;
+    }
+    return true;
+  }, [selectedIds, selectedImageIds]);
+
+  // ===== Multi-drag (arrastar grupo) =====
+  const multiDragRef = useRef<{
+    active: boolean;
+    driverId: string | null;
+    driverType: "shape" | "image" | null;
+    driverStart: { x: number; y: number } | null;
+    shapesStart: Record<string, { x: number; y: number }>;
+    imagesStart: Record<string, { x: number; y: number }>;
+  }>({
+    active: false,
+    driverId: null,
+    driverType: null,
+    driverStart: null,
+    shapesStart: {},
+    imagesStart: {},
+  });
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const isNodeOneOf = (
+      node: Konva.Node | null,
+      targets: Array<Konva.Node | null>
+    ) => {
+      if (!node) return false;
+      for (const t of targets) {
+        if (!t) continue;
+        let n: Konva.Node | null = node;
+        while (n) {
+          if (n === t) return true;
+          n = n.getParent();
+        }
+      }
+      return false;
+    };
+
+    const onDragStart = (e: Konva.KonvaEventObject<any>) => {
+      // só entra no multi-drag se houver mais de 1 selecionado
+      if (
+        selectedIdsRef.current.length + selectedImageIdsRef.current.length <=
+        1
+      )
+        return;
+
+      const driverNode = e.target as Konva.Node;
+
+      const currentSelectedNodes: (Konva.Node | null)[] = [];
+      for (const imgId of selectedImageIdsRef.current) {
+        currentSelectedNodes.push(imageRefs.current[imgId] ?? null);
+      }
+      for (const id of selectedIdsRef.current)
+        currentSelectedNodes.push(shapeRefs.current[id] ?? null);
+
+      if (!isNodeOneOf(driverNode, currentSelectedNodes)) return;
+
+      // identificar driver
+      let driverId: string | null = null;
+      let driverType: "shape" | "image" | null = null;
+
+      for (const imgId of selectedImageIdsRef.current) {
+        const imgNode = imageRefs.current[imgId] ?? null;
+        if (isNodeOneOf(driverNode, [imgNode])) {
+          driverId = imgId;
+          driverType = "image";
+          break;
+        }
+      }
+      if (!driverId) {
+        for (const sid of selectedIdsRef.current) {
+          const sNode = shapeRefs.current[sid] ?? null;
+          if (isNodeOneOf(driverNode, [sNode])) {
+            driverId = sid;
+            driverType = "shape";
+            break;
+          }
+        }
+      }
+      if (!driverId || !driverType) return;
+
+      // snapshot das posições iniciais
+      const shapesStart: Record<string, { x: number; y: number }> = {};
+      for (const sid of selectedIdsRef.current) {
+        const s = shapesRef.current.find((sh) => sh.id === sid);
+        if (s) shapesStart[sid] = { x: s.x, y: s.y };
+      }
+
+      const imagesStart: Record<string, { x: number; y: number }> = {};
+      for (const imgId of selectedImageIdsRef.current) {
+        const img = insertedImagesRef.current.find((i) => i.id === imgId);
+        if (img) imagesStart[img.id] = { x: img.x, y: img.y };
+      }
+
+      multiDragRef.current = {
+        active: true,
+        driverId,
+        driverType,
+        driverStart: { x: driverNode.x(), y: driverNode.y() },
+        shapesStart,
+        imagesStart,
+      };
+    };
+
+    const onDragMove = (e: Konva.KonvaEventObject<any>) => {
+      if (!multiDragRef.current.active) return;
+      const driverNode = e.target as Konva.Node;
+
+      const dx = driverNode.x() - (multiDragRef.current.driverStart?.x ?? 0);
+      const dy = driverNode.y() - (multiDragRef.current.driverStart?.y ?? 0);
+
+      // mover visualmente os outros nós (sem re-render a cada frame)
+      Object.entries(multiDragRef.current.shapesStart).forEach(
+        ([id, start]) => {
+          if (
+            multiDragRef.current.driverType === "shape" &&
+            id === multiDragRef.current.driverId
+          )
+            return;
+          const n = shapeRefs.current[id];
+          if (n) n.position({ x: start.x + dx, y: start.y + dy });
+        }
+      );
+      Object.entries(multiDragRef.current.imagesStart).forEach(
+        ([id, start]) => {
+          if (
+            multiDragRef.current.driverType === "image" &&
+            id === multiDragRef.current.driverId
+          )
+            return;
+          const n = imageRefs.current[id];
+          if (n) n.position({ x: start.x + dx, y: start.y + dy });
+        }
+      );
+
+      stage.batchDraw();
+    };
+
+    const onDragEnd = (e: Konva.KonvaEventObject<any>) => {
+      if (!multiDragRef.current.active) return;
+      const driverNode = e.target as Konva.Node;
+
+      const dx = driverNode.x() - (multiDragRef.current.driverStart?.x ?? 0);
+      const dy = driverNode.y() - (multiDragRef.current.driverStart?.y ?? 0);
+
+      // persistir no estado (um único re-render)
+      setShapes((prev) =>
+        prev.map((s) => {
+          const start = multiDragRef.current.shapesStart[s.id];
+          return start ? { ...s, x: start.x + dx, y: start.y + dy } : s;
+        })
+      );
+      setInsertedImages((prev) =>
+        prev.map((img) => {
+          const start = multiDragRef.current.imagesStart[img.id];
+          return start ? { ...img, x: start.x + dx, y: start.y + dy } : img;
+        })
+      );
+
+      multiDragRef.current.active = false;
+    };
+
+    stage.on("dragstart", onDragStart);
+    stage.on("dragmove", onDragMove);
+    stage.on("dragend", onDragEnd);
+
+    return () => {
+      stage.off("dragstart", onDragStart);
+      stage.off("dragmove", onDragMove);
+      stage.off("dragend", onDragEnd);
+    };
   }, []);
 
-  // 🔧 opções dinâmicas do transformer (respeita lock da imagem)
-  const selectedImage = useMemo(
-    () => insertedImages.find((im) => im.id === selectedImageId) || null,
-    [insertedImages, selectedImageId]
-  );
+  // ===== Apenas textos (derivado de shapes) =====
+  const textShapes = useMemo(() => shapes.filter(isTextShapeStrict), [shapes]);
 
   return (
     <div
@@ -916,133 +988,122 @@ export default function Canvas() {
             sy = stagePos.y + (artboard.height * scale) / 2;
           }
 
-          addShapeAt(t, sx, sy);
+          addShapeAt(t as AnyShape["type"], sx, sy);
         }}
         onSelect={(id) => {
           if (!id) {
-            setSelectedIds([]);
-            setSelectedId(null);
-            setSelectedImageId(null);
+            sel.clear();
+            applySelectionToLegacy(sel.get());
             return;
           }
-          if (isImageId(id)) {
-            setSelectedImageId(id);
-            setSelectedIds([]);
-            setSelectedId(null);
+          const isShape = shapesRef.current.some((s) => s.id === id);
+          const isImage = insertedImagesRef.current.some(
+            (img) => img.id === id
+          );
+
+          if (isShape) {
+            sel.select("shape", id);
+            applySelectionToLegacy(sel.get());
             return;
           }
-          if (isShapeId(id)) {
-            setSelectedImageId(null);
-            setSelectedIds([id]);
-            setSelectedId(id);
+          if (isImage) {
+            sel.select("image", id);
+            applySelectionToLegacy(sel.get());
+            return;
           }
         }}
         onDelete={(id) => {
-          // Se veio id, preferir deletar pelo alvo explícito
+          // suporta deletar shapes e imagens
           if (id) {
-            if (isImageId(id)) {
-              setInsertedImages((prev) => prev.filter((im) => im.id !== id));
-              if (selectedImageIdRef.current === id) setSelectedImageId(null);
-              return;
-            }
-            if (isShapeId(id)) {
+            const isShape = shapesRef.current.some((s) => s.id === id);
+            const isImage = insertedImagesRef.current.some(
+              (img) => img.id === id
+            );
+            if (isShape) {
               setShapes((prev) => prev.filter((s) => s.id !== id));
-              setSelectedIds((prev) => prev.filter((x) => x !== id));
-              if (selectedRef.current === id) setSelectedId(null);
-              return;
+              sel.clear();
+              applySelectionToLegacy(sel.get());
+            } else if (isImage) {
+              setInsertedImages((prev) => prev.filter((img) => img.id !== id));
+              sel.clear();
+              applySelectionToLegacy(sel.get());
             }
             return;
           }
-          // Sem id: seguir prioridade atual (imagem > shapes)
-          const imgId = selectedImageIdRef.current;
-          if (imgId) {
-            setInsertedImages((prev) => prev.filter((im) => im.id !== imgId));
-            setSelectedImageId(null);
+
+          // sem id: deleta toda a seleção atual
+          const imgIds = selectedImageIdsRef.current;
+          if (imgIds.length > 0) {
+            setInsertedImages((prev) =>
+              prev.filter((img) => !imgIds.includes(img.id))
+            );
+            sel.clear();
+            applySelectionToLegacy(sel.get());
             return;
           }
-          const ids = selectedIdsRef.current;
-          if (!ids.length) return;
-          setShapes((prev) => prev.filter((s) => !ids.includes(s.id)));
-          setSelectedIds([]);
-          setSelectedId(null);
+
+          const targetIds = selectedIdsRef.current;
+          if (!targetIds.length) return;
+          setShapes((prev) => prev.filter((s) => !targetIds.includes(s.id)));
+          sel.clear();
+          applySelectionToLegacy(sel.get());
         }}
         onToggleHidden={(id) => {
-          if (isImageId(id)) {
-            setInsertedImages((prev) =>
-              prev.map((im) =>
-                im.id === id ? { ...im, isHidden: !im.isHidden } : im
-              )
-            );
-            return;
-          }
-          if (isShapeId(id)) {
-            setShapes((prev) =>
-              prev.map((s) =>
-                s.id === id ? { ...s, isHidden: !s.isHidden } : s
-              )
-            );
-          }
+          setShapes((prev) =>
+            prev.map((s) => (s.id === id ? { ...s, isHidden: !s.isHidden } : s))
+          );
         }}
         onToggleLocked={(id) => {
-          if (isImageId(id)) {
-            setInsertedImages((prev) =>
-              prev.map((im) =>
-                im.id === id ? { ...im, isLocked: !im.isLocked } : im
-              )
-            );
-            return;
-          }
-          if (isShapeId(id)) {
-            setShapes((prev) =>
-              prev.map((s) =>
-                s.id === id ? { ...s, isLocked: !s.isLocked } : s
-              )
-            );
-          }
+          setShapes((prev) =>
+            prev.map((s) => (s.id === id ? { ...s, isLocked: !s.isLocked } : s))
+          );
         }}
         onBringForward={(id) => {
-          if (isImageId(id)) {
-            setInsertedImages((prev) => {
-              const idx = prev.findIndex((im) => im.id === id);
-              if (idx === -1 || idx === prev.length - 1) return prev;
-              const copy = [...prev];
-              [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
-              return copy;
-            });
-            return;
-          }
-          if (isShapeId(id)) {
-            setShapes((prev) => {
-              const idx = prev.findIndex((s) => s.id === id);
-              if (idx === -1 || idx === prev.length - 1) return prev;
-              const copy = [...prev];
-              [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
-              return copy;
-            });
-          }
+          let bumpedShape = false;
+          setShapes((prev) => {
+            const idx = prev.findIndex((s) => s.id === id);
+            if (idx === -1 || idx === prev.length - 1) return prev;
+            const copy = [...prev];
+            [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
+            bumpedShape = true;
+            return copy;
+          });
+          if (bumpedShape) setShapesVersion((v) => v + 1);
+
+          let bumpedImage = false;
+          setInsertedImages((prev) => {
+            const idx = prev.findIndex((img) => img.id === id);
+            if (idx === -1 || idx === prev.length - 1) return prev;
+            const copy = [...prev];
+            [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
+            bumpedImage = true;
+            return copy;
+          });
+          if (bumpedImage) setImagesVersion((v) => v + 1);
         }}
         onSendBackward={(id) => {
-          if (isImageId(id)) {
-            setInsertedImages((prev) => {
-              const idx = prev.findIndex((im) => im.id === id);
-              if (idx <= 0) return prev;
-              const copy = [...prev];
-              [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-              return copy;
-            });
-            return;
-          }
-          if (isShapeId(id)) {
-            setShapes((prev) => {
-              const idx = prev.findIndex((s) => s.id === id);
-              if (idx <= 0) return prev;
-              const copy = [...prev];
-              [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-              return copy;
-            });
-          }
+          let bumpedShape = false;
+          setShapes((prev) => {
+            const idx = prev.findIndex((s) => s.id === id);
+            if (idx === -1 || idx === 0) return prev;
+            const copy = [...prev];
+            [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+            bumpedShape = true;
+            return copy;
+          });
+          if (bumpedShape) setShapesVersion((v) => v + 1);
+
+          let bumpedImage = false;
+          setInsertedImages((prev) => {
+            const idx = prev.findIndex((img) => img.id === id);
+            if (idx === -1 || idx === 0) return prev;
+            const copy = [...prev];
+            [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+            bumpedImage = true;
+            return copy;
+          });
+          if (bumpedImage) setImagesVersion((v) => v + 1);
         }}
-        // ✅ novo
         onInsertImage={handleInsertImage}
       />
 
@@ -1062,9 +1123,10 @@ export default function Canvas() {
         x={stagePos.x}
         y={stagePos.y}
         onMouseDown={(e: any) => {
+          // Só inicia marquee/deseleção se: clique ESQUERDO, em área vazia e sem “space”.
           const clickedOnEmpty = e.target === e.target.getStage();
           if (
-            e.evt.button === 0 &&
+            e.evt?.button === 0 &&
             clickedOnEmpty &&
             !spacePressedRef.current
           ) {
@@ -1074,12 +1136,6 @@ export default function Canvas() {
               const l = stageToLocal(p.x, p.y);
               beginMarquee(l.x, l.y);
             }
-            return;
-          }
-          if (clickedOnEmpty) {
-            setSelectedIds([]);
-            setSelectedId(null);
-            setSelectedImageId(null);
           }
         }}
         onMouseMove={(e: any) => {
@@ -1097,9 +1153,8 @@ export default function Canvas() {
         onTouchStart={(e: any) => {
           const clickedOnEmpty = e.target === e.target.getStage();
           if (clickedOnEmpty) {
-            setSelectedIds([]);
-            setSelectedId(null);
-            setSelectedImageId(null);
+            sel.clear();
+            applySelectionToLegacy(sel.get());
           }
         }}>
         {/* 🔹 Artboard na ORIGEM (0,0) */}
@@ -1110,90 +1165,117 @@ export default function Canvas() {
         />
 
         {/* ✅ Layer de imagens (abaixo dos shapes) */}
-        <Layer name="ImagesLayer">
-          {insertedImages.map((img) => (
-            <InsertedImageNode
-              key={img.id}
-              data={img}
-              selected={selectedImageId === img.id}
-              onSelect={(id) => {
-                setSelectedImageId(id);
-                setSelectedIds([]);
-                setSelectedId(null);
-              }}
-              onMove={(id, x, y) =>
-                setInsertedImages((prev) =>
-                  prev.map((it) => (it.id === id ? { ...it, x, y } : it))
-                )
-              }
-              onTransform={(id, patch) =>
-                setInsertedImages((prev) =>
-                  prev.map((it) => (it.id === id ? { ...it, ...patch } : it))
-                )
-              }
-              registerRef={(id, node) => {
-                imageRefs.current[id] = node ?? null;
-              }}
-            />
-          ))}
-
-          {/* 🔧 Transformer de imagem usando SelectionTransformer */}
-          <SelectionTransformer
-            selectedNodes={
-              selectedImageId
-                ? [imageRefs.current[selectedImageId] ?? null]
-                : []
+        <ImagesLayer
+          key={`images-${imagesVersion}`}
+          images={insertedImages}
+          // evita dois transformers quando a seleção é mista
+          selectedImageIds={hasMixedSelection ? [] : selectedImageIds}
+          onSelectImage={(id, multi) => {
+            if (id) {
+              if (multi) sel.toggle("image", id);
+              else sel.select("image", id);
+            } else {
+              sel.clear();
             }
-            getOptionsForSelection={() => {
-              const locked = !!selectedImage?.isLocked;
-              return {
-                keepRatio: true,
-                rotateEnabled: !locked,
-                enabledAnchors: locked
-                  ? []
-                  : ["top-left", "top-right", "bottom-left", "bottom-right"],
-                boundBoxFunc: imageBoundBox,
-              };
-            }}
-          />
-        </Layer>
+            applySelectionToLegacy(sel.get());
+          }}
+          onMoveImage={handleMoveImage}
+          onTransformImage={(id, patch) =>
+            setInsertedImages((prev) =>
+              prev.map((it) => (it.id === id ? { ...it, ...patch } : it))
+            )
+          }
+          imageRefs={imageRefs}
+        />
 
-        {/* 🔹 Conteúdo + transformer (apenas shapes) */}
-        <Layer>
+        {/* 🔹 Shapes SEM textos (wrapper novo) */}
+        <ShapesLayerWrapper
+          key={`shapes-${shapesVersion}`} // chave única
+          shapes={shapes}
+          selectedId={selectedId}
+          selectedIds={selectedIds}
+          onSelectShape={(id, multi) => {
+            if (id) {
+              if (multi) sel.toggle("shape", id);
+              else sel.select("shape", id);
+            } else {
+              sel.clear();
+            }
+            applySelectionToLegacy(sel.get());
+          }}
+          onMoveShape={handleMoveShape}
+          shapeRefs={shapeRefs}
+          canvasHeight={viewport.height}
+          showTransformer={hasOnlyShapes}
+          renderTexts={false}
+        />
+
+        {/* 📝 Textos (em layer dedicada, acima dos shapes) */}
+        <TextLayer name="TextLayer" key={`text-${shapesVersion}`}>
           <ShapesLayer
-            shapes={shapes}
+            shapes={textShapes}
             selectedId={selectedId}
-            onSelectShape={(id) => {
-              setSelectedImageId(null);
-              setSelectedIds(id ? [id] : []);
-              setSelectedId(id ?? null);
+            onSelectShape={(id, multi) => {
+              if (id) {
+                if (multi) sel.toggle("shape", id);
+                else sel.select("shape", id);
+              } else {
+                sel.clear();
+              }
+              applySelectionToLegacy(sel.get());
             }}
+            onMoveShape={handleMoveShape}
             shapeRefs={shapeRefs}
           />
+        </TextLayer>
 
-          <TransformerManager
-            selectedId={selectedId}
-            selectedIds={selectedIds}
-            shapeRefs={shapeRefs}
-          />
-
-          <HintOverlay selectedId={selectedId} canvasHeight={viewport.height} />
-        </Layer>
-
-        {/* 🔹 Marquee overlay */}
-        {marquee.active && (
-          <Layer listening={false}>
-            <Rect
-              x={Math.min(marquee.x1, marquee.x2)}
-              y={Math.min(marquee.y1, marquee.y2)}
-              width={Math.abs(marquee.x2 - marquee.x1)}
-              height={Math.abs(marquee.y2 - marquee.y1)}
-              fill="rgba(43,127,255,0.10)"
-              stroke="#155dfc"
-              strokeWidth={1}
+        {/* 🔧 Transformer para seleção SOMENTE de textos */}
+        {hasOnlyTextSelection && selectedNodes.length > 0 && (
+          <Layer name="TextTransformerLayer">
+            <SelectionTransformer
+              selectedNodes={selectedNodes}
+              getOptionsForSelection={() => ({
+                keepRatio: false,
+                rotateEnabled: true,
+                enabledAnchors: [
+                  "top-left",
+                  "top-right",
+                  "bottom-left",
+                  "bottom-right",
+                  "middle-left",
+                  "middle-right",
+                  "top-center",
+                  "bottom-center",
+                ],
+              })}
             />
           </Layer>
         )}
+
+        {/* 🔧 Transformer UNIFICADO (seleção mista) */}
+        {hasMixedSelection && selectedNodes.length > 0 && (
+          <Layer name="UnifiedTransformerLayer">
+            <SelectionTransformer
+              selectedNodes={selectedNodes}
+              getOptionsForSelection={() => ({
+                keepRatio: false,
+                rotateEnabled: true,
+                enabledAnchors: [
+                  "top-left",
+                  "top-right",
+                  "bottom-left",
+                  "bottom-right",
+                  "middle-left",
+                  "middle-right",
+                  "top-center",
+                  "bottom-center",
+                ],
+              })}
+            />
+          </Layer>
+        )}
+
+        <MarqueeOverlay marquee={marquee} />
       </Stage>
 
       {/* 🔹 Controles de Zoom */}

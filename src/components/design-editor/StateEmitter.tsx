@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect } from "react";
-import type { AnyShape } from "@/lib/design-editor/types";
+import type { AnyShape } from "@/components/design-editor/types/shapes";
 
 type Props = {
   shapes: AnyShape[];

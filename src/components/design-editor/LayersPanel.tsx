@@ -21,113 +21,58 @@ import {
   Image as IconImage,
 } from "lucide-react";
 import clsx from "clsx";
+import type { Selection } from "@/components/design-editor/types/selection";
 
-/** Payloads aceitos do Canvas */
-type LegacyShapeType =
-  | "rect"
-  | "text"
-  | "circle"
-  | "triangle"
-  | "line"
-  | "star";
-
-type LegacyShape = {
+/** Item de camada vindo do Canvas */
+type Item = {
   id: string;
-  type: LegacyShapeType;
+  type: string;
+  kind: "shape" | "image";
   name?: string;
   isHidden?: boolean;
   isLocked?: boolean;
 };
 
-type LegacyImage = {
-  id: string;
-  type: "image";
-  name?: string;
-  isHidden?: boolean;
-  isLocked?: boolean;
+/** Mensagem de estado vinda do Canvas */
+type EditorStateMsg = {
+  items: Item[];
+  selection: Selection;
 };
-
-type EditorStateMsg =
-  | {
-      // Modelo legado + imagens
-      selectedId: string | null;
-      selectedImageId?: string | null;
-      selectedImageIds?: string[];
-      shapes?: LegacyShape[];
-      images?: LegacyImage[];
-    }
-  | {
-      // Modelo unificado (compat futuro)
-      selectedItemIds: string[];
-      items: Array<
-        (LegacyShape & { kind?: "shape" }) | (LegacyImage & { kind?: "image" })
-      >;
-    };
-
-/** Item normalizado para o painel */
-type PanelItem =
-  | (LegacyShape & { kind: "shape" })
-  | (LegacyImage & { kind: "image" });
 
 type Props = {
   className?: string;
 };
 
 export default function LayersPanel({ className }: Props) {
-  const [items, setItems] = useState<PanelItem[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     const onState = (ev: Event) => {
       const e = ev as CustomEvent<EditorStateMsg>;
-      const detail = e.detail as any;
+      const detail = e.detail;
       if (!detail) return;
 
-      // --- Seleção ---
-      if (Array.isArray(detail.selectedItemIds)) {
-        setSelectedIds(detail.selectedItemIds);
-      } else {
-        const sel: string[] = [];
-        if (Array.isArray(detail.selectedImageIds)) {
-          sel.push(...detail.selectedImageIds);
-        } else if (detail.selectedImageId) {
-          sel.push(detail.selectedImageId);
-        } else if (detail.selectedId) {
-          sel.push(detail.selectedId);
-        }
-        setSelectedIds(sel);
-      }
-
-      // --- Itens (camadas) ---
+      // Atualiza a lista de itens (camadas)
       if (Array.isArray(detail.items)) {
-        // Unificado
-        const normalized: PanelItem[] = detail.items.map((it: any) => {
-          if (it.kind === "image" || it.type === "image") {
-            return { ...it, kind: "image", type: "image" } as PanelItem;
-          }
-          return { ...it, kind: "shape" } as PanelItem;
-        });
-        setItems(normalized);
-        return;
+        setItems(detail.items);
       }
 
-      // Legado: shapes + images separados
-      const shapes: PanelItem[] = (detail.shapes ?? []).map(
-        (s: LegacyShape) => ({
-          ...s,
-          kind: "shape",
-        })
-      );
-      const images: PanelItem[] = (detail.images ?? []).map(
-        (img: LegacyImage) => ({
-          ...img,
-          kind: "image",
-          type: "image",
-        })
-      );
+      // Deriva os IDs selecionados a partir do objeto de seleção unificado
+      const { selection } = detail;
+      if (!selection) return;
 
-      // Ordem exibida: shapes primeiro (compat com render atual)
-      setItems([...shapes, ...images]);
+      if (selection.kind === "none") {
+        setSelectedIds([]);
+      } else if (selection.kind === "mixed") {
+        setSelectedIds([
+          ...selection.shapeIds,
+          ...(selection.textIds ?? []),
+          ...selection.imageIds,
+        ]);
+      } else {
+        setSelectedIds(selection.ids);
+      }
     };
 
     window.addEventListener("design-editor:state", onState as EventListener);
@@ -142,13 +87,7 @@ export default function LayersPanel({ className }: Props) {
   const dispatch = (name: string, detail: Record<string, any>) =>
     window.dispatchEvent(new CustomEvent(`design-editor:${name}`, { detail }));
 
-  const selectShape = (id: string) => dispatch("select", { id });
-  const selectImage = (id: string) => {
-    // compat: tentar ambos
-    dispatch("select-image", { id });
-    dispatch("select", { id });
-  };
-
+  const selectItem = (id: string) => dispatch("select", { id });
   const toggleHidden = (id: string) => dispatch("toggle-hidden", { id });
   const toggleLocked = (id: string) => dispatch("toggle-locked", { id });
   const bringForward = (id: string) => dispatch("bring-forward", { id });
@@ -192,13 +131,12 @@ export default function LayersPanel({ className }: Props) {
 
           {items.map((it) => {
             const isImage = it.kind === "image";
-            const iconKey: keyof typeof typeIcon = isImage
-              ? "image"
-              : (it.type as LegacyShapeType);
+            const iconKey = it.type as keyof typeof typeIcon;
             const Icon = typeIcon[iconKey] || IconRect;
 
             const selected = isSelected(it.id);
-            const actionsDisabled = isImage; // ações ainda não suportadas para imagens
+            // TODO: Habilitar ações para imagens no futuro
+            const actionsDisabled = isImage;
 
             return (
               <li
@@ -250,9 +188,7 @@ export default function LayersPanel({ className }: Props) {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() =>
-                    isImage ? selectImage(it.id) : selectShape(it.id)
-                  }
+                  onClick={() => selectItem(it.id)}
                   className="flex min-w-0 w-full !px-0 justify-start items-center gap-2 text-left hover:bg-transparent"
                   title={it.name || it.id}>
                   <Icon
@@ -323,10 +259,8 @@ export default function LayersPanel({ className }: Props) {
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 hover:text-red-600"
-                    title={
-                      isImage ? "Remoção via painel — em breve" : "Remover"
-                    }
-                    disabled={isImage}
+                    title={isImage ? "Remoção indisponível" : "Remover"}
+                    disabled={actionsDisabled}
                     onClick={(e) => {
                       e.stopPropagation();
                       remove(it.id);

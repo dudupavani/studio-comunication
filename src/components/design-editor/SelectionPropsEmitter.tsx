@@ -2,18 +2,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { DEFAULTS } from "@/lib/design-editor/defaults";
-import { AnyShape, isShapeText } from "@/lib/design-editor/types";
+import { DESIGN_DEFAULTS as DEFAULTS } from "@/components/design-editor/constants/design-defaults";
+import type { AnyShape } from "@/components/design-editor/types/shapes";
+import { isTextShapeStrict } from "@/components/design-editor/types/shapes";
 
 type Props = {
   shapes: AnyShape[];
   selectedId: string | null;
 };
 
-/**
- * Emite `design-editor:selection-props` sempre que
- * `selectedId` ou `shapes` mudam.
- */
 export default function SelectionPropsEmitter({ shapes, selectedId }: Props) {
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -24,6 +21,7 @@ export default function SelectionPropsEmitter({ shapes, selectedId }: Props) {
       null;
 
     let detail: any = null;
+
     if (sel) {
       const base = {
         id: sel.id,
@@ -46,7 +44,7 @@ export default function SelectionPropsEmitter({ shapes, selectedId }: Props) {
         shadowOffsetY: sel.shadowOffsetY ?? DEFAULTS.shadowOffsetY,
       };
 
-      if (isShapeText(sel)) {
+      if (isTextShapeStrict(sel)) {
         detail = {
           ...base,
           text: sel.text ?? DEFAULTS.text.text,
