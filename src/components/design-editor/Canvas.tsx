@@ -653,6 +653,9 @@ export default function Canvas() {
       if (wLocal < 2 && hLocal < 2) {
         sel.clear();
         applySelectionToLegacy(sel.get());
+        requestAnimationFrame(() => {
+          stageRef.current?.batchDraw();
+        });
         return { active: false, x1: 0, y1: 0, x2: 0, y2: 0 };
       }
 
@@ -714,6 +717,9 @@ export default function Canvas() {
       }
 
       applySelectionToLegacy(sel.get());
+      requestAnimationFrame(() => {
+        stageRef.current?.batchDraw();
+      });
       return { active: false, x1: 0, y1: 0, x2: 0, y2: 0 };
     });
   };

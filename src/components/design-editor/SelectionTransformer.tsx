@@ -1,7 +1,7 @@
 // src/components/design-editor/SelectionTransformer.tsx
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { Transformer } from "react-konva";
 import type Konva from "konva";
 
@@ -68,18 +68,34 @@ export default function SelectionTransformer({
   const finalKeepRatio = dynamicOpts.keepRatio ?? keepRatio;
   const finalBoundBoxFunc = dynamicOpts.boundBoxFunc ?? boundBoxFunc;
 
-  useEffect(() => {
+  // ⬇️ Rebind IMEDIATO do transformer quando a seleção muda (antes da pintura)
+  useLayoutEffect(() => {
     const tr = trRef.current;
     if (!tr) return;
 
-    tr.nodes(nodes);
-    tr.getLayer()?.batchDraw();
+    if (nodes.length === 0) {
+      // limpa quando não há seleção
+      tr.nodes([]);
+      tr.getLayer()?.batchDraw();
+      return;
+    }
 
-    // ✅ depois do próximo frame, força o recálculo (útil p/ imagens que acabam de carregar)
+    tr.nodes(nodes);
+    // garante que fique no topo dentro da mesma Layer
+    try {
+      tr.moveToTop();
+    } catch {
+      /* noop */
+    }
+    const layer = tr.getLayer();
+    layer?.batchDraw();
+
+    // segundo tick garante cálculo de bbox já com layout estável
     const raf = requestAnimationFrame(() => {
       try {
         tr.forceUpdate();
-        tr.getLayer()?.batchDraw();
+        layer?.batchDraw();
+        tr.getStage()?.batchDraw();
       } catch {
         /* noop */
       }
@@ -90,6 +106,8 @@ export default function SelectionTransformer({
   return (
     <Transformer
       ref={trRef}
+      // visível só quando há nós (evita “fantasma”)
+      visible={nodes.length > 0}
       enabledAnchors={finalEnabledAnchors}
       rotateEnabled={finalRotateEnabled}
       keepRatio={finalKeepRatio}
@@ -102,6 +120,7 @@ export default function SelectionTransformer({
       borderStrokeWidth={1}
       borderStroke={"#2b7fff"}
       anchorStroke={"#2b7fff"}
+      listening
     />
   );
 }

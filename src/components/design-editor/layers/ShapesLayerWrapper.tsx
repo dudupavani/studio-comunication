@@ -54,39 +54,36 @@ export default function ShapesLayerWrapper({
   }, [filtered, selectedIds, showTransformer, shapeRefs]);
 
   return (
-    <>
-      <Layer name="ShapesLayer">
-        <ShapesLayer
-          shapes={filtered}
-          selectedId={selectedId}
-          onSelectShape={onSelectShape}
-          onMoveShape={onMoveShape}
-          shapeRefs={shapeRefs}
-        />
-      </Layer>
+    <Layer name="ShapesLayer">
+      <ShapesLayer
+        shapes={filtered}
+        selectedId={selectedId}
+        onSelectShape={onSelectShape}
+        onMoveShape={onMoveShape}
+        shapeRefs={shapeRefs}
+      />
 
-      {/* Transformer LOCAL para seleção **apenas de formas** */}
+      {/* Transformer LOCAL para seleção **apenas de formas** (mesma Layer dos shapes) */}
       {showTransformer && selectedNodes.length > 0 && (
-        <Layer name="ShapeTransformerLayer">
-          <SelectionTransformer
-            selectedNodes={selectedNodes}
-            getOptionsForSelection={() => ({
-              keepRatio: false,
-              rotateEnabled: true,
-              enabledAnchors: [
-                "top-left",
-                "top-right",
-                "bottom-left",
-                "bottom-right",
-                "middle-left",
-                "middle-right",
-                "top-center",
-                "bottom-center",
-              ],
-            })}
-          />
-        </Layer>
+        <SelectionTransformer
+          key={`shape-xf-${selectedIds.join("_")}`} // ⬅️ força remount a cada mudança de seleção
+          selectedNodes={selectedNodes}
+          getOptionsForSelection={() => ({
+            keepRatio: false,
+            rotateEnabled: true,
+            enabledAnchors: [
+              "top-left",
+              "top-right",
+              "bottom-left",
+              "bottom-right",
+              "middle-left",
+              "middle-right",
+              "top-center",
+              "bottom-center",
+            ],
+          })}
+        />
       )}
-    </>
+    </Layer>
   );
 }
