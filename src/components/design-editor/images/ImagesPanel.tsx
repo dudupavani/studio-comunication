@@ -216,7 +216,7 @@ export default function ImagesPanel({
             disabled={uploading}
             onClick={() => fileInputRef.current?.click()}>
             <ImageUp size={18} className="mr-1" />
-            {uploading ? "Enviando..." : "Selecionar arquivo"}
+            {uploading ? "Enviando..." : "Upload"}
           </Button>
         </div>
       </div>

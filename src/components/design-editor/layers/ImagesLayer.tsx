@@ -5,16 +5,18 @@ import { Layer } from "react-konva";
 import type Konva from "konva";
 import { useCallback, useMemo } from "react";
 import InsertedImageNode, { InsertedImageLike } from "../InsertedImageNode";
-import SelectionTransformer from "../SelectionTransformer";
+import { useSelectionContext } from "@/components/design-editor/SelectionContext";
 
 type Props = {
   images: InsertedImageLike[];
 
-  // ✅ compat + novo
-  selectedImageId?: string | null; // legado (opcional)
-  selectedImageIds?: string[]; // novo (preferível)
+  // ✅ compat (serão removidos depois)
+  selectedImageId?: string | null;
+  selectedImageIds?: string[];
 
-  onSelectImage: (id: string, multi?: boolean) => void;
+  // ✅ compat: se não vier do pai, usamos o contexto
+  onSelectImage?: (id: string, multi?: boolean) => void;
+
   onMoveImage: (id: string, x: number, y: number) => void;
   onTransformImage: (id: string, patch: Partial<InsertedImageLike>) => void;
 
@@ -30,14 +32,28 @@ export default function ImagesLayer({
   onTransformImage,
   imageRefs,
 }: Props) {
-  // 🔒 boundBox simples para evitar imagem sumir ao redimensionar
-  const MIN_IMG_SIZE = 8;
-  const imageBoundBox = useCallback((oldBox: any, newBox: any) => {
-    const w = Math.abs(newBox.width);
-    const h = Math.abs(newBox.height);
-    if (w < MIN_IMG_SIZE || h < MIN_IMG_SIZE) return oldBox;
-    return newBox;
-  }, []);
+  const { selection, actions } = useSelectionContext();
+
+  // 🔁 seleção vinda do contexto (preferencial)
+  const idsFromContext = useMemo<string[]>(() => {
+    if (selection.kind === "image") return selection.ids;
+    if (selection.kind === "mixed") return selection.imageIds;
+    return [];
+  }, [selection]);
+
+  // 🔁 normaliza: props legadas > contexto
+  const effectiveIds = useMemo<string[]>(() => {
+    if (selectedImageIds && selectedImageIds.length) return selectedImageIds;
+    if (selectedImageId) return [selectedImageId];
+    return idsFromContext;
+  }, [selectedImageIds, selectedImageId, idsFromContext]);
+
+  // ✅ memo dos nós selecionados (sem estados auxiliares)
+  const selectedNodes = useMemo(() => {
+    return effectiveIds
+      .map((id) => imageRefs.current[id] ?? null)
+      .filter(Boolean) as Konva.Node[];
+  }, [effectiveIds, imageRefs]);
 
   // ✅ ref idempotente e **sem setState**
   const registerRef = useCallback(
@@ -49,18 +65,19 @@ export default function ImagesLayer({
     [imageRefs]
   );
 
-  // ✅ normaliza seleção (legado + novo)
-  const ids: string[] = useMemo(() => {
-    if (selectedImageIds && selectedImageIds.length) return selectedImageIds;
-    return selectedImageId ? [selectedImageId] : [];
-  }, [selectedImageIds, selectedImageId]);
-
-  // ✅ memo dos nós selecionados (sem estados auxiliares)
-  const selectedNodes = useMemo(() => {
-    return ids
-      .map((id) => imageRefs.current[id] ?? null)
-      .filter(Boolean) as Konva.Node[];
-  }, [ids, imageRefs]);
+  // ✅ seleção via contexto (fallback se pai não fornecer handler)
+  const handleSelect = useCallback(
+    (id: string, multi?: boolean) => {
+      if (onSelectImage) {
+        onSelectImage(id, multi);
+        return;
+      }
+      if (!id) return;
+      if (multi) actions.toggle("image", id);
+      else actions.select("image", id);
+    },
+    [onSelectImage, actions]
+  );
 
   return (
     <Layer name="ImagesLayer">
@@ -68,34 +85,15 @@ export default function ImagesLayer({
         <InsertedImageNode
           key={img.id}
           data={img}
-          selected={ids.includes(img.id)}
-          onSelect={onSelectImage}
+          selected={effectiveIds.includes(img.id)}
+          onSelect={handleSelect}
           onMove={onMoveImage}
           onTransform={onTransformImage}
           registerRef={registerRef}
         />
       ))}
 
-      {selectedNodes.length > 0 && (
-        <SelectionTransformer
-          selectedNodes={selectedNodes}
-          getOptionsForSelection={() => ({
-            keepRatio: true,
-            rotateEnabled: true,
-            enabledAnchors: [
-              "top-left",
-              "top-right",
-              "bottom-left",
-              "bottom-right",
-              "middle-left",
-              "middle-right",
-              "top-center",
-              "bottom-center",
-            ],
-            boundBoxFunc: imageBoundBox,
-          })}
-        />
-      )}
+      {/* ⚠️ Transformer é centralizado no Canvas pelo TransformerManager */}
     </Layer>
   );
 }

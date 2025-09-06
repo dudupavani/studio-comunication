@@ -1,29 +1,17 @@
 // src/components/design-editor/layers/MarqueeOverlay.tsx
 "use client";
+import { Group, Rect } from "react-konva";
 
-import { Layer, Rect } from "react-konva";
-
-export type MarqueeState = {
+type Marquee = {
   active: boolean;
   x1: number;
   y1: number;
   x2: number;
   y2: number;
 };
+type Props = { marquee: Marquee };
 
-type Props = {
-  marquee: MarqueeState;
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
-};
-
-export default function MarqueeOverlay({
-  marquee,
-  fill = "rgba(43,127,255,0.10)",
-  stroke = "#155dfc",
-  strokeWidth = 1,
-}: Props) {
+export default function MarqueeOverlay({ marquee }: Props) {
   if (!marquee.active) return null;
 
   const x = Math.min(marquee.x1, marquee.x2);
@@ -32,16 +20,21 @@ export default function MarqueeOverlay({
   const h = Math.abs(marquee.y2 - marquee.y1);
 
   return (
-    <Layer listening={false} name="MarqueeOverlay">
+    <Group listening={false}>
       <Rect
         x={x}
         y={y}
         width={w}
         height={h}
-        fill={fill}
-        stroke={stroke}
-        strokeWidth={strokeWidth}
+        stroke="#3b82f6"
+        strokeWidth={1}
+        strokeScaleEnabled={false} // ✅ stroke 1px, não escala com zoom
+        dash={[4, 4]} // ✅ dash também não escala
+        fill="rgba(59,130,246,0.08)"
+        shadowForStrokeEnabled={false}
+        perfectDrawEnabled={false}
+        listening={false}
       />
-    </Layer>
+    </Group>
   );
 }

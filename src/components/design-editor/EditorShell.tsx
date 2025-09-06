@@ -36,6 +36,10 @@ import ImagesPanel from "./images/ImagesPanel";
 // ✅ hook de auth
 import { useAuthContext } from "@/hooks/use-auth-context";
 
+// ✅ Selection context (caminho correto no seu projeto)
+import { SelectionProvider } from "@/components/design-editor/SelectionContext";
+import { useSelectionManager } from "@/hooks/design-editor/use-selection-manager";
+
 const Canvas = dynamic(() => import("./Canvas"), { ssr: false });
 
 type Panel = "none" | "formas" | "imagens" | "templates";
@@ -56,6 +60,9 @@ export default function EditorShell() {
     (auth as any)?.organizationId ??
     null;
   const userId = (auth as any)?.userId ?? (auth as any)?.user?.id ?? null;
+
+  // ✅ instância única do selection manager para toda a árvore
+  const manager = useSelectionManager();
 
   function cmd(name: string, detail: any) {
     if (typeof window !== "undefined") {
@@ -103,7 +110,7 @@ export default function EditorShell() {
   // inclui "imagens" para abrir a coluna extra
   const columns =
     panel === "formas" || panel === "templates" || panel === "imagens"
-      ? "90px 220px 1fr"
+      ? "90px 160px 1fr"
       : "90px 1fr";
 
   const onEmptyAreaMouseDown = (e: React.MouseEvent) => {
@@ -168,7 +175,7 @@ export default function EditorShell() {
               onClick={handleToggleTemplates}
               title="Abrir/fechar submenu de templates">
               <Frame size={20} />
-              Artboard
+              Áreas
             </Button>
           </div>
         </aside>
@@ -221,7 +228,7 @@ export default function EditorShell() {
               </Button>
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
                 className="justify-center items-center p-6 cursor-grab"
@@ -252,28 +259,28 @@ export default function EditorShell() {
               <Button
                 variant="outline"
                 className="justify-center items-center p-6 cursor-grab"
-                onClick={addLine}
-                draggable
-                onDragStart={onDragStart("line")}
-                title="Arraste ou clique">
-                <IconMinus size={34} />
-              </Button>
-              <Button
-                variant="outline"
-                className="justify-center items-center p-6 cursor-grab"
                 onClick={addStar}
                 draggable
                 onDragStart={onDragStart("star")}
                 title="Arraste ou clique">
                 <IconStar size={34} />
               </Button>
+              <Button
+                variant="outline"
+                className="justify-center items-center p-6 cursor-grab"
+                onClick={addLine}
+                draggable
+                onDragStart={onDragStart("line")}
+                title="Arraste ou clique">
+                <IconMinus size={34} />
+              </Button>
             </div>
 
             <div className="flex flex-col items-center gap-2 mt-4">
-              <span className="text-[11px] leading-none text-left text-gray-400">
+              <span className="text-[11px] leading-none text-center text-gray-400">
                 Arraste ou clique para inserir.
               </span>
-              <span className="text-[11px] leading-none text-left text-gray-400">
+              <span className="text-[11px] leading-none text-center text-gray-400">
                 ESC para fechar a coluna.
               </span>
             </div>
@@ -287,7 +294,7 @@ export default function EditorShell() {
             style={{ height: `calc(100vh - ${PROP_BAR_H}px)` }}
             onMouseDown={onEmptyAreaMouseDown}>
             <div className="flex items-center justify-between mt-1 mb-3">
-              <div className="text-base font-semibold">Templates</div>
+              <div className="text-base font-semibold">Áreas</div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -410,29 +417,32 @@ export default function EditorShell() {
         )}
 
         {/* Área redimensionável */}
-        <ResizablePanelGroup
-          direction="horizontal"
-          className="overflow-hidden"
-          style={{ height: `calc(100vh - ${PROP_BAR_H}px)` }}>
-          <ResizablePanel defaultSize={75} minSize={40}>
-            <section className="flex h-full flex-col">
-              <main
-                className="bg-gray-200 p-3 flex-1 overflow-auto"
-                onMouseDown={onEmptyAreaMouseDown}>
-                <Canvas />
-              </main>
-            </section>
-          </ResizablePanel>
+        {/* ⬇️ Envolvemos o editor (Canvas + LayersPanel) com SelectionProvider e manager */}
+        <SelectionProvider manager={manager}>
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="overflow-hidden"
+            style={{ height: `calc(100vh - ${PROP_BAR_H}px)` }}>
+            <ResizablePanel defaultSize={75} minSize={40}>
+              <section className="flex h-full flex-col">
+                <main
+                  className="bg-gray-200 p-3 flex-1 overflow-auto"
+                  onMouseDown={onEmptyAreaMouseDown}>
+                  <Canvas />
+                </main>
+              </section>
+            </ResizablePanel>
 
-          <ResizableHandle withHandle />
+            <ResizableHandle withHandle />
 
-          {/* Painel Camadas */}
-          <ResizablePanel defaultSize={25} minSize={16} maxSize={50}>
-            <aside onMouseDown={onEmptyAreaMouseDown}>
-              <LayersPanel />
-            </aside>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+            {/* Painel Camadas */}
+            <ResizablePanel defaultSize={25} minSize={16} maxSize={50}>
+              <aside onMouseDown={onEmptyAreaMouseDown}>
+                <LayersPanel />
+              </aside>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </SelectionProvider>
       </div>
     </div>
   );

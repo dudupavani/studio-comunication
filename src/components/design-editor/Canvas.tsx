@@ -6,11 +6,11 @@ import type Konva from "konva";
 import EventBridge from "./EventBridge";
 import DnDContainer from "./DnDContainer";
 import ZoomControls from "./ZoomControls";
-import SelectionTransformer from "./SelectionTransformer";
 import ImagesLayer from "@/components/design-editor/layers/ImagesLayer";
 import ShapesLayerWrapper from "@/components/design-editor/layers/ShapesLayerWrapper";
 import TextLayer from "@/components/design-editor/layers/TextLayer";
 import ShapesLayer from "@/components/design-editor/ShapesLayer";
+import TransformerManager from "@/components/design-editor/TransformerManager";
 
 import { Stage, Layer } from "react-konva";
 import MarqueeOverlay from "@/components/design-editor/layers/MarqueeOverlay";
@@ -43,8 +43,8 @@ import {
   isTextShapeStrict,
 } from "@/components/design-editor/types/shapes";
 
-// ✅ Selection Manager (base recém-adicionada)
-import { useSelectionManager } from "@/hooks/design-editor/use-selection-manager";
+// ✅ seleção (contexto)
+import { useSelectionContext } from "@/components/design-editor/SelectionContext";
 import type { Selection } from "@/components/design-editor/types/selection";
 
 // ========= Imagens inseridas =========
@@ -71,19 +71,20 @@ export default function Canvas() {
   const [scale, setScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
 
-  // shapes/seleção
+  // shapes/seleção (legado — será aposentado em passo futuro)
   const [shapes, setShapes] = useState<AnyShape[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // 🔹 seleção de imagem
+  // 🔹 seleção de imagem (legado — será aposentado)
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [selectedImageIds, setSelectedImageIds] = useState<string[]>([]);
 
   const shapeRefs = useRef<Record<string, Konva.Node | null>>({});
+  const imageRefs = useRef<Record<string, Konva.Group | null>>({});
+
   const selectedImageIdRef = useRef<string | null>(null);
   const selectedImageIdsRef = useRef<string[]>([]);
-  const imageRefs = useRef<Record<string, Konva.Group | null>>({});
 
   // Artboard
   const { artboard } = useArtboard();
@@ -95,10 +96,34 @@ export default function Canvas() {
   const [imagesVersion, setImagesVersion] = useState(0);
   const [shapesVersion, setShapesVersion] = useState(0);
 
-  // ✅ Selection Manager — inicialização
-  const sel = useSelectionManager();
+  // ✅ Selection Manager — via contexto (APIs: select/toggle/replace/clear + leitura via selection)
+  const { selection, actions } = useSelectionContext();
+  const sel = {
+    select: actions.select,
+    toggle: actions.toggle,
+    replace: actions.replace,
+    clear: actions.clear,
+    get: () => selection,
+  };
 
   // ✅ Handlers para mover itens (com guarda para multi-drag)
+  const multiDragRef = useRef<
+    { active: boolean } & {
+      driverId: string | null;
+      driverType: "shape" | "image" | null;
+      driverStart: { x: number; y: number } | null;
+      shapesStart: Record<string, { x: number; y: number }>;
+      imagesStart: Record<string, { x: number; y: number }>;
+    }
+  >({
+    active: false,
+    driverId: null,
+    driverType: null,
+    driverStart: null,
+    shapesStart: {},
+    imagesStart: {},
+  });
+
   const handleMoveShape = (id: string, x: number, y: number) => {
     if (multiDragRef.current.active) return;
     setShapes((prev) => prev.map((s) => (s.id === id ? { ...s, x, y } : s)));
@@ -156,6 +181,11 @@ export default function Canvas() {
     }
   }, []);
 
+  useEffect(() => {
+    // espelha o contexto no estado legado sempre que a seleção mudar
+    applySelectionToLegacy(selection);
+  }, [selection, applySelectionToLegacy]);
+
   // refs anti-stale
   const shapesRef = useRef<AnyShape[]>(shapes);
   const selectedRef = useRef<string | null>(selectedId);
@@ -171,6 +201,7 @@ export default function Canvas() {
   useEffect(() => {
     selectedImageIdRef.current = selectedImageId;
   }, [selectedImageId]);
+
   useEffect(() => {
     selectedImageIdsRef.current = selectedImageIds;
   }, [selectedImageIds]);
@@ -251,7 +282,6 @@ export default function Canvas() {
     }));
 
     const items = [...imageItems, ...shapeItems];
-
     const selectedItemIds = [...selectedIds, ...selectedImageIds];
 
     const payload = {
@@ -689,7 +719,7 @@ export default function Canvas() {
         .filter((s) => shapeIdSet.has(s.id))
         .map((s) => s.id);
 
-      // 🔹 Imagens — agora pega TODAS
+      // 🔹 Imagens — pega todas as que intersectam
       const imageIds: string[] = [];
       for (const img of insertedImagesRef.current) {
         const node = imageRefs.current[img.id];
@@ -699,7 +729,7 @@ export default function Canvas() {
         if (intersects(aStage, bb)) imageIds.push(img.id);
       }
 
-      // 🎯 Seleção (agora sem “apenas a última”)
+      // 🎯 Seleção
       if (imageIds.length && orderedShapeIds.length) {
         sel.replace({
           kind: "mixed",
@@ -770,7 +800,7 @@ export default function Canvas() {
     ]
   );
 
-  // ===== Seleção combinada (para transformer unificado) =====
+  // ===== Derivados de seleção (locais) =====
   const selectedNodes = useMemo(() => {
     const nodes: (Konva.Node | null)[] = [];
     for (const id of selectedImageIds)
@@ -779,37 +809,9 @@ export default function Canvas() {
     return nodes.filter(Boolean) as Konva.Node[];
   }, [selectedIds, selectedImageIds]);
 
-  const hasMixedSelection =
-    selectedIds.length > 0 && selectedImageIds.length > 0;
-  const hasOnlyShapes = selectedIds.length > 0 && selectedImageIds.length === 0;
-
-  // 🔎 Seleção somente de textos
-  const hasOnlyTextSelection = useMemo(() => {
-    if (selectedImageIds.length > 0 || selectedIds.length === 0) return false;
-    for (const id of selectedIds) {
-      const s = shapesRef.current.find((sh) => sh.id === id);
-      if (!s || s.type !== "text") return false;
-    }
-    return true;
-  }, [selectedIds, selectedImageIds]);
+  const hasOnlyImages = selectedImageIds.length > 0 && selectedIds.length === 0;
 
   // ===== Multi-drag (arrastar grupo) =====
-  const multiDragRef = useRef<{
-    active: boolean;
-    driverId: string | null;
-    driverType: "shape" | "image" | null;
-    driverStart: { x: number; y: number } | null;
-    shapesStart: Record<string, { x: number; y: number }>;
-    imagesStart: Record<string, { x: number; y: number }>;
-  }>({
-    active: false,
-    driverId: null,
-    driverType: null,
-    driverStart: null,
-    shapesStart: {},
-    imagesStart: {},
-  });
-
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -1228,8 +1230,7 @@ export default function Canvas() {
         <ImagesLayer
           key={`images-${imagesVersion}`}
           images={insertedImages}
-          // evita dois transformers quando a seleção é mista
-          selectedImageIds={hasMixedSelection ? [] : selectedImageIds}
+          selectedImageIds={selectedImageIds}
           onSelectImage={(id, multi) => {
             if (id) {
               if (multi) sel.toggle("image", id);
@@ -1253,7 +1254,6 @@ export default function Canvas() {
           key={`shapes-${shapesVersion}`} // chave única
           shapes={shapes}
           selectedId={selectedId}
-          selectedIds={selectedIds}
           onSelectShape={(id, multi) => {
             if (id) {
               if (multi) sel.toggle("shape", id);
@@ -1265,8 +1265,6 @@ export default function Canvas() {
           }}
           onMoveShape={handleMoveShape}
           shapeRefs={shapeRefs}
-          canvasHeight={viewport.height}
-          showTransformer={hasOnlyShapes}
           renderTexts={false}
         />
 
@@ -1289,31 +1287,18 @@ export default function Canvas() {
           />
         </TextLayer>
 
-        {/* 🔧 Transformer UNIFICADO (textos e seleção mista) */}
-        {(hasOnlyTextSelection || hasMixedSelection) &&
-          selectedNodes.length > 0 && (
-            <Layer name="UnifiedTransformerLayer">
-              <SelectionTransformer
+        {/* 🔧 Overlay geral (Transformer + Marquee) */}
+        {(selectedNodes.length > 0 || marquee.active) && (
+          <Layer name="OverlayLayer" listening={false}>
+            {selectedNodes.length > 0 && (
+              <TransformerManager
                 selectedNodes={selectedNodes}
-                getOptionsForSelection={() => ({
-                  keepRatio: false,
-                  rotateEnabled: true,
-                  enabledAnchors: [
-                    "top-left",
-                    "top-right",
-                    "bottom-left",
-                    "bottom-right",
-                    "middle-left",
-                    "middle-right",
-                    "top-center",
-                    "bottom-center",
-                  ],
-                })}
+                hasOnlyImages={hasOnlyImages}
               />
-            </Layer>
-          )}
-
-        <MarqueeOverlay marquee={marquee} />
+            )}
+            <MarqueeOverlay marquee={marquee} />
+          </Layer>
+        )}
       </Stage>
 
       {/* 🔹 Controles de Zoom */}

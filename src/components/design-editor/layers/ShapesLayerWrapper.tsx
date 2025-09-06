@@ -1,25 +1,24 @@
 // src/components/design-editor/layers/ShapesLayerWrapper.tsx
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Layer } from "react-konva";
 import type Konva from "konva";
 import ShapesLayer from "@/components/design-editor/ShapesLayer";
 import type { AnyShape } from "@/components/design-editor/types/shapes";
-import SelectionTransformer from "@/components/design-editor/SelectionTransformer";
+import { useSelectionContext } from "@/components/design-editor/SelectionContext";
 
 type Props = {
   shapes: AnyShape[];
+  /** Mantido por compat (será removido depois) */
   selectedId: string | null;
-  selectedIds: string[];
-  onSelectShape: (id: string | null, multi?: boolean) => void;
+
+  /** ✅ compat: se não vier do pai, usamos o contexto */
+  onSelectShape?: (id: string | null, multi?: boolean) => void;
+
   onMoveShape: (id: string, x: number, y: number) => void;
   /** Registro de refs dos nós konva, compartilhados com o Canvas */
   shapeRefs: React.MutableRefObject<Record<string, Konva.Node | null>>;
-  /** Altura do canvas – mantido por compatibilidade (não usado aqui) */
-  canvasHeight: number;
-  /** Quando true, este wrapper pode exibir um transformer local para formas (não-texto) */
-  showTransformer?: boolean;
   /** Se true, renderiza também textos; por padrão este wrapper NÃO renderiza textos */
   renderTexts?: boolean;
 };
@@ -27,14 +26,13 @@ type Props = {
 export default function ShapesLayerWrapper({
   shapes,
   selectedId,
-  selectedIds,
   onSelectShape,
   onMoveShape,
   shapeRefs,
-  canvasHeight, // eslint-disable-line @typescript-eslint/no-unused-vars
-  showTransformer = false,
   renderTexts = false,
 }: Props) {
+  const { selection, actions } = useSelectionContext();
+
   // Este wrapper, por padrão, renderiza apenas formas NÃO-texto.
   // Textos são tratados separadamente em TextLayer no Canvas.
   const filtered = useMemo(() => {
@@ -42,48 +40,49 @@ export default function ShapesLayerWrapper({
     return shapes.filter((s) => s.type !== "text");
   }, [shapes, renderTexts]);
 
-  // Nós selecionados (apenas formas presentes neste wrapper)
-  const selectedNodes = useMemo(() => {
-    if (!showTransformer) return [] as Konva.Node[];
-    const set = new Set(selectedIds);
-    const nodes = filtered
-      .filter((s) => set.has(s.id))
-      .map((s) => shapeRefs.current[s.id])
-      .filter(Boolean) as Konva.Node[];
-    return nodes;
-  }, [filtered, selectedIds, showTransformer, shapeRefs]);
+  // 🔁 último shape/text selecionado pelo contexto (fallback ao prop legado)
+  const selectedIdFromContext = useMemo<string | null>(() => {
+    if (selection.kind === "shape" || selection.kind === "text") {
+      const ids = selection.ids;
+      return ids.length ? ids[ids.length - 1] : null;
+    }
+    if (selection.kind === "mixed") {
+      const ids = [...selection.shapeIds, ...(selection.textIds ?? [])];
+      return ids.length ? ids[ids.length - 1] : null;
+    }
+    return null;
+  }, [selection]);
+
+  const effectiveSelectedId: string | null =
+    selectedId ?? selectedIdFromContext;
+
+  // ✅ seleção via contexto (fallback se pai não fornecer handler)
+  const handleSelect = useCallback(
+    (id: string | null, multi?: boolean) => {
+      if (onSelectShape) {
+        onSelectShape(id, multi);
+        return;
+      }
+      if (id === null) {
+        actions.clear();
+        return;
+      }
+      if (multi) actions.toggle("shape", id);
+      else actions.select("shape", id);
+    },
+    [onSelectShape, actions]
+  );
 
   return (
     <Layer name="ShapesLayer">
       <ShapesLayer
         shapes={filtered}
-        selectedId={selectedId}
-        onSelectShape={onSelectShape}
+        selectedId={effectiveSelectedId}
+        onSelectShape={handleSelect}
         onMoveShape={onMoveShape}
         shapeRefs={shapeRefs}
       />
-
-      {/* Transformer LOCAL para seleção **apenas de formas** (mesma Layer dos shapes) */}
-      {showTransformer && selectedNodes.length > 0 && (
-        <SelectionTransformer
-          key={`shape-xf-${selectedIds.join("_")}`} // ⬅️ força remount a cada mudança de seleção
-          selectedNodes={selectedNodes}
-          getOptionsForSelection={() => ({
-            keepRatio: false,
-            rotateEnabled: true,
-            enabledAnchors: [
-              "top-left",
-              "top-right",
-              "bottom-left",
-              "bottom-right",
-              "middle-left",
-              "middle-right",
-              "top-center",
-              "bottom-center",
-            ],
-          })}
-        />
-      )}
+      {/* ⚠️ Sem transformer local: o unificado é gerido no Canvas pelo TransformerManager */}
     </Layer>
   );
 }
