@@ -1,7 +1,7 @@
 // src/components/design-editor/TextFontControl.tsx
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -13,6 +13,7 @@ import {
   useFonts,
   ensureFontLoaded,
 } from "@/lib/design-editor/fonts/font-loader";
+import { useEditorState } from "@/components/design-editor/EditorStateContext";
 
 type FontStyle = "normal" | "bold" | "italic" | "bold italic";
 
@@ -44,45 +45,25 @@ const FALLBACK_FONTS = [
 ];
 
 export default function TextFontControl({ selection }: Props) {
-  const [sel, setSel] = useState<SelectionDetail | null>(selection ?? null);
-  const isText = sel?.type === "text";
-
-  // fontes vindas do loader (com fallback)
+  const { updateShape } = useEditorState();
   const { families } = useFonts();
-  const options = useMemo(() => {
+
+  const options = (() => {
     const base = (
       families && families.length ? families : FALLBACK_FONTS
     ).slice();
-    if (isText && sel?.fontFamily && !base.includes(sel.fontFamily)) {
-      base.unshift(sel.fontFamily); // garante valor atual na lista
+    if (
+      selection?.type === "text" &&
+      selection.fontFamily &&
+      !base.includes(selection.fontFamily)
+    ) {
+      base.unshift(selection.fontFamily);
     }
     return Array.from(new Set(base));
-  }, [families, isText, sel?.fontFamily]);
+  })();
 
-  const currentFont = isText ? sel?.fontFamily ?? "Arial" : "";
-
-  // 1) Atualiza pelo prop (render imediato quando painel/seleção mudam)
-  useEffect(() => {
-    if (selection) setSel(selection);
-  }, [selection]);
-
-  // 2) Continua ouvindo o event-bus (mudanças vindas do Canvas)
-  useEffect(() => {
-    const onProps = (ev: Event) => {
-      const e = ev as CustomEvent<any>;
-      const detail = e.detail as SelectionDetail | null;
-      setSel(detail ?? null);
-    };
-    window.addEventListener(
-      "design-editor:selection-props",
-      onProps as EventListener
-    );
-    return () =>
-      window.removeEventListener(
-        "design-editor:selection-props",
-        onProps as EventListener
-      );
-  }, []);
+  const currentFont =
+    selection?.type === "text" ? selection.fontFamily ?? "Arial" : "";
 
   // 🔒 Guarda “latest-only” por elemento para evitar corrida entre trocas rápidas
   const fontGuardsRef = useRef<
@@ -90,16 +71,16 @@ export default function TextFontControl({ selection }: Props) {
   >(new Map());
 
   async function handleChangeFont(value: string) {
-    if (!isText || !sel?.id) return;
+    if (selection?.type !== "text" || !selection?.id) return;
 
     // deduz variante (peso/estilo) a partir do estado atual
-    const bold = sel.fontStyle?.includes("bold");
-    const italic = sel.fontStyle?.includes("italic");
+    const bold = selection.fontStyle?.includes("bold");
+    const italic = selection.fontStyle?.includes("italic");
     const weight = bold ? 700 : 400;
     const style: "normal" | "italic" = italic ? "italic" : "normal";
 
     // latest-only: cancela a requisição anterior para o mesmo elemento
-    const elementId = sel.id;
+    const elementId = selection.id;
     const guards = fontGuardsRef.current;
     const prev = guards.get(elementId);
     prev?.ctrl?.abort?.();
@@ -109,25 +90,13 @@ export default function TextFontControl({ selection }: Props) {
     guards.set(elementId, { id: reqId, ctrl });
 
     try {
-      // Garante que a fonte esteja carregada antes de aplicar
       await ensureFontLoaded(value, weight, style, ctrl.signal);
 
       // Ainda é a requisição mais recente?
       const still = guards.get(elementId);
       if (!still || still.id !== reqId) return;
 
-      // Canal padrão
-      window.dispatchEvent(
-        new CustomEvent("design-editor:update-props", {
-          detail: { id: sel.id, patch: { fontFamily: value } },
-        })
-      );
-      // Compatibilidade (se houver listeners legados)
-      window.dispatchEvent(
-        new CustomEvent("design-editor:update-text", {
-          detail: { id: sel.id, patch: { fontFamily: value } },
-        })
-      );
+      updateShape(selection.id, { fontFamily: value });
     } catch (err: any) {
       if (err?.name !== "AbortError") {
         console.warn("TextFontControl: ensureFontLoaded error", err);
@@ -140,7 +109,7 @@ export default function TextFontControl({ selection }: Props) {
   }
 
   // Esconde quando não for texto
-  if (!isText) return null;
+  if (selection?.type !== "text") return null;
 
   return (
     <div className="flex items-center gap-2 text-sm">

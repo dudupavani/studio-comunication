@@ -66,7 +66,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start "
+                  className="w-full justify-start p-3"
                   asChild>
                   <Link href="/dashboard">
                     <AppWindowMac size={20} />
@@ -77,7 +77,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start "
+                  className="w-full justify-start p-3"
                   asChild>
                   <Link href="/calendar">
                     <Calendar size={20} />
@@ -88,7 +88,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start "
+                  className="w-full justify-start p-3"
                   asChild>
                   <Link href="/design-editor">
                     <LaptopMinimalCheck size={20} />
@@ -99,7 +99,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start"
+                  className="w-full justify-start p-3"
                   asChild>
                   <Link href="/users">
                     <UserCog size={20} />
@@ -110,7 +110,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start"
+                  className="w-full justify-start p-3"
                   asChild>
                   <Link href="/groups">
                     <Group size={20} />
@@ -123,7 +123,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start"
+                  className="w-full justify-start p-3"
                   asChild>
                   <Link href="/settings">
                     <Settings size={20} />
@@ -135,7 +135,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start"
+                  className="w-full justify-start p-3"
                   asChild>
                   <Link href="/units">
                     <Warehouse size={20} />

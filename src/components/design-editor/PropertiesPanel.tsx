@@ -1,7 +1,7 @@
 // src/components/design-editor/PropertiesPanel.tsx
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Download } from "lucide-react";
@@ -27,68 +27,60 @@ import {
 } from "lucide-react";
 import { ensureFontLoaded } from "@/lib/design-editor/fonts/font-loader";
 import TextFontControl from "./TextFontControl";
+import { useSelectionContext } from "@/components/design-editor/SelectionContext";
+import { useEditorState } from "@/components/design-editor/EditorStateContext";
+import type {
+  ShapeRect,
+  ShapeCircle,
+  ShapeTriangle,
+  ShapeLine,
+  ShapeStar,
+  ShapeText,
+  AnyShape,
+} from "@/components/design-editor/types/shapes";
 
-/** Tipos que chegam do Canvas via `design-editor:selection-props` */
-type SelectionCommon = {
-  id: string;
-  type: "rect" | "text" | "circle" | "triangle" | "line" | "star";
-  name?: string;
+type SelectionProps =
+  | (ShapeRect & { type: "rect" })
+  | (ShapeCircle & { type: "circle" })
+  | (ShapeTriangle & { type: "triangle" })
+  | (ShapeLine & { type: "line" })
+  | (ShapeStar & { type: "star" })
+  | (ShapeText & { type: "text" });
 
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
-  opacity?: number;
-  shadowBlur?: number;
-  shadowOffsetX?: number;
-  shadowOffsetY?: number;
-};
-
-type SelectionText = SelectionCommon & {
-  type: "text";
-  text?: string;
-  fontFamily?: string;
-  fontSize?: number;
-  fontStyle?: "normal" | "bold" | "italic" | "bold italic";
-  align?: "left" | "center" | "right" | "justify";
-  lineHeight?: number;
-  letterSpacing?: number;
-  width?: number;
-  height?: number;
-};
-
-type SelectionProps = SelectionCommon | SelectionText;
-function isText(sel: SelectionProps | null): sel is SelectionText {
+function isText(sel: SelectionProps | null): sel is ShapeText {
   return !!sel && sel.type === "text";
 }
 
 export default function PropertiesPanel() {
-  const [sel, setSel] = useState<SelectionProps | null>(null);
+  const { selection } = useSelectionContext();
+  const { shapes, getShapeById, updateShape } = useEditorState();
 
-  // Guard “latest-only” por elemento (sequência incremental)
+  // pega o shape/text "primário" da seleção atual
+  const sel: SelectionProps | null = useMemo(() => {
+    if (!selection || selection.kind === "none") return null;
+
+    const pick = (ids: string[]) => {
+      const last = ids.at(-1);
+      if (!last) return null;
+      return (getShapeById(last) as SelectionProps | null) ?? null;
+    };
+
+    if (selection.kind === "shape" || selection.kind === "text") {
+      return pick(selection.ids);
+    }
+    if (selection.kind === "mixed") {
+      // prioriza shape/text; se não houver, não exibe painel por enquanto
+      return pick([...(selection.textIds ?? []), ...selection.shapeIds]);
+    }
+    return null; // imagens não têm propriedades aqui
+  }, [selection, getShapeById, shapes]);
+
+  // Guard “latest-only” por elemento (sequência incremental) para fontes
   const fontSeqRef = useRef<Map<string, number>>(new Map());
 
-  // ouvir dados da seleção vindo do Canvas
-  useEffect(() => {
-    const onProps = (e: any) => setSel(e.detail ?? null);
-    window.addEventListener(
-      "design-editor:selection-props",
-      onProps as EventListener
-    );
-    return () =>
-      window.removeEventListener(
-        "design-editor:selection-props",
-        onProps as EventListener
-      );
-  }, []);
-
-  // enviar PATCH p/ Canvas
-  function updateProps(patch: Partial<SelectionCommon & SelectionText>) {
+  function updateProps(patch: Partial<SelectionProps>) {
     if (!sel) return;
-    window.dispatchEvent(
-      new CustomEvent("design-editor:update-props", {
-        detail: { id: sel.id, patch },
-      })
-    );
+    updateShape(sel.id, patch as Partial<AnyShape>);
   }
 
   // helpers UI
@@ -102,7 +94,6 @@ export default function PropertiesPanel() {
     isText(sel) &&
     (sel.fontStyle === "italic" || sel.fontStyle === "bold italic");
 
-  // alternar bold com “latest-only” + garantir variante carregada
   const setBold = async () => {
     if (!isText(sel)) return;
 
@@ -125,18 +116,15 @@ export default function PropertiesPanel() {
 
       try {
         await ensureFontLoaded(sel.fontFamily, nextWeight, nextStyle);
-        // se outra ação ocorreu enquanto aguardávamos, aborta aplicação
         if (fontSeqRef.current.get(sel.id) !== seq) return;
       } catch (err) {
         console.warn("ensureFontLoaded (bold) falhou:", err);
-        // seguimos aplicando o estilo para manter UX consistente
       }
     }
 
     updateProps({ fontStyle: next });
   };
 
-  // alternar italic com “latest-only” + garantir variante carregada
   const setItalic = async () => {
     if (!isText(sel)) return;
 
@@ -168,6 +156,10 @@ export default function PropertiesPanel() {
     updateProps({ fontStyle: next });
   };
 
+  // ------------------
+  // RENDER
+  // ------------------
+
   if (!sel) {
     return (
       <div className="flex items-center justify-between">
@@ -192,37 +184,35 @@ export default function PropertiesPanel() {
     );
   }
 
+  const s = sel;
+
   return (
     <div className="flex flex-wrap items-center gap-3 text-sm">
-      {/* ----- Fill ----- */}
+      {/* Fill */}
       <div className="flex items-center gap-2">
         <IconPaintBucket className="h-4 w-4 text-muted-foreground" />
         <input
           type="color"
           className="h-8 w-8 cursor-pointer rounded border"
           disabled={fillDisabled}
-          title={
-            fillDisabled ? "Não aplicável para linhas" : "Cor de preenchimento"
-          }
-          value={sel.fill ?? "#000000"}
+          value={s.fill ?? "#000000"}
           onChange={(e) => updateProps({ fill: e.target.value })}
         />
       </div>
 
-      {/* ----- Stroke color ----- */}
+      {/* Stroke */}
       <div className="flex items-center gap-2">
         <IconSquare className="h-4 w-4 text-muted-foreground" />
         <input
           type="color"
           className="h-8 w-8 cursor-pointer rounded border"
           disabled={strokeDisabled}
-          title={strokeDisabled ? "Texto não usa contorno" : "Cor do contorno"}
-          value={sel.stroke ?? "#000000"}
+          value={s.stroke ?? "#000000"}
           onChange={(e) => updateProps({ stroke: e.target.value })}
         />
       </div>
 
-      {/* ----- Stroke width ----- */}
+      {/* Stroke width */}
       <div className="flex items-center gap-2">
         <IconMinus className="h-4 w-4 text-muted-foreground" />
         <Input
@@ -232,7 +222,7 @@ export default function PropertiesPanel() {
           min={0}
           step={1}
           disabled={strokeDisabled}
-          value={sel.strokeWidth ?? 0}
+          value={s.strokeWidth ?? 0}
           onChange={(e) =>
             updateProps({
               strokeWidth: Math.max(0, Number(e.target.value) || 0),
@@ -241,7 +231,7 @@ export default function PropertiesPanel() {
         />
       </div>
 
-      {/* ----- Opacidade (popover) ----- */}
+      {/* Opacidade */}
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" title="Opacidade">
@@ -252,19 +242,19 @@ export default function PropertiesPanel() {
           <div className="space-y-3">
             <div className="text-sm font-medium">Opacidade</div>
             <Slider
-              value={[Math.round((sel.opacity ?? 1) * 100)]}
+              value={[Math.round((s.opacity ?? 1) * 100)]}
               max={100}
               step={1}
               onValueChange={([v]) => updateProps({ opacity: v / 100 })}
             />
             <div className="text-right text-sm text-muted-foreground">
-              {Math.round((sel.opacity ?? 1) * 100)}%
+              {Math.round((s.opacity ?? 1) * 100)}%
             </div>
           </div>
         </PopoverContent>
       </Popover>
 
-      {/* ----- Sombra (3 sliders) ----- */}
+      {/* Sombra */}
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" title="Sombra (blur, X, Y)">
@@ -276,7 +266,7 @@ export default function PropertiesPanel() {
             <div className="space-y-2">
               <div className="text-sm font-medium">Blur</div>
               <Slider
-                value={[sel.shadowBlur ?? 0]}
+                value={[s.shadowBlur ?? 0]}
                 max={50}
                 step={1}
                 onValueChange={([v]) => updateProps({ shadowBlur: v })}
@@ -285,7 +275,7 @@ export default function PropertiesPanel() {
             <div className="space-y-2">
               <div className="text-sm font-medium ">Offset-X</div>
               <Slider
-                value={[sel.shadowOffsetX ?? 0]}
+                value={[s.shadowOffsetX ?? 0]}
                 min={-100}
                 max={100}
                 step={1}
@@ -295,7 +285,7 @@ export default function PropertiesPanel() {
             <div className="space-y-2">
               <div className="text-sm font-medium ">Offset-Y</div>
               <Slider
-                value={[sel.shadowOffsetY ?? 0]}
+                value={[s.shadowOffsetY ?? 0]}
                 min={-100}
                 max={100}
                 step={1}
@@ -307,19 +297,16 @@ export default function PropertiesPanel() {
       </Popover>
 
       {/* ======================== TEXTO ======================== */}
-      {isText(sel) && (
+      {isText(s) && (
         <>
-          {/* Fonte — passa a seleção atual por props (render imediato) */}
-          <div className="flex items-center gap-2">
-            <TextFontControl
-              selection={{
-                id: sel.id,
-                type: sel.type,
-                fontFamily: sel.fontFamily,
-                fontStyle: sel.fontStyle,
-              }}
-            />
-          </div>
+          <TextFontControl
+            selection={{
+              id: s.id,
+              type: s.type,
+              fontFamily: s.fontFamily,
+              fontStyle: s.fontStyle,
+            }}
+          />
 
           {/* Tamanho */}
           <div className="flex items-center gap-2">
@@ -329,7 +316,7 @@ export default function PropertiesPanel() {
               className="h-8 w-20"
               min={1}
               step={1}
-              value={sel.fontSize ?? 16}
+              value={s.fontSize ?? 16}
               onChange={(e) =>
                 updateProps({
                   fontSize: Math.max(1, Number(e.target.value) || 1),
@@ -361,7 +348,7 @@ export default function PropertiesPanel() {
           {/* Alinhamento */}
           <div className="flex items-center gap-1">
             <Button
-              variant={sel.align === "left" ? "default" : "outline"}
+              variant={s.align === "left" ? "default" : "outline"}
               size="icon"
               className="h-8 w-8"
               title="Alinhar à esquerda"
@@ -369,7 +356,7 @@ export default function PropertiesPanel() {
               <AlignLeft className="h-4 w-4" />
             </Button>
             <Button
-              variant={sel.align === "center" ? "default" : "outline"}
+              variant={s.align === "center" ? "default" : "outline"}
               size="icon"
               className="h-8 w-8"
               title="Centralizar"
@@ -377,7 +364,7 @@ export default function PropertiesPanel() {
               <AlignCenter className="h-4 w-4" />
             </Button>
             <Button
-              variant={sel.align === "right" ? "default" : "outline"}
+              variant={s.align === "right" ? "default" : "outline"}
               size="icon"
               className="h-8 w-8"
               title="Alinhar à direita"
@@ -385,7 +372,7 @@ export default function PropertiesPanel() {
               <AlignRight className="h-4 w-4" />
             </Button>
             <Button
-              variant={sel.align === "justify" ? "default" : "outline"}
+              variant={s.align === "justify" ? "default" : "outline"}
               size="icon"
               className="h-8 w-8"
               title="Justificar"
@@ -415,7 +402,7 @@ export default function PropertiesPanel() {
                       className="h-7 w-20"
                       step="0.1"
                       min="0.5"
-                      value={sel.lineHeight ?? 1.2}
+                      value={s.lineHeight ?? 1.2}
                       onChange={(e) =>
                         updateProps({
                           lineHeight: Math.max(
@@ -427,7 +414,7 @@ export default function PropertiesPanel() {
                     />
                   </div>
                   <Slider
-                    value={[sel.lineHeight ?? 1.2]}
+                    value={[s.lineHeight ?? 1.2]}
                     min={0.5}
                     max={3}
                     step={0.1}
@@ -445,7 +432,7 @@ export default function PropertiesPanel() {
                       inputMode="decimal"
                       className="h-7 w-20"
                       step="0.5"
-                      value={sel.letterSpacing ?? 0}
+                      value={s.letterSpacing ?? 0}
                       onChange={(e) =>
                         updateProps({
                           letterSpacing: Number(e.target.value) || 0,
@@ -454,7 +441,7 @@ export default function PropertiesPanel() {
                     />
                   </div>
                   <Slider
-                    value={[sel.letterSpacing ?? 0]}
+                    value={[s.letterSpacing ?? 0]}
                     min={-5}
                     max={20}
                     step={0.5}

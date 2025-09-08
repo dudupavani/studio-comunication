@@ -296,7 +296,7 @@ export default function ImagesPanel({
             <button
               aria-label="Remover imagem"
               title="Remover do armazenamento"
-              className="absolute left-1 top-1 h-5 w-5 rounded bg-red-500 text-white opacity-0 transition group-hover:opacity-100 flex items-center justify-center hover:bg-red-600"
+              className="absolute left-1 top-1 h-4 w-4 rounded bg-red-700 text-white opacity-0 transition group-hover:opacity-100 flex items-center justify-center hover:bg-red-600"
               onClick={(e) => {
                 e.stopPropagation(); // não inserir
                 handleRemoveItem(it);

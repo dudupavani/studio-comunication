@@ -27,7 +27,7 @@ import DnDContainer from "./DnDContainer";
 import ZoomControls from "./ZoomControls";
 import TransformerManager from "@/components/design-editor/TransformerManager";
 import MarqueeOverlay from "@/components/design-editor/layers/MarqueeOverlay";
-import { useSelectionSync } from "@/components/design-editor/hooks/useSelectionSync";
+
 import {
   isKonvaTextNode,
   applyTextPatchToNode,
@@ -41,22 +41,20 @@ import { DESIGN_DEFAULTS as DEFAULTS } from "@/components/design-editor/constant
 import {
   normalizeType,
   AnyShape,
-  ShapeBase,
   ShapeRect,
   ShapeCircle,
   ShapeTriangle,
   ShapeLine,
   ShapeStar,
   ShapeText,
-  isTextShapeStrict,
 } from "@/components/design-editor/types/shapes";
 
 import { useSelectionContext } from "@/components/design-editor/SelectionContext";
-import type { Selection } from "@/components/design-editor/types/selection";
-
 import InsertedImageNode, {
   type InsertedImageLike as InsertedImage,
 } from "@/components/design-editor/InsertedImageNode";
+
+import { useEditorState } from "@/components/design-editor/EditorStateContext";
 
 // ===== Tipo da pilha unificada (baixo -> topo) =====
 type StackItem = { kind: "shape" | "image"; id: string };
@@ -66,123 +64,71 @@ export default function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
 
-  // 🔹 viewport
+  // 🔹 viewport / zoom / pan
   const [viewport, setViewport] = useState({ width: 800, height: 600 });
-
-  // 🔹 zoom/posicionamento
   const [scale, setScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
 
-  // shapes/seleção (legado)
-  const [shapes, setShapes] = useState<AnyShape[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  // imagens
-  const [insertedImages, setInsertedImages] = useState<InsertedImage[]>([]);
-  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
-  const [selectedImageIds, setSelectedImageIds] = useState<string[]>([]);
-
-  // 🔹 pilha unificada (baixo -> topo)
-  const [stack, setStack] = useState<StackItem[]>([]);
+  // 🔹 estado global do editor
+  const {
+    shapes,
+    images: insertedImages,
+    stack,
+    addShape,
+    updateShape,
+    removeShape,
+    addImage,
+    updateImage,
+    removeImage,
+    bringForward,
+    sendBackward,
+  } = useEditorState();
 
   // refs de nós
   const shapeRefs = useRef<Record<string, Konva.Node | null>>({});
-  const imageRefs = useRef<Record<string, Konva.Group | null>>({});
+  const imageRefs = useRef<Record<string, Konva.Node | null>>({});
 
-  // refs auxiliares
+  // refs auxiliares para cálculos sem re-render
   const shapesRef = useRef<AnyShape[]>([]);
   const insertedImagesRef = useRef<InsertedImage[]>([]);
-  const selectedIdsRef = useRef<string[]>([]);
-  const selectedImageIdsRef = useRef<string[]>([]);
-  const selectedRef = useRef<string | null>(null);
 
   useEffect(() => {
     shapesRef.current = shapes;
   }, [shapes]);
-
   useEffect(() => {
     insertedImagesRef.current = insertedImages;
   }, [insertedImages]);
 
-  useEffect(() => {
-    selectedIdsRef.current = selectedIds;
-    selectedRef.current = selectedId;
-  }, [selectedIds, selectedId]);
-
-  useEffect(() => {
-    selectedImageIdsRef.current = selectedImageIds;
-  }, [selectedImageIds]);
-
   // Artboard
   const { artboard } = useArtboard();
 
-  // ✅ Selection Manager — via contexto
-  const { selection, actions } = useSelectionContext();
-  const sel = useMemo(
-    () => ({
-      select: actions.select,
-      toggle: actions.toggle,
-      replace: actions.replace,
-      clear: actions.clear,
-    }),
-    [actions.select, actions.toggle, actions.replace, actions.clear]
-  );
+  // ✅ Selection — via contexto
+  const { selection, actions: sel } = useSelectionContext();
+
+  const selectedShapeIds = useMemo<string[]>(() => {
+    if (!selection || selection.kind === "none") return [];
+    if (selection.kind === "shape" || selection.kind === "text")
+      return selection.ids;
+    if (selection.kind === "mixed")
+      return [...selection.shapeIds, ...(selection.textIds ?? [])];
+    return [];
+  }, [selection]);
+
+  const selectedImageIds = useMemo<string[]>(() => {
+    if (!selection || selection.kind === "none") return [];
+    if (selection.kind === "image") return selection.ids;
+    if (selection.kind === "mixed") return [...selection.imageIds];
+    return [];
+  }, [selection]);
+
+  const hasAnySelection =
+    selectedShapeIds.length > 0 || selectedImageIds.length > 0;
 
   // agenda mudanças de seleção para depois do render atual
   const scheduleSel = useCallback((fn: () => void) => {
     if (typeof queueMicrotask === "function") queueMicrotask(fn);
     else setTimeout(fn, 0);
   }, []);
-
-  // 🔧 espelha seleção no estado legado (compat)
-  const applySelectionToLegacy = useCallback((s: Selection) => {
-    switch (s.kind) {
-      case "none": {
-        setSelectedIds([]);
-        setSelectedId(null);
-        setSelectedImageId(null);
-        setSelectedImageIds([]);
-        break;
-      }
-      case "image": {
-        const last = s.ids.length ? s.ids[s.ids.length - 1] : null;
-        setSelectedImageId(last);
-        setSelectedImageIds(s.ids);
-        setSelectedIds([]);
-        setSelectedId(null);
-        break;
-      }
-      case "shape":
-      case "text": {
-        const ids = s.ids;
-        const last = ids.length ? ids[ids.length - 1] : null;
-        setSelectedIds(ids);
-        setSelectedId(last);
-        setSelectedImageId(null);
-        setSelectedImageIds([]);
-        break;
-      }
-      case "mixed": {
-        const shapeIds = [...s.shapeIds, ...(s.textIds ?? [])];
-        const lastShape = shapeIds.length
-          ? shapeIds[shapeIds.length - 1]
-          : null;
-        const lastImage = s.imageIds.length
-          ? s.imageIds[s.imageIds.length - 1]
-          : null;
-        setSelectedIds(shapeIds);
-        setSelectedId(lastShape);
-        setSelectedImageId(lastImage);
-        setSelectedImageIds(s.imageIds);
-        break;
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    applySelectionToLegacy(selection);
-  }, [selection, applySelectionToLegacy]);
 
   // medir container
   useEffect(() => {
@@ -225,124 +171,6 @@ export default function Canvas() {
     applyCenterFromScale(fitScale);
   }, [fitScale, applyCenterFromScale]);
 
-  // ========= Mantém a pilha unificada em sincronia com shapes/imagens =========
-  useEffect(() => {
-    setStack((prev) => {
-      const have = new Set(prev.map((k) => `${k.kind}:${k.id}`));
-      let changed = false;
-      const next = [...prev];
-
-      // adiciona faltantes (na ponta TOP)
-      for (const img of insertedImages) {
-        const key = `image:${img.id}`;
-        if (!have.has(key)) {
-          next.push({ kind: "image", id: img.id });
-          changed = true;
-        }
-      }
-      for (const s of shapes) {
-        const key = `shape:${s.id}`;
-        if (!have.has(key)) {
-          next.push({ kind: "shape", id: s.id });
-          changed = true;
-        }
-      }
-
-      // remove ids que não existem mais
-      const alive = new Set([
-        ...insertedImages.map((i) => `image:${i.id}`),
-        ...shapes.map((s) => `shape:${s.id}`),
-      ]);
-      const filtered = next.filter((k) =>
-        alive.has(`${k.kind}:${k.id}`)
-      ) as StackItem[];
-
-      if (filtered.length !== prev.length || changed) return filtered;
-      return prev;
-    });
-  }, [insertedImages, shapes]);
-
-  // ========= Evento de estado p/ painel de camadas =========
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const filenameFromPath = (p?: string) => {
-      if (!p) return "Imagem";
-      const base = p.split("/").pop() || "Imagem";
-      return base || "Imagem";
-    };
-
-    // mapeia stack -> itens com z (index é o z real; maior = topo)
-    const items = stack.map((k, idx) => {
-      if (k.kind === "image") {
-        const img = insertedImages.find((i) => i.id === k.id);
-        return {
-          id: k.id,
-          kind: "image" as const,
-          type: "image" as const,
-          name: filenameFromPath(img?.path),
-          isHidden: false,
-          isLocked: false,
-          z: idx,
-          layer: "UnifiedLayer" as const,
-        };
-      }
-      const s = shapes.find((x) => x.id === k.id);
-      return {
-        id: k.id,
-        kind: "shape" as const,
-        type: s?.type ?? "rect",
-        name: s?.name,
-        isHidden: !!s?.isHidden,
-        isLocked: !!s?.isLocked,
-        z: idx,
-        layer: "UnifiedLayer" as const,
-      };
-    });
-
-    const selectedItemIds = [...selectedIds, ...selectedImageIds];
-
-    const payload = {
-      items,
-      selectedItemIds,
-      selection,
-      // 🔁 Legado
-      selectedId,
-      shapes: shapes.map((s) => ({
-        id: s.id,
-        type: s.type,
-        name: s.name,
-        isHidden: !!s.isHidden,
-        isLocked: !!s.isLocked,
-      })),
-      images: insertedImages.map((img) => ({
-        id: img.id,
-        type: "image" as const,
-        name: filenameFromPath(img.path),
-        isHidden: false,
-        isLocked: false,
-      })),
-      selectedImageId,
-      selectedImageIds,
-    };
-
-    window.dispatchEvent(
-      new CustomEvent("design-editor:state", { detail: payload })
-    );
-  }, [
-    shapes,
-    selectedId,
-    selectedIds,
-    insertedImages,
-    selectedImageId,
-    selectedImageIds,
-    selection,
-    stack,
-  ]);
-
-  // sincroniza propriedades da seleção (usa selectedId como primário)
-  useSelectionSync({ selectedId, shapes });
-
   // helpers coords: Stage -> espaço local (artboard)
   const stageToLocal = useCallback(
     (sx: number, sy: number) => ({
@@ -353,42 +181,52 @@ export default function Canvas() {
   );
 
   // ===== Handlers de movimento individuais =====
-  const handleMoveShape = useCallback((id: string, x: number, y: number) => {
-    setShapes((prev) => prev.map((s) => (s.id === id ? { ...s, x, y } : s)));
-  }, []);
+  const handleMoveShape = useCallback(
+    (id: string, x: number, y: number) => {
+      updateShape(id, { x, y });
+    },
+    [updateShape]
+  );
 
-  const handleMoveImage = useCallback((id: string, x: number, y: number) => {
-    setInsertedImages((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, x, y } : it))
-    );
-  }, []);
+  const handleMoveImage = useCallback(
+    (id: string, x: number, y: number) => {
+      updateImage(id, { x, y });
+    },
+    [updateImage]
+  );
 
   // ===== Inserir shape no ponto =====
   function addShapeAt(type: AnyShape["type"], sx: number, sy: number) {
     const rid = (p: string) => `${p}-${crypto.randomUUID().slice(0, 8)}`;
     const { x, y } = stageToLocal(sx, sy);
-    let newShape: AnyShape;
 
+    const base = {
+      x,
+      y,
+      rotation: 0,
+      opacity: 1,
+      shadowBlur: 0,
+      shadowOffsetX: 0,
+      shadowOffsetY: 0,
+      isHidden: false,
+      isLocked: false,
+    };
+
+    let newShape: AnyShape;
     switch (type) {
       case "rect":
         newShape = {
           id: rid("rect"),
           type,
           name: "Retângulo",
+          ...base,
           x: x - 70,
           y: y - 50,
           width: 140,
           height: 100,
-          rotation: 0,
           fill: DEFAULTS.fill,
           stroke: DEFAULTS.stroke,
           strokeWidth: DEFAULTS.strokeWidth,
-          opacity: DEFAULTS.opacity,
-          shadowBlur: 0,
-          shadowOffsetX: 0,
-          shadowOffsetY: 0,
-          isHidden: false,
-          isLocked: false,
         } as any;
         break;
       case "circle":
@@ -396,19 +234,11 @@ export default function Canvas() {
           id: rid("circle"),
           type,
           name: "Círculo",
-          x,
-          y,
+          ...base,
           radius: 60,
-          rotation: 0,
           fill: DEFAULTS.fill,
           stroke: DEFAULTS.stroke,
           strokeWidth: DEFAULTS.strokeWidth,
-          opacity: DEFAULTS.opacity,
-          shadowBlur: 0,
-          shadowOffsetX: 0,
-          shadowOffsetY: 0,
-          isHidden: false,
-          isLocked: false,
         } as any;
         break;
       case "triangle":
@@ -416,19 +246,11 @@ export default function Canvas() {
           id: rid("triangle"),
           type,
           name: "Triângulo",
-          x,
-          y,
+          ...base,
           radius: 70,
-          rotation: 0,
           fill: DEFAULTS.fill,
           stroke: DEFAULTS.stroke,
           strokeWidth: DEFAULTS.strokeWidth,
-          opacity: DEFAULTS.opacity,
-          shadowBlur: 0,
-          shadowOffsetX: 0,
-          shadowOffsetY: 0,
-          isHidden: false,
-          isLocked: false,
         } as any;
         break;
       case "line":
@@ -436,19 +258,12 @@ export default function Canvas() {
           id: rid("line"),
           type,
           name: "Linha",
-          x,
-          y,
+          ...base,
           points: [-70, 0, 70, 0],
-          rotation: 0,
           stroke: DEFAULTS.line.stroke,
           strokeWidth: DEFAULTS.line.strokeWidth,
           opacity: DEFAULTS.line.opacity,
-          shadowBlur: 0,
-          shadowOffsetX: 0,
-          shadowOffsetY: 0,
           lineCap: "round",
-          isHidden: false,
-          isLocked: false,
         } as any;
         break;
       case "star":
@@ -456,21 +271,13 @@ export default function Canvas() {
           id: rid("star"),
           type,
           name: "Estrela",
-          x,
-          y,
+          ...base,
           numPoints: 5,
           innerRadius: 30,
           outerRadius: 70,
-          rotation: 0,
           fill: DEFAULTS.fill,
           stroke: DEFAULTS.stroke,
           strokeWidth: DEFAULTS.strokeWidth,
-          opacity: DEFAULTS.opacity,
-          shadowBlur: 0,
-          shadowOffsetX: 0,
-          shadowOffsetY: 0,
-          isHidden: false,
-          isLocked: false,
         } as any;
         break;
       default:
@@ -478,9 +285,7 @@ export default function Canvas() {
           id: rid("text"),
           type: "text",
           name: "Texto",
-          x,
-          y,
-          rotation: 0,
+          ...base,
           text: DEFAULTS.text.text,
           fontFamily: DEFAULTS.text.fontFamily,
           fontSize: DEFAULTS.text.fontSize,
@@ -494,84 +299,24 @@ export default function Canvas() {
           fill: DEFAULTS.text.fill,
           strokeWidth: 0,
           opacity: DEFAULTS.text.opacity,
-          shadowBlur: 0,
-          shadowOffsetX: 0,
-          shadowOffsetY: 0,
-          isHidden: false,
-          isLocked: false,
         } as any;
         break;
     }
 
-    setShapes((prev) => [...prev, newShape]);
-    // coloca no topo da pilha
-    setStack((prev) => [...prev, { kind: "shape", id: newShape.id }]);
+    addShape(newShape, true);
     scheduleSel(() => sel.select("shape", newShape.id));
   }
 
-  // update props (patch vindo de painéis)
-  useEffect(() => {
-    type Patch =
-      | Partial<Omit<ShapeText, "id" | "type">>
-      | Partial<Omit<ShapeRect, "id" | "type">>
-      | Partial<Omit<ShapeCircle, "id" | "type">>
-      | Partial<Omit<ShapeTriangle, "id" | "type">>
-      | Partial<Omit<ShapeLine, "id" | "type">>
-      | Partial<Omit<ShapeStar, "id" | "type">>
-      | Partial<Omit<ShapeBase, "id" | "type">>;
-
-    const applyPatch = (id: string, incoming: Patch | undefined) => {
-      const p = (incoming ?? {}) as Patch;
-      setShapes((prev) =>
-        prev.map((s) => {
-          if (s.id !== id) return s;
-          switch (s.type) {
-            case "text": {
-              const node = shapeRefs.current[id];
-              const pt = p as Partial<Omit<ShapeText, "id" | "type">>;
-              if (isKonvaTextNode(node)) applyTextPatchToNode(node, pt);
-              return { ...s, ...pt } as any;
-            }
-            default:
-              return { ...s, ...(p as any) } as any;
-          }
-        })
-      );
-    };
-
-    const onUpdateProps = (ev: Event) => {
-      const e = ev as CustomEvent<{ id?: string; patch?: Patch }>;
-      const id = e.detail?.id ?? selectedRef.current;
-      if (!id) return;
-      applyPatch(id, e.detail?.patch);
-    };
-
-    const onUpdateText = (ev: Event) => {
-      const e = ev as CustomEvent<{ id?: string; patch?: Patch }>;
-      const id = e.detail?.id ?? selectedRef.current;
-      if (!id) return;
-      applyPatch(id, e.detail?.patch);
-    };
-
-    window.addEventListener(
-      "design-editor:update-props",
-      onUpdateProps as EventListener
-    );
-    window.addEventListener(
-      "design-editor:update-text",
-      onUpdateText as EventListener
-    );
-    return () => {
-      window.removeEventListener(
-        "design-editor:update-props",
-        onUpdateProps as EventListener
-      );
-      window.removeEventListener(
-        "design-editor:update-text",
-        onUpdateText as EventListener
-      );
-    };
-  }, []);
+  // ===== Receber patch vindo dos painéis (sem event-bus) =====
+  // -> O painel agora chama updateShape via contexto diretamente.
+  //    Mantemos este util só para patches de texto aplicados no Konva Node.
+  const applyTextPatchLocalNode = useCallback(
+    (id: string, patch: Partial<ShapeText>) => {
+      const node = shapeRefs.current[id];
+      if (isKonvaTextNode(node)) applyTextPatchToNode(node, patch);
+    },
+    []
+  );
 
   // pan com espaço
   const isPanningRef = useRef(false);
@@ -644,32 +389,31 @@ export default function Canvas() {
       }
 
       if (e.key === "Delete" || e.key === "Backspace") {
-        const imgIds = selectedImageIdsRef.current;
+        const imgIds = [...selectedImageIds];
         if (imgIds.length > 0) {
           e.preventDefault();
-          setInsertedImages((prev) =>
-            prev.filter((it) => !imgIds.includes(it.id))
-          );
-          setStack((prev) =>
-            prev.filter((k) => !(k.kind === "image" && imgIds.includes(k.id)))
-          );
+          for (const id of imgIds) removeImage(id);
           scheduleSel(() => sel.clear());
           return;
         }
-        const ids = selectedIdsRef.current;
+        const ids = [...selectedShapeIds];
         if (!ids.length) return;
         e.preventDefault();
-        setShapes((prev) => prev.filter((s) => !ids.includes(s.id)));
-        setStack((prev) =>
-          prev.filter((k) => !(k.kind === "shape" && ids.includes(k.id)))
-        );
+        for (const id of ids) removeShape(id);
         scheduleSel(() => sel.clear());
       }
     };
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [scheduleSel, sel]);
+  }, [
+    scheduleSel,
+    sel,
+    selectedImageIds,
+    selectedShapeIds,
+    removeImage,
+    removeShape,
+  ]);
 
   // marquee
   type Marquee = {
@@ -774,7 +518,7 @@ export default function Canvas() {
   const handleChangeScale = (s: number) => applyCenterFromScale(s);
   const handleFit = () => applyCenterFromScale(fitScale);
 
-  // ✅ Inserir imagem recebida do EventBridge no centro da artboard
+  // ✅ Inserir imagem (EventBridge) no centro da artboard
   const handleInsertImage = useCallback(
     ({ url, path }: { url: string; path?: string }) => {
       const id = `img-${crypto.randomUUID().slice(0, 8)}`;
@@ -796,8 +540,7 @@ export default function Canvas() {
       const { x, y } = stageToLocal(sx, sy);
       const pathSafe = path ?? "";
 
-      setInsertedImages((prev) => [
-        ...prev,
+      addImage(
         {
           id,
           url,
@@ -809,9 +552,9 @@ export default function Canvas() {
           rotation: 0,
           opacity: 1,
         },
-      ]);
+        true
+      );
 
-      setStack((prev) => [...prev, { kind: "image", id }]);
       scheduleSel(() => sel.select("image", id));
     },
     [
@@ -823,19 +566,9 @@ export default function Canvas() {
       stageToLocal,
       scheduleSel,
       sel,
+      addImage,
     ]
   );
-
-  // ===== Derivados de seleção (nós Konva) =====
-  const selectedNodes = useMemo(() => {
-    const nodes: (Konva.Node | null)[] = [];
-    for (const id of selectedImageIds)
-      nodes.push(imageRefs.current[id] ?? null);
-    for (const id of selectedIds) nodes.push(shapeRefs.current[id] ?? null);
-    return nodes.filter(Boolean) as Konva.Node[];
-  }, [selectedIds, selectedImageIds]);
-
-  const hasOnlyImages = selectedImageIds.length > 0 && selectedIds.length === 0;
 
   // ===== Drag em grupo (multi-drag) =====
   const multiDragRef = useRef<{
@@ -875,19 +608,14 @@ export default function Canvas() {
     };
 
     const onDragStart = (e: Konva.KonvaEventObject<any>) => {
-      if (
-        selectedIdsRef.current.length + selectedImageIdsRef.current.length <=
-        1
-      )
-        return;
+      if (selectedShapeIds.length + selectedImageIds.length <= 1) return;
 
       const driverNode = e.target as Konva.Node;
 
       const currentSelectedNodes: (Konva.Node | null)[] = [];
-      for (const imgId of selectedImageIdsRef.current) {
+      for (const imgId of selectedImageIds)
         currentSelectedNodes.push(imageRefs.current[imgId] ?? null);
-      }
-      for (const id of selectedIdsRef.current)
+      for (const id of selectedShapeIds)
         currentSelectedNodes.push(shapeRefs.current[id] ?? null);
 
       if (!isNodeOneOf(driverNode, currentSelectedNodes)) return;
@@ -896,7 +624,7 @@ export default function Canvas() {
       let driverId: string | null = null;
       let driverType: "shape" | "image" | null = null;
 
-      for (const imgId of selectedImageIdsRef.current) {
+      for (const imgId of selectedImageIds) {
         const imgNode = imageRefs.current[imgId] ?? null;
         if (isNodeOneOf(driverNode, [imgNode])) {
           driverId = imgId;
@@ -905,7 +633,7 @@ export default function Canvas() {
         }
       }
       if (!driverId) {
-        for (const sid of selectedIdsRef.current) {
+        for (const sid of selectedShapeIds) {
           const sNode = shapeRefs.current[sid] ?? null;
           if (isNodeOneOf(driverNode, [sNode])) {
             driverId = sid;
@@ -918,13 +646,13 @@ export default function Canvas() {
 
       // snapshot das posições iniciais
       const shapesStart: Record<string, { x: number; y: number }> = {};
-      for (const sid of selectedIdsRef.current) {
+      for (const sid of selectedShapeIds) {
         const s = shapesRef.current.find((sh) => sh.id === sid);
         if (s) shapesStart[sid] = { x: s.x, y: s.y };
       }
 
       const imagesStart: Record<string, { x: number; y: number }> = {};
-      for (const imgId of selectedImageIdsRef.current) {
+      for (const imgId of selectedImageIds) {
         const img = insertedImagesRef.current.find((i) => i.id === imgId);
         if (img) imagesStart[img.id] = { x: img.x, y: img.y };
       }
@@ -982,18 +710,16 @@ export default function Canvas() {
       const dy = driverNode.y() - (multiDragRef.current.driverStart?.y ?? 0);
 
       // persistir no estado (um único re-render)
-      setShapes((prev) =>
-        prev.map((s) => {
-          const start = multiDragRef.current.shapesStart[s.id];
-          return start ? { ...s, x: start.x + dx, y: start.y + dy } : s;
-        })
-      );
-      setInsertedImages((prev) =>
-        prev.map((img) => {
-          const start = multiDragRef.current.imagesStart[img.id];
-          return start ? { ...img, x: start.x + dx, y: start.y + dy } : img;
-        })
-      );
+      for (const [id, start] of Object.entries(
+        multiDragRef.current.shapesStart
+      )) {
+        updateShape(id, { x: start.x + dx, y: start.y + dy });
+      }
+      for (const [id, start] of Object.entries(
+        multiDragRef.current.imagesStart
+      )) {
+        updateImage(id, { x: start.x + dx, y: start.y + dy });
+      }
 
       multiDragRef.current.active = false;
     };
@@ -1007,7 +733,7 @@ export default function Canvas() {
       stage.off("dragmove", onDragMove);
       stage.off("dragend", onDragEnd);
     };
-  }, []);
+  }, [selectedShapeIds, selectedImageIds, updateShape, updateImage]);
 
   // ===== Renderer de SHAPES (num único Layer) =====
   const ShapeNode = ({ s }: { s: AnyShape }) => {
@@ -1140,27 +866,6 @@ export default function Canvas() {
     );
   };
 
-  // ===== Handlers de reordenação (um passo) na pilha =====
-  const bringForwardInStack = (id: string) => {
-    setStack((prev) => {
-      const idx = prev.findIndex((k) => k.id === id);
-      if (idx === -1 || idx === prev.length - 1) return prev;
-      const copy = [...prev];
-      [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
-      return copy;
-    });
-  };
-
-  const sendBackwardInStack = (id: string) => {
-    setStack((prev) => {
-      const idx = prev.findIndex((k) => k.id === id);
-      if (idx <= 0) return prev;
-      const copy = [...prev];
-      [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-      return copy;
-    });
-  };
-
   // ===== Stage =====
   return (
     <div
@@ -1170,7 +875,7 @@ export default function Canvas() {
       onMouseMove={onContainerMouseMove}
       onMouseUp={onContainerMouseUp}
       onMouseLeave={onContainerMouseUp}>
-      {/* Bridge centraliza listeners e API global */}
+      {/* Bridge: mantém compatibilidade com botões/atalhos externos */}
       <EventBridge
         onCreate={(type, coords) => {
           const stage = stageRef.current;
@@ -1200,14 +905,8 @@ export default function Canvas() {
             (img) => img.id === id
           );
 
-          if (isShape) {
-            scheduleSel(() => sel.select("shape", id));
-            return;
-          }
-          if (isImage) {
-            scheduleSel(() => sel.select("image", id));
-            return;
-          }
+          if (isShape) scheduleSel(() => sel.select("shape", id));
+          else if (isImage) scheduleSel(() => sel.select("image", id));
         }}
         onDelete={(id) => {
           if (id) {
@@ -1216,56 +915,39 @@ export default function Canvas() {
               (img) => img.id === id
             );
             if (isShape) {
-              setShapes((prev) => prev.filter((s) => s.id !== id));
-              setStack((prev) =>
-                prev.filter((k) => !(k.kind === "shape" && k.id === id))
-              );
+              removeShape(id);
               scheduleSel(() => sel.clear());
             } else if (isImage) {
-              setInsertedImages((prev) => prev.filter((img) => img.id !== id));
-              setStack((prev) =>
-                prev.filter((k) => !(k.kind === "image" && k.id === id))
-              );
+              removeImage(id);
               scheduleSel(() => sel.clear());
             }
             return;
           }
 
-          // sem id: deleta toda a seleção atual
-          const imgIds = selectedImageIdsRef.current;
-          if (imgIds.length > 0) {
-            setInsertedImages((prev) =>
-              prev.filter((img) => !imgIds.includes(img.id))
-            );
-            setStack((prev) =>
-              prev.filter((k) => !(k.kind === "image" && imgIds.includes(k.id)))
-            );
+          // sem id: limpa seleção atual
+          if (selectedImageIds.length > 0) {
+            for (const imgId of selectedImageIds) removeImage(imgId);
             scheduleSel(() => sel.clear());
             return;
           }
 
-          const targetIds = selectedIdsRef.current;
-          if (!targetIds.length) return;
-          setShapes((prev) => prev.filter((s) => !targetIds.includes(s.id)));
-          setStack((prev) =>
-            prev.filter(
-              (k) => !(k.kind === "shape" && targetIds.includes(k.id))
-            )
-          );
-          scheduleSel(() => sel.clear());
+          if (selectedShapeIds.length > 0) {
+            for (const sid of selectedShapeIds) removeShape(sid);
+            scheduleSel(() => sel.clear());
+          }
         }}
         onToggleHidden={(id) => {
-          setShapes((prev) =>
-            prev.map((s) => (s.id === id ? { ...s, isHidden: !s.isHidden } : s))
-          );
+          const s = shapesRef.current.find((sh) => sh.id === id);
+          if (!s) return;
+          updateShape(id, { isHidden: !s.isHidden });
         }}
         onToggleLocked={(id) => {
-          setShapes((prev) =>
-            prev.map((s) => (s.id === id ? { ...s, isLocked: !s.isLocked } : s))
-          );
+          const s = shapesRef.current.find((sh) => sh.id === id);
+          if (!s) return;
+          updateShape(id, { isLocked: !s.isLocked });
         }}
-        onBringForward={(id) => bringForwardInStack(id)}
-        onSendBackward={(id) => sendBackwardInStack(id)}
+        onBringForward={(id) => bringForward(id)}
+        onSendBackward={(id) => sendBackward(id)}
         onInsertImage={handleInsertImage}
       />
 
@@ -1397,13 +1079,7 @@ export default function Canvas() {
                     });
                   }}
                   onMove={handleMoveImage}
-                  onTransform={(id, patch) =>
-                    setInsertedImages((prev) =>
-                      prev.map((it) =>
-                        it.id === id ? { ...it, ...patch } : it
-                      )
-                    )
-                  }
+                  onTransform={(id, patch) => updateImage(id, patch)}
                   registerRef={(id, node) => {
                     imageRefs.current[id] = node;
                   }}
@@ -1420,13 +1096,10 @@ export default function Canvas() {
         </Layer>
 
         {/* 🔧 Overlay (Transformer + Marquee) */}
-        {(selectedNodes.length > 0 || marquee.active) && (
+        {(hasAnySelection || marquee.active) && (
           <Layer name="OverlayLayer" listening={false}>
-            {selectedNodes.length > 0 && (
-              <TransformerManager
-                selectedNodes={selectedNodes}
-                hasOnlyImages={hasOnlyImages}
-              />
+            {hasAnySelection && (
+              <TransformerManager shapeRefs={shapeRefs} imageRefs={imageRefs} />
             )}
             <MarqueeOverlay marquee={marquee} />
           </Layer>

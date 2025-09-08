@@ -1,7 +1,7 @@
 // src/components/design-editor/LayersPanel.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Eye,
@@ -21,9 +21,10 @@ import {
   Image as IconImage,
 } from "lucide-react";
 import clsx from "clsx";
-import type { Selection } from "@/components/design-editor/types/selection";
+import { useSelectionContext } from "@/components/design-editor/SelectionContext";
+import { useEditorState } from "@/components/design-editor/EditorStateContext";
 
-/** Item de camada vindo do Canvas */
+/** Item de camada renderizado */
 type Item = {
   id: string;
   type: string;
@@ -31,16 +32,7 @@ type Item = {
   name?: string;
   isHidden?: boolean;
   isLocked?: boolean;
-  /** ordem de empilhamento (maior = mais no topo) */
-  z?: number;
-  /** nome lógico da layer (p.ex. "ImagesLayer" | "ShapesLayer") — não usado aqui, mas preservado */
-  layer?: string;
-};
-
-/** Mensagem de estado vinda do Canvas */
-type EditorStateMsg = {
-  items: Item[];
-  selection: Selection;
+  z: number; // ordem empilhamento (0 = base)
 };
 
 type Props = {
@@ -48,53 +40,94 @@ type Props = {
 };
 
 export default function LayersPanel({ className }: Props) {
-  const [items, setItems] = useState<Item[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { selection, actions: sel } = useSelectionContext();
+  const {
+    shapes,
+    images,
+    stack,
+    updateShape,
+    removeShape,
+    removeImage,
+    bringForward,
+    sendBackward,
+  } = useEditorState();
 
-  useEffect(() => {
-    const onState = (ev: Event) => {
-      const e = ev as CustomEvent<EditorStateMsg>;
-      const detail = e.detail;
-      if (!detail) return;
-
-      if (Array.isArray(detail.items)) setItems(detail.items);
-
-      const { selection } = detail;
-      if (!selection) return;
-
-      if (selection.kind === "none") {
-        setSelectedIds([]);
-      } else if (selection.kind === "mixed") {
-        setSelectedIds([
-          ...selection.shapeIds,
-          ...(selection.textIds ?? []),
-          ...selection.imageIds,
-        ]);
-      } else {
-        setSelectedIds(selection.ids);
-      }
+  // itens ordenados do topo → base (z desc)
+  const orderedItems: Item[] = useMemo(() => {
+    const filenameFromPath = (p?: string) => {
+      if (!p) return "Imagem";
+      const base = p.split("/").pop() || "Imagem";
+      return base || "Imagem";
     };
 
-    window.addEventListener("design-editor:state", onState as EventListener);
-    return () =>
-      window.removeEventListener(
-        "design-editor:state",
-        onState as EventListener
-      );
-  }, []);
+    // z = index do stack (base -> topo). Para ordenar topo->base, vamos usar desc na renderização.
+    const built = stack.map((k, idx) => {
+      if (k.kind === "image") {
+        const img = images.find((i) => i.id === k.id);
+        return {
+          id: k.id,
+          kind: "image" as const,
+          type: "image",
+          name: filenameFromPath(img?.path),
+          isHidden: false,
+          isLocked: false,
+          z: idx,
+        };
+      }
+      const s = shapes.find((x) => x.id === k.id);
+      return {
+        id: k.id,
+        kind: "shape" as const,
+        type: s?.type ?? "rect",
+        name: s?.name,
+        isHidden: !!s?.isHidden,
+        isLocked: !!s?.isLocked,
+        z: idx,
+      };
+    });
 
-  // === Event-bus helpers ===
-  const dispatch = (name: string, detail: Record<string, any>) =>
-    window.dispatchEvent(new CustomEvent(`design-editor:${name}`, { detail }));
+    return [...built].sort((a, b) => (b.z ?? 0) - (a.z ?? 0));
+  }, [stack, shapes, images]);
 
-  const selectItem = (id: string) => dispatch("select", { id });
-  const toggleHidden = (id: string) => dispatch("toggle-hidden", { id });
-  const toggleLocked = (id: string) => dispatch("toggle-locked", { id });
-  const bringForward = (id: string) => dispatch("bring-forward", { id });
-  const sendBackward = (id: string) => dispatch("send-backward", { id });
-  const remove = (id: string) => dispatch("delete", { id });
+  // ids selecionados para destacar na lista
+  const selectedIds = useMemo<string[]>(() => {
+    if (!selection || selection.kind === "none") return [];
+    if (selection.kind === "image") return selection.ids;
+    if (selection.kind === "shape" || selection.kind === "text")
+      return selection.ids;
+    if (selection.kind === "mixed")
+      return [
+        ...selection.imageIds,
+        ...selection.shapeIds,
+        ...(selection.textIds ?? []),
+      ];
+    return [];
+  }, [selection]);
 
-  // Ícone por tipo (shapes) e imagem
+  // === Ações ===
+  const selectItem = (id: string) => {
+    const isShape = shapes.some((s) => s.id === id);
+    const isImage = images.some((i) => i.id === id);
+    if (isShape) sel.select("shape", id);
+    else if (isImage) sel.select("image", id);
+  };
+  const toggleHidden = (id: string) => {
+    const s = shapes.find((sh) => sh.id === id);
+    if (!s) return;
+    updateShape(id, { isHidden: !s.isHidden });
+  };
+  const toggleLocked = (id: string) => {
+    const s = shapes.find((sh) => sh.id === id);
+    if (!s) return;
+    updateShape(id, { isLocked: !s.isLocked });
+  };
+  const bringFwd = (id: string) => bringForward(id);
+  const sendBack = (id: string) => sendBackward(id);
+  const remove = (id: string) => {
+    if (shapes.some((s) => s.id === id)) removeShape(id);
+    else if (images.some((i) => i.id === id)) removeImage(id);
+  };
+
   const typeIcon = useMemo(
     () => ({
       text: IconText,
@@ -109,11 +142,6 @@ export default function LayersPanel({ className }: Props) {
   );
 
   const isSelected = (id: string) => selectedIds.includes(id);
-
-  // ✅ Ordena visualmente do topo → base (z desc; undefined vira 0)
-  const orderedItems = useMemo(() => {
-    return [...items].sort((a, b) => (b.z ?? 0) - (a.z ?? 0));
-  }, [items]);
 
   return (
     <aside className={clsx("flex h-full w-full flex-col gap-2 p-2", className)}>
@@ -140,11 +168,11 @@ export default function LayersPanel({ className }: Props) {
             const Icon = typeIcon[iconKey] || IconRect;
             const selected = isSelected(it.id);
 
-            // Controles granulares
-            const canReorder = true; // reordenar habilitado p/ todos
-            const canRemove = true; // remover habilitado p/ todos
-            const canHide = !isImage; // manter ocultar só p/ shapes/text
-            const canLock = !isImage; // manter bloquear só p/ shapes/text
+            // Controles
+            const canReorder = true;
+            const canRemove = true;
+            const canHide = !isImage; // ocultar apenas para shapes/text
+            const canLock = !isImage; // bloquear apenas para shapes/text
 
             return (
               <li
@@ -169,7 +197,7 @@ export default function LayersPanel({ className }: Props) {
                     disabled={!canReorder}
                     onClick={(e) => {
                       e.stopPropagation();
-                      bringForward(it.id);
+                      bringFwd(it.id);
                     }}>
                     <ChevronUp size={16} className="text-gray-500" />
                   </Button>
@@ -184,7 +212,7 @@ export default function LayersPanel({ className }: Props) {
                     disabled={!canReorder}
                     onClick={(e) => {
                       e.stopPropagation();
-                      sendBackward(it.id);
+                      sendBack(it.id);
                     }}>
                     <ChevronDown size={16} className="text-gray-500" />
                   </Button>
@@ -197,13 +225,7 @@ export default function LayersPanel({ className }: Props) {
                   onClick={() => selectItem(it.id)}
                   className="flex min-w-0 w-full !px-0 justify-start items-center gap-2 text-left hover:bg-transparent"
                   title={it.name || it.id}>
-                  <Icon
-                    size={16}
-                    className={clsx(
-                      "shrink-0",
-                      it.isHidden ? "opacity-40" : "opacity-90"
-                    )}
-                  />
+                  <Icon size={16} className="shrink-0" />
                   <span
                     className={clsx(
                       "truncate text-sm font-medium",
