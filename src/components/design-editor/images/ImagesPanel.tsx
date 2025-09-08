@@ -278,10 +278,13 @@ export default function ImagesPanel({
               }
             }}>
             {it.url ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={it.url}
+                alt={it.name || ""}
                 className="h-full w-full object-cover"
                 loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-[11px] text-muted-foreground">

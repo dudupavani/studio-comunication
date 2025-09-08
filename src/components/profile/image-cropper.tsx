@@ -1,3 +1,4 @@
+// src/components/profile/image-cropper.tsx
 "use client";
 
 import { useState, useRef } from "react";
@@ -201,12 +202,15 @@ export function ImageCropper({
               aspect={aspect}
               minWidth={160}
               minHeight={160}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 ref={imgRef}
-                alt="Crop me"
+                alt="Prévia de recorte"
                 src={imgSrc}
                 onLoad={onImageLoad}
                 style={{ maxHeight: "60vh" }}
+                loading="lazy"
+                decoding="async"
               />
             </ReactCrop>
           )}

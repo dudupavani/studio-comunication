@@ -1,7 +1,7 @@
 // src/components/design-editor/EventBridge.tsx
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { on } from "@/components/design-editor/utils/event-bus";
 
 /**
@@ -43,14 +43,10 @@ export default function EventBridge({
   // Sequência para ordenar logs de debug
   const seqRef = useRef(0);
 
-  // Helper para decidir se o debug está ativo (lido em tempo real)
-  const isDebugOn = () =>
-    typeof window !== "undefined" &&
-    window?.localStorage?.getItem("design-editor:debug") === "1";
-
-  // Console log estilizado
-  const dlog = (title: string, payload: any) => {
-    if (!isDebugOn()) return;
+  // Console log estilizado (estável; lê localStorage a cada chamada)
+  const dlog = useCallback((title: string, payload: any) => {
+    if (typeof window === "undefined") return;
+    if (window.localStorage?.getItem("design-editor:debug") !== "1") return;
     const seq = ++seqRef.current;
     const ts = new Date().toISOString();
     // eslint-disable-next-line no-console
@@ -63,41 +59,84 @@ export default function EventBridge({
       "color:#64748b",
       payload
     );
-  };
+  }, []);
 
   useEffect(() => {
-    // ===== Comandos vindos do Shell =====
+    // Helper para evitar double-handling quando ambos (window + event-bus) estiverem ativos
+    const alreadyHandled = (ev: any) => ev && ev._handledByEventBridge;
+    const markHandled = (ev: any) => {
+      if (ev) ev._handledByEventBridge = true;
+    };
+
+    // ===== Comandos vindos do Shell (via window CustomEvent) =====
     const onSelectEv = (ev: Event) => {
+      if (alreadyHandled(ev)) return;
+      markHandled(ev);
       const e = ev as CustomEvent<{ id?: string | null }>;
       onSelect((e.detail?.id ?? null) as string | null);
     };
 
     const onDeleteEv = (ev: Event) => {
+      if (alreadyHandled(ev)) return;
+      markHandled(ev);
       const e = ev as CustomEvent<{ id?: string | null }>;
       onDelete(e.detail?.id ?? null);
     };
 
     const onToggleHiddenEv = (ev: Event) => {
+      if (alreadyHandled(ev)) return;
+      markHandled(ev);
       const e = ev as CustomEvent<{ id: string }>;
       if (e.detail?.id) onToggleHidden(e.detail.id);
     };
 
     const onToggleLockedEv = (ev: Event) => {
+      if (alreadyHandled(ev)) return;
+      markHandled(ev);
       const e = ev as CustomEvent<{ id: string }>;
       if (e.detail?.id) onToggleLocked(e.detail.id);
     };
 
     const onBringForwardEv = (ev: Event) => {
+      if (alreadyHandled(ev)) return;
+      markHandled(ev);
       const e = ev as CustomEvent<{ id: string }>;
       if (e.detail?.id) onBringForward(e.detail.id);
     };
 
     const onSendBackwardEv = (ev: Event) => {
+      if (alreadyHandled(ev)) return;
+      markHandled(ev);
       const e = ev as CustomEvent<{ id: string }>;
       if (e.detail?.id) onSendBackward(e.detail.id);
     };
 
-    // ===== Listeners baseados em window (mantidos) =====
+    // 🔁 Compat: criação via window CustomEvent
+    const onCreateShapeWin = (ev: Event) => {
+      if (alreadyHandled(ev)) return;
+      markHandled(ev);
+      const e = ev as CustomEvent<{
+        type?: ShapeKind | string;
+        x?: number;
+        y?: number;
+      }>;
+      const { type, x, y } = e.detail || {};
+      onCreate(type ?? "text", { x, y });
+    };
+
+    // 🔁 Compat: insert-image via window CustomEvent
+    const onInsertImageWin = (ev: Event) => {
+      if (alreadyHandled(ev)) return;
+      markHandled(ev);
+      const e = ev as CustomEvent<InsertImageDetail>;
+      const detail = e.detail;
+      if (detail?.url) {
+        dlog("insert-image(win)", detail);
+        onInsertImage?.(detail);
+      }
+    };
+
+    // ===== Listeners baseados em window (mantidos/expandido) =====
     window.addEventListener(
       "design-editor:select",
       onSelectEv as EventListener
@@ -122,17 +161,29 @@ export default function EventBridge({
       "design-editor:send-backward",
       onSendBackwardEv as EventListener
     );
+    window.addEventListener(
+      "design-editor:create-shape",
+      onCreateShapeWin as EventListener
+    );
+    window.addEventListener(
+      "design-editor:insert-image",
+      onInsertImageWin as EventListener
+    );
 
-    // ===== NOVO: listeners tipados via event-bus =====
+    // ===== NOVO: listeners tipados via event-bus (com guarda anti-duplicação) =====
     const offCreate = on("design-editor:create-shape", (ev) => {
-      const { type, x, y } = ev.detail;
-      onCreate(type ?? "text", { x, y });
+      if (alreadyHandled(ev)) return;
+      markHandled(ev);
+      const { type, x, y } = (ev as any).detail || {};
+      onCreate((type as ShapeKind | string) ?? "text", { x, y });
     });
 
     const offInsertImage = on("design-editor:insert-image", (ev) => {
-      const detail = ev.detail as InsertImageDetail;
+      if (alreadyHandled(ev)) return;
+      markHandled(ev);
+      const detail = (ev as any).detail as InsertImageDetail;
       if (detail?.url) {
-        dlog("insert-image", detail);
+        dlog("insert-image(bus)", detail);
         onInsertImage?.(detail);
       }
     });
@@ -234,6 +285,14 @@ export default function EventBridge({
         "design-editor:send-backward",
         onSendBackwardEv as EventListener
       );
+      window.removeEventListener(
+        "design-editor:create-shape",
+        onCreateShapeWin as EventListener
+      );
+      window.removeEventListener(
+        "design-editor:insert-image",
+        onInsertImageWin as EventListener
+      );
 
       window.removeEventListener(
         "design-editor:update-props",
@@ -265,6 +324,7 @@ export default function EventBridge({
     onBringForward,
     onSendBackward,
     onInsertImage,
+    dlog, // estável (useCallback), incluído para satisfazer exhaustive-deps
   ]);
 
   return null;

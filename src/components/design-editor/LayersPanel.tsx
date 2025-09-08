@@ -31,6 +31,10 @@ type Item = {
   name?: string;
   isHidden?: boolean;
   isLocked?: boolean;
+  /** ordem de empilhamento (maior = mais no topo) */
+  z?: number;
+  /** nome lógico da layer (p.ex. "ImagesLayer" | "ShapesLayer") — não usado aqui, mas preservado */
+  layer?: string;
 };
 
 /** Mensagem de estado vinda do Canvas */
@@ -53,12 +57,8 @@ export default function LayersPanel({ className }: Props) {
       const detail = e.detail;
       if (!detail) return;
 
-      // Atualiza a lista de itens (camadas)
-      if (Array.isArray(detail.items)) {
-        setItems(detail.items);
-      }
+      if (Array.isArray(detail.items)) setItems(detail.items);
 
-      // Deriva os IDs selecionados a partir do objeto de seleção unificado
       const { selection } = detail;
       if (!selection) return;
 
@@ -110,6 +110,11 @@ export default function LayersPanel({ className }: Props) {
 
   const isSelected = (id: string) => selectedIds.includes(id);
 
+  // ✅ Ordena visualmente do topo → base (z desc; undefined vira 0)
+  const orderedItems = useMemo(() => {
+    return [...items].sort((a, b) => (b.z ?? 0) - (a.z ?? 0));
+  }, [items]);
+
   return (
     <aside className={clsx("flex h-full w-full flex-col gap-2 p-2", className)}>
       <header className="mb-1 flex items-center justify-between px-1">
@@ -118,7 +123,7 @@ export default function LayersPanel({ className }: Props) {
 
       <div className="min-h-0 flex-1 overflow-auto">
         <ul className="flex flex-col gap-1">
-          {items.length === 0 && (
+          {orderedItems.length === 0 && (
             <div className="flex flex-col items-center gap-4 px-2 py-4 text-center text-xs text-muted-foreground">
               <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white shadow-md">
                 <Layers2 size={18} />
@@ -129,14 +134,17 @@ export default function LayersPanel({ className }: Props) {
             </div>
           )}
 
-          {items.map((it) => {
+          {orderedItems.map((it) => {
             const isImage = it.kind === "image";
             const iconKey = it.type as keyof typeof typeIcon;
             const Icon = typeIcon[iconKey] || IconRect;
-
             const selected = isSelected(it.id);
-            // TODO: Habilitar ações para imagens no futuro
-            const actionsDisabled = isImage;
+
+            // Controles granulares
+            const canReorder = true; // reordenar habilitado p/ todos
+            const canRemove = true; // remover habilitado p/ todos
+            const canHide = !isImage; // manter ocultar só p/ shapes/text
+            const canLock = !isImage; // manter bloquear só p/ shapes/text
 
             return (
               <li
@@ -154,11 +162,11 @@ export default function LayersPanel({ className }: Props) {
                     size="icon"
                     className="h-6 w-6"
                     title={
-                      actionsDisabled
-                        ? "Reordenar indisponível para imagens"
-                        : "Trazer para frente"
+                      canReorder
+                        ? "Trazer para frente"
+                        : "Reordenar indisponível"
                     }
-                    disabled={actionsDisabled}
+                    disabled={!canReorder}
                     onClick={(e) => {
                       e.stopPropagation();
                       bringForward(it.id);
@@ -171,11 +179,9 @@ export default function LayersPanel({ className }: Props) {
                     size="icon"
                     className="h-6 w-6"
                     title={
-                      actionsDisabled
-                        ? "Reordenar indisponível para imagens"
-                        : "Enviar para trás"
+                      canReorder ? "Enviar para trás" : "Reordenar indisponível"
                     }
-                    disabled={actionsDisabled}
+                    disabled={!canReorder}
                     onClick={(e) => {
                       e.stopPropagation();
                       sendBackward(it.id);
@@ -209,18 +215,19 @@ export default function LayersPanel({ className }: Props) {
 
                 {/* Ações */}
                 <div className="flex shrink-0 items-center">
+                  {/* Ocultar/Mostrar */}
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6"
                     title={
-                      actionsDisabled
-                        ? "Ocultar/mostrar indisponível para imagens"
-                        : it.isHidden
-                        ? "Mostrar"
-                        : "Ocultar"
+                      canHide
+                        ? it.isHidden
+                          ? "Mostrar"
+                          : "Ocultar"
+                        : "Ocultar/mostrar indisponível"
                     }
-                    disabled={actionsDisabled}
+                    disabled={!canHide}
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleHidden(it.id);
@@ -232,18 +239,19 @@ export default function LayersPanel({ className }: Props) {
                     )}
                   </Button>
 
+                  {/* Bloquear/Desbloquear */}
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6"
                     title={
-                      actionsDisabled
-                        ? "Bloquear/desbloquear indisponível para imagens"
-                        : it.isLocked
-                        ? "Desbloquear"
-                        : "Bloquear"
+                      canLock
+                        ? it.isLocked
+                          ? "Desbloquear"
+                          : "Bloquear"
+                        : "Bloquear/desbloquear indisponível"
                     }
-                    disabled={actionsDisabled}
+                    disabled={!canLock}
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleLocked(it.id);
@@ -255,12 +263,13 @@ export default function LayersPanel({ className }: Props) {
                     )}
                   </Button>
 
+                  {/* Remover */}
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 hover:text-red-600"
-                    title={isImage ? "Remoção indisponível" : "Remover"}
-                    disabled={actionsDisabled}
+                    title={canRemove ? "Remover" : "Remoção indisponível"}
+                    disabled={!canRemove}
                     onClick={(e) => {
                       e.stopPropagation();
                       remove(it.id);

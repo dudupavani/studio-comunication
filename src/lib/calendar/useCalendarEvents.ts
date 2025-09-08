@@ -1,7 +1,7 @@
 // src/lib/calendar/useCalendarEvents.ts
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   CalendarEventDTO,
   CalendarQueryParams,
@@ -49,12 +49,9 @@ export function useCalendarEvents({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Para permitir refetch manual
-  const refetchFlag = useRef(0);
-  const refetch = () => {
-    refetchFlag.current++;
-    setLoading(true);
-  };
+  // 🔁 Gatilho de refetch sem usar ref.current no array de deps
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refetch = () => setRefreshKey((k) => k + 1);
 
   const qs = useMemo(
     () =>
@@ -93,7 +90,7 @@ export function useCalendarEvents({
       });
 
     return () => controller.abort();
-  }, [qs, refetchFlag.current]);
+  }, [qs, refreshKey]); // ✅ depende do refreshKey (state), não de ref.current
 
   return { data, loading, error, refetch };
 }

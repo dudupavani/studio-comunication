@@ -1,35 +1,43 @@
 // src/components/design-editor/Canvas.tsx
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  Fragment,
+} from "react";
 import type Konva from "konva";
+import {
+  Stage,
+  Layer,
+  Group,
+  Rect,
+  Circle,
+  Line,
+  Star,
+  RegularPolygon,
+  Text as KText,
+} from "react-konva";
+
 import EventBridge from "./EventBridge";
 import DnDContainer from "./DnDContainer";
 import ZoomControls from "./ZoomControls";
-import ImagesLayer from "@/components/design-editor/layers/ImagesLayer";
-import ShapesLayerWrapper from "@/components/design-editor/layers/ShapesLayerWrapper";
-import TextLayer from "@/components/design-editor/layers/TextLayer";
-import ShapesLayer from "@/components/design-editor/ShapesLayer";
 import TransformerManager from "@/components/design-editor/TransformerManager";
-
-import { Stage, Layer } from "react-konva";
 import MarqueeOverlay from "@/components/design-editor/layers/MarqueeOverlay";
-
-// 🔹 existentes
 import { useSelectionSync } from "@/components/design-editor/hooks/useSelectionSync";
 import {
   isKonvaTextNode,
   applyTextPatchToNode,
 } from "@/components/design-editor/utils/konvaCache";
-
-// 🔹 utils (guard de teclado unificado)
 import { isInputLike } from "@/components/design-editor/utils/is-input-like";
 
-// 🔹 artboard
 import { useArtboard } from "@/hooks/design-editor/use-artboard";
 import ArtboardLayer from "@/components/design-editor/ArtboardLayer";
-
 import { DESIGN_DEFAULTS as DEFAULTS } from "@/components/design-editor/constants/design-defaults";
+
 import {
   normalizeType,
   AnyShape,
@@ -43,21 +51,15 @@ import {
   isTextShapeStrict,
 } from "@/components/design-editor/types/shapes";
 
-// ✅ seleção (contexto)
 import { useSelectionContext } from "@/components/design-editor/SelectionContext";
 import type { Selection } from "@/components/design-editor/types/selection";
 
-// ========= Imagens inseridas =========
-type InsertedImage = {
-  id: string;
-  url: string;
-  path: string;
-  x: number;
-  y: number;
-  scaleX?: number;
-  scaleY?: number;
-  rotation?: number;
-};
+import InsertedImageNode, {
+  type InsertedImageLike as InsertedImage,
+} from "@/components/design-editor/InsertedImageNode";
+
+// ===== Tipo da pilha unificada (baixo -> topo) =====
+type StackItem = { kind: "shape" | "image"; id: string };
 
 export default function Canvas() {
   // ---------- refs ----------
@@ -71,72 +73,69 @@ export default function Canvas() {
   const [scale, setScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
 
-  // shapes/seleção (legado — será aposentado em passo futuro)
+  // shapes/seleção (legado)
   const [shapes, setShapes] = useState<AnyShape[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // 🔹 seleção de imagem (legado — será aposentado)
+  // imagens
+  const [insertedImages, setInsertedImages] = useState<InsertedImage[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [selectedImageIds, setSelectedImageIds] = useState<string[]>([]);
 
+  // 🔹 pilha unificada (baixo -> topo)
+  const [stack, setStack] = useState<StackItem[]>([]);
+
+  // refs de nós
   const shapeRefs = useRef<Record<string, Konva.Node | null>>({});
   const imageRefs = useRef<Record<string, Konva.Group | null>>({});
 
-  const selectedImageIdRef = useRef<string | null>(null);
+  // refs auxiliares
+  const shapesRef = useRef<AnyShape[]>([]);
+  const insertedImagesRef = useRef<InsertedImage[]>([]);
+  const selectedIdsRef = useRef<string[]>([]);
   const selectedImageIdsRef = useRef<string[]>([]);
+  const selectedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    shapesRef.current = shapes;
+  }, [shapes]);
+
+  useEffect(() => {
+    insertedImagesRef.current = insertedImages;
+  }, [insertedImages]);
+
+  useEffect(() => {
+    selectedIdsRef.current = selectedIds;
+    selectedRef.current = selectedId;
+  }, [selectedIds, selectedId]);
+
+  useEffect(() => {
+    selectedImageIdsRef.current = selectedImageIds;
+  }, [selectedImageIds]);
 
   // Artboard
   const { artboard } = useArtboard();
 
-  // 🔹 imagens inseridas
-  const [insertedImages, setInsertedImages] = useState<InsertedImage[]>([]);
-
-  // 🔁 versions para forçar remount nos layers ao reordenar
-  const [imagesVersion, setImagesVersion] = useState(0);
-  const [shapesVersion, setShapesVersion] = useState(0);
-
-  // ✅ Selection Manager — via contexto (APIs: select/toggle/replace/clear + leitura via selection)
+  // ✅ Selection Manager — via contexto
   const { selection, actions } = useSelectionContext();
-  const sel = {
-    select: actions.select,
-    toggle: actions.toggle,
-    replace: actions.replace,
-    clear: actions.clear,
-    get: () => selection,
-  };
+  const sel = useMemo(
+    () => ({
+      select: actions.select,
+      toggle: actions.toggle,
+      replace: actions.replace,
+      clear: actions.clear,
+    }),
+    [actions.select, actions.toggle, actions.replace, actions.clear]
+  );
 
-  // ✅ Handlers para mover itens (com guarda para multi-drag)
-  const multiDragRef = useRef<
-    { active: boolean } & {
-      driverId: string | null;
-      driverType: "shape" | "image" | null;
-      driverStart: { x: number; y: number } | null;
-      shapesStart: Record<string, { x: number; y: number }>;
-      imagesStart: Record<string, { x: number; y: number }>;
-    }
-  >({
-    active: false,
-    driverId: null,
-    driverType: null,
-    driverStart: null,
-    shapesStart: {},
-    imagesStart: {},
-  });
+  // agenda mudanças de seleção para depois do render atual
+  const scheduleSel = useCallback((fn: () => void) => {
+    if (typeof queueMicrotask === "function") queueMicrotask(fn);
+    else setTimeout(fn, 0);
+  }, []);
 
-  const handleMoveShape = (id: string, x: number, y: number) => {
-    if (multiDragRef.current.active) return;
-    setShapes((prev) => prev.map((s) => (s.id === id ? { ...s, x, y } : s)));
-  };
-
-  const handleMoveImage = (id: string, x: number, y: number) => {
-    if (multiDragRef.current.active) return;
-    setInsertedImages((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, x, y } : it))
-    );
-  };
-
-  // 🔧 helper: aplicar seleção unificada no estado legado (compat)
+  // 🔧 espelha seleção no estado legado (compat)
   const applySelectionToLegacy = useCallback((s: Selection) => {
     switch (s.kind) {
       case "none": {
@@ -182,33 +181,8 @@ export default function Canvas() {
   }, []);
 
   useEffect(() => {
-    // espelha o contexto no estado legado sempre que a seleção mudar
     applySelectionToLegacy(selection);
   }, [selection, applySelectionToLegacy]);
-
-  // refs anti-stale
-  const shapesRef = useRef<AnyShape[]>(shapes);
-  const selectedRef = useRef<string | null>(selectedId);
-  const selectedIdsRef = useRef<string[]>(selectedIds);
-  const insertedImagesRef = useRef<InsertedImage[]>(insertedImages);
-
-  useEffect(() => {
-    shapesRef.current = shapes;
-    selectedRef.current = selectedId;
-    selectedIdsRef.current = selectedIds;
-  }, [shapes, selectedId, selectedIds]);
-
-  useEffect(() => {
-    selectedImageIdRef.current = selectedImageId;
-  }, [selectedImageId]);
-
-  useEffect(() => {
-    selectedImageIdsRef.current = selectedImageIds;
-  }, [selectedImageIds]);
-
-  useEffect(() => {
-    insertedImagesRef.current = insertedImages;
-  }, [insertedImages]);
 
   // medir container
   useEffect(() => {
@@ -237,16 +211,56 @@ export default function Canvas() {
     return s * 0.98;
   }, [viewport.width, viewport.height, artboard.width, artboard.height]);
 
-  const applyCenterFromScale = (s: number) => {
-    const x = (viewport.width - artboard.width * s) / 2;
-    const y = (viewport.height - artboard.height * s) / 2;
-    setScale(s);
-    setStagePos({ x, y });
-  };
+  const applyCenterFromScale = useCallback(
+    (s: number) => {
+      const x = (viewport.width - artboard.width * s) / 2;
+      const y = (viewport.height - artboard.height * s) / 2;
+      setScale(s);
+      setStagePos({ x, y });
+    },
+    [viewport.width, viewport.height, artboard.width, artboard.height]
+  );
 
   useEffect(() => {
     applyCenterFromScale(fitScale);
-  }, [artboard.width, artboard.height, fitScale]);
+  }, [fitScale, applyCenterFromScale]);
+
+  // ========= Mantém a pilha unificada em sincronia com shapes/imagens =========
+  useEffect(() => {
+    setStack((prev) => {
+      const have = new Set(prev.map((k) => `${k.kind}:${k.id}`));
+      let changed = false;
+      const next = [...prev];
+
+      // adiciona faltantes (na ponta TOP)
+      for (const img of insertedImages) {
+        const key = `image:${img.id}`;
+        if (!have.has(key)) {
+          next.push({ kind: "image", id: img.id });
+          changed = true;
+        }
+      }
+      for (const s of shapes) {
+        const key = `shape:${s.id}`;
+        if (!have.has(key)) {
+          next.push({ kind: "shape", id: s.id });
+          changed = true;
+        }
+      }
+
+      // remove ids que não existem mais
+      const alive = new Set([
+        ...insertedImages.map((i) => `image:${i.id}`),
+        ...shapes.map((s) => `shape:${s.id}`),
+      ]);
+      const filtered = next.filter((k) =>
+        alive.has(`${k.kind}:${k.id}`)
+      ) as StackItem[];
+
+      if (filtered.length !== prev.length || changed) return filtered;
+      return prev;
+    });
+  }, [insertedImages, shapes]);
 
   // ========= Evento de estado p/ painel de camadas =========
   useEffect(() => {
@@ -258,36 +272,40 @@ export default function Canvas() {
       return base || "Imagem";
     };
 
-    // z-order conforme render: ImagesLayer abaixo de ShapesLayer
-    const imageItems = insertedImages.map((img, idx) => ({
-      id: img.id,
-      kind: "image" as const,
-      type: "image" as const,
-      name: filenameFromPath(img.path),
-      isHidden: false,
-      isLocked: false,
-      z: idx,
-      layer: "ImagesLayer" as const,
-    }));
+    // mapeia stack -> itens com z (index é o z real; maior = topo)
+    const items = stack.map((k, idx) => {
+      if (k.kind === "image") {
+        const img = insertedImages.find((i) => i.id === k.id);
+        return {
+          id: k.id,
+          kind: "image" as const,
+          type: "image" as const,
+          name: filenameFromPath(img?.path),
+          isHidden: false,
+          isLocked: false,
+          z: idx,
+          layer: "UnifiedLayer" as const,
+        };
+      }
+      const s = shapes.find((x) => x.id === k.id);
+      return {
+        id: k.id,
+        kind: "shape" as const,
+        type: s?.type ?? "rect",
+        name: s?.name,
+        isHidden: !!s?.isHidden,
+        isLocked: !!s?.isLocked,
+        z: idx,
+        layer: "UnifiedLayer" as const,
+      };
+    });
 
-    const shapeItems = shapes.map((s, idx) => ({
-      id: s.id,
-      kind: "shape" as const,
-      type: s.type,
-      name: s.name,
-      isHidden: !!s.isHidden,
-      isLocked: !!s.isLocked,
-      z: insertedImages.length + idx,
-      layer: "ShapesLayer" as const,
-    }));
-
-    const items = [...imageItems, ...shapeItems];
     const selectedItemIds = [...selectedIds, ...selectedImageIds];
 
     const payload = {
       items,
       selectedItemIds,
-
+      selection,
       // 🔁 Legado
       selectedId,
       shapes: shapes.map((s) => ({
@@ -318,23 +336,34 @@ export default function Canvas() {
     insertedImages,
     selectedImageId,
     selectedImageIds,
+    selection,
+    stack,
   ]);
 
   // sincroniza propriedades da seleção (usa selectedId como primário)
-  useSelectionSync({
-    selectedId,
-    shapes,
-  });
+  useSelectionSync({ selectedId, shapes });
 
   // helpers coords: Stage -> espaço local (artboard)
-  function stageToLocal(sx: number, sy: number) {
-    return {
+  const stageToLocal = useCallback(
+    (sx: number, sy: number) => ({
       x: (sx - stagePos.x) / scale,
       y: (sy - stagePos.y) / scale,
-    };
-  }
+    }),
+    [stagePos.x, stagePos.y, scale]
+  );
 
-  // add shape
+  // ===== Handlers de movimento individuais =====
+  const handleMoveShape = useCallback((id: string, x: number, y: number) => {
+    setShapes((prev) => prev.map((s) => (s.id === id ? { ...s, x, y } : s)));
+  }, []);
+
+  const handleMoveImage = useCallback((id: string, x: number, y: number) => {
+    setInsertedImages((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, x, y } : it))
+    );
+  }, []);
+
+  // ===== Inserir shape no ponto =====
   function addShapeAt(type: AnyShape["type"], sx: number, sy: number) {
     const rid = (p: string) => `${p}-${crypto.randomUUID().slice(0, 8)}`;
     const { x, y } = stageToLocal(sx, sy);
@@ -475,13 +504,12 @@ export default function Canvas() {
     }
 
     setShapes((prev) => [...prev, newShape]);
-
-    // ✅ Seleção via manager (compat com legado)
-    sel.select("shape", newShape.id);
-    applySelectionToLegacy(sel.get());
+    // coloca no topo da pilha
+    setStack((prev) => [...prev, { kind: "shape", id: newShape.id }]);
+    scheduleSel(() => sel.select("shape", newShape.id));
   }
 
-  // update props
+  // update props (patch vindo de painéis)
   useEffect(() => {
     type Patch =
       | Partial<Omit<ShapeText, "id" | "type">>
@@ -501,9 +529,7 @@ export default function Canvas() {
             case "text": {
               const node = shapeRefs.current[id];
               const pt = p as Partial<Omit<ShapeText, "id" | "type">>;
-              if (isKonvaTextNode(node)) {
-                applyTextPatchToNode(node, pt);
-              }
+              if (isKonvaTextNode(node)) applyTextPatchToNode(node, pt);
               return { ...s, ...pt } as any;
             }
             default:
@@ -535,7 +561,6 @@ export default function Canvas() {
       "design-editor:update-text",
       onUpdateText as EventListener
     );
-
     return () => {
       window.removeEventListener(
         "design-editor:update-props",
@@ -548,7 +573,7 @@ export default function Canvas() {
     };
   }, []);
 
-  // pan com espaço (com guard unificado)
+  // pan com espaço
   const isPanningRef = useRef(false);
   const spacePressedRef = useRef(false);
   const panStartRef = useRef({ x: 0, y: 0, stageX: 0, stageY: 0 });
@@ -608,14 +633,13 @@ export default function Canvas() {
     document.body.style.cursor = spacePressedRef.current ? "grab" : "";
   };
 
-  // delete/esc — PRIORIDADE: imagens selecionadas; senão, shapes (guard unificado)
+  // delete/esc
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isInputLike(e.target)) return;
 
       if (e.key === "Escape") {
-        sel.clear();
-        applySelectionToLegacy(sel.get());
+        scheduleSel(() => sel.clear());
         return;
       }
 
@@ -626,22 +650,26 @@ export default function Canvas() {
           setInsertedImages((prev) =>
             prev.filter((it) => !imgIds.includes(it.id))
           );
-          sel.clear();
-          applySelectionToLegacy(sel.get());
+          setStack((prev) =>
+            prev.filter((k) => !(k.kind === "image" && imgIds.includes(k.id)))
+          );
+          scheduleSel(() => sel.clear());
           return;
         }
         const ids = selectedIdsRef.current;
         if (!ids.length) return;
         e.preventDefault();
         setShapes((prev) => prev.filter((s) => !ids.includes(s.id)));
-        sel.clear();
-        applySelectionToLegacy(sel.get());
+        setStack((prev) =>
+          prev.filter((k) => !(k.kind === "shape" && ids.includes(k.id)))
+        );
+        scheduleSel(() => sel.clear());
       }
     };
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [applySelectionToLegacy, sel]);
+  }, [scheduleSel, sel]);
 
   // marquee
   type Marquee = {
@@ -661,8 +689,7 @@ export default function Canvas() {
 
   const beginMarquee = (lx: number, ly: number) => {
     setMarquee({ active: true, x1: lx, y1: ly, x2: lx, y2: ly });
-    sel.clear();
-    applySelectionToLegacy(sel.get());
+    scheduleSel(() => sel.clear());
   };
 
   const updateMarquee = (lx: number, ly: number) => {
@@ -681,11 +708,8 @@ export default function Canvas() {
 
       // clique curto: limpa e sai
       if (wLocal < 2 && hLocal < 2) {
-        sel.clear();
-        applySelectionToLegacy(sel.get());
-        requestAnimationFrame(() => {
-          stageRef.current?.batchDraw();
-        });
+        scheduleSel(() => sel.clear());
+        requestAnimationFrame(() => stageRef.current?.batchDraw());
         return { active: false, x1: 0, y1: 0, x2: 0, y2: 0 };
       }
 
@@ -706,50 +730,42 @@ export default function Canvas() {
         A.y <= B.y + B.height &&
         A.y + A.height >= B.y;
 
-      // 🔹 Shapes (ordem consistente)
+      // 🔹 Shapes
       const shapeIdSet = new Set<string>();
       for (const s of shapesRef.current) {
         const node = shapeRefs.current[s.id] as Konva.Node | null;
         if (!node || (node as any).isDestroyed?.() || !node.getStage())
           continue;
-        const bb = node.getClientRect(); // stage space
+        const bb = node.getClientRect();
         if (intersects(aStage, bb)) shapeIdSet.add(s.id);
       }
       const orderedShapeIds = shapesRef.current
         .filter((s) => shapeIdSet.has(s.id))
         .map((s) => s.id);
 
-      // 🔹 Imagens — pega todas as que intersectam
+      // 🔹 Imagens
       const imageIds: string[] = [];
       for (const img of insertedImagesRef.current) {
         const node = imageRefs.current[img.id];
         if (!node || (node as any).isDestroyed?.() || !node.getStage())
           continue;
-        const bb = node.getClientRect(); // stage space
+        const bb = node.getClientRect();
         if (intersects(aStage, bb)) imageIds.push(img.id);
       }
 
-      // 🎯 Seleção
-      if (imageIds.length && orderedShapeIds.length) {
-        sel.replace({
-          kind: "mixed",
-          shapeIds: orderedShapeIds,
-          imageIds,
-        });
-      } else if (imageIds.length) {
-        sel.replace({ kind: "image", ids: imageIds });
-      } else {
-        if (orderedShapeIds.length) {
+      scheduleSel(() => {
+        if (imageIds.length && orderedShapeIds.length) {
+          sel.replace({ kind: "mixed", shapeIds: orderedShapeIds, imageIds });
+        } else if (imageIds.length) {
+          sel.replace({ kind: "image", ids: imageIds });
+        } else if (orderedShapeIds.length) {
           sel.replace({ kind: "shape", ids: orderedShapeIds });
         } else {
           sel.clear();
         }
-      }
-
-      applySelectionToLegacy(sel.get());
-      requestAnimationFrame(() => {
-        stageRef.current?.batchDraw();
       });
+
+      requestAnimationFrame(() => stageRef.current?.batchDraw());
       return { active: false, x1: 0, y1: 0, x2: 0, y2: 0 };
     });
   };
@@ -767,27 +783,36 @@ export default function Canvas() {
       const cx = stagePos.x + (artboard.width * scale) / 2;
       const cy = stagePos.y + (artboard.height * scale) / 2;
 
-      // 🔸 offset incremental para evitar sobreposição total
+      // offset incremental para evitar sobreposição total
       const n = insertedImagesRef.current.length;
       const step = 24; // px em espaço LOCAL
       const oxLocal = (n % 5) * step;
       const oyLocal = (n % 5) * step;
 
-      // converter offset local -> stage antes de chamar stageToLocal
+      // local -> stage
       const sx = cx + oxLocal * scale;
       const sy = cy + oyLocal * scale;
 
       const { x, y } = stageToLocal(sx, sy);
-
       const pathSafe = path ?? "";
 
       setInsertedImages((prev) => [
         ...prev,
-        { id, url, path: pathSafe, x, y, scaleX: 1, scaleY: 1, rotation: 0 },
+        {
+          id,
+          url,
+          path: pathSafe,
+          x,
+          y,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          opacity: 1,
+        },
       ]);
 
-      sel.select("image", id);
-      applySelectionToLegacy(sel.get());
+      setStack((prev) => [...prev, { kind: "image", id }]);
+      scheduleSel(() => sel.select("image", id));
     },
     [
       stagePos.x,
@@ -795,12 +820,13 @@ export default function Canvas() {
       artboard.width,
       artboard.height,
       scale,
+      stageToLocal,
+      scheduleSel,
       sel,
-      applySelectionToLegacy,
     ]
   );
 
-  // ===== Derivados de seleção (locais) =====
+  // ===== Derivados de seleção (nós Konva) =====
   const selectedNodes = useMemo(() => {
     const nodes: (Konva.Node | null)[] = [];
     for (const id of selectedImageIds)
@@ -811,7 +837,23 @@ export default function Canvas() {
 
   const hasOnlyImages = selectedImageIds.length > 0 && selectedIds.length === 0;
 
-  // ===== Multi-drag (arrastar grupo) =====
+  // ===== Drag em grupo (multi-drag) =====
+  const multiDragRef = useRef<{
+    active: boolean;
+    driverId: string | null;
+    driverType: "shape" | "image" | null;
+    driverStart: { x: number; y: number } | null;
+    shapesStart: Record<string, { x: number; y: number }>;
+    imagesStart: Record<string, { x: number; y: number }>;
+  }>({
+    active: false,
+    driverId: null,
+    driverType: null,
+    driverStart: null,
+    shapesStart: {},
+    imagesStart: {},
+  });
+
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -833,7 +875,6 @@ export default function Canvas() {
     };
 
     const onDragStart = (e: Konva.KonvaEventObject<any>) => {
-      // só entra no multi-drag se houver mais de 1 selecionado
       if (
         selectedIdsRef.current.length + selectedImageIdsRef.current.length <=
         1
@@ -917,6 +958,7 @@ export default function Canvas() {
           if (n) n.position({ x: start.x + dx, y: start.y + dy });
         }
       );
+
       Object.entries(multiDragRef.current.imagesStart).forEach(
         ([id, start]) => {
           if (
@@ -967,9 +1009,159 @@ export default function Canvas() {
     };
   }, []);
 
-  // ===== Apenas textos (derivado de shapes) =====
-  const textShapes = useMemo(() => shapes.filter(isTextShapeStrict), [shapes]);
+  // ===== Renderer de SHAPES (num único Layer) =====
+  const ShapeNode = ({ s }: { s: AnyShape }) => {
+    // seleção multi (shift/cmd/ctrl)
+    const handleClick = useCallback(
+      (evt: any) => {
+        const multi = !!(
+          evt?.evt?.shiftKey ||
+          evt?.evt?.metaKey ||
+          evt?.evt?.ctrlKey
+        );
+        scheduleSel(() => {
+          if (multi) sel.toggle("shape", s.id);
+          else sel.select("shape", s.id);
+        });
+        evt.cancelBubble = true;
+      },
+      [s.id, scheduleSel, sel]
+    );
 
+    const common = {
+      x: s.x,
+      y: s.y,
+      rotation: s.rotation ?? 0,
+      opacity: (s as any).opacity ?? 1,
+      draggable: !s.isLocked,
+      onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => {
+        const node = e.target as Konva.Node;
+        handleMoveShape(s.id, node.x(), node.y());
+      },
+      onMouseDown: handleClick,
+      onTap: handleClick,
+    };
+
+    if (s.type === "text") {
+      return (
+        <KText
+          ref={(n) => {
+            shapeRefs.current[s.id] = n;
+          }}
+          {...common}
+          text={(s as ShapeText).text}
+          fontFamily={(s as ShapeText).fontFamily}
+          fontSize={(s as ShapeText).fontSize}
+          fontStyle={(s as ShapeText).fontStyle}
+          align={(s as ShapeText).align as any}
+          lineHeight={(s as ShapeText).lineHeight}
+          letterSpacing={(s as ShapeText).letterSpacing}
+          width={(s as ShapeText).width}
+          height={(s as ShapeText).height}
+          padding={(s as ShapeText).padding}
+          fill={(s as ShapeText).fill}
+          listening
+        />
+      );
+    }
+
+    return (
+      <Group
+        ref={(n) => {
+          shapeRefs.current[s.id] = n;
+        }}
+        {...common}
+        listening>
+        {s.type === "rect" && (
+          <Rect
+            width={(s as ShapeRect).width}
+            height={(s as ShapeRect).height}
+            fill={(s as any).fill}
+            stroke={(s as any).stroke}
+            strokeWidth={(s as any).strokeWidth}
+            shadowBlur={(s as any).shadowBlur}
+            shadowOffsetX={(s as any).shadowOffsetX}
+            shadowOffsetY={(s as any).shadowOffsetY}
+          />
+        )}
+
+        {s.type === "circle" && (
+          <Circle
+            radius={(s as ShapeCircle).radius}
+            fill={(s as any).fill}
+            stroke={(s as any).stroke}
+            strokeWidth={(s as any).strokeWidth}
+            shadowBlur={(s as any).shadowBlur}
+            shadowOffsetX={(s as any).shadowOffsetX}
+            shadowOffsetY={(s as any).shadowOffsetY}
+          />
+        )}
+
+        {s.type === "triangle" && (
+          <RegularPolygon
+            sides={3}
+            radius={(s as ShapeTriangle).radius}
+            fill={(s as any).fill}
+            stroke={(s as any).stroke}
+            strokeWidth={(s as any).strokeWidth}
+            shadowBlur={(s as any).shadowBlur}
+            shadowOffsetX={(s as any).shadowOffsetX}
+            shadowOffsetY={(s as any).shadowOffsetY}
+          />
+        )}
+
+        {s.type === "line" && (
+          <Line
+            points={(s as ShapeLine).points}
+            stroke={(s as ShapeLine).stroke}
+            strokeWidth={(s as ShapeLine).strokeWidth}
+            lineCap={(s as ShapeLine).lineCap as any}
+            opacity={(s as ShapeLine).opacity}
+            shadowBlur={(s as any).shadowBlur}
+            shadowOffsetX={(s as any).shadowOffsetX}
+            shadowOffsetY={(s as any).shadowOffsetY}
+          />
+        )}
+
+        {s.type === "star" && (
+          <Star
+            numPoints={(s as ShapeStar).numPoints}
+            innerRadius={(s as ShapeStar).innerRadius}
+            outerRadius={(s as ShapeStar).outerRadius}
+            fill={(s as any).fill}
+            stroke={(s as any).stroke}
+            strokeWidth={(s as any).strokeWidth}
+            shadowBlur={(s as any).shadowBlur}
+            shadowOffsetX={(s as any).shadowOffsetX}
+            shadowOffsetY={(s as any).shadowOffsetY}
+          />
+        )}
+      </Group>
+    );
+  };
+
+  // ===== Handlers de reordenação (um passo) na pilha =====
+  const bringForwardInStack = (id: string) => {
+    setStack((prev) => {
+      const idx = prev.findIndex((k) => k.id === id);
+      if (idx === -1 || idx === prev.length - 1) return prev;
+      const copy = [...prev];
+      [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
+      return copy;
+    });
+  };
+
+  const sendBackwardInStack = (id: string) => {
+    setStack((prev) => {
+      const idx = prev.findIndex((k) => k.id === id);
+      if (idx <= 0) return prev;
+      const copy = [...prev];
+      [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+      return copy;
+    });
+  };
+
+  // ===== Stage =====
   return (
     <div
       ref={containerRef}
@@ -1000,8 +1192,7 @@ export default function Canvas() {
         }}
         onSelect={(id) => {
           if (!id) {
-            sel.clear();
-            applySelectionToLegacy(sel.get());
+            scheduleSel(() => sel.clear());
             return;
           }
           const isShape = shapesRef.current.some((s) => s.id === id);
@@ -1010,18 +1201,15 @@ export default function Canvas() {
           );
 
           if (isShape) {
-            sel.select("shape", id);
-            applySelectionToLegacy(sel.get());
+            scheduleSel(() => sel.select("shape", id));
             return;
           }
           if (isImage) {
-            sel.select("image", id);
-            applySelectionToLegacy(sel.get());
+            scheduleSel(() => sel.select("image", id));
             return;
           }
         }}
         onDelete={(id) => {
-          // suporta deletar shapes e imagens
           if (id) {
             const isShape = shapesRef.current.some((s) => s.id === id);
             const isImage = insertedImagesRef.current.some(
@@ -1029,12 +1217,16 @@ export default function Canvas() {
             );
             if (isShape) {
               setShapes((prev) => prev.filter((s) => s.id !== id));
-              sel.clear();
-              applySelectionToLegacy(sel.get());
+              setStack((prev) =>
+                prev.filter((k) => !(k.kind === "shape" && k.id === id))
+              );
+              scheduleSel(() => sel.clear());
             } else if (isImage) {
               setInsertedImages((prev) => prev.filter((img) => img.id !== id));
-              sel.clear();
-              applySelectionToLegacy(sel.get());
+              setStack((prev) =>
+                prev.filter((k) => !(k.kind === "image" && k.id === id))
+              );
+              scheduleSel(() => sel.clear());
             }
             return;
           }
@@ -1045,16 +1237,22 @@ export default function Canvas() {
             setInsertedImages((prev) =>
               prev.filter((img) => !imgIds.includes(img.id))
             );
-            sel.clear();
-            applySelectionToLegacy(sel.get());
+            setStack((prev) =>
+              prev.filter((k) => !(k.kind === "image" && imgIds.includes(k.id)))
+            );
+            scheduleSel(() => sel.clear());
             return;
           }
 
           const targetIds = selectedIdsRef.current;
           if (!targetIds.length) return;
           setShapes((prev) => prev.filter((s) => !targetIds.includes(s.id)));
-          sel.clear();
-          applySelectionToLegacy(sel.get());
+          setStack((prev) =>
+            prev.filter(
+              (k) => !(k.kind === "shape" && targetIds.includes(k.id))
+            )
+          );
+          scheduleSel(() => sel.clear());
         }}
         onToggleHidden={(id) => {
           setShapes((prev) =>
@@ -1066,52 +1264,8 @@ export default function Canvas() {
             prev.map((s) => (s.id === id ? { ...s, isLocked: !s.isLocked } : s))
           );
         }}
-        onBringForward={(id) => {
-          let bumpedShape = false;
-          setShapes((prev) => {
-            const idx = prev.findIndex((s) => s.id === id);
-            if (idx === -1 || idx === prev.length - 1) return prev;
-            const copy = [...prev];
-            [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
-            bumpedShape = true;
-            return copy;
-          });
-          if (bumpedShape) setShapesVersion((v) => v + 1);
-
-          let bumpedImage = false;
-          setInsertedImages((prev) => {
-            const idx = prev.findIndex((img) => img.id === id);
-            if (idx === -1 || idx === prev.length - 1) return prev;
-            const copy = [...prev];
-            [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
-            bumpedImage = true;
-            return copy;
-          });
-          if (bumpedImage) setImagesVersion((v) => v + 1);
-        }}
-        onSendBackward={(id) => {
-          let bumpedShape = false;
-          setShapes((prev) => {
-            const idx = prev.findIndex((s) => s.id === id);
-            if (idx === -1 || idx === 0) return prev;
-            const copy = [...prev];
-            [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-            bumpedShape = true;
-            return copy;
-          });
-          if (bumpedShape) setShapesVersion((v) => v + 1);
-
-          let bumpedImage = false;
-          setInsertedImages((prev) => {
-            const idx = prev.findIndex((img) => img.id === id);
-            if (idx === -1 || idx === 0) return prev;
-            const copy = [...prev];
-            [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-            bumpedImage = true;
-            return copy;
-          });
-          if (bumpedImage) setImagesVersion((v) => v + 1);
-        }}
+        onBringForward={(id) => bringForwardInStack(id)}
+        onSendBackward={(id) => sendBackwardInStack(id)}
         onInsertImage={handleInsertImage}
       />
 
@@ -1125,13 +1279,11 @@ export default function Canvas() {
         ref={stageRef}
         width={viewport.width}
         height={viewport.height}
-        // zoom/posicionamento
         scaleX={scale}
         scaleY={scale}
         x={stagePos.x}
         y={stagePos.y}
         onMouseDown={(e: any) => {
-          // Só inicia marquee/deseleção se: clique ESQUERDO, em área vazia (Stage/Artboard) e sem “space”.
           const target: Konva.Node = e.target;
           const stage = target.getStage();
           if (!stage) return;
@@ -1156,7 +1308,6 @@ export default function Canvas() {
             ...Object.values(shapeRefs.current),
             ...Object.values(imageRefs.current),
           ];
-
           const clickedOnEmpty =
             target === stage || !isDescendantOfAny(target, allInteractive);
 
@@ -1210,84 +1361,65 @@ export default function Canvas() {
             ...Object.values(shapeRefs.current),
             ...Object.values(imageRefs.current),
           ];
-
           const clickedOnEmpty =
             target === stage || !isDescendantOfAny(target, allInteractive);
 
           if (clickedOnEmpty) {
-            sel.clear();
-            applySelectionToLegacy(sel.get());
+            scheduleSel(() => sel.clear());
           }
         }}>
-        {/* 🔹 Artboard na ORIGEM (0,0) */}
+        {/* 🔹 Artboard */}
         <ArtboardLayer
           artboard={{ width: artboard.width, height: artboard.height }}
           stageSize={viewport}
           pad={0}
         />
 
-        {/* ✅ Layer de imagens (abaixo dos shapes) */}
-        <ImagesLayer
-          key={`images-${imagesVersion}`}
-          images={insertedImages}
-          selectedImageIds={selectedImageIds}
-          onSelectImage={(id, multi) => {
-            if (id) {
-              if (multi) sel.toggle("image", id);
-              else sel.select("image", id);
-            } else {
-              sel.clear();
+        {/* 🔹 Conteúdo unificado: RESPEITA A ORDEM DA PILHA */}
+        <Layer name="UnifiedLayer">
+          {stack.map((k) => {
+            if (k.kind === "image") {
+              const img = insertedImages.find((i) => i.id === k.id);
+              if (!img) return <Fragment key={`void-${k.kind}-${k.id}`} />;
+              return (
+                <InsertedImageNode
+                  key={`img-${img.id}`}
+                  data={img}
+                  selected={selectedImageIds.includes(img.id)}
+                  onSelect={(id, multi) => {
+                    scheduleSel(() => {
+                      if (id) {
+                        if (multi) sel.toggle("image", id);
+                        else sel.select("image", id);
+                      } else {
+                        sel.clear();
+                      }
+                    });
+                  }}
+                  onMove={handleMoveImage}
+                  onTransform={(id, patch) =>
+                    setInsertedImages((prev) =>
+                      prev.map((it) =>
+                        it.id === id ? { ...it, ...patch } : it
+                      )
+                    )
+                  }
+                  registerRef={(id, node) => {
+                    imageRefs.current[id] = node;
+                  }}
+                />
+              );
             }
-            applySelectionToLegacy(sel.get());
-          }}
-          onMoveImage={handleMoveImage}
-          onTransformImage={(id, patch) =>
-            setInsertedImages((prev) =>
-              prev.map((it) => (it.id === id ? { ...it, ...patch } : it))
-            )
-          }
-          imageRefs={imageRefs}
-        />
 
-        {/* 🔹 Shapes SEM textos (wrapper novo) */}
-        <ShapesLayerWrapper
-          key={`shapes-${shapesVersion}`} // chave única
-          shapes={shapes}
-          selectedId={selectedId}
-          onSelectShape={(id, multi) => {
-            if (id) {
-              if (multi) sel.toggle("shape", id);
-              else sel.select("shape", id);
-            } else {
-              sel.clear();
-            }
-            applySelectionToLegacy(sel.get());
-          }}
-          onMoveShape={handleMoveShape}
-          shapeRefs={shapeRefs}
-          renderTexts={false}
-        />
+            const s = shapes.find((sh) => sh.id === k.id);
+            if (!s || s.isHidden)
+              return <Fragment key={`void-${k.kind}-${k.id}`} />;
 
-        {/* 📝 Textos (em layer dedicada, acima dos shapes) */}
-        <TextLayer name="TextLayer" key={`text-${shapesVersion}`}>
-          <ShapesLayer
-            shapes={textShapes}
-            selectedId={selectedId}
-            onSelectShape={(id, multi) => {
-              if (id) {
-                if (multi) sel.toggle("shape", id);
-                else sel.select("shape", id);
-              } else {
-                sel.clear();
-              }
-              applySelectionToLegacy(sel.get());
-            }}
-            onMoveShape={handleMoveShape}
-            shapeRefs={shapeRefs}
-          />
-        </TextLayer>
+            return <ShapeNode key={`shape-${s.id}`} s={s} />;
+          })}
+        </Layer>
 
-        {/* 🔧 Overlay geral (Transformer + Marquee) */}
+        {/* 🔧 Overlay (Transformer + Marquee) */}
         {(selectedNodes.length > 0 || marquee.active) && (
           <Layer name="OverlayLayer" listening={false}>
             {selectedNodes.length > 0 && (

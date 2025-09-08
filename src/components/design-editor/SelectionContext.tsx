@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useCallback,
 } from "react";
 import type { Selection } from "@/components/design-editor/types/selection";
 
@@ -55,7 +56,7 @@ export function SelectionProvider({
 
   // Enfileira uma sincronização para pós-render (microtask), evitando setState durante render.
   const syncQueued = useRef(false);
-  const scheduleSync = () => {
+  const scheduleSync = useCallback(() => {
     if (syncQueued.current) return;
     syncQueued.current = true;
 
@@ -69,7 +70,7 @@ export function SelectionProvider({
     } else {
       Promise.resolve().then(run);
     }
-  };
+  }, [manager]);
 
   const actions = useMemo(() => {
     return {
@@ -101,7 +102,7 @@ export function SelectionProvider({
       },
       get: manager.get,
     };
-  }, [manager]);
+  }, [manager, scheduleSync]);
 
   const value = useMemo(() => ({ selection, actions }), [selection, actions]);
 

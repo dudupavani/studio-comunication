@@ -40,7 +40,11 @@ import { useAuthContext } from "@/hooks/use-auth-context";
 import { SelectionProvider } from "@/components/design-editor/SelectionContext";
 import { useSelectionManager } from "@/hooks/design-editor/use-selection-manager";
 
-const Canvas = dynamic(() => import("./Canvas"), { ssr: false });
+// ⬇️ garante client-only + placeholder durante o carregamento
+const Canvas = dynamic(() => import("./Canvas"), {
+  ssr: false,
+  loading: () => <div className="h-full w-full" aria-hidden="true" />,
+});
 
 type Panel = "none" | "formas" | "imagens" | "templates";
 const DND_MIME = "application/x-design-editor";

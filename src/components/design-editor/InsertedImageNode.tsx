@@ -20,7 +20,7 @@ export type InsertedImageLike = {
 
 type Props = {
   data: InsertedImageLike;
-  selected: boolean;
+  selected: boolean; // recebido, mas não usado aqui
   onSelect: (id: string, multi?: boolean) => void;
   onMove: (id: string, x: number, y: number) => void;
   onTransform: (id: string, patch: Partial<InsertedImageLike>) => void;
@@ -32,7 +32,7 @@ const TRANSPARENT_1PX =
 
 export default function InsertedImageNode({
   data,
-  selected, // eslint-disable-line @typescript-eslint/no-unused-vars
+  // selected (não utilizado neste componente)
   onSelect,
   onMove,
   onTransform,
