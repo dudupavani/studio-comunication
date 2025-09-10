@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Stage, Layer, Rect, Circle, Transformer, Text } from "react-konva";
+import { Stage, Text } from "react-konva";
 import Konva from "konva";
 import { useEditor } from "./store";
 import TextEditOverlay from "./TextEditOverlay";
+import NodesLayer from "./NodesLayer";
+import TransformerLayer from "./TransformerLayer";
+import RectNode from "./nodes/RectNode";
+import CircleNode from "./nodes/CircleNode";
 
 export function StageView() {
   const {
@@ -62,108 +66,66 @@ export function StageView() {
       const s = shapes[id];
       if (!s) return null;
 
-      const common = {
-        onMouseDown: (evt: any) => {
-          select(id);
-          evt.cancelBubble = true;
-        },
-        onTap: (evt: any) => {
-          select(id);
-          evt.cancelBubble = true;
-        },
-        onDragEnd: (evt: any) => {
-          const node = evt.target as Konva.Node & {
-            x: () => number;
-            y: () => number;
-          };
-          updateShape(id, { x: node.x(), y: node.y() });
-        },
-        draggable: s.draggable && !editingId, // não arrastar enquanto edita texto
-        rotation: s.rotation,
-        stroke: s.stroke,
-        strokeWidth: s.strokeWidth ?? 0,
-        fill: s.fill,
-        id,
-        name: s.type,
-      };
-
       if (s.type === "rect") {
         return (
-          <Rect
+          <RectNode
             key={id}
-            {...common}
-            x={s.x}
-            y={s.y}
-            width={s.width}
-            height={s.height}
-            onTransformEnd={(evt: any) => {
-              const node = evt.target as Konva.Rect;
-              const scaleX = node.scaleX();
-              const scaleY = node.scaleY();
-              const newW = Math.max(5, Math.round(node.width() * scaleX));
-              const newH = Math.max(5, Math.round(node.height() * scaleY));
-              node.scaleX(1);
-              node.scaleY(1);
-              updateShape(id, {
-                x: node.x(),
-                y: node.y(),
-                width: newW,
-                height: newH,
-                rotation: node.rotation(),
-              });
-            }}
+            id={id}
+            s={s as any}
+            editing={!!editingId}
+            onSelect={select}
+            onUpdate={updateShape}
           />
         );
       }
 
       if (s.type === "circle") {
-        const radius = Math.max(3, Math.min(s.width, s.height) / 2);
         return (
-          <Circle
+          <CircleNode
             key={id}
-            {...common}
-            x={s.x + s.width / 2}
-            y={s.y + s.height / 2}
-            radius={radius}
-            onDragEnd={(evt: any) => {
-              const node = evt.target as Konva.Circle;
-              updateShape(id, {
-                x: node.x() - s.width / 2,
-                y: node.y() - s.height / 2,
-              });
-            }}
-            onTransformEnd={(evt: any) => {
-              const node = evt.target as Konva.Circle;
-              const scaleX = node.scaleX();
-              const scaleY = node.scaleY();
-              const newR = Math.max(
-                3,
-                Math.round(node.radius() * Math.max(scaleX, scaleY))
-              );
-              node.scaleX(1);
-              node.scaleY(1);
-              const newSize = newR * 2;
-              updateShape(id, {
-                x: node.x() - newR,
-                y: node.y() - newR,
-                width: newSize,
-                height: newSize,
-                rotation: node.rotation(),
-              });
-            }}
+            id={id}
+            s={s as any}
+            editing={!!editingId}
+            onSelect={select}
+            onUpdate={updateShape}
           />
         );
       }
 
       if (s.type === "text") {
+        const commonText = {
+          onMouseDown: (evt: any) => {
+            select(id);
+            evt.cancelBubble = true;
+          },
+          onTap: (evt: any) => {
+            select(id);
+            evt.cancelBubble = true;
+          },
+          onDragEnd: (evt: any) => {
+            const node = evt.target as Konva.Node & {
+              x: () => number;
+              y: () => number;
+            };
+            updateShape(id, { x: node.x(), y: node.y() });
+          },
+          draggable: s.draggable && !editingId,
+          rotation: s.rotation,
+          stroke: s.stroke,
+          strokeWidth: s.strokeWidth ?? 0,
+          fill: s.fill,
+          id,
+          name: s.type,
+        };
+
         return (
           <Text
             key={id}
-            {...common}
+            {...commonText}
             x={s.x}
             y={s.y}
             width={s.width}
-            text={s.text ?? ""} // usa o valor salvo
+            text={s.text ?? ""}
             fontSize={s.fontSize || 24}
             fontFamily={s.fontFamily}
             fontStyle={s.fontStyle}
@@ -208,42 +170,19 @@ export function StageView() {
         height={containerSize.h}
         style={{ background: stage.background }}
         onMouseDown={(e: any) => {
-          // >>> FIX: não sair do modo de edição antes do blur commitar
           if (editingId) return;
           if (e.target === e.target.getStage()) {
             select(null);
           }
         }}>
-        <Layer>
+        <NodesLayer>
           {shapeNodes}
-          <Transformer
-            ref={trRef}
-            rotateEnabled
-            enabledAnchors={[
-              "top-left",
-              "top-center",
-              "top-right",
-              "middle-right",
-              "bottom-right",
-              "bottom-center",
-              "bottom-left",
-              "middle-left",
-            ]}
-            anchorSize={8}
-            borderDash={[4, 4]}
-            boundBoxFunc={(oldBox, newBox) => {
-              const id = selectedId;
-              if (!id) return newBox;
-              const s = shapes[id];
-              if (!s) return newBox;
-              if (s.type === "circle") {
-                const size = Math.max(newBox.width, newBox.height);
-                return { ...newBox, width: size, height: size };
-              }
-              return newBox;
-            }}
+          <TransformerLayer
+            trRef={trRef}
+            selectedId={selectedId}
+            shapes={shapes}
           />
-        </Layer>
+        </NodesLayer>
       </Stage>
 
       {/* Editor de texto DOM sobreposto */}
