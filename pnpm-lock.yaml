@@ -114,8 +114,8 @@ dependencies:
     specifier: ^7.6.1
     version: 7.6.1
   konva:
-    specifier: 9.3.22
-    version: 9.3.22
+    specifier: 10.0.1
+    version: 10.0.1
   lucide-react:
     specifier: ^0.475.0
     version: 0.475.0(react@18.3.1)
@@ -147,8 +147,8 @@ dependencies:
     specifier: ^7.6.1
     version: 7.6.1(react@18.3.1)
   react-konva:
-    specifier: 19.0.8
-    version: 19.0.8(@types/react@18.0.0)(konva@9.3.22)(react-dom@18.3.1)(react@18.3.1)
+    specifier: 19.0.10
+    version: 19.0.10(@types/react@18.0.0)(konva@10.0.1)(react-dom@18.3.1)(react@18.3.1)
   react-resizable-panels:
     specifier: ^3.0.5
     version: 3.0.5(react-dom@18.3.1)(react@18.3.1)
@@ -6908,8 +6908,8 @@ packages:
       graceful-fs: 4.2.11
     dev: false
 
-  /konva@9.3.22:
-    resolution: {integrity: sha512-yQI5d1bmELlD/fowuyfOp9ff+oamg26WOCkyqUyc+nczD/lhRa3EvD2MZOoc4c1293TAubW9n34fSQLgSeEgSw==}
+  /konva@10.0.1:
+    resolution: {integrity: sha512-rcL2MZgM0/3x35TgMS2in10PtXcmORrQ9I09LjYKZVx0RcHlgZf2L70nSI0zemzHho8bZwtjxw1LZOMm3NTpOQ==}
     dev: false
 
   /kuler@2.0.0:
@@ -7790,8 +7790,8 @@ packages:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
     dev: false
 
-  /react-konva@19.0.8(@types/react@18.0.0)(konva@9.3.22)(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-RMT853VMwFeaRxAHYSvWXm8rpA7gu3cPV4LodSJPU3423Stewotgym/DLfxjoZnKKR8u3P81rUzZvS5ASq+r9g==}
+  /react-konva@19.0.10(@types/react@18.0.0)(konva@10.0.1)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-tJID7bungYs8ri5McjjlHWCniQMAasiNkTgATd8OJEnLrz3B7S5JN7nFkNfWETIHPx9rEN3gc+kQg32RhdZJcw==}
     peerDependencies:
       konva: ^8.0.1 || ^7.2.5 || ^9.0.0 || ^10.0.0
       react: ^18.3.1 || ^19.0.0
@@ -7799,7 +7799,7 @@ packages:
     dependencies:
       '@types/react-reconciler': 0.32.1(@types/react@18.0.0)
       its-fine: 2.0.0(@types/react@18.0.0)(react@18.3.1)
-      konva: 9.3.22
+      konva: 10.0.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-reconciler: 0.32.0(react@18.3.1)
