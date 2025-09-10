@@ -1,14 +1,14 @@
 // src/components/design-editor/constants/design-defaults.ts
 export const DESIGN_DEFAULTS = {
-  fill: "#222222",
-  stroke: "#222222",
+  fill: "#111111",
+  stroke: "#111111",
   strokeWidth: 0,
   opacity: 1,
   shadowBlur: 0,
   shadowOffsetX: 0,
   shadowOffsetY: 0,
   line: {
-    stroke: "#222222",
+    stroke: "#111111",
     strokeWidth: 2,
     opacity: 1,
     shadowBlur: 0,
@@ -16,7 +16,7 @@ export const DESIGN_DEFAULTS = {
     shadowOffsetY: 0,
   },
   text: {
-    fill: "#000000",
+    fill: "#111111",
     opacity: 1,
     shadowBlur: 0,
     shadowOffsetX: 0,

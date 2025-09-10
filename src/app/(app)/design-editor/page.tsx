@@ -1,12 +1,10 @@
-// src/app/(app)/design-editor/page.tsx
-import EditorShell from "@/components/design-editor/EditorShell";
+"use client";
+import dynamic from "next/dynamic";
 
-export const metadata = { title: "Design Editor" };
+const CanvasMinimal = dynamic(() => import("./minimal/CanvasMinimal"), {
+  ssr: false,
+});
 
 export default function DesignEditorPage() {
-  return (
-    <div>
-      <EditorShell />
-    </div>
-  );
+  return <CanvasMinimal />;
 }
