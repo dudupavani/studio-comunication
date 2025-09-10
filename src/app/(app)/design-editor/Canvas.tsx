@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { EditorProvider } from "@/app/(app)/design-editor/minimal/editor/store";
-import { Sidebar } from "@/app/(app)/design-editor/minimal/editor/Sidebar";
-import { StageView } from "@/app/(app)/design-editor/minimal/editor/StageView";
+import { EditorProvider } from "./editor/store";
+import { Sidebar } from "./editor/Sidebar";
+import { StageView } from "./editor/StageView";
 
 export default function CanvasMinimal() {
   return (
