@@ -1,7 +1,7 @@
 // src/components/design-editor/layers/ImagesLayer.tsx
 "use client";
 
-import { Layer } from "react-konva";
+import { Group } from "react-konva";
 import type Konva from "konva";
 import { useCallback, useMemo } from "react";
 import InsertedImageNode, { InsertedImageLike } from "../InsertedImageNode";
@@ -20,7 +20,8 @@ type Props = {
   onMoveImage: (id: string, x: number, y: number) => void;
   onTransformImage: (id: string, patch: Partial<InsertedImageLike>) => void;
 
-  imageRefs: React.MutableRefObject<Record<string, Konva.Group | null>>;
+  // 🔧 corrigido: Konva.Node (não Group)
+  imageRefs: React.MutableRefObject<Record<string, Konva.Node | null>>;
 };
 
 export default function ImagesLayer({
@@ -48,19 +49,18 @@ export default function ImagesLayer({
     return idsFromContext;
   }, [selectedImageIds, selectedImageId, idsFromContext]);
 
-  // ✅ memo dos nós selecionados (sem estados auxiliares)
-  const selectedNodes = useMemo(() => {
-    return effectiveIds
-      .map((id) => imageRefs.current[id] ?? null)
-      .filter(Boolean) as Konva.Node[];
-  }, [effectiveIds, imageRefs]);
-
   // ✅ ref idempotente e **sem setState**
+  // 🔧 corrigido: parâmetro como Konva.Node | null
   const registerRef = useCallback(
-    (id: string, node: Konva.Group | null) => {
+    (id: string, node: Konva.Node | null) => {
       const prev = imageRefs.current[id] ?? null;
       if (prev === node) return; // nada mudou
       imageRefs.current[id] = node;
+      try {
+        node?.id?.(id); // garante id único no Stage (ajuda o Manager a resolver via stage.findOne)
+      } catch {
+        /* noop */
+      }
     },
     [imageRefs]
   );
@@ -79,8 +79,11 @@ export default function ImagesLayer({
     [onSelectImage, actions]
   );
 
+  // ⚠️ Este componente NÃO cria <Layer>. Deve ser renderizado dentro da mesma <Layer>
+  // que contém shapes e textos (ex.: <Layer name="UnifiedLayer"> no Canvas).
+
   return (
-    <Layer name="ImagesLayer">
+    <Group name="ImagesGroup" listening>
       {images.map((img) => (
         <InsertedImageNode
           key={img.id}
@@ -92,8 +95,7 @@ export default function ImagesLayer({
           registerRef={registerRef}
         />
       ))}
-
-      {/* ⚠️ Transformer é centralizado no Canvas pelo TransformerManager */}
-    </Layer>
+      {/* Transformer centralizado no Canvas via TransformerManager */}
+    </Group>
   );
 }

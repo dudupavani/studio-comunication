@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import GroupColorSquare from "@/components/groups/GroupColorSquare";
 import NewGroupModal from "@/components/groups/new-group-modal";
 import { createGroupAction } from "./actions";
+import { CircleOff } from "lucide-react";
 
 type GroupRow = {
   id: string;
@@ -121,9 +122,14 @@ export default async function GroupsPage() {
       </div>
 
       {!groups.length ? (
-        <p className="text-sm text-muted-foreground">
-          Nenhum grupo encontrado.
-        </p>
+        <div className="flex flex-col w-full justify-center items-center gap-4">
+          <div className="flex items-center justify-center text-muted-foreground bg-white border border-gray-100 shadow-lg rounded-lg w-12 h-12">
+            <CircleOff size={24} />
+          </div>
+          <span className="text-sm text-muted-foreground">
+            Nenhum grupo encontrado.
+          </span>
+        </div>
       ) : (
         <ul className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 items-stretch gap-2 lg:gap-4">
           {groups.map((g) => (

@@ -26,18 +26,33 @@ export default function ZoomControls({
   max = 4,
   step = 0.01,
 }: Props) {
+  // Estado do campo de texto (%)
   const [text, setText] = useState(() => String(Math.round(scale * 100)));
+  // Estado CONTROLADO do slider (em %)
+  const [sliderValue, setSliderValue] = useState(() => Math.round(scale * 100));
+  // Flag para evitar “ping-pong” enquanto o usuário está arrastando
+  const [isSliding, setIsSliding] = useState(false);
 
+  // Quando o scale externo mudar (por Fit, ou commit do próprio slider),
+  // refletimos nos controles — mas só se não estamos no meio do drag.
   useEffect(() => {
-    setText(String(Math.round(scale * 100)));
-  }, [scale]);
+    if (!isSliding) {
+      const pct = Math.round(scale * 100);
+      setSliderValue(pct);
+      setText(String(pct));
+    }
+  }, [scale, isSliding]);
 
-  const clamp = (n: number) => Math.min(max, Math.max(min, n));
+  const clampScale = (s: number) => Math.min(max, Math.max(min, s));
+  const clampPct = (pct: number) =>
+    Math.round(Math.min(max * 100, Math.max(min * 100, pct)));
 
   const commitFromText = () => {
     const n = Number(String(text).replace(",", "."));
     if (!Number.isFinite(n)) return;
-    onChangeScale(clamp(n / 100));
+    const pct = clampPct(n);
+    setSliderValue(pct); // mantém slider sincronizado
+    onChangeScale(clampScale(pct / 100));
   };
 
   return (
@@ -61,16 +76,27 @@ export default function ZoomControls({
         />
         <span className="text-sm text-muted-foreground">%</span>
       </div>
-      {/* Slider (0.1–4.0 -> 10%–400%) */}
+
+      {/* Slider (10%–400%) — CONTROLADO */}
       <div className="w-36">
         <Slider
           min={min * 100}
           max={max * 100}
           step={step * 100}
-          value={[Math.round(scale * 100)]}
+          value={[sliderValue]} // CONTROLADO
           onValueChange={(vals) => {
             const v = Array.isArray(vals) ? vals[0] : Number(vals);
-            onChangeScale(clamp((v ?? 100) / 100));
+            setIsSliding(true);
+            const pct = clampPct(v ?? 100);
+            setSliderValue(pct);
+            setText(String(pct)); // feedback imediato no input
+          }}
+          onValueCommit={(vals) => {
+            const v = Array.isArray(vals) ? vals[0] : Number(vals);
+            const pct = clampPct(v ?? 100);
+            setIsSliding(false);
+            setSliderValue(pct);
+            onChangeScale(clampScale(pct / 100)); // só comita ao soltar
           }}
           aria-label="Controle de zoom"
         />

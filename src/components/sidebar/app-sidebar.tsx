@@ -51,7 +51,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   alt="Logo"
                   width={40}
                   height={40}
-                  className="object-contain"
+                  className="object-contain min-w-[40px] min-h-[40px]"
                 />
               </div>
             </Link>
@@ -66,55 +66,65 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start p-3"
+                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                   asChild>
                   <Link href="/dashboard">
                     <AppWindowMac size={20} />
-                    <span className="ml-2">Painel</span>
+                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                      Painel
+                    </span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start p-3"
+                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                   asChild>
                   <Link href="/calendar">
                     <Calendar size={20} />
-                    <span className="ml-2">Calendário</span>
+                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                      Calendário
+                    </span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start p-3"
+                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                   asChild>
                   <Link href="/design-editor">
                     <LaptopMinimalCheck size={20} />
-                    <span className="ml-2">Designer</span>
+                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                      Designer
+                    </span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start p-3"
+                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                   asChild>
                   <Link href="/users">
                     <UserCog size={20} />
-                    <span className="ml-2">Usuários</span>
+                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                      Usuários
+                    </span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start p-3"
+                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                   asChild>
                   <Link href="/groups">
                     <Group size={20} />
-                    <span className="ml-2">Grupos</span>
+                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                      Grupos
+                    </span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
@@ -123,11 +133,13 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start p-3"
+                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                   asChild>
                   <Link href="/settings">
                     <Settings size={20} />
-                    <span className="ml-2">Configuração</span>
+                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                      Configuração
+                    </span>
                   </Link>
                 </Button>
               </SidebarMenuItem>
@@ -135,11 +147,13 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start p-3"
+                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                   asChild>
                   <Link href="/units">
                     <Warehouse size={20} />
-                    <span className="ml-2">Unidades</span>
+                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                      Unidades
+                    </span>
                   </Link>
                 </Button>
               </SidebarMenuItem>

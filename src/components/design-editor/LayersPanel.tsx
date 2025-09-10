@@ -144,9 +144,9 @@ export default function LayersPanel({ className }: Props) {
   const isSelected = (id: string) => selectedIds.includes(id);
 
   return (
-    <aside className={clsx("flex h-full w-full flex-col gap-2 p-2", className)}>
+    <aside className={clsx("flex h-full w-full flex-col p-1", className)}>
       <header className="mb-1 flex items-center justify-between px-1">
-        <h3 className="text-lg font-semibold">Camadas</h3>
+        <h3 className="text-lg font-semibold p-2">Camadas</h3>
       </header>
 
       <div className="min-h-0 flex-1 overflow-auto">
@@ -178,17 +178,17 @@ export default function LayersPanel({ className }: Props) {
               <li
                 key={it.id}
                 className={clsx(
-                  "group flex items-center justify-start gap-2 rounded-md border px-1.5 py-1",
+                  "group flex items-center justify-start gap-2 border border-gray-200 rounded-md pl-1 pr-1.5 py-1",
                   selected
-                    ? "border-primary/40 bg-gray-200"
-                    : "border-gray-100 bg-gray-50 hover:bg-gray-100"
+                    ? "border-gray-300 bg-gray-200"
+                    : "border-gray-100 bg-white hover:bg-gray-100 transition"
                 )}>
                 {/* Z-order */}
-                <div className="flex flex-col">
+                <div className="flex flex-col opacity-40 group-hover:opacity-100 transition-all duration-300">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-5 w-5"
                     title={
                       canReorder
                         ? "Trazer para frente"
@@ -205,7 +205,7 @@ export default function LayersPanel({ className }: Props) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-5 w-5"
                     title={
                       canReorder ? "Enviar para trás" : "Reordenar indisponível"
                     }
@@ -236,7 +236,7 @@ export default function LayersPanel({ className }: Props) {
                 </Button>
 
                 {/* Ações */}
-                <div className="flex shrink-0 items-center">
+                <div className="flex shrink-0 items-center  opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto scale-95 group-hover:scale-100 transition-all duration-150">
                   {/* Ocultar/Mostrar */}
                   <Button
                     variant="ghost"

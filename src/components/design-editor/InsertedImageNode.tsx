@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { Group, Image as KonvaImage } from "react-konva";
+import { Image as KonvaImage } from "react-konva";
 import type Konva from "konva";
 
 // ⚠️ Mantém o tipo existente no projeto
@@ -24,7 +24,8 @@ type Props = {
   onSelect: (id: string, multi?: boolean) => void;
   onMove: (id: string, x: number, y: number) => void;
   onTransform: (id: string, patch: Partial<InsertedImageLike>) => void;
-  registerRef: (id: string, node: Konva.Group | null) => void;
+  // ✅ aceitar qualquer Konva.Node (agora é o próprio Konva.Image)
+  registerRef: (id: string, node: Konva.Node | null) => void;
 };
 
 const TRANSPARENT_1PX =
@@ -38,12 +39,12 @@ export default function InsertedImageNode({
   onTransform,
   registerRef,
 }: Props) {
-  const groupRef = useRef<Konva.Group>(null);
+  const imageRef = useRef<Konva.Image>(null);
   const [imgEl, setImgEl] = useState<HTMLImageElement | null>(null);
 
   // registra / remove ref no mapa compartilhado
   useEffect(() => {
-    registerRef(data.id, groupRef.current);
+    registerRef(data.id, imageRef.current);
     return () => registerRef(data.id, null);
   }, [data.id, registerRef]);
 
@@ -51,17 +52,27 @@ export default function InsertedImageNode({
   useEffect(() => {
     let cancelled = false;
 
+    const notifyDraw = () => {
+      // força redesenho para o Transformer pegar o tamanho final
+      imageRef.current?.getLayer()?.batchDraw();
+      imageRef.current?.getStage()?.batchDraw();
+    };
+
     const load = () => {
       const el = new window.Image();
       el.crossOrigin = "anonymous";
       el.onload = () => {
-        if (!cancelled) setImgEl(el);
+        if (!cancelled) {
+          setImgEl(el);
+          notifyDraw();
+        }
       };
       el.onerror = () => {
         if (!cancelled) {
           const fallback = new window.Image();
           fallback.src = TRANSPARENT_1PX;
           setImgEl(fallback);
+          notifyDraw();
         }
       };
       el.src = data.url;
@@ -97,14 +108,14 @@ export default function InsertedImageNode({
 
   const handleDragEnd = useCallback(
     (e: Konva.KonvaEventObject<DragEvent>) => {
-      const node = e.target as Konva.Group;
+      const node = e.target as Konva.Image;
       onMove(data.id, node.x(), node.y());
     },
     [data.id, onMove]
   );
 
   const handleTransformEnd = useCallback(() => {
-    const node = groupRef.current;
+    const node = imageRef.current;
     if (!node) return;
     onTransform(data.id, {
       x: node.x(),
@@ -119,20 +130,24 @@ export default function InsertedImageNode({
     typeof (data as any).opacity === "number" ? (data as any).opacity : 1;
 
   return (
-    <Group
-      ref={groupRef}
+    <KonvaImage
+      id={data.id}
+      ref={imageRef}
+      image={imageToUse}
       x={data.x}
       y={data.y}
       scaleX={data.scaleX ?? 1}
       scaleY={data.scaleY ?? 1}
       rotation={data.rotation ?? 0}
+      opacity={opacity}
       draggable
       onDragEnd={handleDragEnd}
       onTransformEnd={handleTransformEnd}
       onMouseDown={handleClick}
       onTap={handleClick}
-      listening>
-      <KonvaImage image={imageToUse} opacity={opacity} listening />
-    </Group>
+      // ajuda a selecionar imagens pequenas
+      hitStrokeWidth={10}
+      listening
+    />
   );
 }

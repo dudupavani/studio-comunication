@@ -13,7 +13,6 @@ import type Konva from "konva";
 import {
   Stage,
   Layer,
-  Group,
   Rect,
   Circle,
   Line,
@@ -24,7 +23,7 @@ import {
 
 import EventBridge from "./EventBridge";
 import DnDContainer from "./DnDContainer";
-import ZoomControls from "./ZoomControls";
+// import ZoomControls from "./ZoomControls"; // mantido fora para evitar loop do Slider
 import TransformerManager from "@/components/design-editor/TransformerManager";
 import MarqueeOverlay from "@/components/design-editor/layers/MarqueeOverlay";
 
@@ -56,13 +55,10 @@ import InsertedImageNode, {
 
 import { useEditorState } from "@/components/design-editor/EditorStateContext";
 
-// ===== Tipo da pilha unificada (baixo -> topo) =====
-type StackItem = { kind: "shape" | "image"; id: string };
-
 export default function Canvas() {
   // ---------- refs ----------
   const containerRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<Konva.Stage>(null);
+  const stageRef = useRef<Konva.Stage | null>(null);
 
   // 🔹 viewport / zoom / pan
   const [viewport, setViewport] = useState({ width: 800, height: 600 });
@@ -105,6 +101,7 @@ export default function Canvas() {
   // ✅ Selection — via contexto
   const { selection, actions: sel } = useSelectionContext();
 
+  // Mantemos esse derivado para teclas (Delete) e multi-drag; incluir textos aqui é OK.
   const selectedShapeIds = useMemo<string[]>(() => {
     if (!selection || selection.kind === "none") return [];
     if (selection.kind === "shape" || selection.kind === "text")
@@ -193,6 +190,83 @@ export default function Canvas() {
       updateImage(id, { x, y });
     },
     [updateImage]
+  );
+
+  // ===== persistência de transform para shapes =====
+  const handleShapeTransformEnd = useCallback(
+    (s: AnyShape) => {
+      const node = shapeRefs.current[s.id] as Konva.Node | null;
+      if (!node || !(node as any).getStage?.()) return;
+
+      // leitura de transform atual
+      const x = (node as any).x?.() as number;
+      const y = (node as any).y?.() as number;
+      const rotation = (node as any).rotation?.() as number;
+      const scaleX = (node as any).scaleX?.() as number;
+      const scaleY = (node as any).scaleY?.() as number;
+
+      const sx = Number.isFinite(scaleX) ? scaleX : 1;
+      const sy = Number.isFinite(scaleY) ? scaleY : 1;
+
+      const baseW = (node as any).width?.() as number | undefined;
+      const baseH = (node as any).height?.() as number | undefined;
+
+      if (s.type === "rect") {
+        const r = s as ShapeRect;
+        const width = Math.max(1, (baseW ?? r.width) * sx);
+        const height = Math.max(1, (baseH ?? r.height) * sy);
+        updateShape(s.id, { x, y, rotation, width, height });
+      } else if (s.type === "circle") {
+        const cnode = node as unknown as Konva.Circle;
+        const baseRadius =
+          (cnode as any).radius?.() ??
+          (baseW && baseH
+            ? Math.min(baseW, baseH) / 2
+            : (s as ShapeCircle).radius);
+        const factor = Math.max(sx, sy);
+        const radius = Math.max(1, baseRadius * factor);
+        updateShape(s.id, { x, y, rotation, radius });
+      } else if (s.type === "triangle") {
+        const pnode = node as unknown as Konva.RegularPolygon;
+        const baseRadius =
+          (pnode as any).radius?.() ??
+          (baseW && baseH
+            ? Math.min(baseW, baseH) / 2
+            : (s as ShapeTriangle).radius);
+        const factor = Math.max(sx, sy);
+        const radius = Math.max(1, baseRadius * factor);
+        updateShape(s.id, { x, y, rotation, radius });
+      } else if (s.type === "star") {
+        const snode = node as unknown as Konva.Star;
+        const baseInner =
+          (snode as any).innerRadius?.() ?? (s as ShapeStar).innerRadius;
+        const baseOuter =
+          (snode as any).outerRadius?.() ?? (s as ShapeStar).outerRadius;
+        const factor = Math.max(sx, sy);
+        const innerRadius = Math.max(1, baseInner * factor);
+        const outerRadius = Math.max(1, baseOuter * factor);
+        updateShape(s.id, { x, y, rotation, innerRadius, outerRadius });
+      } else if (s.type === "line") {
+        const lnode = node as unknown as Konva.Line;
+        const points: number[] =
+          (lnode as any).points?.() ?? (s as ShapeLine).points ?? [];
+        const newPoints = points.map((v, i) => (i % 2 === 0 ? v * sx : v * sy));
+        updateShape(s.id, { x, y, rotation, points: newPoints });
+      } else if (s.type === "text") {
+        const tnode = node as unknown as Konva.Text;
+        const baseWidth =
+          (tnode as any).width?.() ?? (s as ShapeText).width ?? 0;
+        const width = Math.max(1, baseWidth * sx);
+        updateShape(s.id, { x, y, rotation, width });
+      }
+
+      // reset de escala no node para evitar acúmulo
+      (node as any).scaleX?.(1);
+      (node as any).scaleY?.(1);
+
+      node.getLayer()?.batchDraw();
+    },
+    [updateShape]
   );
 
   // ===== Inserir shape no ponto =====
@@ -304,12 +378,12 @@ export default function Canvas() {
     }
 
     addShape(newShape, true);
-    scheduleSel(() => sel.select("shape", newShape.id));
+    // ✅ seleciona o tipo correto ao criar
+    const createdKind = type === "text" ? "text" : "shape";
+    scheduleSel(() => sel.select(createdKind, newShape.id));
   }
 
-  // ===== Receber patch vindo dos painéis (sem event-bus) =====
-  // -> O painel agora chama updateShape via contexto diretamente.
-  //    Mantemos este util só para patches de texto aplicados no Konva Node.
+  // ===== Patches locais de texto (sem event-bus) =====
   const applyTextPatchLocalNode = useCallback(
     (id: string, patch: Partial<ShapeText>) => {
       const node = shapeRefs.current[id];
@@ -474,7 +548,7 @@ export default function Canvas() {
         A.y <= B.y + B.height &&
         A.y + A.height >= B.y;
 
-      // 🔹 Shapes
+      // 🔹 Shapes (inclui textos)
       const shapeIdSet = new Set<string>();
       for (const s of shapesRef.current) {
         const node = shapeRefs.current[s.id] as Konva.Node | null;
@@ -483,9 +557,6 @@ export default function Canvas() {
         const bb = node.getClientRect();
         if (intersects(aStage, bb)) shapeIdSet.add(s.id);
       }
-      const orderedShapeIds = shapesRef.current
-        .filter((s) => shapeIdSet.has(s.id))
-        .map((s) => s.id);
 
       // 🔹 Imagens
       const imageIds: string[] = [];
@@ -497,13 +568,39 @@ export default function Canvas() {
         if (intersects(aStage, bb)) imageIds.push(img.id);
       }
 
+      // Separa textos de shapes não-texto preservando ordem declarativa
+      const orderedTextIds = shapesRef.current
+        .filter((s) => shapeIdSet.has(s.id) && s.type === "text")
+        .map((s) => s.id);
+      const orderedPureShapeIds = shapesRef.current
+        .filter((s) => shapeIdSet.has(s.id) && s.type !== "text")
+        .map((s) => s.id);
+
       scheduleSel(() => {
-        if (imageIds.length && orderedShapeIds.length) {
-          sel.replace({ kind: "mixed", shapeIds: orderedShapeIds, imageIds });
-        } else if (imageIds.length) {
+        const hasText = orderedTextIds.length > 0;
+        const hasShape = orderedPureShapeIds.length > 0;
+        const hasImage = imageIds.length > 0;
+
+        if (hasImage && (hasShape || hasText)) {
+          sel.replace({
+            kind: "mixed",
+            shapeIds: orderedPureShapeIds,
+            textIds: orderedTextIds,
+            imageIds,
+          });
+        } else if (hasImage) {
           sel.replace({ kind: "image", ids: imageIds });
-        } else if (orderedShapeIds.length) {
-          sel.replace({ kind: "shape", ids: orderedShapeIds });
+        } else if (hasShape && hasText) {
+          sel.replace({
+            kind: "mixed",
+            shapeIds: orderedPureShapeIds,
+            textIds: orderedTextIds,
+            imageIds: [],
+          });
+        } else if (hasText) {
+          sel.replace({ kind: "text", ids: orderedTextIds });
+        } else if (hasShape) {
+          sel.replace({ kind: "shape", ids: orderedPureShapeIds });
         } else {
           sel.clear();
         }
@@ -513,10 +610,6 @@ export default function Canvas() {
       return { active: false, x1: 0, y1: 0, x2: 0, y2: 0 };
     });
   };
-
-  // zoom controls
-  const handleChangeScale = (s: number) => applyCenterFromScale(s);
-  const handleFit = () => applyCenterFromScale(fitScale);
 
   // ✅ Inserir imagem (EventBridge) no centro da artboard
   const handleInsertImage = useCallback(
@@ -737,7 +830,7 @@ export default function Canvas() {
 
   // ===== Renderer de SHAPES (num único Layer) =====
   const ShapeNode = ({ s }: { s: AnyShape }) => {
-    // seleção multi (shift/cmd/ctrl)
+    // seleção (shift/cmd/ctrl)
     const handleClick = useCallback(
       (evt: any) => {
         const multi = !!(
@@ -745,125 +838,161 @@ export default function Canvas() {
           evt?.evt?.metaKey ||
           evt?.evt?.ctrlKey
         );
+        const kind = s.type === "text" ? "text" : "shape";
         scheduleSel(() => {
-          if (multi) sel.toggle("shape", s.id);
-          else sel.select("shape", s.id);
+          if (multi) sel.toggle(kind, s.id);
+          else sel.select(kind, s.id);
         });
         evt.cancelBubble = true;
       },
-      [s.id, scheduleSel, sel]
+      [s.id, scheduleSel, sel, s.type]
+    );
+
+    // ✅ usar callback-ref para registrar nó SEM setState (evita loops)
+    const assignRef = useCallback(
+      (node: Konva.Node | null) => {
+        const prev = shapeRefs.current[s.id] ?? null;
+        if (prev !== node) {
+          shapeRefs.current[s.id] = node;
+          try {
+            node?.id?.(s.id); // id no Stage (opcional)
+          } catch {
+            /* noop */
+          }
+        }
+      },
+      [s.id]
     );
 
     const common = {
+      id: s.id,
       x: s.x,
       y: s.y,
       rotation: s.rotation ?? 0,
       opacity: (s as any).opacity ?? 1,
       draggable: !s.isLocked,
-      onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => {
+      onDragEnd: (e: Konva.KonvaEventObject<any>) => {
         const node = e.target as Konva.Node;
         handleMoveShape(s.id, node.x(), node.y());
       },
-      onMouseDown: handleClick,
+      onTransformEnd: () => handleShapeTransformEnd(s),
+      onClick: handleClick,
       onTap: handleClick,
+      listening: true,
     };
 
     if (s.type === "text") {
+      const tx = s as ShapeText;
       return (
         <KText
-          ref={(n) => {
-            shapeRefs.current[s.id] = n;
-          }}
+          ref={assignRef}
           {...common}
-          text={(s as ShapeText).text}
-          fontFamily={(s as ShapeText).fontFamily}
-          fontSize={(s as ShapeText).fontSize}
-          fontStyle={(s as ShapeText).fontStyle}
-          align={(s as ShapeText).align as any}
-          lineHeight={(s as ShapeText).lineHeight}
-          letterSpacing={(s as ShapeText).letterSpacing}
-          width={(s as ShapeText).width}
-          height={(s as ShapeText).height}
-          padding={(s as ShapeText).padding}
-          fill={(s as ShapeText).fill}
-          listening
+          text={tx.text}
+          fontFamily={tx.fontFamily}
+          fontSize={tx.fontSize}
+          fontStyle={tx.fontStyle}
+          align={tx.align as any}
+          lineHeight={tx.lineHeight}
+          letterSpacing={tx.letterSpacing}
+          width={tx.width}
+          height={tx.height}
+          padding={tx.padding}
+          fill={tx.fill}
         />
       );
     }
 
-    return (
-      <Group
-        ref={(n) => {
-          shapeRefs.current[s.id] = n;
-        }}
-        {...common}
-        listening>
-        {s.type === "rect" && (
-          <Rect
-            width={(s as ShapeRect).width}
-            height={(s as ShapeRect).height}
-            fill={(s as any).fill}
-            stroke={(s as any).stroke}
-            strokeWidth={(s as any).strokeWidth}
-            shadowBlur={(s as any).shadowBlur}
-            shadowOffsetX={(s as any).shadowOffsetX}
-            shadowOffsetY={(s as any).shadowOffsetY}
-          />
-        )}
+    if (s.type === "rect") {
+      const r = s as ShapeRect;
+      return (
+        <Rect
+          ref={assignRef}
+          {...common}
+          width={r.width}
+          height={r.height}
+          fill={(s as any).fill}
+          stroke={(s as any).stroke}
+          strokeWidth={(s as any).strokeWidth}
+          shadowBlur={(s as any).shadowBlur}
+          shadowOffsetX={(s as any).shadowOffsetX}
+          shadowOffsetY={(s as any).shadowOffsetY}
+        />
+      );
+    }
 
-        {s.type === "circle" && (
-          <Circle
-            radius={(s as ShapeCircle).radius}
-            fill={(s as any).fill}
-            stroke={(s as any).stroke}
-            strokeWidth={(s as any).strokeWidth}
-            shadowBlur={(s as any).shadowBlur}
-            shadowOffsetX={(s as any).shadowOffsetX}
-            shadowOffsetY={(s as any).shadowOffsetY}
-          />
-        )}
+    if (s.type === "circle") {
+      const c = s as ShapeCircle;
+      return (
+        <Circle
+          ref={assignRef}
+          {...common}
+          radius={c.radius}
+          fill={(s as any).fill}
+          stroke={(s as any).stroke}
+          strokeWidth={(s as any).strokeWidth}
+          shadowBlur={(s as any).shadowBlur}
+          shadowOffsetX={(s as any).shadowOffsetX}
+          shadowOffsetY={(s as any).shadowOffsetY}
+        />
+      );
+    }
 
-        {s.type === "triangle" && (
-          <RegularPolygon
-            sides={3}
-            radius={(s as ShapeTriangle).radius}
-            fill={(s as any).fill}
-            stroke={(s as any).stroke}
-            strokeWidth={(s as any).strokeWidth}
-            shadowBlur={(s as any).shadowBlur}
-            shadowOffsetX={(s as any).shadowOffsetX}
-            shadowOffsetY={(s as any).shadowOffsetY}
-          />
-        )}
+    if (s.type === "triangle") {
+      const t = s as ShapeTriangle;
+      return (
+        <RegularPolygon
+          ref={assignRef}
+          {...common}
+          sides={3}
+          radius={t.radius}
+          fill={(s as any).fill}
+          stroke={(s as any).stroke}
+          strokeWidth={(s as any).strokeWidth}
+          shadowBlur={(s as any).shadowBlur}
+          shadowOffsetX={(s as any).shadowOffsetX}
+          shadowOffsetY={(s as any).shadowOffsetY}
+        />
+      );
+    }
 
-        {s.type === "line" && (
-          <Line
-            points={(s as ShapeLine).points}
-            stroke={(s as ShapeLine).stroke}
-            strokeWidth={(s as ShapeLine).strokeWidth}
-            lineCap={(s as ShapeLine).lineCap as any}
-            opacity={(s as ShapeLine).opacity}
-            shadowBlur={(s as any).shadowBlur}
-            shadowOffsetX={(s as any).shadowOffsetX}
-            shadowOffsetY={(s as any).shadowOffsetY}
-          />
-        )}
+    if (s.type === "line") {
+      const l = s as ShapeLine;
+      return (
+        <Line
+          ref={assignRef}
+          {...common}
+          points={l.points}
+          stroke={l.stroke}
+          strokeWidth={l.strokeWidth}
+          lineCap={l.lineCap as any}
+          hitStrokeWidth={Math.max(l.strokeWidth ?? 0, 10)}
+          shadowBlur={(s as any).shadowBlur}
+          shadowOffsetX={(s as any).shadowOffsetX}
+          shadowOffsetY={(s as any).shadowOffsetY}
+        />
+      );
+    }
 
-        {s.type === "star" && (
-          <Star
-            numPoints={(s as ShapeStar).numPoints}
-            innerRadius={(s as ShapeStar).innerRadius}
-            outerRadius={(s as ShapeStar).outerRadius}
-            fill={(s as any).fill}
-            stroke={(s as any).stroke}
-            strokeWidth={(s as any).strokeWidth}
-            shadowBlur={(s as any).shadowBlur}
-            shadowOffsetX={(s as any).shadowOffsetX}
-            shadowOffsetY={(s as any).shadowOffsetY}
-          />
-        )}
-      </Group>
-    );
+    if (s.type === "star") {
+      const st = s as ShapeStar;
+      return (
+        <Star
+          ref={assignRef}
+          {...common}
+          numPoints={st.numPoints}
+          innerRadius={st.innerRadius}
+          outerRadius={st.outerRadius}
+          fill={(s as any).fill}
+          stroke={(s as any).stroke}
+          strokeWidth={(s as any).strokeWidth}
+          shadowBlur={(s as any).shadowBlur}
+          shadowOffsetX={(s as any).shadowOffsetX}
+          shadowOffsetY={(s as any).shadowOffsetY}
+        />
+      );
+    }
+
+    return null;
   };
 
   // ===== Stage =====
@@ -875,7 +1004,7 @@ export default function Canvas() {
       onMouseMove={onContainerMouseMove}
       onMouseUp={onContainerMouseUp}
       onMouseLeave={onContainerMouseUp}>
-      {/* Bridge: mantém compatibilidade com botões/atalhos externos */}
+      {/* Bridge */}
       <EventBridge
         onCreate={(type, coords) => {
           const stage = stageRef.current;
@@ -900,13 +1029,17 @@ export default function Canvas() {
             scheduleSel(() => sel.clear());
             return;
           }
-          const isShape = shapesRef.current.some((s) => s.id === id);
+          const shapeObj = shapesRef.current.find((s) => s.id === id) || null;
           const isImage = insertedImagesRef.current.some(
             (img) => img.id === id
           );
 
-          if (isShape) scheduleSel(() => sel.select("shape", id));
-          else if (isImage) scheduleSel(() => sel.select("image", id));
+          if (shapeObj) {
+            const kind = shapeObj.type === "text" ? "text" : "shape";
+            scheduleSel(() => sel.select(kind, id));
+          } else if (isImage) {
+            scheduleSel(() => sel.select("image", id));
+          }
         }}
         onDelete={(id) => {
           if (id) {
@@ -986,12 +1119,23 @@ export default function Canvas() {
             return false;
           };
 
+          // 👇 impede que cliques no Transformer sejam tratados como "vazio"
+          const isWithinTransformer = (node: Konva.Node | null) => {
+            let n: Konva.Node | null = node;
+            while (n) {
+              if ((n as any).getClassName?.() === "Transformer") return true;
+              n = n.getParent();
+            }
+            return false;
+          };
+
           const allInteractive = [
             ...Object.values(shapeRefs.current),
             ...Object.values(imageRefs.current),
           ];
           const clickedOnEmpty =
-            target === stage || !isDescendantOfAny(target, allInteractive);
+            !isWithinTransformer(target) &&
+            (target === stage || !isDescendantOfAny(target, allInteractive));
 
           if (
             e.evt?.button === 0 &&
@@ -1039,12 +1183,22 @@ export default function Canvas() {
             return false;
           };
 
+          const isWithinTransformer = (node: Konva.Node | null) => {
+            let n: Konva.Node | null = node;
+            while (n) {
+              if ((n as any).getClassName?.() === "Transformer") return true;
+              n = n.getParent();
+            }
+            return false;
+          };
+
           const allInteractive = [
             ...Object.values(shapeRefs.current),
             ...Object.values(imageRefs.current),
           ];
           const clickedOnEmpty =
-            target === stage || !isDescendantOfAny(target, allInteractive);
+            !isWithinTransformer(target) &&
+            (target === stage || !isDescendantOfAny(target, allInteractive));
 
           if (clickedOnEmpty) {
             scheduleSel(() => sel.clear());
@@ -1081,7 +1235,16 @@ export default function Canvas() {
                   onMove={handleMoveImage}
                   onTransform={(id, patch) => updateImage(id, patch)}
                   registerRef={(id, node) => {
-                    imageRefs.current[id] = node;
+                    // ✅ sem setState aqui: apenas mantenha a referência
+                    const prev = imageRefs.current[id] ?? null;
+                    if (prev !== node) {
+                      imageRefs.current[id] = node;
+                      try {
+                        node?.id?.(id);
+                      } catch {
+                        /* noop */
+                      }
+                    }
                   }}
                 />
               );
@@ -1093,28 +1256,26 @@ export default function Canvas() {
 
             return <ShapeNode key={`shape-${s.id}`} s={s} />;
           })}
+
+          {/* 🔧 Transformer na MESMA Layer */}
+          {hasAnySelection && (
+            <TransformerManager
+              stageRef={stageRef}
+              shapeRefs={shapeRefs}
+              imageRefs={imageRefs}
+            />
+          )}
         </Layer>
 
-        {/* 🔧 Overlay (Transformer + Marquee) */}
-        {(hasAnySelection || marquee.active) && (
+        {/* 🔧 Overlay apenas para o Marquee */}
+        {marquee.active && (
           <Layer name="OverlayLayer" listening={false}>
-            {hasAnySelection && (
-              <TransformerManager shapeRefs={shapeRefs} imageRefs={imageRefs} />
-            )}
             <MarqueeOverlay marquee={marquee} />
           </Layer>
         )}
       </Stage>
 
-      {/* 🔹 Controles de Zoom */}
-      <ZoomControls
-        scale={scale}
-        onChangeScale={handleChangeScale}
-        onFit={handleFit}
-        min={0.1}
-        max={4}
-        step={0.01}
-      />
+      {/* ZoomControls temporariamente desativado */}
     </div>
   );
 }
