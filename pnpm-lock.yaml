@@ -114,7 +114,7 @@ dependencies:
     specifier: ^7.6.1
     version: 7.6.1
   konva:
-    specifier: ^9.3.22
+    specifier: 9.3.22
     version: 9.3.22
   lucide-react:
     specifier: ^0.475.0
@@ -147,8 +147,8 @@ dependencies:
     specifier: ^7.6.1
     version: 7.6.1(react@18.3.1)
   react-konva:
-    specifier: ^19.0.7
-    version: 19.0.7(@types/react@18.0.0)(konva@9.3.22)(react-dom@18.3.1)(react@18.3.1)
+    specifier: 19.0.8
+    version: 19.0.8(@types/react@18.0.0)(konva@9.3.22)(react-dom@18.3.1)(react@18.3.1)
   react-resizable-panels:
     specifier: ^3.0.5
     version: 3.0.5(react-dom@18.3.1)(react@18.3.1)
@@ -7790,10 +7790,10 @@ packages:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
     dev: false
 
-  /react-konva@19.0.7(@types/react@18.0.0)(konva@9.3.22)(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-uYWCpSv4ajLymTh8S8fV9396fHDX7eDTWiLGkYlBuawud5MoNiuGjapPhA5Avdy/Jfh9P2KaWuNf4i9PI1F9HQ==}
+  /react-konva@19.0.8(@types/react@18.0.0)(konva@9.3.22)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-RMT853VMwFeaRxAHYSvWXm8rpA7gu3cPV4LodSJPU3423Stewotgym/DLfxjoZnKKR8u3P81rUzZvS5ASq+r9g==}
     peerDependencies:
-      konva: ^8.0.1 || ^7.2.5 || ^9.0.0
+      konva: ^8.0.1 || ^7.2.5 || ^9.0.0 || ^10.0.0
       react: ^18.3.1 || ^19.0.0
       react-dom: ^18.3.1 || ^19.0.0
     dependencies:
