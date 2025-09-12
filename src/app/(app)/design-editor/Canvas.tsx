@@ -197,16 +197,38 @@ export default function Canvas() {
     const stage = stageRef.current;
     const node = stage?.findOne<Konva.Text>("#text-1");
     if (!node) return;
+
     const sx = node.scaleX();
+    const sy = node.scaleY();
+
+    const changedByWidthOnly = sx !== 1 && sy === 1; // caso arraste lateral
+    const changedByHeightOnly = sy !== 1 && sx === 1; // ignoramos
+    const changedByCorner = sx !== 1 && sy !== 1; // arraste nos cantos
+
+    if (changedByWidthOnly) {
+      // só ajusta largura da caixa
+      setText((t) => ({
+        ...t,
+        x: node.x(),
+        y: node.y(),
+        rotation: node.rotation(),
+        width: Math.max(20, node.width() * sx),
+      }));
+    } else if (changedByCorner) {
+      // escala caixa + conteúdo
+      setText((t) => ({
+        ...t,
+        x: node.x(),
+        y: node.y(),
+        rotation: node.rotation(),
+        width: Math.max(20, node.width() * sx),
+        fontSize: Math.max(8, t.fontSize * sy),
+      }));
+    }
+
+    // reset scale para evitar acumular
     node.scaleX(1);
     node.scaleY(1);
-    setText((t) => ({
-      ...t,
-      x: node.x(),
-      y: node.y(),
-      rotation: node.rotation(),
-      width: Math.max(20, node.width() * sx),
-    }));
   }, []);
 
   const onImageTransformEnd = useCallback(() => {
@@ -337,10 +359,63 @@ export default function Canvas() {
     }
 
     tr.nodes(nodes);
+
+    // 👉 se todos selecionados são Text, restringe anchors
+    if (nodes.length > 0 && nodes.every((n) => n.getClassName() === "Text")) {
+      tr.enabledAnchors([
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+        "middle-left",
+        "middle-right",
+      ]);
+    } else {
+      tr.enabledAnchors([
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+        "middle-left",
+        "middle-right",
+        "top-center",
+        "bottom-center",
+      ]);
+    }
+
     tr.moveToTop();
     tr.getLayer()?.batchDraw();
     tr.getStage()?.batchDraw();
   }, [selectedIds, rect, text, image, imgEl]);
+
+  // ---- Evitar distorção visual em Text durante resize lateral
+  useEffect(() => {
+    const tr = trRef.current;
+    if (!tr) return;
+
+    const handler = () => {
+      const nodes = tr.nodes();
+      if (nodes.length === 0) return;
+
+      // se todos são Text
+      if (nodes.every((n) => n.getClassName() === "Text")) {
+        nodes.forEach((node) => {
+          const sx = node.scaleX();
+          const sy = node.scaleY();
+          if (sx !== 1 && Math.abs(sy - 1) < 0.001) {
+            // redimensiona width e reseta scaleX
+            node.width(node.width() * sx);
+            node.scaleX(1);
+          }
+        });
+      }
+    };
+
+    tr.on("transform", handler);
+    return () => {
+      tr.off("transform", handler);
+    };
+  }, [selectedIds]);
 
   return (
     <Stage
