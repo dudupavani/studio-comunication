@@ -2,11 +2,13 @@
 
 import React, { createContext, useContext, useMemo, useReducer } from "react";
 
-export type ShapeType = "rect" | "circle" | "text";
+/** =======================
+ *  Tipos (uniões discriminadas)
+ *  ======================= */
+export type ShapeKind = "rect" | "circle" | "text";
 
-export type BaseShape = {
+type CommonShape = {
   id: string;
-  type: ShapeType;
   x: number;
   y: number;
   width: number;
@@ -16,38 +18,56 @@ export type BaseShape = {
   stroke?: string;
   strokeWidth?: number;
   draggable: boolean;
-  // Props de texto (para type === "text")
-  text?: string;
-  fontSize?: number;
-  fontFamily?: string;
+};
+
+export type RectShape = CommonShape & { type: "rect" };
+export type CircleShape = CommonShape & { type: "circle" };
+export type TextShape = CommonShape & {
+  type: "text";
+  text: string;
+  fontSize: number;
+  fontFamily: string;
   fontStyle?: string; // "normal" | "bold" | "italic" | ...
   align?: "left" | "center" | "right";
 };
 
+export type Shape = RectShape | CircleShape | TextShape;
+export type ShapePatch = Partial<Shape>;
+
 export type EditorState = {
-  shapes: Record<string, BaseShape>;
+  shapes: Record<string, Shape>;
   order: string[];
   selectedId: string | null;
   editingId: string | null; // texto em edição
   stage: { width: number; height: number; background: string };
 };
 
+/** =======================
+ *  Ações
+ *  ======================= */
 type Action =
-  | { type: "ADD_SHAPE"; payload: BaseShape }
-  | { type: "UPDATE_SHAPE"; id: string; patch: Partial<BaseShape> }
+  | { type: "ADD_SHAPE"; payload: Shape }
+  | { type: "UPDATE_SHAPE"; id: string; patch: ShapePatch }
   | { type: "SELECT"; id: string | null }
   | { type: "DELETE_SELECTED" }
   | { type: "SET_STAGE_SIZE"; width: number; height: number }
   | { type: "START_EDIT_TEXT"; id: string }
   | { type: "END_EDIT_TEXT" };
 
+/** =======================
+ *  Util
+ *  ======================= */
 function genId(prefix: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    // randomUUID já tem 36 chars; usamos um sufixo curto para legibilidade
     return `${prefix}-${(crypto as any).randomUUID().slice(0, 8)}`;
   }
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/** =======================
+ *  Estado inicial
+ *  ======================= */
 const initialState: EditorState = {
   shapes: {},
   order: [],
@@ -56,6 +76,9 @@ const initialState: EditorState = {
   stage: { width: 1000, height: 700, background: "#ffffff" },
 };
 
+/** =======================
+ *  Reducer
+ *  ======================= */
 function reducer(state: EditorState, action: Action): EditorState {
   switch (action.type) {
     case "ADD_SHAPE": {
@@ -74,7 +97,7 @@ function reducer(state: EditorState, action: Action): EditorState {
         ...state,
         shapes: {
           ...state.shapes,
-          [action.id]: { ...state.shapes[action.id], ...action.patch },
+          [action.id]: { ...state.shapes[action.id], ...action.patch } as Shape,
         },
       };
     }
@@ -83,7 +106,7 @@ function reducer(state: EditorState, action: Action): EditorState {
     case "DELETE_SELECTED": {
       const id = state.selectedId;
       if (!id) return state;
-      const { [id]: _, ...rest } = state.shapes;
+      const { [id]: _removed, ...rest } = state.shapes;
       return {
         ...state,
         shapes: rest,
@@ -106,6 +129,9 @@ function reducer(state: EditorState, action: Action): EditorState {
   }
 }
 
+/** =======================
+ *  Contexto e Provider
+ *  ======================= */
 const EditorCtx = createContext<{
   state: EditorState;
   dispatch: React.Dispatch<Action>;
@@ -114,7 +140,7 @@ const EditorCtx = createContext<{
     addCircle: () => void;
     addText: () => void;
     select: (id: string | null) => void;
-    updateShape: (id: string, patch: Partial<BaseShape>) => void;
+    updateShape: (id: string, patch: ShapePatch) => void;
     startEditText: (id: string) => void;
     endEditText: () => void;
     deleteSelected: () => void;
@@ -129,67 +155,60 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     return {
       addRect: () => {
         const id = genId("rect");
-        dispatch({
-          type: "ADD_SHAPE",
-          payload: {
-            id,
-            type: "rect",
-            x: 120,
-            y: 100,
-            width: 220,
-            height: 140,
-            rotation: 0,
-            fill: "#f87171",
-            stroke: "#1f2937",
-            strokeWidth: 0,
-            draggable: true,
-          },
-        });
+        const shape: RectShape = {
+          id,
+          type: "rect",
+          x: 120,
+          y: 100,
+          width: 220,
+          height: 140,
+          rotation: 0,
+          fill: "#f87171",
+          stroke: "#1f2937",
+          strokeWidth: 0,
+          draggable: true,
+        };
+        dispatch({ type: "ADD_SHAPE", payload: shape });
       },
       addCircle: () => {
         const id = genId("circle");
-        dispatch({
-          type: "ADD_SHAPE",
-          payload: {
-            id,
-            type: "circle",
-            x: 420,
-            y: 220,
-            width: 160,
-            height: 160,
-            rotation: 0,
-            fill: "#60a5fa",
-            stroke: "#1f2937",
-            strokeWidth: 0,
-            draggable: true,
-          },
-        });
+        const shape: CircleShape = {
+          id,
+          type: "circle",
+          x: 420,
+          y: 220,
+          width: 160,
+          height: 160,
+          rotation: 0,
+          fill: "#60a5fa",
+          stroke: "#1f2937",
+          strokeWidth: 0,
+          draggable: true,
+        };
+        dispatch({ type: "ADD_SHAPE", payload: shape });
       },
       addText: () => {
         const id = genId("text");
-        dispatch({
-          type: "ADD_SHAPE",
-          payload: {
-            id,
-            type: "text",
-            x: 180,
-            y: 120,
-            width: 300,
-            height: 50,
-            rotation: 0,
-            fill: "#111827",
-            draggable: true,
-            // FIX: inicia sem placeholder salvo
-            text: "Inserir texto aqui...",
-            fontSize: 24,
-            fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto",
-            fontStyle: "normal",
-            align: "left",
-          },
-        });
+        const shape: TextShape = {
+          id,
+          type: "text",
+          x: 180,
+          y: 120,
+          width: 300,
+          height: 50,
+          rotation: 0,
+          fill: "#111827",
+          draggable: true,
+          text: "Inserir texto aqui...",
+          fontSize: 24,
+          fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto",
+          fontStyle: "normal",
+          align: "left",
+        };
+        dispatch({ type: "ADD_SHAPE", payload: shape });
       },
       select: (id: string | null) => dispatch({ type: "SELECT", id }),
-      updateShape: (id: string, patch: Partial<BaseShape>) =>
+      updateShape: (id: string, patch: ShapePatch) =>
         dispatch({ type: "UPDATE_SHAPE", id, patch }),
       startEditText: (id: string) => dispatch({ type: "START_EDIT_TEXT", id }),
       endEditText: () => dispatch({ type: "END_EDIT_TEXT" }),

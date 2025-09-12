@@ -39,17 +39,45 @@ export function StageView() {
     return () => ro.disconnect();
   }, [setStageSize]);
 
+  // Seleciona o nó no Transformer e ajusta as âncoras conforme o tipo
   useEffect(() => {
     const tr = trRef.current;
     const st = stageRef.current;
     if (!tr || !st) return;
+
     if (selectedId) {
       const node = st.findOne(`#${selectedId}`) as Konva.Node | null;
       tr.nodes(node ? [node] : []);
+
+      // ⚙️ Texto não pode ter anchors top-center e bottom-center
+      if (node && node.getClassName() === "Text") {
+        tr.enabledAnchors([
+          "top-left",
+          "top-right",
+          "bottom-left",
+          "bottom-right",
+          "middle-left",
+          "middle-right",
+        ]);
+      } else {
+        tr.enabledAnchors([
+          "top-left",
+          "top-right",
+          "bottom-left",
+          "bottom-right",
+          "middle-left",
+          "middle-right",
+          "top-center",
+          "bottom-center",
+        ]);
+      }
     } else {
       tr.nodes([]);
     }
+
+    tr.moveToTop();
     tr.getLayer()?.batchDraw();
+    tr.getStage()?.batchDraw();
   }, [selectedId, shapes, order]);
 
   useEffect(() => {
@@ -134,25 +162,34 @@ export function StageView() {
             onDblTap={() => startEditText(id)}
             onTransformEnd={(evt: any) => {
               const node = evt.target as Konva.Text;
-              const scaleX = node.scaleX();
-              const scaleY = node.scaleY();
-              const newW = Math.max(
-                20,
-                Math.round((node.width() || s.width) * scaleX)
-              );
-              const newH = Math.max(
-                20,
-                Math.round((node.height() || s.height) * scaleY)
-              );
+              const sx = node.scaleX();
+              const sy = node.scaleY();
+
+              const changedByWidthOnly = sx !== 1 && sy === 1;
+              const changedByHeightOnly = sy !== 1 && sx === 1; // ← ignorar
+              const changedByCorner = sx !== 1 && sy !== 1;
+
+              if (changedByWidthOnly) {
+                updateShape(id, {
+                  x: node.x(),
+                  y: node.y(),
+                  rotation: node.rotation(),
+                  width: Math.max(20, node.width() * sx),
+                });
+              } else if (changedByHeightOnly) {
+                // ignora redimensionamento vertical puro
+              } else if (changedByCorner) {
+                updateShape(id, {
+                  x: node.x(),
+                  y: node.y(),
+                  rotation: node.rotation(),
+                  width: Math.max(20, node.width() * sx),
+                  fontSize: Math.max(8, (s.fontSize || 24) * sy),
+                });
+              }
+
               node.scaleX(1);
               node.scaleY(1);
-              updateShape(id, {
-                x: node.x(),
-                y: node.y(),
-                width: newW,
-                height: newH,
-                rotation: node.rotation(),
-              });
             }}
           />
         );
@@ -161,6 +198,33 @@ export function StageView() {
       return null;
     });
   }, [order, shapes, select, updateShape, editingId, startEditText]);
+
+  // Corrige em tempo real a distorção durante resize lateral do Text
+  useEffect(() => {
+    const tr = trRef.current;
+    if (!tr) return;
+
+    const handler = () => {
+      const nodes = tr.nodes();
+      if (nodes.length === 0) return;
+
+      if (nodes.every((n) => n.getClassName() === "Text")) {
+        nodes.forEach((node) => {
+          const sx = node.scaleX();
+          const sy = node.scaleY();
+          if (sx !== 1 && Math.abs(sy - 1) < 0.001) {
+            node.width(node.width() * sx);
+            node.scaleX(1);
+          }
+        });
+      }
+    };
+
+    tr.on("transform", handler);
+    return () => {
+      tr.off("transform", handler);
+    };
+  }, []);
 
   return (
     <div ref={containerRef} style={{ position: "relative" }}>
