@@ -1,7 +1,13 @@
 // src/app/(app)/design-editor/editor/store.tsx
 "use client";
 
-import React, { createContext, useContext, useMemo, useReducer } from "react";
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useReducer,
+  useRef,
+} from "react";
 
 /** =======================
  *  Tipos (uniões discriminadas)
@@ -73,6 +79,7 @@ export type EditorState = {
   selectedIds: string[];
   editingId: string | null;
   stage: { width: number; height: number; background: string };
+  fileTitle: string;
 };
 
 /** =======================
@@ -89,7 +96,8 @@ type Action =
   | { type: "DELETE_SELECTED" }
   | { type: "SET_STAGE_SIZE"; width: number; height: number }
   | { type: "START_EDIT_TEXT"; id: string }
-  | { type: "END_EDIT_TEXT" };
+  | { type: "END_EDIT_TEXT" }
+  | { type: "SET_FILE_TITLE"; title: string };
 
 function genId(prefix: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -124,6 +132,7 @@ const initialState: EditorState = {
   selectedIds: [],
   editingId: null,
   stage: { width: 700, height: 700, background: "#ffffff" },
+  fileTitle: "Novo arquivo",
 };
 
 /** =======================
@@ -219,6 +228,8 @@ function reducer(state: EditorState, action: Action): EditorState {
       return state;
     case "END_EDIT_TEXT":
       return { ...state, editingId: null };
+    case "SET_FILE_TITLE":
+      return { ...state, fileTitle: action.title };
     default:
       return state;
   }
@@ -236,8 +247,56 @@ const EditorCtx = createContext<{
 export function EditorProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  // 🔹 instância atual do Konva.Stage
+  const stageRef = useRef<any>(null);
+
   const api = useMemo(() => {
     return {
+      // ===== Persistência =====
+      toJSON: () => {
+        return {
+          shapes: state.shapes,
+          order: state.order,
+          stage: state.stage,
+          fileTitle: state.fileTitle,
+        };
+      },
+
+      loadFromJSON: (data: any) => {
+        if (!data) return;
+        dispatch({ type: "CLEAR_SELECTION" });
+        if (data.shapes && data.order) {
+          for (const id of data.order) {
+            if (data.shapes[id]) {
+              dispatch({ type: "ADD_SHAPE", payload: data.shapes[id] });
+            }
+          }
+        }
+        if (data.stage) {
+          dispatch({
+            type: "SET_STAGE_SIZE",
+            width: data.stage.width,
+            height: data.stage.height,
+          });
+          state.stage.background = data.stage.background ?? "#ffffff";
+        }
+        if (data.fileTitle) {
+          dispatch({ type: "SET_FILE_TITLE", title: data.fileTitle });
+        }
+      },
+
+      // ===== Stage instance (thumbnail/export) =====
+      setStageRef: (instance: any) => {
+        stageRef.current = instance;
+      },
+      getStageRef: (): any | null => stageRef.current ?? null,
+      getStageJSON: (): string | null => stageRef.current?.toJSON?.() ?? null,
+
+      // ===== File title =====
+      setFileTitle: (title: string) =>
+        dispatch({ type: "SET_FILE_TITLE", title }),
+
+      // ===== Shapes =====
       addRect: () => {
         const id = genId("rect");
         const shape: RectShape = {
@@ -361,6 +420,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "ADD_SHAPE", payload: shape });
       },
 
+      // ===== Seleção / edição =====
       select: (id: string | null) => dispatch({ type: "SELECT", id }),
       selectOne: (id: string | null) => dispatch({ type: "SELECT_ONE", id }),
       toggleSelect: (id: string) => dispatch({ type: "TOGGLE_SELECT", id }),
@@ -374,7 +434,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       setStageSize: (w: number, h: number) =>
         dispatch({ type: "SET_STAGE_SIZE", width: w, height: h }),
     };
-  }, []);
+  }, [state]);
 
   return (
     <EditorCtx.Provider value={{ state, dispatch, api }}>

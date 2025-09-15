@@ -34,6 +34,7 @@ export function StageView() {
       updateShape,
       deleteSelected,
       startEditText,
+      setStageRef, // <<< adicionado
     },
   } = useEditor();
 
@@ -66,6 +67,13 @@ export function StageView() {
     base: {},
     ids: [],
   });
+
+  // registra o stageRef no store
+  useEffect(() => {
+    if (stageRef.current) {
+      setStageRef(stageRef.current);
+    }
+  }, [setStageRef]);
 
   // ====== Panning fora do Stage (no workspace cinza) ======
   useEffect(() => {
