@@ -5,7 +5,15 @@ import React, { useState } from "react";
 import { useEditor } from "./store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Instagram, Facebook, Linkedin } from "lucide-react";
+import {
+  X,
+  Instagram,
+  Facebook,
+  Linkedin,
+  Youtube,
+  Music2,
+  Twitter,
+} from "lucide-react";
 
 export default function StagePanel({ onClose }: { onClose: () => void }) {
   const {
@@ -86,6 +94,7 @@ export default function StagePanel({ onClose }: { onClose: () => void }) {
         <h3 className="text-sm font-medium mb-1">Templates Rápidos</h3>
 
         <div className="flex flex-col gap-2">
+          {/* Instagram */}
           <Button
             variant="outline"
             className="flex items-center justify-start gap-3 py-6 px-2"
@@ -108,6 +117,7 @@ export default function StagePanel({ onClose }: { onClose: () => void }) {
             </div>
           </Button>
 
+          {/* Facebook */}
           <Button
             variant="outline"
             className="flex items-center justify-start gap-3 py-6 px-2"
@@ -130,6 +140,7 @@ export default function StagePanel({ onClose }: { onClose: () => void }) {
             </div>
           </Button>
 
+          {/* LinkedIn */}
           <Button
             variant="outline"
             className="flex items-center justify-start gap-3 py-6 px-2"
@@ -149,6 +160,53 @@ export default function StagePanel({ onClose }: { onClose: () => void }) {
             <div className="flex flex-col text-left text-muted-foreground text-xs">
               <span className="font-medium">LinkedIn Cover</span>
               <span className="font-light">1584×396</span>
+            </div>
+          </Button>
+
+          {/* YouTube */}
+          <Button
+            variant="outline"
+            className="flex items-center justify-start gap-3 py-6 px-2"
+            onClick={() => applyPreset(1280, 720)}>
+            <Youtube className="h-6 w-6" />
+            <div className="flex flex-col text-left text-muted-foreground text-xs">
+              <span className="font-medium">YouTube Thumbnail</span>
+              <span className="font-light">1280×720</span>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="flex items-center justify-start gap-3 py-6 px-2"
+            onClick={() => applyPreset(2560, 1440)}>
+            <Youtube className="h-6 w-6" />
+            <div className="flex flex-col text-left text-muted-foreground text-xs">
+              <span className="font-medium">YouTube Cover</span>
+              <span className="font-light">2560×1440</span>
+            </div>
+          </Button>
+
+          {/* TikTok */}
+          <Button
+            variant="outline"
+            className="flex items-center justify-start gap-3 py-6 px-2"
+            onClick={() => applyPreset(1080, 1920)}>
+            <Music2 className="h-6 w-6" />
+            <div className="flex flex-col text-left text-muted-foreground text-xs">
+              <span className="font-medium">TikTok</span>
+              <span className="font-light">1080×1920</span>
+            </div>
+          </Button>
+
+          {/* Twitter/X */}
+          <Button
+            variant="outline"
+            className="flex items-center justify-start gap-3 py-6 px-2"
+            onClick={() => applyPreset(1200, 675)}>
+            <Twitter className="h-6 w-6" />
+            <div className="flex flex-col text-left text-muted-foreground text-xs">
+              <span className="font-medium">Twitter Post</span>
+              <span className="font-light">1200×675</span>
             </div>
           </Button>
         </div>
