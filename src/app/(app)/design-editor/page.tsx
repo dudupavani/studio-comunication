@@ -41,14 +41,14 @@ export default function DesignEditorPage() {
 
         {/* Coluna 3: painel lateral (abre/fecha) */}
         {rightPanel === "stage" && (
-          <div className="w-50 border-r border-gray-200 bg-white">
+          <div className="w-60 border-r border-gray-200 bg-white">
             <StagePanel onClose={() => setRightPanel("none")} />
           </div>
         )}
 
         {/* Coluna 2: painel lateral (abre/fecha) */}
         {rightPanel === "shapes" && (
-          <div className="w-50 border-r border-gray-200 bg-white">
+          <div className="w-60 border-r border-gray-200 bg-white">
             <FormsPanel onClose={() => setRightPanel("none")} />
           </div>
         )}
