@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { createServiceClient } from "@/lib/supabase/service"; // usa SERVICE_ROLE_KEY
+import { createServiceClient } from "@/lib/supabase/service"; // ✅ service client com SERVICE_ROLE_KEY
 
 export async function GET(
   req: Request,
@@ -89,7 +89,32 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const userClient = createRouteHandlerClient({ cookies });
+  const adminClient = createServiceClient();
 
+  // 🔹 Buscar o registro antes de apagar
+  const { data: file, error: fetchError } = await userClient
+    .from("design_files")
+    .select("thumbnail_path")
+    .eq("id", params.id)
+    .single();
+
+  if (fetchError) {
+    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+  }
+
+  // 🔹 Remover o thumbnail do bucket se existir
+  if (file?.thumbnail_path) {
+    const { error: storageError } = await adminClient.storage
+      .from("design-thumbnails")
+      .remove([file.thumbnail_path]);
+
+    if (storageError) {
+      console.error("Erro ao remover thumbnail:", storageError.message);
+      // não retorna erro aqui, apenas loga
+    }
+  }
+
+  // 🔹 Remover o registro do banco
   const { error } = await userClient
     .from("design_files")
     .delete()

@@ -6,7 +6,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Plus } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type DesignFile = {
   id: string;
@@ -62,6 +73,17 @@ export default function DesignFilesPage() {
     }
   };
 
+  // Excluir arquivo
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/design-files/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Falha ao excluir");
+      setFiles((prev) => prev.filter((f) => f.id !== id));
+    } catch (err) {
+      console.error("Erro ao excluir arquivo:", err);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -82,27 +104,58 @@ export default function DesignFilesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {files.map((file) => (
-            <Link
+            <div
               key={file.id}
-              href={`/design-editor/${file.id}`}
-              className="rounded-md overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition">
-              <div className="aspect-video bg-gray-100">
-                {file.thumbnail_url ? (
-                  <img
-                    src={file.thumbnail_url}
-                    alt={file.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    Sem preview
-                  </div>
-                )}
-              </div>
-              <div className="py-3 px-4 font-medium text-gray-800 text-base sm:text-sm">
-                {file.title}
-              </div>
-            </Link>
+              className="relative rounded-md overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition group">
+              {/* botão delete visível só no hover */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    className="absolute top-1 right-1 w-6 h-6 bg-white shadow opacity-0 group-hover:opacity-100 transition"
+                    variant={"secondary"}
+                    size={"icon-sm"}
+                    onClick={() => handleDelete(file.id)}>
+                    <Trash size={14} />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir arquivo</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja excluir "{file.title}"? Essa ação
+                      não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleDelete(file.id)}
+                      className="bg-red-600 hover:bg-red-700 text-white">
+                      Excluir
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <Link href={`/design-editor/${file.id}`}>
+                <div className="aspect-video bg-gray-100">
+                  {file.thumbnail_url ? (
+                    <img
+                      src={file.thumbnail_url}
+                      alt={file.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      Sem preview
+                    </div>
+                  )}
+                </div>
+                <div className="py-3 px-4 font-medium text-gray-800 text-base sm:text-sm">
+                  {file.title}
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
       )}
