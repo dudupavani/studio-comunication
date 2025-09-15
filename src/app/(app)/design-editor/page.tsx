@@ -6,7 +6,8 @@ import { useState } from "react";
 import { EditorProvider } from "./editor/store";
 import InsertMenu from "./editor/InsertMenu";
 import FormsPanel from "./editor/FormsPanel";
-import ImagesPanel from "./editor/ImagesPanel"; // ✅ novo import
+import ImagesPanel from "./editor/ImagesPanel";
+import StagePanel from "./editor/StagePanel";
 
 const StageView = dynamic(
   () => import("./editor/StageView").then((m) => m.StageView),
@@ -15,9 +16,9 @@ const StageView = dynamic(
 
 export default function DesignEditorPage() {
   // agora pode ser none | shapes | images
-  const [rightPanel, setRightPanel] = useState<"none" | "shapes" | "images">(
-    "none"
-  );
+  const [rightPanel, setRightPanel] = useState<
+    "none" | "shapes" | "images" | "stage"
+  >("none");
 
   return (
     <EditorProvider>
@@ -32,8 +33,18 @@ export default function DesignEditorPage() {
             onOpenImages={() =>
               setRightPanel((p) => (p === "images" ? "none" : "images"))
             }
+            onOpenStage={() =>
+              setRightPanel((p) => (p === "stage" ? "none" : "stage"))
+            }
           />
         </div>
+
+        {/* Coluna 3: painel lateral (abre/fecha) */}
+        {rightPanel === "stage" && (
+          <div className="w-50 border-r border-gray-200 bg-white">
+            <StagePanel onClose={() => setRightPanel("none")} />
+          </div>
+        )}
 
         {/* Coluna 2: painel lateral (abre/fecha) */}
         {rightPanel === "shapes" && (
@@ -49,7 +60,7 @@ export default function DesignEditorPage() {
         )}
 
         {/* Coluna 3: Stage ocupa o restante */}
-        <div className="flex-1 min-w-0 flex items-center justify-center bg-gray-100">
+        <div className="flex-1 min-w-0 h-dvh flex items-center justify-center bg-gray-300">
           <StageView />
         </div>
       </div>

@@ -123,7 +123,7 @@ const initialState: EditorState = {
   selectedId: null,
   selectedIds: [],
   editingId: null,
-  stage: { width: 1000, height: 700, background: "#ffffff" },
+  stage: { width: 700, height: 700, background: "#ffffff" },
 };
 
 /** =======================

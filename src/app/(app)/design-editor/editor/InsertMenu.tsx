@@ -9,14 +9,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Type, ImageIcon, Box } from "lucide-react";
+import { Type, ImageIcon, Box, StickyNote } from "lucide-react";
 
 export default function InsertMenu({
   onOpenShapes,
   onOpenImages,
+  onOpenStage,
 }: {
   onOpenShapes: () => void;
   onOpenImages: () => void;
+  onOpenStage: () => void;
 }) {
   const { api } = useEditor();
 
@@ -66,6 +68,21 @@ export default function InsertMenu({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">Imagens</TooltipContent>
+        </Tooltip>
+
+        {/* Stage */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-xl"
+              onClick={onOpenStage}>
+              <StickyNote className="h-5 w-5" />
+              <span className="sr-only">Stage</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">Stage</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>

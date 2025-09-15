@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Stage, Text } from "react-konva";
+import { Stage, Text, Layer, Rect } from "react-konva";
 import Konva from "konva";
 import { useEditor } from "./store";
 import TextEditOverlay from "./TextEditOverlay";
@@ -33,7 +33,6 @@ export function StageView() {
       toggleSelect,
       updateShape,
       deleteSelected,
-      setStageSize,
       startEditText,
     },
   } = useEditor();
@@ -41,10 +40,19 @@ export function StageView() {
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
 
-  const [containerSize, setContainerSize] = useState({
-    w: stage.width,
-    h: stage.height,
-  });
+  // Wrapper que contém o Stage (usado para panning fora do Stage
+  // e como container do TextEditOverlay)
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const stageWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Offset do Stage dentro do workspace (panning externo)
+  const [offset, setOffset] = useState<XY>({ x: 0, y: 0 });
+  const panStartRef = useRef<{
+    startX: number;
+    startY: number;
+    baseX: number;
+    baseY: number;
+  } | null>(null);
 
   const selectedIdsRef = useRef<string[]>(selectedIds);
   useEffect(() => {
@@ -59,23 +67,55 @@ export function StageView() {
     ids: [],
   });
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  // ====== Panning fora do Stage (no workspace cinza) ======
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const e of entries) {
-        const w = Math.max(400, Math.floor(e.contentRect.width));
-        const h = Math.max(300, Math.floor(e.contentRect.height));
-        setContainerSize({ w, h });
-        setStageSize(w, h);
+    const ws = workspaceRef.current;
+    if (!ws) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      // Se clicou dentro do container do Konva (Stage), não inicia panning do workspace
+      const stageEl = stageRef.current?.container();
+      if (stageEl && e.target instanceof Node && stageEl.contains(e.target)) {
+        return;
       }
-    });
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
+      // Inicia panning do workspace
+      panStartRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        baseX: offset.x,
+        baseY: offset.y,
+      };
+      ws.setPointerCapture?.(e.pointerId);
+      // Cursor de feedback
+      ws.style.cursor = "grabbing";
     };
-  }, [setStageSize]);
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!panStartRef.current) return;
+      const { startX, startY, baseX, baseY } = panStartRef.current;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      setOffset({ x: baseX + dx, y: baseY + dy });
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      panStartRef.current = null;
+      ws.releasePointerCapture?.(e.pointerId);
+      ws.style.cursor = "";
+    };
+
+    ws.addEventListener("pointerdown", onPointerDown);
+    ws.addEventListener("pointermove", onPointerMove);
+    ws.addEventListener("pointerup", onPointerUp);
+    ws.addEventListener("pointerleave", onPointerUp);
+
+    return () => {
+      ws.removeEventListener("pointerdown", onPointerDown);
+      ws.removeEventListener("pointermove", onPointerMove);
+      ws.removeEventListener("pointerup", onPointerUp);
+      ws.removeEventListener("pointerleave", onPointerUp);
+    };
+  }, [offset.x, offset.y]);
 
   // ===== Transformer =====
   useEffect(() => {
@@ -113,7 +153,6 @@ export function StageView() {
           "bottom-center",
         ];
 
-        // aplica regra hideTopBottomCenters se alguma das formas tiver essa policy
         const hideCenters = nodes.some((n) => {
           const s = shapes[n.id()];
           return (
@@ -332,35 +371,6 @@ export function StageView() {
             align={s.align}
             onDblClick={() => startEditText(id)}
             onDblTap={() => startEditText(id)}
-            onTransformEnd={(evt: any) => {
-              const node = evt.target as Konva.Text;
-              const sx = node.scaleX();
-              const sy = node.scaleY();
-
-              const changedByWidthOnly = sx !== 1 && sy === 1;
-              const changedByHeightOnly = sy !== 1 && sx === 1;
-              const changedByCorner = sx !== 1 && sy !== 1;
-
-              if (changedByWidthOnly) {
-                updateShape(id, {
-                  x: node.x(),
-                  y: node.y(),
-                  rotation: node.rotation(),
-                  width: Math.max(20, node.width() * sx),
-                });
-              } else if (changedByCorner) {
-                updateShape(id, {
-                  x: node.x(),
-                  y: node.y(),
-                  rotation: node.rotation(),
-                  width: Math.max(20, node.width() * sx),
-                  fontSize: Math.max(8, (s.fontSize || 24) * sy),
-                });
-              }
-
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
           />
         );
       }
@@ -409,28 +419,56 @@ export function StageView() {
 
   return (
     <div
-      ref={containerRef}
-      style={{ position: "relative", width: "100%", height: "100%" }}>
-      <Stage
-        ref={stageRef}
-        width={containerSize.w}
-        height={containerSize.h}
-        style={{ background: stage.background }}
-        onMouseDown={(e: any) => {
-          if (editingId) return;
-          if (e.target === e.target.getStage()) selectOne(null);
+      ref={workspaceRef}
+      className="w-full h-full flex items-center justify-center overflow-hidden relative">
+      {/* Wrapper do Stage (artboard), respeita layout */}
+      <div
+        ref={stageWrapperRef}
+        style={{
+          transform: `translate(${offset.x}px, ${offset.y}px)`,
+          willChange: "transform",
+          position: "relative", // garante que fique no fluxo
+          zIndex: 0, // impede sobreposição fora do workspace
         }}>
-        <NodesLayer>
-          {shapeNodes}
-          <TransformerLayer
-            trRef={trRef}
-            selectedId={selectedId}
-            shapes={shapes}
-          />
-        </NodesLayer>
-      </Stage>
+        <Stage
+          ref={stageRef}
+          width={stage.width}
+          height={stage.height}
+          style={{
+            display: "block",
+            background: stage.background,
+            boxShadow: "0 0 0 1px rgba(0,0,0,0.1)", // borda opcional
+          }}
+          onMouseDown={(e: any) => {
+            if (editingId) return;
+            if (e.target === e.target.getStage()) selectOne(null);
+          }}>
+          <Layer>
+            <Rect
+              x={0}
+              y={0}
+              width={stage.width}
+              height={stage.height}
+              fill={stage.background}
+              listening={false}
+            />
+          </Layer>
 
-      <TextEditOverlay container={containerRef.current} stageRef={stageRef} />
+          <NodesLayer>
+            {shapeNodes}
+            <TransformerLayer
+              trRef={trRef}
+              selectedId={selectedId}
+              shapes={shapes}
+            />
+          </NodesLayer>
+        </Stage>
+      </div>
+
+      <TextEditOverlay
+        container={stageWrapperRef.current}
+        stageRef={stageRef}
+      />
     </div>
   );
 }
