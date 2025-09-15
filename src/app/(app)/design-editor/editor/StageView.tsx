@@ -1,3 +1,4 @@
+// src/app/(app)/design-editor/editor/StageView.tsx
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -7,20 +8,55 @@ import { useEditor } from "./store";
 import TextEditOverlay from "./TextEditOverlay";
 import NodesLayer from "./NodesLayer";
 import TransformerLayer from "./TransformerLayer";
-import RectNode from "./nodes/RectNode";
-import CircleNode from "./nodes/CircleNode";
+
+import { applyShapeLiveConstraint } from "./transform-rules";
+import { getShapeEntry, isShapeType } from "./nodes/registry";
+
+type XY = { x: number; y: number };
+
+type DragSession = {
+  active: boolean;
+  leaderId: string | null;
+  leaderStart: XY | null;
+  base: Record<string, XY>;
+  ids: string[];
+};
+
+const isMultiKey = (evt: any) =>
+  !!(evt?.evt?.shiftKey || evt?.evt?.metaKey || evt?.evt?.ctrlKey);
 
 export function StageView() {
   const {
-    state: { shapes, order, selectedId, stage, editingId },
-    api: { select, updateShape, deleteSelected, setStageSize, startEditText },
+    state: { shapes, order, selectedId, selectedIds, stage, editingId },
+    api: {
+      selectOne,
+      toggleSelect,
+      updateShape,
+      deleteSelected,
+      setStageSize,
+      startEditText,
+    },
   } = useEditor();
 
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
+
   const [containerSize, setContainerSize] = useState({
     w: stage.width,
     h: stage.height,
+  });
+
+  const selectedIdsRef = useRef<string[]>(selectedIds);
+  useEffect(() => {
+    selectedIdsRef.current = selectedIds;
+  }, [selectedIds]);
+
+  const dragRef = useRef<DragSession>({
+    active: false,
+    leaderId: null,
+    leaderStart: null,
+    base: {},
+    ids: [],
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,21 +72,27 @@ export function StageView() {
       }
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+    };
   }, [setStageSize]);
 
-  // Seleciona o nó no Transformer e ajusta as âncoras conforme o tipo
+  // ===== Transformer =====
   useEffect(() => {
     const tr = trRef.current;
     const st = stageRef.current;
     if (!tr || !st) return;
 
-    if (selectedId) {
-      const node = st.findOne(`#${selectedId}`) as Konva.Node | null;
-      tr.nodes(node ? [node] : []);
+    if (selectedIds.length > 0) {
+      const nodes: Konva.Node[] = [];
+      for (const id of selectedIds) {
+        const n = st.findOne<Konva.Node>(`#${id}`);
+        if (n) nodes.push(n);
+      }
+      tr.nodes(nodes);
 
-      // ⚙️ Texto não pode ter anchors top-center e bottom-center
-      if (node && node.getClassName() === "Text") {
+      const hasText = nodes.some((n) => n.getClassName() === "Text");
+      if (hasText) {
         tr.enabledAnchors([
           "top-left",
           "top-right",
@@ -60,7 +102,7 @@ export function StageView() {
           "middle-right",
         ]);
       } else {
-        tr.enabledAnchors([
+        const anchors = [
           "top-left",
           "top-right",
           "bottom-left",
@@ -69,7 +111,23 @@ export function StageView() {
           "middle-right",
           "top-center",
           "bottom-center",
-        ]);
+        ];
+
+        // aplica regra hideTopBottomCenters se alguma das formas tiver essa policy
+        const hideCenters = nodes.some((n) => {
+          const s = shapes[n.id()];
+          return (
+            s &&
+            isShapeType(s.type) &&
+            getShapeEntry(s.type).policyKeys.includes("hideTopBottomCenters")
+          );
+        });
+
+        tr.enabledAnchors(
+          hideCenters
+            ? anchors.filter((a) => a !== "top-center" && a !== "bottom-center")
+            : anchors
+        );
       }
     } else {
       tr.nodes([]);
@@ -78,44 +136,161 @@ export function StageView() {
     tr.moveToTop();
     tr.getLayer()?.batchDraw();
     tr.getStage()?.batchDraw();
-  }, [selectedId, shapes, order]);
+  }, [selectedIds, shapes, order]);
 
+  // ===== Teclas globais =====
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Delete" || e.key === "Backspace") deleteSelected();
-      if (e.key === "Escape") select(null);
+      if (e.key === "Escape") selectOne(null);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [deleteSelected, select]);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [deleteSelected, selectOne]);
 
+  // ===== Seleção =====
+  const handleSelect = (id: string, isMulti: boolean) => {
+    if (editingId) return;
+    const cur = selectedIdsRef.current;
+
+    if (isMulti) {
+      if (!cur.includes(id)) {
+        selectedIdsRef.current = [...cur, id];
+        toggleSelect(id);
+      }
+      return;
+    }
+
+    if (cur.includes(id) && cur.length > 1) {
+      return;
+    }
+
+    selectedIdsRef.current = [id];
+    selectOne(id);
+  };
+
+  // ===== Multi-drag =====
+  const handleDragStart = (id: string, node: Konva.Node, isShift?: boolean) => {
+    let ids = selectedIdsRef.current;
+    if (isShift && !ids.includes(id)) ids = [...ids, id];
+
+    if (!ids.includes(id) || ids.length <= 1) {
+      dragRef.current = {
+        active: false,
+        leaderId: id,
+        leaderStart: null,
+        base: {},
+        ids: [id],
+      };
+      return;
+    }
+
+    const base: Record<string, XY> = {};
+    for (const sid of ids) {
+      const s = shapes[sid];
+      if (s) base[sid] = { x: s.x, y: s.y };
+    }
+
+    dragRef.current = {
+      active: true,
+      leaderId: id,
+      leaderStart: { x: node.x(), y: node.y() },
+      base,
+      ids,
+    };
+  };
+
+  const handleDragMove = (id: string, node: Konva.Node) => {
+    const sess = dragRef.current;
+    if (!sess.active || sess.leaderId !== id || !sess.leaderStart) return;
+
+    const dx = node.x() - sess.leaderStart.x;
+    const dy = node.y() - sess.leaderStart.y;
+
+    const st = stageRef.current;
+    if (!st) return;
+
+    for (const sid of sess.ids) {
+      if (sid === id) continue;
+      const base = sess.base[sid];
+      if (!base) continue;
+      const target = st.findOne<Konva.Node>(`#${sid}`);
+      if (!target) continue;
+
+      const s = shapes[sid];
+      let tx = base.x + dx;
+      let ty = base.y + dy;
+      if (s?.type === "circle") {
+        tx += s.width / 2;
+        ty += s.height / 2;
+      }
+
+      target.position({ x: tx, y: ty });
+    }
+
+    trRef.current?.forceUpdate?.();
+    trRef.current?.getLayer()?.batchDraw();
+    stageRef.current?.batchDraw();
+  };
+
+  const handleDragEnd = (id: string, node: Konva.Node) => {
+    const sess = dragRef.current;
+
+    if (sess.active && sess.leaderId === id && sess.leaderStart) {
+      const dx = node.x() - sess.leaderStart.x;
+      const dy = node.y() - sess.leaderStart.y;
+
+      for (const sid of sess.ids) {
+        if (sid === id) continue;
+        const base = sess.base[sid];
+        if (!base) continue;
+        updateShape(sid, { x: base.x + dx, y: base.y + dy });
+      }
+    }
+
+    const nx = node.x();
+    const ny = node.y();
+    const s = shapes[id];
+    if (s?.type === "circle") {
+      updateShape(id, { x: nx - s.width / 2, y: ny - s.height / 2 });
+    } else {
+      updateShape(id, { x: nx, y: ny });
+    }
+
+    dragRef.current = {
+      active: false,
+      leaderId: null,
+      leaderStart: null,
+      base: {},
+      ids: [],
+    };
+  };
+
+  // ===== Render dos nodes =====
   const shapeNodes = useMemo(() => {
     return order.map((id) => {
       const s = shapes[id];
       if (!s) return null;
 
-      if (s.type === "rect") {
+      if (isShapeType(s.type)) {
+        const { Component } = getShapeEntry(s.type);
         return (
-          <RectNode
+          <Component
             key={id}
             id={id}
             s={s as any}
             editing={!!editingId}
-            onSelect={select}
+            onSelect={(tid: string, isShift?: boolean) =>
+              handleSelect(tid, !!isShift)
+            }
             onUpdate={updateShape}
-          />
-        );
-      }
-
-      if (s.type === "circle") {
-        return (
-          <CircleNode
-            key={id}
-            id={id}
-            s={s as any}
-            editing={!!editingId}
-            onSelect={select}
-            onUpdate={updateShape}
+            onDragStart={(tid: string, n: Konva.Node, isShift?: boolean) =>
+              handleDragStart(tid, n, isShift)
+            }
+            onDragMove={(tid: string, n: Konva.Node) => handleDragMove(tid, n)}
+            onDragEnd={(tid: string, n: Konva.Node) => handleDragEnd(tid, n)}
           />
         );
       }
@@ -123,20 +298,17 @@ export function StageView() {
       if (s.type === "text") {
         const commonText = {
           onMouseDown: (evt: any) => {
-            select(id);
+            handleSelect(id, isMultiKey(evt));
             evt.cancelBubble = true;
           },
           onTap: (evt: any) => {
-            select(id);
+            handleSelect(id, false);
             evt.cancelBubble = true;
           },
-          onDragEnd: (evt: any) => {
-            const node = evt.target as Konva.Node & {
-              x: () => number;
-              y: () => number;
-            };
-            updateShape(id, { x: node.x(), y: node.y() });
-          },
+          onDragStart: (evt: any) =>
+            handleDragStart(id, evt.target, isMultiKey(evt)),
+          onDragMove: (evt: any) => handleDragMove(id, evt.target),
+          onDragEnd: (evt: any) => handleDragEnd(id, evt.target),
           draggable: s.draggable && !editingId,
           rotation: s.rotation,
           stroke: s.stroke,
@@ -166,7 +338,7 @@ export function StageView() {
               const sy = node.scaleY();
 
               const changedByWidthOnly = sx !== 1 && sy === 1;
-              const changedByHeightOnly = sy !== 1 && sx === 1; // ← ignorar
+              const changedByHeightOnly = sy !== 1 && sx === 1;
               const changedByCorner = sx !== 1 && sy !== 1;
 
               if (changedByWidthOnly) {
@@ -176,8 +348,6 @@ export function StageView() {
                   rotation: node.rotation(),
                   width: Math.max(20, node.width() * sx),
                 });
-              } else if (changedByHeightOnly) {
-                // ignora redimensionamento vertical puro
               } else if (changedByCorner) {
                 updateShape(id, {
                   x: node.x(),
@@ -197,27 +367,38 @@ export function StageView() {
 
       return null;
     });
-  }, [order, shapes, select, updateShape, editingId, startEditText]);
+  }, [order, shapes, editingId, startEditText, updateShape]);
 
-  // Corrige em tempo real a distorção durante resize lateral do Text
+  // ===== Transform live handler =====
   useEffect(() => {
     const tr = trRef.current;
     if (!tr) return;
 
     const handler = () => {
       const nodes = tr.nodes();
-      if (nodes.length === 0) return;
+      if (!nodes || nodes.length === 0) return;
 
-      if (nodes.every((n) => n.getClassName() === "Text")) {
-        nodes.forEach((node) => {
+      for (const node of nodes) {
+        const cls = node.getClassName();
+
+        if (cls === "Text") {
           const sx = node.scaleX();
           const sy = node.scaleY();
           if (sx !== 1 && Math.abs(sy - 1) < 0.001) {
             node.width(node.width() * sx);
             node.scaleX(1);
           }
-        });
+          continue;
+        }
+
+        if (cls === "Circle") {
+          applyShapeLiveConstraint(node);
+          continue;
+        }
       }
+
+      tr.getLayer()?.batchDraw();
+      tr.getStage()?.batchDraw();
     };
 
     tr.on("transform", handler);
@@ -227,7 +408,9 @@ export function StageView() {
   }, []);
 
   return (
-    <div ref={containerRef} style={{ position: "relative" }}>
+    <div
+      ref={containerRef}
+      style={{ position: "relative", width: "100%", height: "100%" }}>
       <Stage
         ref={stageRef}
         width={containerSize.w}
@@ -235,9 +418,7 @@ export function StageView() {
         style={{ background: stage.background }}
         onMouseDown={(e: any) => {
           if (editingId) return;
-          if (e.target === e.target.getStage()) {
-            select(null);
-          }
+          if (e.target === e.target.getStage()) selectOne(null);
         }}>
         <NodesLayer>
           {shapeNodes}
@@ -249,7 +430,6 @@ export function StageView() {
         </NodesLayer>
       </Stage>
 
-      {/* Editor de texto DOM sobreposto */}
       <TextEditOverlay container={containerRef.current} stageRef={stageRef} />
     </div>
   );

@@ -1,8 +1,10 @@
+// src/app/(app)/design-editor/editor/nodes/shapes/CircleNode.tsx
 "use client";
 
 import React from "react";
 import { Circle } from "react-konva";
 import Konva from "konva";
+import { commitShapeTransform } from "../../transform-rules/shape";
 
 type CircleModel = {
   type: "circle";
@@ -21,8 +23,11 @@ type Props = {
   id: string;
   s: CircleModel;
   editing: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, isShift?: boolean) => void;
   onUpdate: (id: string, patch: Partial<CircleModel>) => void;
+  onDragStart?: (id: string, node: Konva.Node, isShift?: boolean) => void;
+  onDragMove?: (id: string, node: Konva.Node) => void;
+  onDragEnd?: (id: string, node: Konva.Node) => void;
 };
 
 export default function CircleNode({
@@ -31,15 +36,32 @@ export default function CircleNode({
   editing,
   onSelect,
   onUpdate,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
 }: Props) {
   const common = {
     onMouseDown: (evt: any) => {
-      onSelect(id);
+      onSelect(id, !!evt?.evt?.shiftKey);
       evt.cancelBubble = true;
     },
     onTap: (evt: any) => {
-      onSelect(id);
+      onSelect(id, false);
       evt.cancelBubble = true;
+    },
+    onDragStart: (evt: any) => {
+      onDragStart?.(id, evt.target, !!evt?.evt?.shiftKey);
+    },
+    onDragMove: (evt: any) => {
+      onDragMove?.(id, evt.target);
+    },
+    onDragEnd: (evt: any) => {
+      onDragEnd?.(id, evt.target);
+      const node = evt.target as Konva.Circle;
+      onUpdate(id, {
+        x: node.x() - s.width / 2,
+        y: node.y() - s.height / 2,
+      });
     },
     draggable: s.draggable && !editing,
     rotation: s.rotation,
@@ -58,31 +80,9 @@ export default function CircleNode({
       x={s.x + s.width / 2}
       y={s.y + s.height / 2}
       radius={radius}
-      onDragEnd={(evt: any) => {
-        const node = evt.target as Konva.Circle;
-        onUpdate(id, {
-          x: node.x() - s.width / 2,
-          y: node.y() - s.height / 2,
-        });
-      }}
       onTransformEnd={(evt: any) => {
         const node = evt.target as Konva.Circle;
-        const scaleX = node.scaleX();
-        const scaleY = node.scaleY();
-        const newR = Math.max(
-          3,
-          Math.round(node.radius() * Math.max(scaleX, scaleY))
-        );
-        node.scaleX(1);
-        node.scaleY(1);
-        const newSize = newR * 2;
-        onUpdate(id, {
-          x: node.x() - newR,
-          y: node.y() - newR,
-          width: newSize,
-          height: newSize,
-          rotation: node.rotation(),
-        });
+        onUpdate(id, commitShapeTransform(node));
       }}
     />
   );

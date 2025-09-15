@@ -1,8 +1,10 @@
+// src/app/(app)/design-editor/editor/nodes/shapes/RectNode.tsx
 "use client";
 
 import React from "react";
 import { Rect } from "react-konva";
 import Konva from "konva";
+import { commitShapeTransform } from "../../transform-rules/shape";
 
 type RectModel = {
   type: "rect";
@@ -21,8 +23,11 @@ type Props = {
   id: string;
   s: RectModel;
   editing: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, isShift?: boolean) => void;
   onUpdate: (id: string, patch: Partial<RectModel>) => void;
+  onDragStart?: (id: string, node: Konva.Node, isShift?: boolean) => void;
+  onDragMove?: (id: string, node: Konva.Node) => void;
+  onDragEnd?: (id: string, node: Konva.Node) => void;
 };
 
 export default function RectNode({
@@ -31,17 +36,27 @@ export default function RectNode({
   editing,
   onSelect,
   onUpdate,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
 }: Props) {
   const common = {
     onMouseDown: (evt: any) => {
-      onSelect(id);
+      onSelect(id, !!evt?.evt?.shiftKey);
       evt.cancelBubble = true;
     },
     onTap: (evt: any) => {
-      onSelect(id);
+      onSelect(id, false);
       evt.cancelBubble = true;
     },
+    onDragStart: (evt: any) => {
+      onDragStart?.(id, evt.target, !!evt?.evt?.shiftKey);
+    },
+    onDragMove: (evt: any) => {
+      onDragMove?.(id, evt.target);
+    },
     onDragEnd: (evt: any) => {
+      onDragEnd?.(id, evt.target);
       const node = evt.target as Konva.Node & {
         x: () => number;
         y: () => number;
@@ -66,19 +81,7 @@ export default function RectNode({
       height={s.height}
       onTransformEnd={(evt: any) => {
         const node = evt.target as Konva.Rect;
-        const scaleX = node.scaleX();
-        const scaleY = node.scaleY();
-        const newW = Math.max(5, Math.round(node.width() * scaleX));
-        const newH = Math.max(5, Math.round(node.height() * scaleY));
-        node.scaleX(1);
-        node.scaleY(1);
-        onUpdate(id, {
-          x: node.x(),
-          y: node.y(),
-          width: newW,
-          height: newH,
-          rotation: node.rotation(),
-        });
+        onUpdate(id, commitShapeTransform(node));
       }}
     />
   );

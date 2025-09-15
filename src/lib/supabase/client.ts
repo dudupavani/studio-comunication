@@ -8,3 +8,6 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 }
+
+// 🔥 aqui criamos e exportamos uma instância única
+export const supabase = createClient();
