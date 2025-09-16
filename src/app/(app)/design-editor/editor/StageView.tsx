@@ -34,19 +34,16 @@ export function StageView() {
       updateShape,
       deleteSelected,
       startEditText,
-      setStageRef, // <<< adicionado
+      setStageRef,
     },
   } = useEditor();
 
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
 
-  // Wrapper que contém o Stage (usado para panning fora do Stage
-  // e como container do TextEditOverlay)
   const workspaceRef = useRef<HTMLDivElement>(null);
   const stageWrapperRef = useRef<HTMLDivElement>(null);
 
-  // Offset do Stage dentro do workspace (panning externo)
   const [offset, setOffset] = useState<XY>({ x: 0, y: 0 });
   const panStartRef = useRef<{
     startX: number;
@@ -68,25 +65,22 @@ export function StageView() {
     ids: [],
   });
 
-  // registra o stageRef no store
   useEffect(() => {
     if (stageRef.current) {
       setStageRef(stageRef.current);
     }
   }, [setStageRef]);
 
-  // ====== Panning fora do Stage (no workspace cinza) ======
+  // ====== Panning ======
   useEffect(() => {
     const ws = workspaceRef.current;
     if (!ws) return;
 
     const onPointerDown = (e: PointerEvent) => {
-      // Se clicou dentro do container do Konva (Stage), não inicia panning do workspace
       const stageEl = stageRef.current?.container();
       if (stageEl && e.target instanceof Node && stageEl.contains(e.target)) {
         return;
       }
-      // Inicia panning do workspace
       panStartRef.current = {
         startX: e.clientX,
         startY: e.clientY,
@@ -94,7 +88,6 @@ export function StageView() {
         baseY: offset.y,
       };
       ws.setPointerCapture?.(e.pointerId);
-      // Cursor de feedback
       ws.style.cursor = "grabbing";
     };
 
@@ -185,7 +178,7 @@ export function StageView() {
     tr.getStage()?.batchDraw();
   }, [selectedIds, shapes, order]);
 
-  // ===== Teclas globais =====
+  // ===== Keyboard =====
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Delete" || e.key === "Backspace") deleteSelected();
@@ -197,7 +190,7 @@ export function StageView() {
     };
   }, [deleteSelected, selectOne]);
 
-  // ===== Seleção =====
+  // ===== Selection =====
   const handleSelect = (id: string, isMulti: boolean) => {
     if (editingId) return;
     const cur = selectedIdsRef.current;
@@ -218,7 +211,7 @@ export function StageView() {
     selectOne(id);
   };
 
-  // ===== Multi-drag =====
+  // ===== Drag =====
   const handleDragStart = (id: string, node: Konva.Node, isShift?: boolean) => {
     let ids = selectedIdsRef.current;
     if (isShift && !ids.includes(id)) ids = [...ids, id];
@@ -315,7 +308,7 @@ export function StageView() {
     };
   };
 
-  // ===== Render dos nodes =====
+  // ===== Render nodes =====
   const shapeNodes = useMemo(() => {
     return order.map((id) => {
       const s = shapes[id];
@@ -379,6 +372,39 @@ export function StageView() {
             align={s.align}
             onDblClick={() => startEditText(id)}
             onDblTap={() => startEditText(id)}
+            onTransformEnd={(evt: any) => {
+              const node = evt.target as Konva.Text;
+              const anchor = trRef.current?.getActiveAnchor?.() ?? "";
+
+              if (anchor === "middle-left" || anchor === "middle-right") {
+                // Só largura da caixa
+                const sx = node.scaleX();
+                if (sx !== 1) {
+                  node.width(node.width() * sx);
+                  node.scaleX(1);
+                }
+                node.scaleY(1);
+              } else {
+                // Escala completa nos cantos
+                const sx = node.scaleX();
+                const sy = node.scaleY();
+                if (sx !== 1 || sy !== 1) {
+                  node.fontSize((s.fontSize || 24) * sy);
+                  node.width(node.width() * sx);
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }
+              }
+
+              updateShape(id, {
+                x: node.x(),
+                y: node.y(),
+                width: node.width(),
+                height: node.height(),
+                rotation: node.rotation(),
+                fontSize: node.fontSize(),
+              });
+            }}
           />
         );
       }
@@ -400,11 +426,24 @@ export function StageView() {
         const cls = node.getClassName();
 
         if (cls === "Text") {
-          const sx = node.scaleX();
-          const sy = node.scaleY();
-          if (sx !== 1 && Math.abs(sy - 1) < 0.001) {
-            node.width(node.width() * sx);
-            node.scaleX(1);
+          const t = node as Konva.Text; // força explicitamente para Text
+          const anchor = trRef.current?.getActiveAnchor?.() ?? "";
+          const sx = t.scaleX();
+          const sy = t.scaleY();
+
+          if (anchor === "middle-left" || anchor === "middle-right") {
+            if (sx !== 1) {
+              t.width(t.width() * sx);
+              t.scaleX(1);
+            }
+            t.scaleY(1);
+          } else {
+            if (sx !== 1 || sy !== 1) {
+              (t as Konva.Text).fontSize((t as Konva.Text).fontSize() * sy); // 👈 cast duplo
+              t.width(t.width() * sx);
+              t.scaleX(1);
+              t.scaleY(1);
+            }
           }
           continue;
         }
@@ -429,14 +468,13 @@ export function StageView() {
     <div
       ref={workspaceRef}
       className="w-full h-full flex items-center justify-center overflow-hidden relative">
-      {/* Wrapper do Stage (artboard), respeita layout */}
       <div
         ref={stageWrapperRef}
         style={{
           transform: `translate(${offset.x}px, ${offset.y}px)`,
           willChange: "transform",
-          position: "relative", // garante que fique no fluxo
-          zIndex: 0, // impede sobreposição fora do workspace
+          position: "relative",
+          zIndex: 0,
         }}>
         <Stage
           ref={stageRef}
@@ -445,7 +483,7 @@ export function StageView() {
           style={{
             display: "block",
             background: stage.background,
-            boxShadow: "0 0 0 1px rgba(0,0,0,0.1)", // borda opcional
+            boxShadow: "0 0 0 1px rgba(0,0,0,0.1)",
           }}
           onMouseDown={(e: any) => {
             if (editingId) return;
