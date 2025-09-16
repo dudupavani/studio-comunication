@@ -325,7 +325,7 @@ export function StageView() {
         const { Component } = getShapeEntry(s.type);
         return (
           <Component
-            key={id}
+            key={`shape-${id}`}
             id={id}
             s={s as any}
             editing={!!editingId}
@@ -367,7 +367,7 @@ export function StageView() {
 
         return (
           <Text
-            key={id}
+            key={`text-${id}`}
             {...commonText}
             x={s.x}
             y={s.y}

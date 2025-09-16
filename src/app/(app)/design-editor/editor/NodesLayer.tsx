@@ -1,7 +1,7 @@
 // src/app/(app)/design-editor/editor/NodesLayer.tsx
 "use client";
 
-import React, { Fragment } from "react";
+import React from "react";
 import { Layer } from "react-konva";
 import { useEditor } from "./store";
 import { shapesRegistry, isShapeType } from "./nodes/registry";
@@ -32,28 +32,25 @@ export default function NodesLayer({ children }: Props) {
           const Comp = entry.Component as any;
 
           return (
-            <Fragment key={id}>
-              <Comp
-                id={id}
-                s={s}
-                editing={state.editingId === id}
-                onSelect={(tid: string, isShift?: boolean) =>
-                  api.selectOne(tid)
-                } // mantém compat
-                onUpdate={(tid: string, patch: any) =>
-                  api.updateShape(tid, patch)
-                }
-                onDragStart={(tid: string, node: any, isShift?: boolean) => {
-                  // Aqui podemos repassar para StageView se necessário
-                }}
-                onDragMove={(tid: string, node: any) => {
-                  // idem
-                }}
-                onDragEnd={(tid: string, node: any) => {
-                  // idem
-                }}
-              />
-            </Fragment>
+            <Comp
+              key={`node-${id}`} // ✅ prefixo único para evitar conflitos
+              id={id}
+              s={s}
+              editing={state.editingId === id}
+              onSelect={(tid: string, isShift?: boolean) => api.selectOne(tid)} // mantém compat
+              onUpdate={(tid: string, patch: any) =>
+                api.updateShape(tid, patch)
+              }
+              onDragStart={(tid: string, node: any, isShift?: boolean) => {
+                // Aqui podemos repassar para StageView se necessário
+              }}
+              onDragMove={(tid: string, node: any) => {
+                // idem
+              }}
+              onDragEnd={(tid: string, node: any) => {
+                // idem
+              }}
+            />
           );
         })
       : null;

@@ -70,6 +70,13 @@ export default function CircleNode({
     fill: s.fill,
     id,
     name: s.type,
+
+    opacity: (s as any).opacity ?? 1,
+    shadowColor: (s as any).shadowColor,
+    shadowBlur: (s as any).shadowBlur,
+    shadowOffsetX: (s as any).shadowOffsetX,
+    shadowOffsetY: (s as any).shadowOffsetY,
+    shadowOpacity: (s as any).shadowOpacity,
   };
 
   const radius = Math.max(3, Math.min(s.width, s.height) / 2);

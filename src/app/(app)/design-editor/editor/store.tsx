@@ -86,6 +86,7 @@ export type EditorState = {
  *  Ações
  *  ======================= */
 type Action =
+  | { type: "CLEAR_ALL" }
   | { type: "ADD_SHAPE"; payload: Shape }
   | { type: "UPDATE_SHAPE"; id: string; patch: ShapePatch }
   | { type: "SELECT"; id: string | null }
@@ -140,6 +141,15 @@ const initialState: EditorState = {
  *  ======================= */
 function reducer(state: EditorState, action: Action): EditorState {
   switch (action.type) {
+    case "CLEAR_ALL":
+      return {
+        ...state,
+        shapes: {},
+        order: [],
+        selectedIds: [],
+        selectedId: null,
+        editingId: null,
+      };
     case "ADD_SHAPE": {
       const s = action.payload;
       return {
@@ -264,7 +274,10 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
       loadFromJSON: (data: any) => {
         if (!data) return;
-        dispatch({ type: "CLEAR_SELECTION" });
+
+        // ✅ limpa tudo antes de carregar
+        dispatch({ type: "CLEAR_ALL" });
+
         if (data.shapes && data.order) {
           for (const id of data.order) {
             if (data.shapes[id]) {
@@ -272,6 +285,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
+
         if (data.stage) {
           dispatch({
             type: "SET_STAGE_SIZE",
@@ -280,6 +294,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           });
           state.stage.background = data.stage.background ?? "#ffffff";
         }
+
         if (data.fileTitle) {
           dispatch({ type: "SET_FILE_TITLE", title: data.fileTitle });
         }
@@ -359,7 +374,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           height: 100,
           rotation: 0,
           stroke: "#111111",
-          strokeWidth: 1,
+          strokeWidth: 0,
           fill: "#111111",
           draggable: true,
           numPoints: 5,

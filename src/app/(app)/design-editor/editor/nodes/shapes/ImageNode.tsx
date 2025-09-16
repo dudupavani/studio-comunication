@@ -87,6 +87,13 @@ export default function ImageNode({
     rotation: s.rotation,
     id,
     name: s.type,
+
+    opacity: (s as any).opacity ?? 1,
+    shadowColor: (s as any).shadowColor,
+    shadowBlur: (s as any).shadowBlur,
+    shadowOffsetX: (s as any).shadowOffsetX,
+    shadowOffsetY: (s as any).shadowOffsetY,
+    shadowOpacity: (s as any).shadowOpacity,
   };
 
   return (
