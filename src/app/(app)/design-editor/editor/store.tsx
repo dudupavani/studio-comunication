@@ -98,7 +98,10 @@ type Action =
   | { type: "SET_STAGE_SIZE"; width: number; height: number }
   | { type: "START_EDIT_TEXT"; id: string }
   | { type: "END_EDIT_TEXT" }
-  | { type: "SET_FILE_TITLE"; title: string };
+  | { type: "SET_FILE_TITLE"; title: string }
+  // 🔽 ADIÇÕES PARA REORDENAÇÃO
+  | { type: "SET_ORDER"; order: string[] }
+  | { type: "REORDER_BY_ID"; id: string; toIndex: number };
 
 function genId(prefix: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -240,6 +243,26 @@ function reducer(state: EditorState, action: Action): EditorState {
       return { ...state, editingId: null };
     case "SET_FILE_TITLE":
       return { ...state, fileTitle: action.title };
+
+    // 🔽 ADIÇÕES PARA REORDENAÇÃO
+    case "SET_ORDER": {
+      // mantém apenas ids válidos e remove duplicados, preservando ordem recebida
+      const clean = uniqStable(action.order.filter((id) => !!state.shapes[id]));
+      return { ...state, order: clean };
+    }
+    case "REORDER_BY_ID": {
+      const from = state.order.indexOf(action.id);
+      if (from === -1) return state;
+
+      const to = Math.max(0, Math.min(action.toIndex, state.order.length - 1));
+      if (from === to) return state;
+
+      const next = state.order.slice();
+      next.splice(from, 1);
+      next.splice(to, 0, action.id);
+      return { ...state, order: next };
+    }
+
     default:
       return state;
   }
@@ -448,6 +471,12 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       deleteSelected: () => dispatch({ type: "DELETE_SELECTED" }),
       setStageSize: (w: number, h: number) =>
         dispatch({ type: "SET_STAGE_SIZE", width: w, height: h }),
+
+      // ===== Ordem (para Layers drag & drop) =====
+      setOrder: (order: string[]) => dispatch({ type: "SET_ORDER", order }),
+
+      reorder: (id: string, toIndex: number) =>
+        dispatch({ type: "REORDER_BY_ID", id, toIndex }),
     };
   }, [state]);
 
