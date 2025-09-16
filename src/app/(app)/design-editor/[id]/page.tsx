@@ -9,6 +9,13 @@ import FormsPanel from "../editor/FormsPanel";
 import ImagesPanel from "../editor/ImagesPanel";
 import StagePanel from "../editor/StagePanel";
 import ActionBar from "../editor/ActionBar";
+import LayersPanel from "../editor/LayersPanel";
+
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 
 const StageView = dynamic(
   () => import("../editor/StageView").then((m) => m.StageView),
@@ -51,7 +58,7 @@ function InnerEditor({ id }: { id: string }) {
     return () => {
       cancelled = true;
     };
-  }, [id]); // 👈 só depende do id (evita loop com api)
+  }, [id]);
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -70,7 +77,7 @@ function InnerEditor({ id }: { id: string }) {
         />
       </div>
 
-      {/* Coluna 2: painel lateral */}
+      {/* Coluna 2: painel lateral (abre/fecha) */}
       {rightPanel === "stage" && (
         <div className="w-56 border-r border-gray-200 bg-white">
           <StagePanel onClose={() => setRightPanel("none")} />
@@ -87,13 +94,21 @@ function InnerEditor({ id }: { id: string }) {
         </div>
       )}
 
-      {/* Coluna 3: Stage + ActionBar */}
-      <div className="flex flex-col flex-1 min-w-0">
-        <ActionBar fileId={id} />
-        <div className="flex-1 flex items-center justify-center bg-gray-300">
-          <StageView />
-        </div>
-      </div>
+      {/* Colunas 3 + 4: Stage + Layers (ajustável) */}
+      <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">
+        <ResizablePanel defaultSize={80} minSize={60}>
+          <div className="flex flex-col h-full">
+            <ActionBar fileId={id} />
+            <div className="flex-1 flex items-center justify-center bg-gray-300">
+              <StageView />
+            </div>
+          </div>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={20} minSize={10} maxSize={40}>
+          <LayersPanel />
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }

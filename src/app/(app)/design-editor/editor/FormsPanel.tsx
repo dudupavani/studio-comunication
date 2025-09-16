@@ -20,7 +20,7 @@ export default function FormsPanel({ onClose }: { onClose: () => void }) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-3 py-2 border-b flex items-center justify-between">
+      <div className="px-3 py-3 border-b flex items-center justify-between">
         <h3 className="font-semibold">Formas</h3>
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X size={18} />
