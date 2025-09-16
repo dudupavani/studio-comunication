@@ -6,7 +6,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useEditor } from "./store";
-import { EditableText } from "@/components/ui/editable-text";
+
+// Inline bars
+import FileInlineBar from "./actionbar/FileInlineBar";
+import TextInlineBar from "./actionbar/TextInlineBar";
+// import ShapeInlineBar from "./actionbar/ShapeInlineBar";
+// import ImageInlineBar from "./actionbar/ImageInlineBar";
 
 type ActionBarProps = {
   fileId: string;
@@ -17,17 +22,30 @@ export default function ActionBar({ fileId }: ActionBarProps) {
   const [saving, setSaving] = useState(false);
   const { api, state } = useEditor();
 
+  // detectar seleção
+  const selectedIds = state.selectedIds || [];
+  let selectionKind: "none" | "multi" | "element" = "none";
+
+  if (selectedIds.length === 1) {
+    selectionKind = "element";
+  } else if (selectedIds.length > 1) {
+    selectionKind = "multi";
+  }
+
+  // helper: tipo do node selecionado
+  function getSelectedType(): string | null {
+    if (selectionKind !== "element") return null;
+    const node = state.shapes[selectedIds[0]];
+    return node?.type || null;
+  }
+
   async function handleSave() {
     try {
       setSaving(true);
 
-      // 🔹 pega o JSON do editor
       const payload = api.toJSON();
-
-      // 🔹 limpa seleção/overlays antes de capturar
       api.clearSelection?.();
 
-      // 🔹 pega o Stage atual (Konva) → gera thumbnail
       const stage = api.getStageRef();
       let thumbnail: string | null = null;
       if (stage?.toDataURL) {
@@ -37,7 +55,6 @@ export default function ActionBar({ fileId }: ActionBarProps) {
         });
       }
 
-      // 🔹 envia pro backend
       const res = await fetch(`/api/design-files/${fileId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -61,44 +78,11 @@ export default function ActionBar({ fileId }: ActionBarProps) {
     }
   }
 
-  async function handleSaveTitle(newTitle: string) {
-    try {
-      // 🔹 atualiza no store imediatamente
-      api.setFileTitle(newTitle);
-
-      // 🔹 salva no backend junto do JSON e thumbnail
-      const stage = api.getStageRef();
-      let thumbnail: string | null = null;
-      if (stage?.toDataURL) {
-        thumbnail = stage.toDataURL({
-          pixelRatio: 0.6,
-          mimeType: "image/png",
-        });
-      }
-
-      const res = await fetch(`/api/design-files/${fileId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newTitle,
-          data: api.toJSON(),
-          thumbnail,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        console.error("Falha ao salvar título:", err);
-      } else {
-        console.log("✅ Título atualizado:", newTitle);
-      }
-    } catch (e) {
-      console.error("❌ Erro ao salvar título:", e);
-    }
-  }
+  const selectedType = getSelectedType();
 
   return (
     <div className="border-b bg-white px-3 py-2 flex items-center justify-between">
+      {/* lado esquerdo: voltar + inline bar */}
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -107,13 +91,28 @@ export default function ActionBar({ fileId }: ActionBarProps) {
           <ArrowLeft size={22} />
         </Button>
 
-        <EditableText
-          value={state.fileTitle || "Novo arquivo"}
-          onSave={handleSaveTitle}
-          className="text-base font-medium"
-        />
+        {selectionKind === "none" && <FileInlineBar fileId={fileId} />}
+
+        {selectionKind === "element" && selectedType === "text" && (
+          <TextInlineBar nodeId={selectedIds[0]} />
+        )}
+
+        {/* {selectionKind === "element" && selectedType === "shape" && (
+          <ShapeInlineBar nodeId={selectedIds[0]} />
+        )}
+
+        {selectionKind === "element" && selectedType === "image" && (
+          <ImageInlineBar nodeId={selectedIds[0]} />
+        )} */}
+
+        {selectionKind === "multi" && (
+          <div className="text-sm text-gray-500">
+            Seleção múltipla ({selectedIds.length})
+          </div>
+        )}
       </div>
 
+      {/* lado direito: botão salvar */}
       <div className="flex items-center gap-2 pr-2">
         <Button onClick={handleSave} disabled={saving}>
           {saving ? "Salvando..." : "Salvar"}
