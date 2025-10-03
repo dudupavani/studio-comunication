@@ -14,7 +14,7 @@ type ImageModel = {
   height: number;
   rotation?: number;
   draggable?: boolean;
-  src: string; // signed URL (Supabase)
+  src: string; // URL da imagem (Supabase signed URL)
 };
 
 type Props = {

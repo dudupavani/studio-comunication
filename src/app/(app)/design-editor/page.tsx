@@ -113,8 +113,7 @@ export default function DesignFilesPage() {
                   <Button
                     className="absolute top-1 right-1 w-6 h-6 bg-white shadow opacity-0 group-hover:opacity-100 transition"
                     variant={"secondary"}
-                    size={"icon-sm"}
-                    onClick={() => handleDelete(file.id)}>
+                    size={"icon-sm"}>
                     <Trash size={14} />
                   </Button>
                 </AlertDialogTrigger>

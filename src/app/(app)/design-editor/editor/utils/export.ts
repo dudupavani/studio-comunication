@@ -15,7 +15,7 @@ function downloadURI(uri: string, filename: string) {
 export function exportStageToPNG(stage: Konva.Stage, filename = "export.png") {
   const dataURL = stage.toDataURL({
     mimeType: "image/png",
-    pixelRatio: 2, // aumenta a resolução
+    pixelRatio: 2,
   });
   downloadURI(dataURL, filename);
 }
@@ -45,4 +45,40 @@ export function exportStageToPDF(stage: Konva.Stage, filename = "export.pdf") {
 
   pdf.addImage(dataURL, "PNG", 0, 0, stage.width(), stage.height());
   pdf.save(filename);
+}
+
+// Exportar para PDF 300dpi (servidor)
+export async function exportStageToPDF300dpi(
+  stage: Konva.Stage,
+  filename = "export-300dpi.pdf"
+) {
+  // calcula fator de escala px → 300 dpi
+  const pixelRatio = 300 / 72; // ≈ 4.1667
+
+  // gera imagem em alta resolução
+  const dataUrl = stage.toDataURL({
+    mimeType: "image/png",
+    pixelRatio,
+  });
+
+  // envia para backend
+  const res = await fetch("/api/pdfkit-export-300dpi", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      stage: { width: stage.width(), height: stage.height() },
+      imageBase64: dataUrl,
+      title: filename.replace(".pdf", ""),
+    }),
+  });
+
+  if (!res.ok) throw new Error("Erro ao gerar PDF 300dpi");
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.URL.revokeObjectURL(url);
 }

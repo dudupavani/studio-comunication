@@ -1,7 +1,7 @@
 // src/app/(app)/design-editor/editor/StageView.tsx
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Stage, Text, Layer, Rect } from "react-konva";
 import Konva from "konva";
 import { useEditor } from "./store";
@@ -11,6 +11,8 @@ import TransformerLayer from "./TransformerLayer";
 
 import { applyShapeLiveConstraint } from "./transform-rules";
 import { getShapeEntry, isShapeType } from "./nodes/registry";
+import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 
 type XY = { x: number; y: number };
 
@@ -27,7 +29,15 @@ const isMultiKey = (evt: any) =>
 
 export function StageView() {
   const {
-    state: { shapes, order, selectedId, selectedIds, stage, editingId },
+    state: {
+      shapes,
+      order,
+      selectedId,
+      selectedIds,
+      stage,
+      editingId,
+      stageZoom,
+    },
     api: {
       selectOne,
       toggleSelect,
@@ -35,6 +45,7 @@ export function StageView() {
       deleteSelected,
       startEditText,
       setStageRef,
+      setStageZoom,
     },
   } = useEditor();
 
@@ -45,6 +56,95 @@ export function StageView() {
   const stageWrapperRef = useRef<HTMLDivElement>(null);
 
   const [offset, setOffset] = useState<XY>({ x: 0, y: 0 });
+  const [zoomInput, setZoomInput] = useState(() =>
+    Math.round((stageZoom ?? 1) * 100).toString()
+  );
+
+  const zoomSkipRef = useRef(false);
+  const prevZoomRef = useRef(stageZoom);
+
+  const clampZoom = useCallback((value: number) => {
+    return Math.min(4, Math.max(0.1, value));
+  }, []);
+
+  const applyZoom = useCallback(
+    (targetZoom: number, anchor?: XY) => {
+      const newZoom = clampZoom(targetZoom);
+      const oldZoom = stageZoom;
+      if (Math.abs(newZoom - oldZoom) < 0.0001) return;
+
+      const pivot = anchor ?? {
+        x: stage.width / 2,
+        y: stage.height / 2,
+      };
+
+      setOffset((prev) => ({
+        x: prev.x + pivot.x * (oldZoom - newZoom),
+        y: prev.y + pivot.y * (oldZoom - newZoom),
+      }));
+
+      zoomSkipRef.current = true;
+      prevZoomRef.current = newZoom;
+      setStageZoom(newZoom);
+    },
+    [clampZoom, stageZoom, stage.width, stage.height, setStageZoom]
+  );
+
+  useEffect(() => {
+    if (!zoomSkipRef.current) {
+      const prev = prevZoomRef.current;
+      if (Math.abs(prev - stageZoom) > 0.0001) {
+        const center = { x: stage.width / 2, y: stage.height / 2 };
+        setOffset((prevOffset) => ({
+          x: prevOffset.x + center.x * (prev - stageZoom),
+          y: prevOffset.y + center.y * (prev - stageZoom),
+        }));
+      }
+    }
+    zoomSkipRef.current = false;
+    prevZoomRef.current = stageZoom;
+    setZoomInput(Math.round(stageZoom * 100).toString());
+  }, [stageZoom, stage.width, stage.height]);
+
+  const handleSliderChange = useCallback(
+    (values: number[]) => {
+      if (!values || values.length === 0) return;
+      const next = values[0];
+      setZoomInput(Math.round(next).toString());
+      applyZoom(next / 100);
+    },
+    [applyZoom]
+  );
+
+  const commitZoomInput = useCallback(() => {
+    const parsed = Number(zoomInput.replace(/,/g, "."));
+    if (!Number.isFinite(parsed)) {
+      setZoomInput(Math.round(stageZoom * 100).toString());
+      return;
+    }
+    applyZoom(parsed / 100);
+  }, [zoomInput, applyZoom, stageZoom]);
+
+  const handleZoomInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setZoomInput(e.target.value);
+    },
+    []
+  );
+
+  const handleZoomInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        commitZoomInput();
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setZoomInput(Math.round(stageZoom * 100).toString());
+      }
+    },
+    [commitZoomInput, stageZoom]
+  );
   const panStartRef = useRef<{
     startX: number;
     startY: number;
@@ -70,6 +170,35 @@ export function StageView() {
       setStageRef(stageRef.current);
     }
   }, [setStageRef]);
+
+  useEffect(() => {
+    const stageObj = stageRef.current;
+    if (!stageObj) return;
+
+    const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
+      e.evt.preventDefault();
+
+      const direction = e.evt.deltaY > 0 ? -1 : 1;
+      const factor = direction > 0 ? 1.05 : 1 / 1.05;
+      const nextZoom = stageZoom * factor;
+
+      const pointer = stageObj.getPointerPosition();
+      let anchor: XY | undefined;
+      if (pointer) {
+        anchor = {
+          x: pointer.x / stageZoom,
+          y: pointer.y / stageZoom,
+        };
+      }
+
+      applyZoom(nextZoom, anchor);
+    };
+
+    stageObj.on("wheel", handleWheel);
+    return () => {
+      stageObj.off("wheel", handleWheel);
+    };
+  }, [applyZoom, stageZoom]);
 
   // ====== Panning ======
   useEffect(() => {
@@ -480,6 +609,8 @@ export function StageView() {
           ref={stageRef}
           width={stage.width}
           height={stage.height}
+          scaleX={stageZoom}
+          scaleY={stageZoom}
           style={{
             display: "block",
             background: stage.background,
@@ -515,6 +646,32 @@ export function StageView() {
         container={stageWrapperRef.current}
         stageRef={stageRef}
       />
+
+      <div className="absolute bottom-4 left-4 flex items-center gap-3 rounded-md bg-white/95 px-3 py-2 shadow-lg ring-1 ring-black/5">
+        <Slider
+          className="w-36"
+          min={10}
+          max={400}
+          step={5}
+          value={[Math.round(stageZoom * 100)]}
+          onValueChange={handleSliderChange}
+          aria-label="Zoom"
+        />
+        <div className="relative w-20">
+          <Input
+            value={zoomInput}
+            onChange={handleZoomInputChange}
+            onBlur={commitZoomInput}
+            onKeyDown={handleZoomInputKeyDown}
+            inputMode="decimal"
+            className="h-8 pr-7 text-right text-sm"
+            aria-label="Zoom em porcentagem"
+          />
+          <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted-foreground">
+            %
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

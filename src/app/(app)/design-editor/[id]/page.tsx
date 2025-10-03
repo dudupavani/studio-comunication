@@ -31,7 +31,7 @@ function InnerEditor({ id }: { id: string }) {
   const { api } = useEditor();
 
   useEffect(() => {
-    if (!id) return; // ✅ se não tiver id, não busca nada
+    if (!id) return;
 
     let cancelled = false;
 
@@ -61,7 +61,7 @@ function InnerEditor({ id }: { id: string }) {
     return () => {
       cancelled = true;
     };
-  }, [id, api]);
+  }, [id]); // ✅ só depende do id
 
   return (
     <div className="flex h-dvh overflow-hidden">

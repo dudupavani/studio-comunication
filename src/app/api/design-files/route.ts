@@ -1,11 +1,14 @@
 // src/app/api/design-files/route.ts
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/service";
+import { createServerClientWithCookies } from "@/lib/supabase/server";
+
+function getUserClient() {
+  return createServerClientWithCookies();
+}
 
 export async function GET() {
-  const userClient = createRouteHandlerClient({ cookies });
+  const userClient = getUserClient();
   const adminClient = createServiceClient();
 
   const { data, error } = await userClient
@@ -38,7 +41,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const userClient = createRouteHandlerClient({ cookies });
+  const userClient = getUserClient();
   const body = await req.json();
 
   const { data, error } = await userClient

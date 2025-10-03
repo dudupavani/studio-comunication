@@ -8,6 +8,7 @@ import React, {
   useReducer,
   useRef,
 } from "react";
+import { supabase } from "@/lib/supabase/client";
 
 /** =======================
  *  Tipos (uniões discriminadas)
@@ -80,6 +81,7 @@ export type EditorState = {
   editingId: string | null;
   stage: { width: number; height: number; background: string };
   fileTitle: string;
+  stageZoom: number;
 };
 
 /** =======================
@@ -101,7 +103,9 @@ type Action =
   | { type: "SET_FILE_TITLE"; title: string }
   // 🔽 ADIÇÕES PARA REORDENAÇÃO
   | { type: "SET_ORDER"; order: string[] }
-  | { type: "REORDER_BY_ID"; id: string; toIndex: number };
+  | { type: "REORDER_BY_ID"; id: string; toIndex: number }
+  | { type: "SET_STAGE_ZOOM"; zoom: number }
+  | { type: "BUMP_STAGE_ZOOM"; delta: number };
 
 function genId(prefix: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -137,6 +141,7 @@ const initialState: EditorState = {
   editingId: null,
   stage: { width: 700, height: 700, background: "#ffffff" },
   fileTitle: "Novo arquivo",
+  stageZoom: 1,
 };
 
 /** =======================
@@ -152,6 +157,7 @@ function reducer(state: EditorState, action: Action): EditorState {
         selectedIds: [],
         selectedId: null,
         editingId: null,
+        stageZoom: 1,
       };
     case "ADD_SHAPE": {
       const s = action.payload;
@@ -263,6 +269,18 @@ function reducer(state: EditorState, action: Action): EditorState {
       return { ...state, order: next };
     }
 
+    case "SET_STAGE_ZOOM": {
+      const zoom = Math.min(4, Math.max(0.1, action.zoom));
+      if (Math.abs(zoom - state.stageZoom) < 0.0001) return state;
+      return { ...state, stageZoom: zoom };
+    }
+
+    case "BUMP_STAGE_ZOOM": {
+      const zoom = Math.min(4, Math.max(0.1, state.stageZoom + action.delta));
+      if (Math.abs(zoom - state.stageZoom) < 0.0001) return state;
+      return { ...state, stageZoom: zoom };
+    }
+
     default:
       return state;
   }
@@ -292,6 +310,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           order: state.order,
           stage: state.stage,
           fileTitle: state.fileTitle,
+          stageZoom: state.stageZoom,
         };
       },
 
@@ -309,6 +328,37 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
+        // Após carregar, renova URLs assinadas de imagens expiradas (Supabase)
+        // Detecta URLs do tipo /object/sign/<bucket>/<path>?token=...
+        (async () => {
+          try {
+            const renewOne = async (shapeId: string, url: string) => {
+              const match = url.match(/\/object\/sign\/([^/]+)\/(.+?)\?/);
+              if (!match) return null;
+              const bucket = match[1];
+              const objectPath = decodeURIComponent(match[2]);
+              const { data: signed, error } = await supabase.storage
+                .from(bucket)
+                .createSignedUrl(objectPath, 60 * 60);
+              if (error || !signed?.signedUrl) return null;
+              return { id: shapeId, url: signed.signedUrl };
+            };
+
+            const shapeEntries = Object.entries(data.shapes || {});
+            for (const [sid, s] of shapeEntries) {
+              if ((s as any).type === "image" && typeof (s as any).src === "string") {
+                const updated = await renewOne(sid, (s as any).src);
+                if (updated?.url) {
+                  dispatch({ type: "UPDATE_SHAPE", id: sid, patch: { src: updated.url } });
+                }
+              }
+            }
+          } catch (err) {
+            // falha silenciosa: mantém URLs antigas
+            console.warn("Não foi possível renovar URLs das imagens:", err);
+          }
+        })();
+
         if (data.stage) {
           dispatch({
             type: "SET_STAGE_SIZE",
@@ -321,6 +371,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         if (data.fileTitle) {
           dispatch({ type: "SET_FILE_TITLE", title: data.fileTitle });
         }
+
+        if (typeof data.stageZoom === "number") {
+          dispatch({ type: "SET_STAGE_ZOOM", zoom: data.stageZoom });
+        }
+
+        // Garante barra de arquivo visível: nenhuma seleção após carregar
+        dispatch({ type: "CLEAR_SELECTION" });
       },
 
       // ===== Stage instance (thumbnail/export) =====
@@ -471,6 +528,10 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       deleteSelected: () => dispatch({ type: "DELETE_SELECTED" }),
       setStageSize: (w: number, h: number) =>
         dispatch({ type: "SET_STAGE_SIZE", width: w, height: h }),
+      setStageZoom: (zoom: number) =>
+        dispatch({ type: "SET_STAGE_ZOOM", zoom }),
+      bumpStageZoom: (delta: number) =>
+        dispatch({ type: "BUMP_STAGE_ZOOM", delta }),
 
       // ===== Ordem (para Layers drag & drop) =====
       setOrder: (order: string[]) => dispatch({ type: "SET_ORDER", order }),

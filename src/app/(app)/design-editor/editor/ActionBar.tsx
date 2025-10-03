@@ -11,7 +11,7 @@ import { useEditor } from "./store";
 import FileInlineBar from "./actionbar/FileInlineBar";
 import TextInlineBar from "./actionbar/TextInlineBar";
 import ShapeInlineBar from "./actionbar/ShapeInlineBar";
-// import ImageInlineBar from "./actionbar/ImageInlineBar"; // se ainda não existir, mantenha comentado
+// import ImageInlineBar from "./actionbar/ImageInlineBar";
 
 // shadcn/ui dropdown
 import {
@@ -21,11 +21,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// utils de exportação (web)
+// utils de exportação (web + servidor)
 import {
   exportStageToPNG,
   exportStageToJPEG,
   exportStageToPDF,
+  exportStageToPDF300dpi,
 } from "./utils/export";
 
 type ActionBarProps = {
@@ -49,7 +50,7 @@ export default function ActionBar({ fileId }: ActionBarProps) {
   const isText = selectedType === "text";
   const isImage = selectedType === "image";
   const isShape =
-    !!selectedType && selectedType !== "text" && selectedType !== "image"; // rect | circle | triangle | star | polygon
+    !!selectedType && selectedType !== "text" && selectedType !== "image";
 
   async function handleSave() {
     try {
@@ -160,29 +161,14 @@ export default function ActionBar({ fileId }: ActionBarProps) {
               PDF web
             </DropdownMenuItem>
 
-            {/* PDF (servidor / vetorial via PDFKit) → envia o JSON completo do editor */}
             <DropdownMenuItem
-              onClick={async () => {
-                try {
-                  const payload = api.toJSON(); // shapes, order, stage, fileTitle
-                  const res = await fetch("/api/pdfkit-export", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      ...payload,
-                      title: state.fileTitle || "export",
-                    }),
-                  });
-                  if (!res.ok) throw new Error("Erro ao gerar PDF");
-                  const blob = await res.blob();
-                  const url = window.URL.createObjectURL(blob);
-                  const link = document.createElement("a");
-                  link.href = url;
-                  link.download = `${state.fileTitle || "export"}.pdf`;
-                  link.click();
-                  window.URL.revokeObjectURL(url);
-                } catch (err) {
-                  console.error("❌ Erro export (PDFKit):", err);
+              onClick={() => {
+                const stage = api.getStageRef();
+                if (stage) {
+                  exportStageToPDF300dpi(
+                    stage,
+                    `${state.fileTitle || "export"}.pdf`
+                  );
                 }
               }}>
               PDF Impressão (300dpi)

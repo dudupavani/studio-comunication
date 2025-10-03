@@ -1,27 +1,36 @@
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/service";
+import { createServerClientWithCookies } from "@/lib/supabase/server";
 
 // evita cache e silencia warnings de rota dinâmica
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// Helper: cliente de usuário com cookies assíncronos (compatível com @supabase/auth-helpers-nextjs d.ts)
+// Helper: cliente de usuário com cookies (usa wrapper central do projeto)
 function getUserClient() {
-  return createRouteHandlerClient({
-    cookies: async () => cookies(),
-  });
+  return createServerClientWithCookies();
 }
 
 // GET /api/design-files/[id]
 export async function GET(
   _req: Request,
-  ctx: { params: Promise<{ id: string }> }
+  ctx: { params: { id: string } }
 ) {
-  const { id } = await ctx.params; // ✅ params aguardado
-  const userClient = getUserClient(); // ✅ cookies via função async
+  const { id } = await Promise.resolve(ctx.params);
+  const userClient = getUserClient();
   const adminClient = createServiceClient();
+
+  // Checa sessão do usuário para garantir auth.uid() válido nas RLS
+  const {
+    data: { user },
+    error: authError,
+  } = await userClient.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Usuário não autenticado" },
+      { status: 401 }
+    );
+  }
 
   const { data, error } = await userClient
     .from("design_files")
@@ -50,12 +59,24 @@ export async function GET(
 // PUT /api/design-files/[id]
 export async function PUT(
   req: Request,
-  ctx: { params: Promise<{ id: string }> }
+  ctx: { params: { id: string } }
 ) {
-  const { id } = await ctx.params; // ✅ params aguardado
-  const userClient = getUserClient(); // ✅ cookies via função async
+  const { id } = await Promise.resolve(ctx.params);
+  const userClient = getUserClient();
   const adminClient = createServiceClient();
   const body = await req.json();
+
+  // Checa sessão do usuário
+  const {
+    data: { user },
+    error: authError,
+  } = await userClient.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Usuário não autenticado" },
+      { status: 401 }
+    );
+  }
 
   let thumbnail_path: string | undefined;
 
@@ -101,11 +122,23 @@ export async function PUT(
 // DELETE /api/design-files/[id]
 export async function DELETE(
   _req: Request,
-  ctx: { params: Promise<{ id: string }> }
+  ctx: { params: { id: string } }
 ) {
-  const { id } = await ctx.params; // ✅ params aguardado
-  const userClient = getUserClient(); // ✅ cookies via função async
+  const { id } = await Promise.resolve(ctx.params);
+  const userClient = getUserClient();
   const adminClient = createServiceClient();
+
+  // Checa sessão do usuário
+  const {
+    data: { user },
+    error: authError,
+  } = await userClient.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Usuário não autenticado" },
+      { status: 401 }
+    );
+  }
 
   // Buscar o registro antes de apagar
   const { data: file, error: fetchError } = await userClient

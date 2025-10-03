@@ -51,7 +51,7 @@ export default function StagePanel({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Conteúdo */}
-      <div className="flex flex-col gap-2 px-3 py-4 border-b">
+      <div className="flex flex-col gap-2 px-3 py-6 border-b">
         <div className="flex items-center justify-between gap-1">
           <div>
             <label className="block text-xs text-muted-foreground font-medium mb-1">
@@ -91,7 +91,7 @@ export default function StagePanel({ onClose }: { onClose: () => void }) {
 
       {/* Templates de dimensões */}
       <div className="flex flex-col gap-3 p-3">
-        <h3 className="text-sm font-medium mb-1">Templates Rápidos</h3>
+        <h3 className="text-sm font-medium mb-1">Templates</h3>
 
         <div className="flex flex-col gap-2">
           {/* Instagram */}
