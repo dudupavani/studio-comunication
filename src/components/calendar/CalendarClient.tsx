@@ -152,8 +152,8 @@ export default function CalendarClient({ orgId, unitId }: CalendarClientProps) {
       <div className="mb-3 flex flex-col-reverse sm:flex-row items-start sm:items-center sm:justify-between">
         <div className="text-sm text-gray-500 mt-3 sm:mt-0">{`Eventos: ${events.length}`}</div>
         <div className="flex items-center justify-between w-full sm:w-auto sm:justify-end gap-4">
-          <Button type="button" onClick={refetch} variant={"outline"}>
-            <CalendarSync size={18} />
+          <Button type="button" onClick={refetch} variant={"ghost"}>
+            <CalendarSync />
             Recarregar
           </Button>
           <Button type="button" variant={"default"} onClick={openNew}>

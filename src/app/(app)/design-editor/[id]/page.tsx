@@ -3,6 +3,7 @@
 
 import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { EditorProvider, useEditor } from "../editor/store";
 import InsertMenu from "../editor/InsertMenu";
 import FormsPanel from "../editor/FormsPanel";
@@ -30,6 +31,8 @@ function InnerEditor({ id }: { id: string }) {
   const { api } = useEditor();
 
   useEffect(() => {
+    if (!id) return; // ✅ se não tiver id, não busca nada
+
     let cancelled = false;
 
     async function fetchFile() {
@@ -58,7 +61,7 @@ function InnerEditor({ id }: { id: string }) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, api]);
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -113,12 +116,13 @@ function InnerEditor({ id }: { id: string }) {
   );
 }
 
-export default function DesignEditorPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = params;
+export default function DesignEditorPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id ?? ""; // ✅ garante string
+
+  if (!id) {
+    return <div className="p-4">❌ Nenhum arquivo encontrado.</div>;
+  }
 
   return (
     <EditorProvider>

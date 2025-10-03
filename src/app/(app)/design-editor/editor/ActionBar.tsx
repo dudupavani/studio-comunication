@@ -4,14 +4,29 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import { useEditor } from "./store";
 
 // Inline bars
 import FileInlineBar from "./actionbar/FileInlineBar";
 import TextInlineBar from "./actionbar/TextInlineBar";
 import ShapeInlineBar from "./actionbar/ShapeInlineBar";
-// import ImageInlineBar from "./actionbar/ImageInlineBar"; // se ainda não existir, comente esta linha e o uso
+// import ImageInlineBar from "./actionbar/ImageInlineBar"; // se ainda não existir, mantenha comentado
+
+// shadcn/ui dropdown
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// utils de exportação (web)
+import {
+  exportStageToPNG,
+  exportStageToJPEG,
+  exportStageToPDF,
+} from "./utils/export";
 
 type ActionBarProps = {
   fileId: string;
@@ -71,6 +86,24 @@ export default function ActionBar({ fileId }: ActionBarProps) {
     }
   }
 
+  function handleExport(option: "png" | "jpeg" | "pdf") {
+    const stage = api.getStageRef();
+    if (!stage) return;
+
+    const baseName = state.fileTitle || "export";
+    switch (option) {
+      case "png":
+        exportStageToPNG(stage, `${baseName}.png`);
+        break;
+      case "jpeg":
+        exportStageToJPEG(stage, `${baseName}.jpg`);
+        break;
+      case "pdf":
+        exportStageToPDF(stage, `${baseName}.pdf`);
+        break;
+    }
+  }
+
   return (
     <div className="border-b bg-white px-3 py-2 flex items-center justify-between">
       {/* lado esquerdo: voltar + inline bar */}
@@ -103,11 +136,59 @@ export default function ActionBar({ fileId }: ActionBarProps) {
         )}
       </div>
 
-      {/* lado direito: botão salvar */}
+      {/* lado direito: botão salvar + exportar */}
       <div className="flex items-center gap-2 pr-2">
         <Button onClick={handleSave} disabled={saving}>
           {saving ? "Salvando..." : "Salvar"}
         </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Exportar
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleExport("png")}>
+              PNG web
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport("jpeg")}>
+              JPEG web
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport("pdf")}>
+              PDF web
+            </DropdownMenuItem>
+
+            {/* PDF (servidor / vetorial via PDFKit) → envia o JSON completo do editor */}
+            <DropdownMenuItem
+              onClick={async () => {
+                try {
+                  const payload = api.toJSON(); // shapes, order, stage, fileTitle
+                  const res = await fetch("/api/pdfkit-export", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      ...payload,
+                      title: state.fileTitle || "export",
+                    }),
+                  });
+                  if (!res.ok) throw new Error("Erro ao gerar PDF");
+                  const blob = await res.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = `${state.fileTitle || "export"}.pdf`;
+                  link.click();
+                  window.URL.revokeObjectURL(url);
+                } catch (err) {
+                  console.error("❌ Erro export (PDFKit):", err);
+                }
+              }}>
+              PDF Impressão (300dpi)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

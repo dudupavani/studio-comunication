@@ -9,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Type, ImageIcon, Box, StickyNote } from "lucide-react";
+import { Type, ImageIcon, Box, Frame } from "lucide-react";
 
 export default function InsertMenu({
   onOpenShapes,
@@ -29,26 +29,21 @@ export default function InsertMenu({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="outline"
+              variant="secondary"
               size="icon"
-              className="rounded-xl"
               onClick={() => api.addText()}>
-              <Type className="h-5 w-5" />
-              <span className="sr-only">Inserir texto</span>
+              <Type size={22} />
+              <span className="sr-only">Texto</span>
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="right">Adicionar Texto</TooltipContent>
+          <TooltipContent side="right">Texto</TooltipContent>
         </Tooltip>
 
         {/* Formas */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-xl"
-              onClick={onOpenShapes}>
-              <Box className="h-5 w-5" />
+            <Button variant="secondary" size="icon" onClick={onOpenShapes}>
+              <Box size={22} />
               <span className="sr-only">Formas</span>
             </Button>
           </TooltipTrigger>
@@ -58,12 +53,8 @@ export default function InsertMenu({
         {/* Imagens */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-xl"
-              onClick={onOpenImages}>
-              <ImageIcon className="h-5 w-5" />
+            <Button variant="secondary" size="icon" onClick={onOpenImages}>
+              <ImageIcon size={22} />
               <span className="sr-only">Imagens</span>
             </Button>
           </TooltipTrigger>
@@ -73,16 +64,12 @@ export default function InsertMenu({
         {/* Stage */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-xl"
-              onClick={onOpenStage}>
-              <StickyNote className="h-5 w-5" />
-              <span className="sr-only">Stage</span>
+            <Button variant="secondary" size="icon" onClick={onOpenStage}>
+              <Frame size={22} />
+              <span className="sr-only">Artboard</span>
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="right">Stage</TooltipContent>
+          <TooltipContent side="right">Artboard</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>

@@ -1,81 +1,60 @@
+// src/app/api/calendar/events/route.ts
 import { createClient } from "../../../../lib/supabase/server";
 import { getAuthContext } from "../../../../lib/auth-context";
+import {
+  EventQuerySchema,
+  EventCreateSchema,
+} from "../../../../lib/calendar/schemas";
+import {
+  parseJson,
+  validateBody,
+  validateQuery,
+} from "../../../../lib/http/validate";
+import { problem } from "../../../../lib/http/problem";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
-// Helper function to validate date range
-function isValidDateRange(from: string, to: string): boolean {
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
+type EventQuery = z.infer<typeof EventQuerySchema>;
+type EventCreate = z.infer<typeof EventCreateSchema>;
 
-  // Check if dates are valid
-  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
-    return false;
+// GET /api/calendar/events
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const parsed = validateQuery(EventQuerySchema, url);
+
+  if (!parsed.ok) {
+    return problem(400, "CAL-VAL-001", "Invalid query parameters", undefined, {
+      issues: parsed.issues,
+    });
   }
 
-  // Check if range is within 90 days
-  const diffTime = Math.abs(toDate.getTime() - fromDate.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const { from, to, unitId } = parsed.data as EventQuery;
+  const orgId = url.searchParams.get("orgId");
 
-  return diffDays <= 90;
-}
-
-export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const from = searchParams.get("from");
-    const to = searchParams.get("to");
-    const orgId = searchParams.get("orgId");
-    const unitId = searchParams.get("unitId");
-
-    // Validate required parameters
-    if (!from || !to) {
-      return NextResponse.json(
-        { data: null, error: "Missing required parameters: from, to" },
-        { status: 400 }
-      );
-    }
-
-    // Validate date range
-    if (!isValidDateRange(from, to)) {
-      return NextResponse.json(
-        { data: null, error: "Invalid date range or range exceeds 90 days" },
-        { status: 400 }
-      );
-    }
-
     const supabase = createClient();
-    const authContext = await getAuthContext(supabase);
+    const authContext = await getAuthContext();
 
-    // Check if user is authenticated
-    if (!authContext || !authContext.userId) {
-      return NextResponse.json(
-        { data: null, error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!authContext?.userId) {
+      return problem(401, "CAL-AUTH-001", "Unauthorized");
     }
 
-    // Validate orgId matches user's org
     if (orgId && orgId !== authContext.orgId) {
-      return NextResponse.json(
-        { data: null, error: "Forbidden" },
-        { status: 403 }
-      );
+      return problem(403, "CAL-AUTH-002", "Forbidden");
     }
 
-    // Build query
+    // Correção: busca por eventos que SOBREPÕEM o intervalo solicitado:
+    // start_time <= to  AND  end_time >= from
     let query = supabase
       .from("calendar_events")
       .select("*")
-      .gte("start_time", from)
-      .lte("end_time", to)
+      .lte("start_time", to.toISOString())
+      .gte("end_time", from.toISOString())
       .order("start_time", { ascending: true });
 
-    // Filter by orgId
     if (orgId) {
       query = query.eq("org_id", orgId);
     }
-
-    // Filter by unitId if provided
     if (unitId) {
       query = query.eq("unit_id", unitId);
     }
@@ -84,81 +63,65 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error("Error fetching calendar events:", error);
-      return NextResponse.json(
-        { data: null, error: "Failed to fetch calendar events" },
-        { status: 500 }
-      );
+      return problem(500, "CAL-SERVER-001", "Failed to fetch calendar events");
     }
 
     return NextResponse.json({ data, error: null });
-  } catch (error) {
-    console.error("Unexpected error in GET /api/calendar/events:", error);
-    return NextResponse.json(
-      { data: null, error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Unexpected error in GET /api/calendar/events:", err);
+    return problem(500, "CAL-SERVER-002", "Internal server error");
   }
 }
 
+// POST /api/calendar/events
 export async function POST(request: Request) {
   try {
     const supabase = createClient();
-    const authContext = await getAuthContext(supabase);
+    const authContext = await getAuthContext();
 
-    // Check if user is authenticated
-    if (!authContext || !authContext.userId) {
-      return NextResponse.json(
-        { data: null, error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!authContext?.userId) {
+      return problem(401, "CAL-AUTH-003", "Unauthorized");
     }
-
-    // Check if user has org
     if (!authContext.orgId) {
-      return NextResponse.json(
-        { data: null, error: "User must belong to an organization" },
-        { status: 400 }
+      return problem(
+        400,
+        "CAL-AUTH-004",
+        "User must belong to an organization"
       );
     }
 
-    const body = await request.json();
-    const { title, start_time, end_time, all_day, color, unit_id, metadata } =
-      body;
+    const json = await parseJson(request);
+    const parsed = validateBody(EventCreateSchema, json);
 
-    // Validate required fields
-    if (!title || !start_time || !end_time) {
-      return NextResponse.json(
-        {
-          data: null,
-          error: "Missing required fields: title, start_time, end_time",
-        },
-        { status: 400 }
-      );
+    if (!parsed.ok) {
+      return problem(400, "CAL-VAL-002", "Invalid body", undefined, {
+        issues: parsed.issues,
+      });
     }
 
-    // Validate date format
-    if (
-      isNaN(new Date(start_time).getTime()) ||
-      isNaN(new Date(end_time).getTime())
-    ) {
-      return NextResponse.json(
-        { data: null, error: "Invalid date format for start_time or end_time" },
-        { status: 400 }
-      );
-    }
+    const {
+      title,
+      description,
+      start_time,
+      end_time,
+      all_day,
+      color,
+      unit_id,
+      metadata,
+    } = parsed.data as EventCreate;
 
-    // Create event
     const { data, error } = await supabase
       .from("calendar_events")
       .insert({
         org_id: authContext.orgId,
-        unit_id,
+        unit_id: unit_id ?? null,
         title,
-        start_time,
-        end_time,
-        all_day: all_day || false,
-        color: color || null,
-        metadata: metadata || null,
+        description: description ?? null,
+        start_time: start_time.toISOString(),
+        end_time: end_time.toISOString(),
+        all_day: all_day ?? false,
+        color: color ?? null,
+        metadata: metadata ?? null,
         created_by: authContext.userId,
       })
       .select()
@@ -166,18 +129,12 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Error creating calendar event:", error);
-      return NextResponse.json(
-        { data: null, error: "Failed to create calendar event" },
-        { status: 500 }
-      );
+      return problem(500, "CAL-SERVER-003", "Failed to create calendar event");
     }
 
     return NextResponse.json({ data, error: null }, { status: 201 });
-  } catch (error) {
-    console.error("Unexpected error in POST /api/calendar/events:", error);
-    return NextResponse.json(
-      { data: null, error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Unexpected error in POST /api/calendar/events:", err);
+    return problem(500, "CAL-SERVER-004", "Internal server error");
   }
 }

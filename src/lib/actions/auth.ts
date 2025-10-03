@@ -23,7 +23,12 @@ export async function signIn(formData: FormData) {
 
 export async function signUp(formData: FormData) {
   const hdr = await headers();
-  const origin = hdr.get("origin")!;
+  const origin = hdr.get("origin") || undefined;
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    origin ||
+    "http://localhost:3000";
   // PEGA full_name DO FORM, pois no SignUpForm já foi enviado assim
   const full_name = formData.get("full_name") as string;
   const email = formData.get("email") as string;
@@ -34,7 +39,7 @@ export async function signUp(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: `${siteUrl.replace(/\/$/, "")}/auth/callback`,
       data: {
         full_name, // <-- IMPORTANTE: deve ser full_name
       },
@@ -56,12 +61,20 @@ export async function signOut() {
 
 export async function sendPasswordResetEmail(formData: FormData) {
   const hdr = await headers();
-  const origin = hdr.get("origin")!;
+  const origin = hdr.get("origin") || undefined;
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    origin ||
+    "http://localhost:3000";
+
   const email = formData.get("email") as string;
   const supabase = createServerClientWithCookies(); // Use write-enabled client
 
+  const redirectTo = `${siteUrl.replace(/\/$/, "")}/auth/callback?type=password`;
+
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?type=password`,
+    redirectTo,
   });
 
   if (error) {

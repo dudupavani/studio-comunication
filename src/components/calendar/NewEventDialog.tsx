@@ -141,42 +141,61 @@ export default function NewEventDialog({
   // datas + horas
   const initialTimes = useMemo(() => {
     const now = new Date();
-    const start =
-      defaultStart ??
-      new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0);
-    const end =
-      defaultEnd ??
-      new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0);
+
+    // sempre arredonda para a próxima hora cheia
+    const base = new Date(now);
+    base.setMinutes(0, 0, 0);
+    base.setHours(base.getHours() + 1);
+
+    const start = defaultStart ?? base;
+    const end = defaultEnd ?? new Date(base.getTime() + 60 * 60 * 1000);
+
     return { start, end };
   }, [defaultStart, defaultEnd]);
 
   const [startDate, setStartDate] = useState<Date>(initialTimes.start);
   const [endDate, setEndDate] = useState<Date>(initialTimes.end);
-  const [startTime, setStartTime] = useState<string>(
-    toHHmm(initialTimes.start)
-  );
-  const [endTime, setEndTime] = useState<string>(toHHmm(initialTimes.end));
+  const [startTime, setStartTime] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
 
+  // calcula horários iniciais sempre que abrir o modal
   useEffect(() => {
-    if (open) {
-      setTitle("");
-      setAllDay(!!defaultAllDay);
-      setColor("#3b82f6");
-      setDescription("");
-      setError(null);
+    if (!open) return;
 
-      const s = defaultAllDay
-        ? startOfDay(initialTimes.start)
-        : initialTimes.start;
-      const e = defaultAllDay ? endOfDay(initialTimes.end) : initialTimes.end;
+    setTitle("");
+    setAllDay(!!defaultAllDay);
+    setColor("#3b82f6");
+    setDescription("");
+    setError(null);
 
-      setStartDate(s);
-      setEndDate(e);
-      setStartTime(toHHmm(s));
-      setEndTime(toHHmm(e));
+    const now = new Date();
+
+    // próxima hora cheia
+    const nextHour = new Date(now);
+    nextHour.setMinutes(0, 0, 0);
+    nextHour.setHours(nextHour.getHours() + 1);
+
+    // START: usa defaultStart se vier FUTURO; senão, próxima hora cheia
+    let start =
+      defaultStart && defaultStart > now ? new Date(defaultStart) : nextHour;
+
+    // END: usa defaultEnd se vier DEPOIS de start; senão, +1h
+    let end =
+      defaultEnd && defaultEnd > start
+        ? new Date(defaultEnd)
+        : new Date(start.getTime() + 60 * 60 * 1000);
+
+    // Se allDay, normaliza para dia inteiro
+    if (defaultAllDay) {
+      start = startOfDay(start);
+      end = endOfDay(start);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+
+    setStartDate(start);
+    setEndDate(end);
+    setStartTime(toHHmm(start));
+    setEndTime(toHHmm(end));
+  }, [open, defaultStart, defaultEnd, defaultAllDay]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -310,6 +329,7 @@ export default function NewEventDialog({
 
               <TimeSelect
                 id="start-time"
+                key={`start-${startTime}`} // 👈 força remount ao mudar
                 value={startTime}
                 onChange={setStartTime}
                 disabled={allDay}
@@ -344,6 +364,7 @@ export default function NewEventDialog({
 
               <TimeSelect
                 id="end-time"
+                key={`end-${endTime}`} // 👈 força remount ao mudar
                 value={endTime}
                 onChange={setEndTime}
                 disabled={allDay}
@@ -412,7 +433,6 @@ export default function NewEventDialog({
               type="button"
               onClick={onClose}
               variant="ghost"
-              className="hover:bg-gray-50"
               disabled={submitting}>
               Cancelar
             </Button>
