@@ -14,6 +14,7 @@ import {
   Calendar,
   Group,
   LaptopMinimalCheck,
+  MessageCircleHeart,
 } from "lucide-react";
 
 import {
@@ -72,6 +73,19 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                     <AppWindowMac size={20} />
                     <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
                       Painel
+                    </span>
+                  </Link>
+                </Button>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
+                  asChild>
+                  <Link href="/helpdesk">
+                    <MessageCircleHeart size={20} />
+                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                      Helpdesk
                     </span>
                   </Link>
                 </Button>
