@@ -10,7 +10,7 @@ import {
   type TypedSupabaseClient,
 } from "@/lib/helpdesk/queries";
 import type { ChatMemberWithUser } from "../components/types";
-import { ConversationLayout } from "../components/ConversationLayout";
+import { ChatFullscreenModal } from "../components/ChatFullscreenModal";
 
 export default async function HelpdeskChatPage({
   params,
@@ -38,7 +38,7 @@ export default async function HelpdeskChatPage({
     auth.isPlatformAdmin || (await isChatAdmin(supabase, chatId, auth.userId));
 
   return (
-    <ConversationLayout
+    <ChatFullscreenModal
       chat={chat}
       chatId={chatId}
       currentUserId={auth.userId}

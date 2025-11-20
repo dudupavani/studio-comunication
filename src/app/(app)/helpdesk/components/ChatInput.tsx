@@ -35,12 +35,15 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
     setFiles([]);
   }, [disabled, files, onSend, value]);
 
-  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(event.target.files ?? []);
-    if (!selected.length) return;
-    setFiles((prev) => [...prev, ...selected].slice(0, 5));
-    event.target.value = "";
-  }, []);
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const selected = Array.from(event.target.files ?? []);
+      if (!selected.length) return;
+      setFiles((prev) => [...prev, ...selected].slice(0, 5));
+      event.target.value = "";
+    },
+    []
+  );
 
   const removeFile = useCallback((name: string) => {
     setFiles((prev) => prev.filter((f) => f.name !== name));
@@ -91,15 +94,13 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
           {files.map((file) => (
             <div
               key={`${file.name}-${file.size}`}
-              className="flex items-center gap-2 rounded-full bg-muted px-3 py-1"
-            >
-              <span className="text-foreground">{file.name}</span>
+              className="flex items-center gap-2 rounded-full bg-secondary border px-5 py-1 shadow-md">
+              <span className="text-foreground font-medium">{file.name}</span>
               <button
                 type="button"
                 onClick={() => removeFile(file.name)}
-                className="text-xs text-muted-foreground hover:text-foreground"
-                aria-label={`Remover ${file.name}`}
-              >
+                className="text-lg text-muted-foreground hover:text-foreground"
+                aria-label={`Remover ${file.name}`}>
                 ×
               </button>
             </div>

@@ -16,6 +16,7 @@ interface ChatWindowProps {
   chatId: string;
   currentUserId: string;
   members: ChatMemberWithUser[];
+  onAttachmentsAdded?: () => void;
 }
 
 export function ChatWindow({
@@ -23,6 +24,7 @@ export function ChatWindow({
   chatId,
   currentUserId,
   members,
+  onAttachmentsAdded,
 }: ChatWindowProps) {
   const { messages, loading, loadingMore, hasMore, loadMore, appendMessage } =
     useMessages(chatId, { limit: 50 });
@@ -54,9 +56,12 @@ export function ChatWindow({
           memberMap.get(currentUserId)?.user ??
           null;
         appendMessage({ ...result, sender: senderUser });
+        if (result.attachments && Array.isArray(result.attachments) && result.attachments.length > 0) {
+          onAttachmentsAdded?.();
+        }
       }
     },
-    [appendMessage, chatId, currentUserId, memberMap, send]
+    [appendMessage, chatId, currentUserId, memberMap, onAttachmentsAdded, send]
   );
 
   return (
