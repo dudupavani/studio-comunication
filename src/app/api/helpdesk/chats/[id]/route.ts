@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClientWithCookies } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { getAuthContext } from "@/lib/helpdesk/auth-context";
 import {
   errorResponse,
@@ -9,6 +10,7 @@ import {
   fetchChatById,
   fetchChatMembers,
   isChatMember,
+  type TypedSupabaseClient,
 } from "@/lib/helpdesk/queries";
 
 export async function GET(
@@ -21,8 +23,8 @@ export async function GET(
   }
 
   try {
-    const auth = await getAuthContext();
     const supabase = createServerClientWithCookies();
+    const auth = await getAuthContext(supabase);
 
     const member = await isChatMember(supabase, chatId, auth.userId);
     if (!member) {
@@ -34,7 +36,9 @@ export async function GET(
       return errorResponse(404, "not_found", "Chat not found");
     }
 
-    const members = await fetchChatMembers(supabase, chatId);
+    // Usa service client após validar membership para contornar RLS e retornar todos os participantes
+    const adminClient = createServiceClient() as unknown as TypedSupabaseClient;
+    const members = await fetchChatMembers(adminClient, chatId);
 
     return NextResponse.json({ chat, members });
   } catch (err) {

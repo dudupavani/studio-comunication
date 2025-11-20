@@ -14,9 +14,10 @@ function resolveSubtitle(members: ChatMemberWithUser[], chat: Chat) {
   if (chat.type === "direct") {
     const other = members.find((m) => m.role !== "admin");
     if (other?.user?.full_name) return other.user.full_name;
+    if (other?.user?.email) return other.user.email;
   }
   const names = members
-    .map((m) => m.user?.full_name)
+    .map((m) => m.user?.full_name || m.user?.email)
     .filter(Boolean)
     .slice(0, 3)
     .join(", ");

@@ -28,7 +28,12 @@ export async function deleteUnitAction(unitId: string) {
   return res;
 }
 
-export async function updateUnitDetailsAction(formData: FormData) {
+type FormState = { ok?: boolean; error?: string };
+
+export async function updateUnitDetailsAction(
+  _prevState: FormState,
+  formData: FormData
+) {
   const auth = await getAuthContext();
   if (!auth?.userId) redirect("/login");
 
@@ -49,7 +54,9 @@ export async function updateUnitDetailsAction(formData: FormData) {
 
   // Revalida a página da unidade
   if (res.ok && res.data?.slug) {
+    revalidatePath("/units");
     revalidatePath(`/units/${res.data.slug}`);
+    return redirect(`/units/${res.data.slug}`);
   }
 
   return res;

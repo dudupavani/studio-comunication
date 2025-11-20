@@ -1,5 +1,7 @@
 // src/lib/helpdesk/auth-context.ts
-import { createServerClientWithCookies } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createServerClientReadOnly } from "@/lib/supabase/server";
+import type { Database } from "@/types/supabase";
 
 export type AuthContext = {
   userId: string;
@@ -23,8 +25,10 @@ function buildError(status: number, message: string) {
   return err;
 }
 
-export async function getAuthContext(): Promise<AuthContext> {
-  const supabase = createServerClientWithCookies();
+export async function getAuthContext(
+  client?: SupabaseClient<Database>
+): Promise<AuthContext> {
+  const supabase = client ?? createServerClientReadOnly();
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user) {

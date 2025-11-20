@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createServerClientWithCookies } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { getAuthContext } from "@/lib/helpdesk/auth-context";
 import { createHelpdeskMessageSchema } from "@/lib/helpdesk/validations";
 import {
@@ -23,8 +24,12 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await getAuthContext();
-    const supabase = createServerClientWithCookies();
+    const supabaseUser = createServerClientWithCookies();
+    const auth = await getAuthContext(supabaseUser);
+    const supabaseWriter =
+      auth.isPlatformAdmin || auth.isOrgAdmin
+        ? createServiceClient()
+        : supabaseUser;
 
     const body = await req.json().catch(() => null);
     const parsed = createHelpdeskMessageSchema.safeParse(body ?? {});
@@ -42,7 +47,7 @@ export async function POST(req: NextRequest) {
     const userIds = new Set<string>(payload.userIds ?? []);
 
     if (payload.groupIds.length > 0) {
-      const { data: groupMembers, error: membersError } = await supabase
+      const { data: groupMembers, error: membersError } = await supabaseUser
         .from("user_group_members")
         .select("user_id")
         .in("group_id", payload.groupIds)
@@ -69,7 +74,7 @@ export async function POST(req: NextRequest) {
     const messageContent = payload.message;
 
     if (payload.mode === "group") {
-      const { data: chatRow, error: chatError } = await supabase
+      const { data: chatRow, error: chatError } = await supabaseWriter
         .from("chats")
         .insert({
           org_id: auth.orgId,
@@ -95,35 +100,37 @@ export async function POST(req: NextRequest) {
       }));
 
       if (memberRows.length) {
-        const { error: memberError } = await supabase
+        const { error: memberError } = await supabaseWriter
           .from("chat_members")
           .insert(memberRows);
 
-      if (memberError && memberError.code !== "23505") {
-        console.error("HELPDESK add members error:", memberError);
+        if (memberError && memberError.code !== "23505") {
+          console.error("HELPDESK add members error:", memberError);
+          return errorResponse(
+            500,
+            "db_error",
+            memberError.message ?? "Failed to assign members"
+          );
+        }
+      }
+
+      const { error: messageError } = await supabaseWriter
+        .from("chat_messages")
+        .insert({
+          chat_id: chatId,
+          sender_id: auth.userId,
+          message: messageContent,
+          attachments: null,
+        });
+
+      if (messageError) {
+        console.error("HELPDESK create message error:", messageError);
         return errorResponse(
           500,
           "db_error",
-          memberError.message ?? "Failed to assign members"
+          messageError.message ?? "Failed to send message"
         );
       }
-    }
-
-    const { error: messageError } = await supabase.from("chat_messages").insert({
-      chat_id: chatId,
-        sender_id: auth.userId,
-        message: messageContent,
-        attachments: null,
-      });
-
-    if (messageError) {
-      console.error("HELPDESK create message error:", messageError);
-      return errorResponse(
-        500,
-        "db_error",
-        messageError.message ?? "Failed to send message"
-      );
-    }
 
       return NextResponse.json({ ok: true, mode: "group", chatIds: [chatId] });
     }
@@ -143,7 +150,7 @@ export async function POST(req: NextRequest) {
       return errorResponse(400, "validation_error", "Lista de destinatários vazia");
     }
 
-    const { error: chatsError } = await supabase
+    const { error: chatsError } = await supabaseWriter
       .from("chats")
       .insert(chatEntries.map(({ _recipient, ...rest }) => rest));
 
@@ -170,7 +177,7 @@ export async function POST(req: NextRequest) {
     ]);
 
     for (const chunk of chunkArray(memberRows, 100)) {
-      const { error: memberError } = await supabase.from("chat_members").insert(chunk);
+      const { error: memberError } = await supabaseWriter.from("chat_members").insert(chunk);
       if (memberError && memberError.code !== "23505") {
         console.error("HELPDESK add members error:", memberError);
         return errorResponse(
@@ -189,7 +196,7 @@ export async function POST(req: NextRequest) {
     }));
 
     for (const chunk of chunkArray(messageRows, 100)) {
-      const { error: messageError } = await supabase.from("chat_messages").insert(chunk);
+      const { error: messageError } = await supabaseWriter.from("chat_messages").insert(chunk);
       if (messageError) {
         console.error("HELPDESK create broadcast message error:", messageError);
         return errorResponse(

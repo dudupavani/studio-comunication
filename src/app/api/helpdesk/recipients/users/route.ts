@@ -5,8 +5,8 @@ import { errorResponse, handleRouteError } from "@/lib/helpdesk/api-helpers";
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await getAuthContext();
     const supabase = createServerClientWithCookies();
+    const auth = await getAuthContext(supabase);
 
     const searchParams = req.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim() ?? "";

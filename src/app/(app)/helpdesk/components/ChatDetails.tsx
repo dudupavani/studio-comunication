@@ -23,7 +23,8 @@ export function ChatDetails({
   onMembersChange,
 }: ChatDetailsProps) {
   const { toast } = useToast();
-  const [localMembers, setLocalMembers] = useState<ChatMemberWithUser[]>(members);
+  const [localMembers, setLocalMembers] =
+    useState<ChatMemberWithUser[]>(members);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -33,9 +34,9 @@ export function ChatDetails({
   const refreshMembers = useCallback(async () => {
     const res = await fetch(`/api/helpdesk/chats/${chatId}/members`);
     if (!res.ok) return;
-    const payload = (await res.json().catch(() => null)) as
-      | { members: ChatMemberWithUser[] }
-      | null;
+    const payload = (await res.json().catch(() => null)) as {
+      members: ChatMemberWithUser[];
+    } | null;
     if (payload?.members) {
       setLocalMembers(payload.members);
       onMembersChange?.(payload.members);
@@ -43,7 +44,9 @@ export function ChatDetails({
   }, [chatId, onMembersChange]);
 
   const handleAdd = useCallback(async () => {
-    const userId = window.prompt("Informe o ID do usuário para adicionar ao chat");
+    const userId = window.prompt(
+      "Informe o ID do usuário para adicionar ao chat"
+    );
     if (!userId) return;
 
     setLoading(true);
@@ -89,15 +92,14 @@ export function ChatDetails({
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Participantes</h3>
+          <h3 className="font-semibold">Participantes</h3>
           {canManageMembers ? (
             <Button
               size="icon"
               variant="ghost"
               title="Adicionar membro"
               onClick={handleAdd}
-              disabled={loading}
-            >
+              disabled={loading}>
               <UserPlus className="h-4 w-4" />
             </Button>
           ) : null}
@@ -106,11 +108,12 @@ export function ChatDetails({
           {localMembers.map((member) => (
             <li
               key={member.id}
-              className="flex items-center justify-between rounded-xl border border-border px-3 py-2"
-            >
+              className="flex items-center justify-between rounded-md border border-border px-3 py-2">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  {member.user?.full_name || "Usuário"}
+                  {member.user?.full_name?.trim() ||
+                    member.user?.email?.trim() ||
+                    "Usuário"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {member.role === "admin" ? "Administrador" : "Membro"}
@@ -127,7 +130,9 @@ export function ChatDetails({
       </section>
 
       <section className="mt-auto space-y-2 rounded-2xl border border-border bg-muted/30 p-4">
-        <h3 className="text-sm font-semibold text-foreground">Notas internas</h3>
+        <h3 className="text-sm font-semibold text-foreground">
+          Notas internas
+        </h3>
         <p className="text-xs text-muted-foreground">
           Espaço reservado para futuras anotações da equipe. Em breve ✨
         </p>

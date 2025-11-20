@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 
 interface ChatInputProps {
   disabled?: boolean;
-  onSend: (message: string) => Promise<void> | void;
+  onSend: (payload: { message: string; files: File[] }) => Promise<void> | void;
 }
 
 export function ChatInput({ disabled, onSend }: ChatInputProps) {
   const [value, setValue] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const autoResize = useCallback(() => {
     const el = textareaRef.current;
@@ -28,9 +30,21 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
   const submit = useCallback(async () => {
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
-    await onSend(trimmed);
+    await onSend({ message: trimmed, files });
     setValue("");
-  }, [disabled, onSend, value]);
+    setFiles([]);
+  }, [disabled, files, onSend, value]);
+
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? []);
+    if (!selected.length) return;
+    setFiles((prev) => [...prev, ...selected].slice(0, 5));
+    event.target.value = "";
+  }, []);
+
+  const removeFile = useCallback((name: string) => {
+    setFiles((prev) => prev.filter((f) => f.name !== name));
+  }, []);
 
   return (
     <div className="border-t border-border">
@@ -51,12 +65,19 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
           }}
         />
         <Button
-          onClick={submit}
-          disabled={disabled || value.trim().length === 0}
-          variant={"outline"}
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled}
+          variant="outline"
           size="icon-md">
           <Paperclip size={22} />
         </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileChange}
+        />
         <Button
           onClick={submit}
           disabled={disabled || value.trim().length === 0}
@@ -64,6 +85,27 @@ export function ChatInput({ disabled, onSend }: ChatInputProps) {
           <Send size={22} />
         </Button>
       </div>
+
+      {files.length > 0 ? (
+        <div className="flex flex-wrap gap-2 px-6 pb-3 text-xs text-muted-foreground">
+          {files.map((file) => (
+            <div
+              key={`${file.name}-${file.size}`}
+              className="flex items-center gap-2 rounded-full bg-muted px-3 py-1"
+            >
+              <span className="text-foreground">{file.name}</span>
+              <button
+                type="button"
+                onClick={() => removeFile(file.name)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+                aria-label={`Remover ${file.name}`}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

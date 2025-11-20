@@ -258,10 +258,10 @@ export async function updateUnitDetails(
   try {
     const supabase = createClient();
 
-    // pega org da unidade
+    // pega org e slug atuais (usado para permissão e revalidação)
     const { data: current, error: readErr } = await supabase
       .from("units")
-      .select("id, org_id")
+      .select("id, org_id, slug")
       .eq("id", unitId)
       .single();
 
@@ -274,15 +274,47 @@ export async function updateUnitDetails(
 
     await assertCanManageUnits(current.org_id);
 
-    // Evita update vazio/crash
-    const toUpdate: Record<string, any> = {};
-    for (const k of ["name", "address", "cnpj", "phone"] as const) {
-      if (k in payload) (toUpdate as any)[k] = (payload as any)[k];
+    // Campos adicionais (sem nome/slug)
+    const extraFields: Record<string, any> = {};
+    for (const k of ["address", "cnpj", "phone"] as const) {
+      if (k in payload) extraFields[k] = (payload as any)[k];
     }
 
+    const hasName = "name" in payload;
+    if (!hasName && Object.keys(extraFields).length === 0) {
+      return { ok: false, error: "Nada para atualizar." };
+    }
+
+    // Se nome mudou, atualiza slug de forma segura (similar ao updateUnit)
+    if (hasName) {
+      const trimmed = (payload.name || "").trim();
+      if (!trimmed) return { ok: false, error: "Nome inválido." };
+
+      const base = slugify(trimmed);
+      for (let i = 0; i < 5; i++) {
+        const candidate = i === 0 ? base : `${base}-${i + 1}`;
+        const { data, error } = await supabase
+          .from("units")
+          .update({ name: trimmed, slug: candidate, ...extraFields })
+          .eq("id", unitId)
+          .select("id, name, slug, org_id, address, cnpj, phone")
+          .single();
+
+        if (!error && data) {
+          if (opts?.revalidate) revalidatePath(opts.revalidate);
+          return { ok: true, data: data as Unit };
+        }
+        if (error && (error as any).code !== "23505") {
+          return { ok: false, error: error.message };
+        }
+      }
+      return { ok: false, error: "Já existe uma unidade com esse nome." };
+    }
+
+    // Sem alteração de nome: apenas detalhes
     const { data, error } = await supabase
       .from("units")
-      .update(toUpdate)
+      .update(extraFields)
       .eq("id", unitId)
       .select("id, name, slug, org_id, address, cnpj, phone")
       .single();

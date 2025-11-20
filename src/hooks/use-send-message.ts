@@ -8,7 +8,7 @@ import type { ChatMessageWithSender } from "./use-messages";
 interface SendOptions {
   chatId: string;
   message: string;
-  attachments?: any;
+  attachments?: File[];
 }
 
 interface UseSendMessageResult {
@@ -28,12 +28,17 @@ export function useSendMessage(): UseSendMessageResult {
       const trimmed = message.trim();
       if (!trimmed) return null;
 
+      const formData = new FormData();
+      formData.set("message", trimmed);
+      (attachments ?? []).forEach((file) => {
+        formData.append("files", file);
+      });
+
       setSending(true);
       try {
         const res = await fetch(`/api/helpdesk/chats/${chatId}/messages`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: trimmed, attachments }),
+          body: formData,
         });
 
         if (!res.ok) {

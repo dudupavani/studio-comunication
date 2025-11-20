@@ -172,20 +172,62 @@ export async function fetchChatMembers(
     throw new Error(`Failed to fetch members: ${error.message}`);
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    chat_id: row.chat_id,
-    user_id: row.user_id,
-    role: row.role,
-    joined_at: row.joined_at,
-    user: row.profiles
-      ? {
-          id: row.profiles.id,
-          full_name: row.profiles.full_name,
-          avatar_url: row.profiles.avatar_url,
-        }
-      : null,
-  }));
+  const rows = Array.isArray(data) ? data : [];
+
+  // Busca identidades de usuários para garantir full_name (usa função SQL que já resolve nomes)
+  const userIds = Array.from(new Set(rows.map((row: any) => row.user_id).filter(Boolean)));
+
+  const identityMap: Record<
+    string,
+    { id: string; full_name: string | null; avatar_url: string | null; email?: string | null }
+  > = {};
+
+  if (userIds.length) {
+    const { data: identities, error: identitiesError } = await supabase.rpc(
+      "get_user_identity_many",
+      { p_user_ids: userIds }
+    );
+
+    if (identitiesError) {
+      console.warn("HELPDESK fetch identity fallback error", identitiesError);
+    }
+
+    if (Array.isArray(identities)) {
+      identities.forEach((identity: any) => {
+        identityMap[identity.user_id] = {
+          id: identity.user_id,
+          full_name: identity.full_name ?? null,
+          avatar_url: identity.avatar_url ?? null,
+          email: identity.email ?? null,
+        };
+      });
+    }
+  }
+
+  return rows.map((row: any) => {
+    const profileFromJoin =
+      row.profiles && (row.profiles.full_name || row.profiles.avatar_url)
+        ? row.profiles
+        : null;
+    const identity = identityMap[row.user_id];
+    const profile = profileFromJoin || identity;
+
+    return {
+      id: row.id,
+      chat_id: row.chat_id,
+      user_id: row.user_id,
+      role: row.role,
+      joined_at: row.joined_at,
+      user: profile
+        ? {
+            id: profile.id ?? row.user_id,
+            full_name: profile.full_name,
+            avatar_url: profile.avatar_url,
+            email: (profile as any).email ?? null,
+          }
+        : null,
+    };
+  });
 }
 
 export async function fetchChatMessages(

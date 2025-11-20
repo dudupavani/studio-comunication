@@ -46,8 +46,8 @@ export function ChatWindow({
   useRealtimeMessages(chatId, handleRealtime);
 
   const handleSend = useCallback(
-    async (text: string) => {
-      const result = await send({ chatId, message: text });
+    async ({ message, files }: { message: string; files: File[] }) => {
+      const result = await send({ chatId, message, attachments: files });
       if (result) {
         const senderUser =
           memberMap.get(result.sender_id)?.user ??

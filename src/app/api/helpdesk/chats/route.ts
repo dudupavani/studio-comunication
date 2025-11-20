@@ -11,8 +11,8 @@ import { createChatSchema } from "@/lib/helpdesk/validations";
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await getAuthContext();
     const supabase = createServerClientWithCookies();
+    const auth = await getAuthContext(supabase);
     const { limit, cursor } = parsePagination(req.nextUrl.searchParams, {
       defaultLimit: 30,
       maxLimit: 100,
@@ -37,7 +37,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await getAuthContext();
+    const supabase = createServerClientWithCookies();
+    const auth = await getAuthContext(supabase);
     if (!auth.isPlatformAdmin && !auth.isOrgAdmin) {
       return errorResponse(403, "forbidden", "Not allowed to create chats");
     }
@@ -57,8 +58,6 @@ export async function POST(req: NextRequest) {
     if (payload.type !== "direct" && !payload.name) {
       return errorResponse(400, "validation_error", "Nome obrigatório");
     }
-
-    const supabase = createServerClientWithCookies();
 
     const { data: chatRow, error: chatError } = await supabase
       .from("chats")
