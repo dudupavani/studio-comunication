@@ -2,7 +2,7 @@
 
 ## Core Features:
 
-- Authentication: User authentication via Supabase, supporting email/password login, signup, logout, and password reset flows.
+- Authentication: User authentication via Supabase, supporting email/password login, logout, and password reset flows.
 - Admin Panel: Secure admin panel accessible only to users with 'admin' role, allowing listing, viewing, editing, and deleting of users.
 - Profile Management: Profile viewing and editing functionality for users to manage their personal information (name, email).
 

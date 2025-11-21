@@ -109,12 +109,6 @@ export function LoginForm() {
             </Button>
           </form>
         </Form>
-        <div className="mt-4 text-sm text-center">
-          Ainda não possui uma conta?{" "}
-          <Link href="/signup" className="font-semibold hover:underline">
-            Cadastre-se
-          </Link>
-        </div>
       </CardContent>
     </Card>
   );
