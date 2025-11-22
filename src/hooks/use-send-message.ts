@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import type { ChatMessage } from "@/lib/helpdesk/types";
+import type { ChatMessage } from "@/lib/messages/types";
 import type { ChatMessageWithSender } from "./use-messages";
 
 interface SendOptions {
@@ -36,7 +36,7 @@ export function useSendMessage(): UseSendMessageResult {
 
       setSending(true);
       try {
-        const res = await fetch(`/api/helpdesk/chats/${chatId}/messages`, {
+        const res = await fetch(`/api/messages/chats/${chatId}/messages`, {
           method: "POST",
           body: formData,
         });

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import type { ChatSummary } from "@/lib/helpdesk/types";
+import type { ChatSummary } from "@/lib/messages/types";
 
 interface UseChatsOptions {
   limit?: number;
@@ -58,7 +58,7 @@ export function useChats(options: UseChatsOptions = {}): UseChatsResult {
           if (opts.cursor) params.set("cursor", opts.cursor);
           if (typeFilter) params.set("type", typeFilter);
 
-          const res = await fetch(`/api/helpdesk/chats?${params.toString()}`, {
+          const res = await fetch(`/api/messages/chats?${params.toString()}`, {
             signal: controller.signal,
           });
 

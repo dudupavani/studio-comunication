@@ -1,5 +1,6 @@
 // src/app/(app)/groups/[groupId]/page.tsx
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import MembersTable from "./MembersTable";
 import GroupColorSquare from "@/components/groups/GroupColorSquare";
 import HeaderEditButton from "@/components/groups/HeaderEditButton";
@@ -121,7 +122,8 @@ export default async function GroupPage(props: Props) {
   };
   let identityById: Record<string, IdentityRow> = {};
   if (userIds.length > 0) {
-    const { data: identities } = await supabase.rpc("get_user_identity_many", {
+    const svc = createServiceClient();
+    const { data: identities } = await svc.rpc("get_user_identity_many", {
       p_user_ids: userIds,
     });
     if (Array.isArray(identities)) {

@@ -1,7 +1,7 @@
 // src/app/api/identity/resolve/route.ts
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { toLoggableError } from "@/lib/log";
 
 const Body = z.object({
@@ -13,8 +13,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { userIds } = Body.parse(body);
 
-    // SSR client (cookies) para obedecer RLS e auth do chamador
-    const supabase = createClient();
+    // Service client para ler identidades sem bloqueio de RLS (somente leitura)
+    const supabase = createServiceClient();
 
     const { data, error } = await supabase.rpc("get_user_identity_many", {
       p_user_ids: userIds,

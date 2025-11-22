@@ -12,7 +12,7 @@ export function useRealtimeMessages(
     if (!chatId) return;
 
     const channel = supabase
-      .channel(`helpdesk-chat-${chatId}`)
+      .channel(`messages-chat-${chatId}`)
       .on(
         "postgres_changes",
         {

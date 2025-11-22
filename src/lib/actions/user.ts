@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { Profile } from "../types";
-import { updateProfileSelfRPC } from "@/lib/supabase/rpc";
 import type { PlatformRole, OrgRole } from "@/lib/types/roles";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import { safeDeleteUser } from "@/lib/auth/safe-delete";
@@ -108,7 +107,8 @@ export async function updateUserProfile(formData: FormData) {
         .from("avatars")
         .getPublicUrl(uploadData.path);
 
-      avatar_url = publicUrlData.publicUrl;
+      const baseUrl = publicUrlData.publicUrl;
+      avatar_url = baseUrl ? `${baseUrl}?t=${Date.now()}` : baseUrl;
     }
   } else if (avatarInput === "REMOVE") {
     await supabase.storage.from("avatars").remove([`${user.id}/avatar.jpg`]);
@@ -133,21 +133,21 @@ export async function updateUserProfile(formData: FormData) {
     }
   }
 
-  // 3) Atualizar PROFILE via RPC segura (não toca em role/global_role)
-  const { error: rpcError } = await updateProfileSelfRPC({
-    full_name: name,
-    phone,
-    avatar_url, // null = remover; undefined = manter; string = nova URL
-  });
+  // 3) Atualizar PROFILE diretamente (somente campos permitidos)
+  const profilePayload: Record<string, unknown> = {};
+  if (name !== null) profilePayload.full_name = name;
+  if (typeof phone !== "undefined") profilePayload.phone = phone || null;
+  if (typeof avatar_url !== "undefined") profilePayload.avatar_url = avatar_url;
 
-  if (rpcError) {
-    if (/platform_admin/i.test(rpcError)) {
-      return {
-        error:
-          "Não é possível alterar a role platform_admin por aqui. Seus dados pessoais foram mantidos.",
-      };
+  if (Object.keys(profilePayload).length) {
+    const { error: profileErr } = await supabase
+      .from("profiles")
+      .update(profilePayload)
+      .eq("id", user.id);
+
+    if (profileErr) {
+      return { error: profileErr.message };
     }
-    return { error: rpcError };
   }
 
   // 4) Revalidate

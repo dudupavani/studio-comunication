@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import type { ChatMessage, UserMini } from "@/lib/helpdesk/types";
+import type { ChatMessage, UserMini } from "@/lib/messages/types";
 
 export interface ChatMessageWithSender extends ChatMessage {
   sender?: UserMini | null;
@@ -74,7 +74,7 @@ export function useMessages(
         if (opts.cursor) params.set("cursor", opts.cursor);
 
         const res = await fetch(
-          `/api/helpdesk/chats/${chatId}/messages?${params.toString()}`,
+          `/api/messages/chats/${chatId}/messages?${params.toString()}`,
           { signal: controller.signal }
         );
 

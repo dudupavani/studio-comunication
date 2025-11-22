@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useAuthContext } from "@/hooks/use-auth-context";
 
 import {
   AppWindowMac,
@@ -15,6 +16,8 @@ import {
   Group,
   LaptopMinimalCheck,
   MessageCircleHeart,
+  Inbox,
+  BookOpen,
 } from "lucide-react";
 
 import {
@@ -34,11 +37,16 @@ type SidebarProps = {
 
 export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
   const pathname = usePathname();
+  const { auth } = useAuthContext();
 
   // Extract orgSlug from pathname when in /orgs/[orgSlug]/*
   const orgSlugMatch = pathname.match(/^\/orgs\/([^/]+)/);
   const orgSlugFromPath = orgSlugMatch ? orgSlugMatch[1] : null;
   const effectiveOrgSlug = activeOrgSlug || orgSlugFromPath || null;
+
+  const canSeeMessages = !auth
+    ? true
+    : auth.platformRole === "platform_admin" || !!auth.orgRole || !!auth.orgId;
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -64,28 +72,45 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
+              {canSeeMessages && (
+                <>
+                  <SidebarMenuItem>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
+                      asChild>
+                      <Link href="/inbox">
+                        <Inbox size={20} />
+                        <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                          Inbox
+                        </span>
+                      </Link>
+                    </Button>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
+                      asChild>
+                      <Link href="/messages">
+                        <MessageCircleHeart size={20} />
+                        <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                          Mensagens
+                        </span>
+                      </Link>
+                    </Button>
+                  </SidebarMenuItem>
+                </>
+              )}
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
                   className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                   asChild>
-                  <Link href="/dashboard">
-                    <AppWindowMac size={20} />
+                  <Link href="/learning">
+                    <BookOpen size={20} />
                     <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                      Painel
-                    </span>
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
-                  asChild>
-                  <Link href="/helpdesk">
-                    <MessageCircleHeart size={20} />
-                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                      Helpdesk
+                      Cursos
                     </span>
                   </Link>
                 </Button>
@@ -112,6 +137,19 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                     <LaptopMinimalCheck size={20} />
                     <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
                       Designer
+                    </span>
+                  </Link>
+                </Button>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
+                  asChild>
+                  <Link href="/dashboard">
+                    <AppWindowMac size={20} />
+                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                      Dashboard
                     </span>
                   </Link>
                 </Button>

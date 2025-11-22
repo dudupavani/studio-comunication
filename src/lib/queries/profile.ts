@@ -14,23 +14,38 @@ export async function getLoggedUserProfile() {
   const user = userRes?.user ?? null;
   if (!user) return { user: null, profile: null, error: null, status: 401 };
 
-  const { data: profile, error: profileError, status } = await supabase
+  const { data: profileRow, error: profileError, status } = await supabase
     .from("profiles")
-    .select("id, full_name, phone, avatar_url, email, created_at, global_role")
+    .select("id, full_name, phone, avatar_url, created_at, global_role")
     .eq("id", user.id)
-    .maybeSingle<Profile>();
+    .maybeSingle();
+
+  const conditionedProfile = profileRow
+    ? {
+        ...(profileRow as any),
+        avatar_url:
+          profileRow.avatar_url === "__KEEP_AVATAR__"
+            ? null
+            : profileRow.avatar_url,
+      }
+    : null;
 
   const loggableError = toLoggableError(profileError);
   const hasRealError = !!profileError && !!loggableError?.message && loggableError.message !== "Empty error object";
 
   if (hasRealError) {
     logError("getLoggedUserProfile — profiles select failed:", profileError);
-  } else if (!profile) {
+  } else if (!conditionedProfile) {
     console.warn("getLoggedUserProfile — no profile or RLS", {
       status,
       userId: user.id,
     });
   }
 
-  return { user, profile, error: hasRealError ? profileError : null, status };
+  return {
+    user,
+    profile: conditionedProfile as Profile | null,
+    error: hasRealError ? profileError : null,
+    status,
+  };
 }

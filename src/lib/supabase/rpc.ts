@@ -30,15 +30,21 @@ export async function updateProfileSelfRPC(input: {
   avatar_url?: string | null; // null = remover, undefined = manter
 }): Promise<{ error: string | null }> {
   const supabase = createClient();
+  const AVATAR_KEEP = "__KEEP_AVATAR__";
 
   // A função SQL aceita exatamente (text, text, text)
   const { error } = await supabase.rpc("update_profile_self", {
     p_full_name: input.full_name ?? null,
     p_phone: input.phone ?? null,
     // Para "manter como está", a função trata null como "não alterar phone".
-    // Para avatar: null remove; para "manter", mandaremos null e a função mantém.
+    // Para avatar usamos um sentinel específico:
+    // - undefined => "__KEEP_AVATAR__" (mantém)
+    // - null => remove
+    // - string => novo valor
     p_avatar_url:
-      typeof input.avatar_url === "undefined" ? null : input.avatar_url,
+      typeof input.avatar_url === "undefined"
+        ? AVATAR_KEEP
+        : input.avatar_url,
   });
 
   if (error) {
