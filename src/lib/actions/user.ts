@@ -74,7 +74,9 @@ async function assertCanManageOrg(targetOrgId: string) {
 export async function updateUserProfile(formData: FormData) {
   const supabase = createClient();
 
-  const name = (formData.get("name") as string) ?? null;
+  const rawName = formData.get("name");
+  const name =
+    typeof rawName === "string" ? rawName.trim() : (rawName as string | null);
   const phone = (formData.get("phone") as string) ?? null;
   const avatarInput = formData.get("avatar");
 
@@ -120,7 +122,9 @@ export async function updateUserProfile(formData: FormData) {
     data: { name?: string; avatar_url?: string | null };
   } = { data: {} };
 
-  if (name) authPayload.data.name = name;
+  if (name && typeof name === "string" && name.length > 0) {
+    authPayload.data.name = name;
+  }
   if (typeof avatar_url !== "undefined")
     authPayload.data.avatar_url = avatar_url;
 
@@ -135,7 +139,9 @@ export async function updateUserProfile(formData: FormData) {
 
   // 3) Atualizar PROFILE diretamente (somente campos permitidos)
   const profilePayload: Record<string, unknown> = {};
-  if (name !== null) profilePayload.full_name = name;
+  if (typeof name === "string" && name.length > 0) {
+    profilePayload.full_name = name;
+  }
   if (typeof phone !== "undefined") profilePayload.phone = phone || null;
   if (typeof avatar_url !== "undefined") profilePayload.avatar_url = avatar_url;
 
@@ -442,7 +448,9 @@ export async function updateUser(formData: FormData) {
   const supabaseAdmin = await getAdminClient();
 
   const id = formData.get("id") as string;
-  const name = formData.get("name") as string;
+  const rawName = formData.get("name");
+  const name =
+    typeof rawName === "string" ? rawName.trim() : (rawName as string);
 
   if (!id) return { error: "ID do usuário é obrigatório." };
   if (!name) return { error: "Nome é obrigatório." };

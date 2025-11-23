@@ -8,17 +8,33 @@ import { canManageCourse, canViewCourse } from "@/lib/learning/access";
 const paramsSchema = z.object({ courseId: z.string().uuid() });
 const bodySchema = z.object({ title: z.string().min(3).max(200), ordem: z.number().int().positive().optional() });
 
-export async function GET(_: Request, { params }: { params: { courseId: string } }) {
+async function resolveParams(
+  params: { courseId: string } | Promise<{ courseId: string }>
+) {
+  const resolved = await Promise.resolve(params);
+  const parsed = paramsSchema.safeParse(resolved);
+  if (!parsed.success) throw new Error("Curso inválido");
+  return parsed.data;
+}
+
+export async function GET(
+  _: Request,
+  { params }: { params: { courseId: string } | Promise<{ courseId: string }> }
+) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const parsed = paramsSchema.safeParse(params);
-  if (!parsed.success) return NextResponse.json({ error: "Curso inválido" }, { status: 400 });
+  let parsed;
+  try {
+    parsed = await resolveParams(params);
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || "Curso inválido" }, { status: 400 });
+  }
 
   const supabase = createClient();
   const { data: course } = await supabase
     .from("courses")
     .select("id, org_id, unit_id, status")
-    .eq("id", parsed.data.courseId)
+    .eq("id", parsed.courseId)
     .maybeSingle();
   if (!course) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
   const allowed =
@@ -29,23 +45,30 @@ export async function GET(_: Request, { params }: { params: { courseId: string }
   const { data, error } = await supabase
     .from("course_modules")
     .select("*")
-    .eq("course_id", parsed.data.courseId)
+    .eq("course_id", parsed.courseId)
     .order("ordem", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ data });
 }
 
-export async function POST(request: Request, { params }: { params: { courseId: string } }) {
+export async function POST(
+  request: Request,
+  { params }: { params: { courseId: string } | Promise<{ courseId: string }> }
+) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const parsedParams = paramsSchema.safeParse(params);
-  if (!parsedParams.success) return NextResponse.json({ error: "Curso inválido" }, { status: 400 });
+  let parsedParams;
+  try {
+    parsedParams = await resolveParams(params);
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || "Curso inválido" }, { status: 400 });
+  }
 
   const supabase = createClient();
   const { data: course } = await supabase
     .from("courses")
     .select("id, org_id, unit_id")
-    .eq("id", parsedParams.data.courseId)
+    .eq("id", parsedParams.courseId)
     .maybeSingle();
   if (!course) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
   if (!canManageCourse(auth, course.org_id as string, course.unit_id as string | null)) {
@@ -61,7 +84,7 @@ export async function POST(request: Request, { params }: { params: { courseId: s
   const { data, error } = await supabase
     .from("course_modules")
     .insert({
-      course_id: parsedParams.data.courseId,
+      course_id: parsedParams.courseId,
       title: parsedBody.data.title,
       ordem: parsedBody.data.ordem ?? 1,
     })

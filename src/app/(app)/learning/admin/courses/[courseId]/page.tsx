@@ -30,11 +30,16 @@ export default async function CourseAdminPage({
 
   const course = await getCourseWithLessons(courseId);
   if (!course) return notFound();
-  if (!canManageCourse(auth as any, course.org_id, course.unit_id)) redirect(`/learning/courses/${course.id}`);
+  if (!canManageCourse(auth as any, course.org_id, course.unit_id))
+    redirect(`/learning/courses/${course.id}`);
 
-  const activeTab = searchParams?.tab && ["details", "content", "quiz", "exam", "audience"].includes(searchParams.tab)
-    ? searchParams.tab
-    : "details";
+  const activeTab =
+    searchParams?.tab &&
+    ["details", "content", "quiz", "exam", "audience"].includes(
+      searchParams.tab
+    )
+      ? searchParams.tab
+      : "details";
 
   const menuItems = [
     { key: "details", label: "Detalhes", icon: BookOpen },
@@ -51,7 +56,9 @@ export default async function CourseAdminPage({
           <div className="space-y-3">
             <div>
               <h1 className="text-xl font-semibold">Detalhes do curso</h1>
-              <p className="text-sm text-muted-foreground">Título, descrição, capa, status e tags.</p>
+              <p className="text-sm text-muted-foreground">
+                Título, descrição, capa, status e tags.
+              </p>
             </div>
             <Card>
               <CardContent className="p-4">
@@ -75,9 +82,15 @@ export default async function CourseAdminPage({
           <div className="space-y-3">
             <div>
               <h2 className="text-lg font-semibold">Conteúdo</h2>
-              <p className="text-sm text-muted-foreground">Organize o curso em módulos e aulas.</p>
+              <p className="text-sm text-muted-foreground">
+                Organize o curso em módulos e aulas.
+              </p>
             </div>
-            <ContentModules courseId={course.id} modules={course.modules} lessons={course.lessons} />
+            <ContentModules
+              courseId={course.id}
+              modules={course.modules}
+              lessons={course.lessons}
+            />
           </div>
         );
       case "quiz":
@@ -85,7 +98,9 @@ export default async function CourseAdminPage({
           <div className="space-y-3">
             <div>
               <h2 className="text-lg font-semibold">Quiz</h2>
-              <p className="text-sm text-muted-foreground">Crie perguntas rápidas por aula.</p>
+              <p className="text-sm text-muted-foreground">
+                Crie perguntas rápidas por aula.
+              </p>
             </div>
             <QuizSection />
           </div>
@@ -95,7 +110,9 @@ export default async function CourseAdminPage({
           <div className="space-y-3">
             <div>
               <h2 className="text-lg font-semibold">Provas</h2>
-              <p className="text-sm text-muted-foreground">Monte a avaliação final com múltipla escolha.</p>
+              <p className="text-sm text-muted-foreground">
+                Monte a avaliação final com múltipla escolha.
+              </p>
             </div>
             <Card>
               <CardContent className="p-4">
@@ -110,7 +127,9 @@ export default async function CourseAdminPage({
           <div className="space-y-3">
             <div>
               <h2 className="text-lg font-semibold">Público</h2>
-              <p className="text-sm text-muted-foreground">Defina grupos e usuários que podem acessar.</p>
+              <p className="text-sm text-muted-foreground">
+                Defina grupos e usuários que podem acessar.
+              </p>
             </div>
             <AudienceSection />
           </div>
@@ -120,8 +139,8 @@ export default async function CourseAdminPage({
 
   return (
     <div className="p-4 md:p-6">
-      <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-        <div className="rounded-md border bg-muted/40 p-2 flex flex-col gap-2">
+      <div className="grid gap-6 md:grid-cols-[160px_1fr]">
+        <div className="flex flex-col gap-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.key;

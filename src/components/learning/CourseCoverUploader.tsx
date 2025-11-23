@@ -208,17 +208,18 @@ export function CourseCoverUploader({ courseId, initialUrl }: Props) {
     return (
       <div className="flex flex-col items-center justify-center text-center text-sm text-muted-foreground px-6">
         <UploadCloud className="h-8 w-8 mb-2" />
-        <p className="font-medium">Arraste e solte uma imagem</p>
-        <p className="text-xs">
-          Aspecto 16:9, resolução recomendada 800×450px. Clique para escolher um
-          arquivo.
+        <p className="font-medium">
+          Arraste e solte uma imagem ou clique para selecionar
+        </p>
+        <p className="text-xs mt-2 text-muted-foreground">
+          Dimensão recomendada 800×450px - Proporção 16:9
         </p>
       </div>
     );
   }, [previewUrl]);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 max-w-xl">
       <input
         ref={inputRef}
         type="file"
@@ -229,8 +230,8 @@ export function CourseCoverUploader({ courseId, initialUrl }: Props) {
 
       <div
         className={cn(
-          "relative border-2 border-dashed rounded-lg aspect-video overflow-hidden transition",
-          isDragging ? "border-primary bg-primary/5" : "border-muted"
+          "relative flex justify-center items-center border-2 border-dashed rounded-lg aspect-video overflow-hidden transition",
+          isDragging ? "border-primary bg-primary/5" : "border-gray-300"
         )}
         onDragOver={(e) => {
           e.preventDefault();

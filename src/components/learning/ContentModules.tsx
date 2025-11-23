@@ -1,13 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { LessonCreateForm } from "@/components/learning/LessonCreateForm";
 import type { CourseModule, Lesson } from "@/lib/learning/types";
 import { useToast } from "@/hooks/use-toast";
+import { Pencil } from "lucide-react";
 
 type Props = {
   courseId: string;
@@ -93,20 +94,30 @@ export function ContentModules({ courseId, modules, lessons }: Props) {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4 space-y-3">
-                <div className="rounded-md border bg-muted/40 p-3">
-                  <p className="text-sm font-medium mb-2">Adicionar aula neste módulo</p>
-                  <LessonCreateForm courseId={courseId} moduleId={mod.id} />
+                <div className="flex justify-end">
+                  <Button asChild size="sm">
+                    <Link href={`/learning/admin/courses/${courseId}/lessons/new?module=${mod.id}`}>
+                      + Nova aula
+                    </Link>
+                  </Button>
                 </div>
                 <div className="space-y-2">
                   {moduleLessons.map((lesson) => (
                     <div key={lesson.id} className="rounded-md border p-3 bg-white">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-3">
                         <div className="space-y-1">
                           <p className="font-semibold">{lesson.title}</p>
                           <p className="text-xs text-muted-foreground">Ordem: {lesson.ordem}</p>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {lesson.liberada ? "Liberada" : "Bloqueada"}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{lesson.liberada ? "Liberada" : "Bloqueada"}</span>
+                          <Button size="sm" asChild variant="outline">
+                            <Link
+                              href={`/learning/admin/courses/${courseId}/lessons/${lesson.id}?module=${mod.id}`}>
+                              <Pencil className="h-4 w-4 mr-1" />
+                              Editar
+                            </Link>
+                          </Button>
                         </div>
                       </div>
                       {lesson.description ? (

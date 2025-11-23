@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import CourseCoverUploader from "./CourseCoverUploader";
 
@@ -27,7 +33,9 @@ export function CourseDetailsForm({ courseId, initial }: Props) {
   const { toast } = useToast();
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description ?? "");
-  const [cargaHoraria, setCargaHoraria] = useState(initial.carga_horaria ? String(initial.carga_horaria) : "");
+  const [cargaHoraria, setCargaHoraria] = useState(
+    initial.carga_horaria ? String(initial.carga_horaria) : ""
+  );
   const [tags, setTags] = useState(initial.tags?.join(", ") ?? "");
   const [status, setStatus] = useState(initial.status);
   const [isPending, startTransition] = useTransition();
@@ -56,7 +64,11 @@ export function CourseDetailsForm({ courseId, initial }: Props) {
         toast({ title: "Curso atualizado" });
         router.refresh();
       } catch (err: any) {
-        toast({ title: "Erro", description: String(err?.message || err), variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: String(err?.message || err),
+          variant: "destructive",
+        });
       }
     });
   };
@@ -65,12 +77,20 @@ export function CourseDetailsForm({ courseId, initial }: Props) {
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label>Capa do curso</Label>
-        <CourseCoverUploader courseId={courseId} initialUrl={initial.cover_url} />
+        <CourseCoverUploader
+          courseId={courseId}
+          initialUrl={initial.cover_url}
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="title">Título</Label>
-        <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
       </div>
 
       <div className="space-y-2">
@@ -120,7 +140,7 @@ export function CourseDetailsForm({ courseId, initial }: Props) {
       </div>
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Salvando..." : "Salvar alterações"}
+        {isPending ? "Salvando..." : "Salvar"}
       </Button>
     </form>
   );

@@ -344,6 +344,101 @@ export type Database = {
           }
         ];
       };
+      equipes: {
+        Row: {
+          id: string;
+          org_id: string;
+          name: string;
+          leader_user_id: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          org_id: string;
+          name: string;
+          leader_user_id: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          org_id?: string;
+          name?: string;
+          leader_user_id?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "equipes_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "equipes_leader_user_id_fkey";
+            columns: ["leader_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "equipes_org_id_fkey";
+            columns: ["org_id"];
+            isOneToOne: false;
+            referencedRelation: "orgs";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      equipe_members: {
+        Row: {
+          equipe_id: string;
+          user_id: string;
+          org_id: string;
+          created_at: string;
+        };
+        Insert: {
+          equipe_id: string;
+          user_id: string;
+          org_id: string;
+          created_at?: string;
+        };
+        Update: {
+          equipe_id?: string;
+          user_id?: string;
+          org_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "equipe_members_equipe_id_fkey";
+            columns: ["equipe_id"];
+            isOneToOne: false;
+            referencedRelation: "equipes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "equipe_members_org_id_fkey";
+            columns: ["org_id"];
+            isOneToOne: false;
+            referencedRelation: "orgs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "equipe_members_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       courses: {
         Row: {
           id: string;

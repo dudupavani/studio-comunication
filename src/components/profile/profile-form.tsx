@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { updateUserProfile } from "@/lib/actions/user";
 import { Card, CardContent } from "../ui/card";
 import { ImageCropper } from "./image-cropper";
 import type { Profile } from "@/lib/types";
@@ -66,7 +65,30 @@ export function ProfileForm({ user }: { user: Profile }) {
       formData.append("avatar", "REMOVE"); // sinaliza remoção
     }
 
-    const { error } = await updateUserProfile(formData);
+    let response: { error?: string | null } | null = null;
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        body: formData,
+      });
+      response = (await res.json().catch(() => null)) as
+        | { error?: string | null }
+        | null;
+      if (!res.ok && (!response || !response.error)) {
+        throw new Error("Falha ao atualizar perfil.");
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Falha ao atualizar perfil.";
+      toast({
+        variant: "destructive",
+        title: "Error updating profile",
+        description: message,
+      });
+      return;
+    }
+
+    const { error } = response ?? { error: "Falha ao atualizar perfil." };
 
     if (error) {
       toast({

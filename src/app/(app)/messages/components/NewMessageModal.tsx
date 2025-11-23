@@ -188,14 +188,14 @@ export function NewMessageModal({
                   />
                 </div>
               </div>
-              <div className="space-y-6">
-                <h3>Modo de entrega</h3>
+              <div>
+                <h5 className="mb-4">Modo de entrega</h5>
                 <RadioGroup
                   value={mode}
                   onValueChange={(value) =>
                     setMode(value as "group" | "individual")
                   }
-                  className="grid gap-3 sm:grid-cols-2">
+                  className="grid gap-4 sm:grid-cols-2">
                   <label
                     className={cn(
                       "flex cursor-pointer flex-col gap-1 rounded-lg border border-border p-4",
@@ -229,19 +229,19 @@ export function NewMessageModal({
                   </label>
                 </RadioGroup>
 
-                <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold">Permitir respostas</p>
-                    <p className="text-xs text-muted-foreground">
-                      Os destinatários poderão responder à mensagem.
-                    </p>
-                  </div>
+                <div className="flex items-center gap-4 rounded-lg border border-border px-4 py-3 mt-4">
                   <Switch
                     checked={allowReplies}
                     onCheckedChange={(checked) =>
                       setAllowReplies(Boolean(checked))
                     }
                   />
+                  <div>
+                    <p className="text-sm font-semibold">Permitir respostas</p>
+                    <p className="text-xs text-muted-foreground">
+                      Os destinatários poderão responder à mensagem.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

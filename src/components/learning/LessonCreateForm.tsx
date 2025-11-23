@@ -11,9 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 type Props = {
   courseId: string;
   moduleId?: string;
+  redirectToEdit?: boolean;
 };
 
-export function LessonCreateForm({ courseId, moduleId }: Props) {
+export function LessonCreateForm({ courseId, moduleId, redirectToEdit }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [title, setTitle] = useState("");
@@ -44,11 +45,17 @@ export function LessonCreateForm({ courseId, moduleId }: Props) {
         if (!res.ok) throw new Error(json?.error || "Falha ao criar aula");
 
         toast({ title: "Aula criada", description: payload.title });
-        setTitle("");
-        setDescription("");
-        setVideoUrl("");
-        setContent("");
-        router.refresh();
+        if (redirectToEdit && json?.data?.id) {
+          router.push(
+            `/learning/admin/courses/${courseId}/lessons/${json.data.id}?module=${moduleId ?? ""}`
+          );
+        } else {
+          setTitle("");
+          setDescription("");
+          setVideoUrl("");
+          setContent("");
+          router.refresh();
+        }
       } catch (err: any) {
         toast({ title: "Erro", description: String(err?.message || err), variant: "destructive" });
       }
