@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "./RichTextEditor";
 import { UserMultiSelect, type UserOption } from "./UserMultiSelect";
 import { GroupMultiSelect, type UserGroupOption } from "./GroupMultiSelect";
+import { TeamMultiSelect, type TeamOption } from "./TeamMultiSelect";
 import { Loader2, Megaphone } from "lucide-react";
 
 export function NewAnnouncementModal({
@@ -26,11 +27,12 @@ export function NewAnnouncementModal({
   const [allowReactions, setAllowReactions] = useState(true);
   const [users, setUsers] = useState<UserOption[]>([]);
   const [groups, setGroups] = useState<UserGroupOption[]>([]);
+  const [teams, setTeams] = useState<TeamOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const totalRecipients = useMemo(
-    () => users.length + groups.length,
-    [groups.length, users.length]
+    () => users.length + groups.length + teams.length,
+    [groups.length, teams.length, users.length]
   );
 
   const resetForm = useCallback(() => {
@@ -38,6 +40,7 @@ export function NewAnnouncementModal({
     setContent("");
     setUsers([]);
     setGroups([]);
+    setTeams([]);
     setAllowComments(true);
     setAllowReactions(true);
     setSubmitting(false);
@@ -68,10 +71,11 @@ export function NewAnnouncementModal({
       toast({ title: "Conteúdo vazio", description: "Escreva o comunicado." });
       return;
     }
-    if (users.length === 0 && groups.length === 0) {
+    if (users.length === 0 && groups.length === 0 && teams.length === 0) {
       toast({
         title: "Selecione destinatários",
-        description: "Escolha usuários ou grupos para enviar o comunicado.",
+        description:
+          "Escolha usuários, grupos ou equipes para enviar o comunicado.",
       });
       return;
     }
@@ -88,6 +92,7 @@ export function NewAnnouncementModal({
           allowReactions,
           userIds: users.map((u) => u.id),
           groupIds: groups.map((g) => g.id),
+          teamIds: teams.map((t) => t.id),
         }),
       });
 
@@ -115,6 +120,7 @@ export function NewAnnouncementModal({
     content,
     groups,
     resetForm,
+    teams,
     title,
     toast,
     users,
@@ -208,12 +214,20 @@ export function NewAnnouncementModal({
                 </p>
                 <GroupMultiSelect value={groups} onChange={setGroups} />
               </div>
+
+              <div>
+                <h3 className="text-sm font-semibold">Equipes</h3>
+                <p className="text-xs text-muted-foreground">
+                  Selecione equipes para incluir todos os participantes.
+                </p>
+                <TeamMultiSelect value={teams} onChange={setTeams} />
+              </div>
             </div>
           </div>
 
           <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              Selecionados: {totalRecipients} (usuários diretos + grupos)
+              Selecionados: {totalRecipients} (usuários, grupos e equipes)
             </span>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setOpen(false)}>

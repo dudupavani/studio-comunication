@@ -9,16 +9,17 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80 space-x-2",
+          "border-transparent bg-primary text-primary-foreground space-x-2",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 space-x-2",
-        destructive: "border-transparent bg-red-500 text-white space-x-2",
-        outline: "text-foreground space-x-2",
-        green: "border-transparent bg-green-500 text-white space-x-2",
-        orange: "border-transparent bg-orange-500 text-white space-x-2",
-        blue: "border-transparent bg-blue-500 text-white space-x-2",
-        violet: "border-transparent bg-violet-500 text-white space-x-2",
-        yellow: "border-transparent bg-yellow-500 text-white space-x-2",
+          "border-transparent bg-secondary text-secondary-foreground space-x-1",
+        destructive: "border-transparent bg-red-100 text-red-800 space-x-1",
+        outline: "text-foreground space-x-1",
+        green: "border-transparent bg-green-100 text-green-800 space-x-1",
+        orange: "border-transparent bg-orange-100 text-orange-800 space-x-1",
+        blue: "border-transparent bg-blue-100 text-blue-800 space-x-2",
+        violet: "border-transparent bg-violet-100 text-violet-800 space-x-1",
+        pink: "border-transparent bg-pink-100 text-pink-800 space-x-1",
+        yellow: "border-transparent bg-yellow-100 text-yellow-700 space-x-1",
       },
     },
     defaultVariants: {

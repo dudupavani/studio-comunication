@@ -68,6 +68,23 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (payload.teamIds.length > 0) {
+      const { data: teamMembers, error: teamMembersError } = await supabaseUser
+        .from("equipe_members")
+        .select("user_id")
+        .in("equipe_id", payload.teamIds)
+        .eq("org_id", auth.orgId);
+
+      if (teamMembersError) {
+        console.error("MESSAGES load team members error:", teamMembersError);
+        return errorResponse(500, "db_error", "Failed to load team members");
+      }
+
+      (teamMembers ?? []).forEach((row: any) => {
+        if (row?.user_id) userIds.add(row.user_id as string);
+      });
+    }
+
     userIds.delete(auth.userId);
     const recipients = unique(userIds);
 

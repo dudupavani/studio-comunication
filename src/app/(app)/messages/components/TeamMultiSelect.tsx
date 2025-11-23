@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { X, Users } from "lucide-react";
+import { X, Users2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -9,21 +9,20 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 
-export interface UserGroupOption {
+export interface TeamOption {
   id: string;
   name: string;
   membersCount: number;
-  color?: string | null;
 }
 
-interface GroupMultiSelectProps {
-  value: UserGroupOption[];
-  onChange: (groups: UserGroupOption[]) => void;
+interface TeamMultiSelectProps {
+  value: TeamOption[];
+  onChange: (teams: TeamOption[]) => void;
 }
 
-export function GroupMultiSelect({ value, onChange }: GroupMultiSelectProps) {
+export function TeamMultiSelect({ value, onChange }: TeamMultiSelectProps) {
   const { toast } = useToast();
-  const [items, setItems] = useState<UserGroupOption[]>([]);
+  const [items, setItems] = useState<TeamOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState<string | undefined>();
@@ -47,26 +46,24 @@ export function GroupMultiSelect({ value, onChange }: GroupMultiSelectProps) {
         if (cursorArg) params.set("cursor", cursorArg);
 
         const res = await fetch(
-          `/api/messages/recipients/groups?${params.toString()}`
+          `/api/messages/recipients/teams?${params.toString()}`
         );
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as any;
           throw new Error(body?.error?.message || `HTTP ${res.status}`);
         }
-
         const payload = (await res.json()) as {
-          items: UserGroupOption[];
+          items: TeamOption[];
           nextCursor?: string;
         };
-
         setItems((prev) =>
           append ? [...prev, ...payload.items] : payload.items
         );
         setCursor(payload.nextCursor);
       } catch (err: any) {
-        console.error("GroupMultiSelect load error", err);
+        console.error("TeamMultiSelect load error", err);
         toast({
-          title: "Erro ao carregar grupos",
+          title: "Erro ao carregar equipes",
           description: err?.message ?? "Tente novamente.",
           variant: "destructive",
         });
@@ -91,13 +88,13 @@ export function GroupMultiSelect({ value, onChange }: GroupMultiSelectProps) {
     }, 300);
   }, [query, load]);
 
-  const toggleGroup = useCallback(
-    (group: UserGroupOption) => {
-      const exists = value.some((item) => item.id === group.id);
+  const toggleTeam = useCallback(
+    (team: TeamOption) => {
+      const exists = value.some((item) => item.id === team.id);
       if (exists) {
-        onChange(value.filter((item) => item.id !== group.id));
+        onChange(value.filter((item) => item.id !== team.id));
       } else {
-        onChange([...value, group]);
+        onChange([...value, team]);
       }
     },
     [onChange, value]
@@ -106,12 +103,12 @@ export function GroupMultiSelect({ value, onChange }: GroupMultiSelectProps) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {value.map((group) => (
-          <Badge key={group.id} variant="secondary">
-            {group.name}
+        {value.map((team) => (
+          <Badge key={team.id} variant="secondary">
+            {team.name}
             <Button
               type="button"
-              onClick={() => toggleGroup(group)}
+              onClick={() => toggleTeam(team)}
               size="icon-xs"
               variant="ghost">
               <X />
@@ -120,42 +117,36 @@ export function GroupMultiSelect({ value, onChange }: GroupMultiSelectProps) {
         ))}
         {value.length === 0 ? (
           <span className="text-xs text-muted-foreground">
-            Nenhum grupo selecionado.
+            Nenhuma equipe selecionada.
           </span>
         ) : null}
       </div>
 
       <ScrollArea className="rounded-md border p-2">
         <Input
-          placeholder="Buscar grupos"
+          placeholder="Buscar equipes"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
         <div className="space-y-1 pt-2">
-          {items.map((group) => {
-            const checked = value.some((item) => item.id === group.id);
+          {items.map((team) => {
+            const checked = value.some((item) => item.id === team.id);
             return (
               <label
-                key={group.id}
+                key={team.id}
                 className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-1 hover:bg-muted">
                 <div className="flex items-center gap-3">
                   <Checkbox
                     checked={checked}
-                    onCheckedChange={() => toggleGroup(group)}
+                    onCheckedChange={() => toggleTeam(team)}
                   />
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">{group.name}</span>
+                    <span className="text-sm font-medium">{team.name}</span>
                     <span className="text-xs text-muted-foreground">
-                      {group.membersCount} membro(s)
+                      {team.membersCount} membro(s)
                     </span>
                   </div>
                 </div>
-                {group.color ? (
-                  <span
-                    className="h-3 w-3 rounded-full border"
-                    style={{ backgroundColor: group.color }}
-                  />
-                ) : null}
               </label>
             );
           })}

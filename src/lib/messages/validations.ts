@@ -44,6 +44,7 @@ export const createMessagesPayloadSchema = z.object({
   mode: z.enum(["group", "individual"]),
   userIds: z.array(z.string().uuid()).default([]),
   groupIds: z.array(z.string().uuid()).default([]),
+  teamIds: z.array(z.string().uuid()).default([]),
 });
 
 export type CreateMessagesPayloadInput = z.infer<
@@ -57,6 +58,7 @@ export const createAnnouncementSchema = z.object({
   allowReactions: z.boolean().default(true),
   userIds: z.array(z.string().uuid()).default([]),
   groupIds: z.array(z.string().uuid()).default([]),
+  teamIds: z.array(z.string().uuid()).default([]),
 });
 
 export type CreateAnnouncementInput = z.infer<typeof createAnnouncementSchema>;

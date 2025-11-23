@@ -15,14 +15,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "./RichTextEditor";
 import { UserMultiSelect, type UserOption } from "./UserMultiSelect";
 import { GroupMultiSelect, type UserGroupOption } from "./GroupMultiSelect";
-import { cn } from "@/lib/utils";
-import { Loader2, MessageSquarePlus } from "lucide-react";
+import { TeamMultiSelect, type TeamOption } from "./TeamMultiSelect";
+import { Loader2, MessageSquarePlus, Send, X } from "lucide-react";
 
 export function NewMessageModal({
   canCreateConversation = true,
@@ -35,24 +34,27 @@ export function NewMessageModal({
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [mode, setMode] = useState<"group" | "individual">("group");
-  const [allowReplies, setAllowReplies] = useState(true);
   const [users, setUsers] = useState<UserOption[]>([]);
   const [groups, setGroups] = useState<UserGroupOption[]>([]);
+  const [teams, setTeams] = useState<TeamOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const totalRecipients = useMemo(
-    () => users.length + groups.length,
-    [groups, users]
+    () => users.length + groups.length + teams.length,
+    [groups, teams, users]
   );
+
+  const computedMode = useMemo<"group" | "individual">(() => {
+    if (groups.length > 0 || teams.length > 0) return "group";
+    return users.length === 1 ? "individual" : "group";
+  }, [groups, teams, users]);
 
   const resetForm = useCallback(() => {
     setTitle("");
     setMessage("");
     setUsers([]);
     setGroups([]);
-    setMode("group");
-    setAllowReplies(true);
+    setTeams([]);
     setSubmitting(false);
   }, []);
 
@@ -84,10 +86,11 @@ export function NewMessageModal({
       toast({ title: "Mensagem vazia", description: "Escreva a mensagem." });
       return;
     }
-    if (users.length === 0 && groups.length === 0) {
+    if (users.length === 0 && groups.length === 0 && teams.length === 0) {
       toast({
         title: "Selecione destinatários",
-        description: "Escolha usuários ou grupos para enviar a mensagem.",
+        description:
+          "Escolha usuários, grupos ou equipes para enviar a mensagem.",
       });
       return;
     }
@@ -100,10 +103,10 @@ export function NewMessageModal({
         body: JSON.stringify({
           title: title.trim(),
           message,
-          allowReplies,
-          mode,
+          mode: computedMode,
           userIds: users.map((u) => u.id),
           groupIds: groups.map((g) => g.id),
+          teamIds: teams.map((t) => t.id),
         }),
       });
 
@@ -134,12 +137,12 @@ export function NewMessageModal({
       setSubmitting(false);
     }
   }, [
-    allowReplies,
     closeModal,
+    computedMode,
     groups,
     message,
-    mode,
     router,
+    teams,
     title,
     toast,
     users,
@@ -161,17 +164,23 @@ export function NewMessageModal({
           Nova conversa
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="max-h-[95vh]">
+      <DrawerContent className="min-h-[95vh]">
         <div className="mx-auto flex w-full flex-col overflow-y-auto px-4 pb-8 sm:px-12">
           <DrawerHeader className="px-0 pb-4">
-            <DrawerTitle>Enviar mensagem</DrawerTitle>
+            <div className="flex items-center justify-between">
+              <DrawerTitle>Enviar mensagem</DrawerTitle>
+              <DrawerClose asChild>
+                <Button variant="ghost" size="icon" aria-label="Fechar">
+                  <X size={22} />
+                </Button>
+              </DrawerClose>
+            </div>
           </DrawerHeader>
 
-          <div className="grid grid-cols-6 gap-12">
-            <div className="col-span-4 space-y-6 pb-4">
+          <div className="grid grid-cols-6 gap-12 h-dvh">
+            <div className="col-span-4 space-y-6 pb-4 pt-2">
               <div className="space-y-6 pb-4">
                 <div className="space-y-2">
-                  <Label htmlFor="messages-message-title">Título</Label>
                   <Input
                     id="messages-message-title"
                     value={title}
@@ -180,92 +189,40 @@ export function NewMessageModal({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Mensagem</Label>
                   <RichTextEditor
                     value={message}
                     onChange={setMessage}
+                    className="min-h-[260px]"
                     placeholder="Digite sua mensagem aqui..."
                   />
                 </div>
-              </div>
-              <div>
-                <h5 className="mb-4">Modo de entrega</h5>
-                <RadioGroup
-                  value={mode}
-                  onValueChange={(value) =>
-                    setMode(value as "group" | "individual")
-                  }
-                  className="grid gap-4 sm:grid-cols-2">
-                  <label
-                    className={cn(
-                      "flex cursor-pointer flex-col gap-1 rounded-lg border border-border p-4",
-                      mode === "group" && "border-primary bg-primary/5"
-                    )}>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold">
-                        Conversa em grupo
-                      </span>
-                      <RadioGroupItem value="group" id="mode-group" />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Todos os usuários participam da mesma conversa.
-                    </p>
-                  </label>
-
-                  <label
-                    className={cn(
-                      "flex cursor-pointer flex-col gap-1 rounded-lg border border-border p-4",
-                      mode === "individual" && "border-primary bg-primary/5"
-                    )}>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold">
-                        Mensagem direta
-                      </span>
-                      <RadioGroupItem value="individual" id="mode-individual" />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Um chat individual é criado para cada destinatário.
-                    </p>
-                  </label>
-                </RadioGroup>
-
-                <div className="flex items-center gap-4 rounded-lg border border-border px-4 py-3 mt-4">
-                  <Switch
-                    checked={allowReplies}
-                    onCheckedChange={(checked) =>
-                      setAllowReplies(Boolean(checked))
-                    }
-                  />
-                  <div>
-                    <p className="text-sm font-semibold">Permitir respostas</p>
-                    <p className="text-xs text-muted-foreground">
-                      Os destinatários poderão responder à mensagem.
-                    </p>
-                  </div>
+                <div className="text-sm text-muted-foreground">
+                  Selecionados: {totalRecipients} (usuários + grupos + equipes)
                 </div>
               </div>
             </div>
-            <div className="col-span-2 flex flex-col gap-7">
-              <div>
-                <h3 className="text-sm font-semibold">Usuários</h3>
-                <p className="text-xs text-muted-foreground">
-                  Pesquise e selecione usuários específicos.
-                </p>
-                <UserMultiSelect value={users} onChange={setUsers} />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold">Grupos de usuários</h3>
-                <p className="text-xs text-muted-foreground">
-                  Adicione grupos para incluir todos os membros automaticamente.
-                </p>
-                <GroupMultiSelect value={groups} onChange={setGroups} />
+            <div className="col-span-2 flex flex-col gap-6">
+              <div className="space-y-3">
+                <Tabs defaultValue="users" className="space-y-4">
+                  <TabsList className="grid grid-cols-3">
+                    <TabsTrigger value="users">Usuários</TabsTrigger>
+                    <TabsTrigger value="groups">Grupos</TabsTrigger>
+                    <TabsTrigger value="teams">Equipes</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="users" className="space-y-2 ">
+                    <UserMultiSelect value={users} onChange={setUsers} />
+                  </TabsContent>
+                  <TabsContent value="groups" className="space-y-2">
+                    <GroupMultiSelect value={groups} onChange={setGroups} />
+                  </TabsContent>
+                  <TabsContent value="teams" className="space-y-2">
+                    <TeamMultiSelect value={teams} onChange={setTeams} />
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           </div>
-          <DrawerFooter className="flex flex-col gap-2 px-0 sm:flex-row sm:justify-between">
-            <div className="text-sm text-muted-foreground">
-              Selecionados: {totalRecipients} (usuários diretos + grupos)
-            </div>
+          <DrawerFooter className="flex flex-col gap-2 px-0 sm:flex-row sm:justify-end">
             <div className="flex gap-2">
               <DrawerClose asChild>
                 <Button
@@ -276,13 +233,14 @@ export function NewMessageModal({
                 </Button>
               </DrawerClose>
               <Button onClick={handleSubmit} disabled={submitting}>
+                <Send />
                 {submitting ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Enviando...
                   </span>
                 ) : (
-                  "Enviar mensagem"
+                  "Enviar"
                 )}
               </Button>
             </div>

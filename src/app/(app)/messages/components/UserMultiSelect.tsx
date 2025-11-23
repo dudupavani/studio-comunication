@@ -29,7 +29,15 @@ export function UserMultiSelect({ value, onChange }: UserMultiSelectProps) {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const load = useCallback(
-    async ({ append, cursor: cursorArg, query: queryArg }: { append: boolean; cursor?: string; query: string }) => {
+    async ({
+      append,
+      cursor: cursorArg,
+      query: queryArg,
+    }: {
+      append: boolean;
+      cursor?: string;
+      query: string;
+    }) => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
@@ -37,7 +45,9 @@ export function UserMultiSelect({ value, onChange }: UserMultiSelectProps) {
         if (queryArg) params.set("q", queryArg);
         if (cursorArg) params.set("cursor", cursorArg);
 
-        const res = await fetch(`/api/messages/recipients/users?${params.toString()}`);
+        const res = await fetch(
+          `/api/messages/recipients/users?${params.toString()}`
+        );
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as any;
           throw new Error(body?.error?.message || `HTTP ${res.status}`);
@@ -94,15 +104,15 @@ export function UserMultiSelect({ value, onChange }: UserMultiSelectProps) {
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         {value.map((user) => (
-          <Badge key={user.id} variant="secondary" className="gap-2">
+          <Badge key={user.id} variant="secondary">
             {user.full_name || user.id}
-            <button
+            <Button
               type="button"
               onClick={() => toggleUser(user)}
-              className="rounded-full p-0.5 hover:bg-muted"
-            >
+              size="icon-xs"
+              variant="ghost">
               <X className="h-3 w-3" />
-            </button>
+            </Button>
           </Badge>
         ))}
         {value.length === 0 ? (
@@ -112,21 +122,19 @@ export function UserMultiSelect({ value, onChange }: UserMultiSelectProps) {
         ) : null}
       </div>
 
-      <Input
-        placeholder="Buscar usuários"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-      />
-
-      <ScrollArea className="h-48 rounded-lg border border-border">
-        <div className="space-y-1 p-2">
+      <ScrollArea className="rounded-lg border p-2">
+        <Input
+          placeholder="Buscar usuários"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <div className="space-y-1 pt-2">
           {items.map((user) => {
             const checked = value.some((item) => item.id === user.id);
             return (
               <label
                 key={user.id}
-                className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1 hover:bg-muted"
-              >
+                className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1 hover:bg-muted">
                 <Checkbox
                   checked={checked}
                   onCheckedChange={() => toggleUser(user)}
@@ -135,7 +143,9 @@ export function UserMultiSelect({ value, onChange }: UserMultiSelectProps) {
                   <span className="text-sm font-medium">
                     {user.full_name || "Usuário sem nome"}
                   </span>
-                  <span className="text-xs text-muted-foreground">{user.id}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {user.id}
+                  </span>
                 </div>
               </label>
             );
@@ -160,8 +170,7 @@ export function UserMultiSelect({ value, onChange }: UserMultiSelectProps) {
           variant="secondary"
           size="sm"
           onClick={() => load({ append: true, cursor, query })}
-          disabled={loading}
-        >
+          disabled={loading}>
           Carregar mais
         </Button>
       ) : null}

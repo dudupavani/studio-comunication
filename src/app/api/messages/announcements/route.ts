@@ -28,14 +28,45 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = parsed.data;
-    const userIds = Array.from(new Set(payload.userIds ?? [])).filter(Boolean);
-    const groupIds = Array.from(new Set(payload.groupIds ?? [])).filter(Boolean);
+    const userIdSet = new Set<string>(
+      (payload.userIds ?? []).filter((id): id is string => !!id)
+    );
+    const groupIds = Array.from(
+      new Set(payload.groupIds ?? []).values()
+    ).filter(Boolean);
+    const teamIds = Array.from(
+      new Set(payload.teamIds ?? []).values()
+    ).filter(Boolean);
+
+    if (teamIds.length > 0) {
+      const { data: teamMembers, error: teamMembersError } = await supabaseUser
+        .from("equipe_members")
+        .select("user_id")
+        .in("equipe_id", teamIds)
+        .eq("org_id", auth.orgId);
+      if (teamMembersError) {
+        console.error(
+          "ANNOUNCEMENTS load team members error:",
+          teamMembersError
+        );
+        return errorResponse(
+          500,
+          "db_error",
+          "Failed to load team members"
+        );
+      }
+      (teamMembers ?? []).forEach((row: any) => {
+        if (row?.user_id) userIdSet.add(row.user_id as string);
+      });
+    }
+
+    const userIds = Array.from(userIdSet);
 
     if (userIds.length === 0 && groupIds.length === 0) {
       return errorResponse(
         400,
         "validation_error",
-        "Selecione ao menos um destinatário (usuário ou grupo)."
+        "Selecione ao menos um destinatário (usuário, grupo ou equipe)."
       );
     }
 
