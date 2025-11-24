@@ -38,7 +38,7 @@ type SidebarProps = {
 };
 
 export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const { auth } = useAuthContext();
 
   // Extract orgSlug from pathname when in /orgs/[orgSlug]/*

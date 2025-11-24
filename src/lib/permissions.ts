@@ -9,6 +9,7 @@ export type AuthContextWithRoles = AuthContext;
 // Constantes tipadas para comparações
 const PLATFORM_ADMIN: PlatformRole = "platform_admin";
 const ORG_ADMIN: OrgRole = "org_admin";
+const ORG_MASTER: OrgRole = "org_master";
 const UNIT_MASTER: UnitRole = "unit_master";
 
 /** Helpers básicos */
@@ -16,7 +17,8 @@ export const isPlatformAdmin = (ctx?: AuthContext | null) =>
   !!ctx && ctx.platformRole === PLATFORM_ADMIN;
 
 export const isOrgAdmin = (auth?: AuthContext | null) =>
-  !!auth && auth.orgRole === ORG_ADMIN;
+  !!auth &&
+  (auth.orgRole === ORG_ADMIN || auth.orgRole === ORG_MASTER);
 
 // Compatibilidade: mantém a função, mas delega para isOrgAdmin
 export const isOrgAdminEffective = (auth?: AuthContext | null) =>
@@ -24,7 +26,10 @@ export const isOrgAdminEffective = (auth?: AuthContext | null) =>
 
 /** Verifica se é org_admin da organização específica */
 export const isOrgAdminOf = (ctx: AuthContext | null, orgId?: string | null) =>
-  !!ctx && !!orgId && ctx.orgRole === ORG_ADMIN && ctx.orgId === orgId;
+  !!ctx &&
+  !!orgId &&
+  ctx.orgId === orgId &&
+  (ctx.orgRole === ORG_ADMIN || ctx.orgRole === ORG_MASTER);
 
 /** Verifica se o usuário é unit_master (papel no membership da org) */
 export const isUnitMaster = (ctx?: AuthContext | null) =>

@@ -81,22 +81,34 @@ export default async function AppLayout({
     // decisão de produto fica como comentário
   }
 
+  const profileRole =
+    profileData?.global_role === "platform_admin" ||
+    profileData?.global_role === "platform_support"
+      ? profileData?.global_role
+      : null;
+
+  const metadataRole =
+    user.user_metadata?.global_role === "platform_admin" ||
+    user.user_metadata?.global_role === "platform_support"
+      ? user.user_metadata?.global_role
+      : null;
+
   const userProfile: Profile = {
     id: user.id,
-    email: user.email,
+    email: user.email ?? "",
     full_name: profileData?.full_name || user.user_metadata?.name || "",
+    global_role: profileRole ?? metadataRole ?? null,
     phone: profileData?.phone || "",
     avatar_url: profileData?.avatar_url || "",
-    role: user.user_metadata?.role || "user",
     created_at: user.created_at,
   };
 
   // Get active organization for sidebar
-  const { auth, org } = await getActiveOrgForSidebar();
+  const { auth } = await getActiveOrgForSidebar();
 
   return (
     <SidebarProvider defaultOpen>
-      <AppSidebar activeOrgSlug={org?.slug ?? null} />
+      <AppSidebar activeOrgSlug={null} />
 
       <SidebarInset className="min-h-screen">
         {/* 🔄 Finalização automática do convite (SSR) + fallback em cliente (CSR) */}

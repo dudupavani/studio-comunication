@@ -4,7 +4,11 @@ import type { Profile } from "@/lib/types";
 import { getLoggedUserProfile } from "@/lib/queries/profile";
 
 export default async function ProfilePage() {
-  const { user, profile: profileData, error: profileError } = await getLoggedUserProfile();
+  const {
+    user,
+    profile: profileData,
+    error: profileError,
+  } = await getLoggedUserProfile();
 
   if (!user) {
     redirect("/login");
@@ -17,8 +21,12 @@ export default async function ProfilePage() {
 
   const userProfile: Profile = {
     id: user.id,
-    email: user.email,
+    email: user.email ?? "",
     full_name: profileData?.full_name || user.user_metadata.name || "",
+    global_role:
+      profileData?.global_role ??
+      (user.user_metadata.global_role as Profile["global_role"]) ??
+      null,
     phone: profileData?.phone || "",
     avatar_url: profileData?.avatar_url || "",
     created_at: user.created_at,
@@ -27,7 +35,7 @@ export default async function ProfilePage() {
   console.log("ProfilePage: userProfile.avatar_url", userProfile.avatar_url);
 
   return (
-    <div className="pt-8 px-6 sm:px-12 w-7/12 w-full sm:max-w-3xl">
+    <div className="pt-8 px-6 sm:px-12 w-full sm:max-w-3xl">
       <div>
         <ProfileForm user={userProfile} />
       </div>
