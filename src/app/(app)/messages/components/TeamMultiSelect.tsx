@@ -18,9 +18,14 @@ export interface TeamOption {
 interface TeamMultiSelectProps {
   value: TeamOption[];
   onChange: (teams: TeamOption[]) => void;
+  showSelectedSummary?: boolean;
 }
 
-export function TeamMultiSelect({ value, onChange }: TeamMultiSelectProps) {
+export function TeamMultiSelect({
+  value,
+  onChange,
+  showSelectedSummary = true,
+}: TeamMultiSelectProps) {
   const { toast } = useToast();
   const [items, setItems] = useState<TeamOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -102,25 +107,27 @@ export function TeamMultiSelect({ value, onChange }: TeamMultiSelectProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {value.map((team) => (
-          <Badge key={team.id} variant="secondary">
-            {team.name}
-            <Button
-              type="button"
-              onClick={() => toggleTeam(team)}
-              size="icon-xs"
-              variant="ghost">
-              <X />
-            </Button>
-          </Badge>
-        ))}
-        {value.length === 0 ? (
-          <span className="text-xs text-muted-foreground">
-            Nenhuma equipe selecionada.
-          </span>
-        ) : null}
-      </div>
+      {showSelectedSummary ? (
+        <div className="flex flex-wrap gap-2">
+          {value.map((team) => (
+            <Badge key={team.id} variant="secondary">
+              {team.name}
+              <Button
+                type="button"
+                onClick={() => toggleTeam(team)}
+                size="icon-xs"
+                variant="ghost">
+                <X />
+              </Button>
+            </Badge>
+          ))}
+          {value.length === 0 ? (
+            <span className="text-xs text-muted-foreground">
+              Nenhuma equipe selecionada.
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       <ScrollArea className="rounded-md border p-2">
         <Input

@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "./RichTextEditor";
@@ -38,6 +39,18 @@ export function NewMessageModal({
   const [groups, setGroups] = useState<UserGroupOption[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const removeUser = useCallback((id: string) => {
+    setUsers((prev) => prev.filter((user) => user.id !== id));
+  }, []);
+
+  const removeGroup = useCallback((id: string) => {
+    setGroups((prev) => prev.filter((group) => group.id !== id));
+  }, []);
+
+  const removeTeam = useCallback((id: string) => {
+    setTeams((prev) => prev.filter((team) => team.id !== id));
+  }, []);
 
   const totalRecipients = useMemo(
     () => users.length + groups.length + teams.length,
@@ -177,7 +190,7 @@ export function NewMessageModal({
             </div>
           </DrawerHeader>
 
-          <div className="grid grid-cols-6 gap-12 h-dvh">
+          <div className="grid grid-cols-6 gap-12">
             <div className="col-span-4 space-y-6 pb-4 pt-2">
               <div className="space-y-6 pb-4">
                 <div className="space-y-2">
@@ -192,13 +205,18 @@ export function NewMessageModal({
                   <RichTextEditor
                     value={message}
                     onChange={setMessage}
-                    className="min-h-[260px]"
                     placeholder="Digite sua mensagem aqui..."
                   />
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Selecionados: {totalRecipients} (usuários + grupos + equipes)
-                </div>
+                <SelectedRecipients
+                  users={users}
+                  groups={groups}
+                  teams={teams}
+                  onRemoveUser={removeUser}
+                  onRemoveGroup={removeGroup}
+                  onRemoveTeam={removeTeam}
+                  total={totalRecipients}
+                />
               </div>
             </div>
             <div className="col-span-2 flex flex-col gap-6">
@@ -209,14 +227,26 @@ export function NewMessageModal({
                     <TabsTrigger value="groups">Grupos</TabsTrigger>
                     <TabsTrigger value="teams">Equipes</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="users" className="space-y-2 ">
-                    <UserMultiSelect value={users} onChange={setUsers} />
+                  <TabsContent value="users" className="space-y-2">
+                    <UserMultiSelect
+                      value={users}
+                      onChange={setUsers}
+                      showSelectedSummary={false}
+                    />
                   </TabsContent>
                   <TabsContent value="groups" className="space-y-2">
-                    <GroupMultiSelect value={groups} onChange={setGroups} />
+                    <GroupMultiSelect
+                      value={groups}
+                      onChange={setGroups}
+                      showSelectedSummary={false}
+                    />
                   </TabsContent>
                   <TabsContent value="teams" className="space-y-2">
-                    <TeamMultiSelect value={teams} onChange={setTeams} />
+                    <TeamMultiSelect
+                      value={teams}
+                      onChange={setTeams}
+                      showSelectedSummary={false}
+                    />
                   </TabsContent>
                 </Tabs>
               </div>
@@ -248,5 +278,99 @@ export function NewMessageModal({
         </div>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+type SelectedRecipientsProps = {
+  users: UserOption[];
+  groups: UserGroupOption[];
+  teams: TeamOption[];
+  onRemoveUser: (id: string) => void;
+  onRemoveGroup: (id: string) => void;
+  onRemoveTeam: (id: string) => void;
+  total: number;
+};
+
+function SelectedRecipients({
+  users,
+  groups,
+  teams,
+  onRemoveUser,
+  onRemoveGroup,
+  onRemoveTeam,
+  total,
+}: SelectedRecipientsProps) {
+  const hasAny = users.length || groups.length || teams.length;
+
+  if (!hasAny) {
+    return (
+      <div className="rounded-lg border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
+        Nenhum destinatário selecionado ainda. Utilize as abas ao lado para
+        adicionar usuários, grupos ou equipes.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 rounded-lg border border-border px-4 py-3">
+      <div className="flex items-center justify-between text-sm font-semibold">
+        <span>Destinatários selecionados</span>
+        <span className="text-xs text-muted-foreground">{total} no total</span>
+      </div>
+      {users.length ? (
+        <RecipientBadgeList
+          label="Usuários"
+          items={users.map((u) => ({
+            id: u.id,
+            label: u.full_name || u.id,
+          }))}
+          onRemove={onRemoveUser}
+        />
+      ) : null}
+      {groups.length ? (
+        <RecipientBadgeList
+          label="Grupos"
+          items={groups.map((g) => ({ id: g.id, label: g.name }))}
+          onRemove={onRemoveGroup}
+        />
+      ) : null}
+      {teams.length ? (
+        <RecipientBadgeList
+          label="Equipes"
+          items={teams.map((t) => ({ id: t.id, label: t.name }))}
+          onRemove={onRemoveTeam}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function RecipientBadgeList({
+  label,
+  items,
+  onRemove,
+}: {
+  label: string;
+  items: { id: string; label: string }[];
+  onRemove: (id: string) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => (
+          <Badge key={item.id} variant="secondary" className="gap-2">
+            {item.label}
+            <Button
+              type="button"
+              size="icon-xs"
+              variant="ghost"
+              onClick={() => onRemove(item.id)}>
+              <X className="h-3 w-3" />
+            </Button>
+          </Badge>
+        ))}
+      </div>
+    </div>
   );
 }

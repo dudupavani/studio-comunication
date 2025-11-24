@@ -18,9 +18,14 @@ export interface UserOption {
 interface UserMultiSelectProps {
   value: UserOption[];
   onChange: (users: UserOption[]) => void;
+  showSelectedSummary?: boolean;
 }
 
-export function UserMultiSelect({ value, onChange }: UserMultiSelectProps) {
+export function UserMultiSelect({
+  value,
+  onChange,
+  showSelectedSummary = true,
+}: UserMultiSelectProps) {
   const { toast } = useToast();
   const [items, setItems] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -102,25 +107,27 @@ export function UserMultiSelect({ value, onChange }: UserMultiSelectProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {value.map((user) => (
-          <Badge key={user.id} variant="secondary">
-            {user.full_name || user.id}
-            <Button
-              type="button"
-              onClick={() => toggleUser(user)}
-              size="icon-xs"
-              variant="ghost">
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        ))}
-        {value.length === 0 ? (
-          <span className="text-xs text-muted-foreground">
-            Nenhum usuário selecionado.
-          </span>
-        ) : null}
-      </div>
+      {showSelectedSummary ? (
+        <div className="flex flex-wrap gap-2">
+          {value.map((user) => (
+            <Badge key={user.id} variant="secondary">
+              {user.full_name || user.id}
+              <Button
+                type="button"
+                onClick={() => toggleUser(user)}
+                size="icon-xs"
+                variant="ghost">
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          ))}
+          {value.length === 0 ? (
+            <span className="text-xs text-muted-foreground">
+              Nenhum usuário selecionado.
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       <ScrollArea className="rounded-lg border p-2">
         <Input

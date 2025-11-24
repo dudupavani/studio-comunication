@@ -19,9 +19,14 @@ export interface UserGroupOption {
 interface GroupMultiSelectProps {
   value: UserGroupOption[];
   onChange: (groups: UserGroupOption[]) => void;
+  showSelectedSummary?: boolean;
 }
 
-export function GroupMultiSelect({ value, onChange }: GroupMultiSelectProps) {
+export function GroupMultiSelect({
+  value,
+  onChange,
+  showSelectedSummary = true,
+}: GroupMultiSelectProps) {
   const { toast } = useToast();
   const [items, setItems] = useState<UserGroupOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -105,25 +110,27 @@ export function GroupMultiSelect({ value, onChange }: GroupMultiSelectProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {value.map((group) => (
-          <Badge key={group.id} variant="secondary">
-            {group.name}
-            <Button
-              type="button"
-              onClick={() => toggleGroup(group)}
-              size="icon-xs"
-              variant="ghost">
-              <X />
-            </Button>
-          </Badge>
-        ))}
-        {value.length === 0 ? (
-          <span className="text-xs text-muted-foreground">
-            Nenhum grupo selecionado.
-          </span>
-        ) : null}
-      </div>
+      {showSelectedSummary ? (
+        <div className="flex flex-wrap gap-2">
+          {value.map((group) => (
+            <Badge key={group.id} variant="secondary">
+              {group.name}
+              <Button
+                type="button"
+                onClick={() => toggleGroup(group)}
+                size="icon-xs"
+                variant="ghost">
+                <X />
+              </Button>
+            </Badge>
+          ))}
+          {value.length === 0 ? (
+            <span className="text-xs text-muted-foreground">
+              Nenhum grupo selecionado.
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       <ScrollArea className="rounded-md border p-2">
         <Input
