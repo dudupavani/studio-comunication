@@ -174,8 +174,7 @@ async function fetchAnnouncementItems(
   );
   const authorMap = await resolveSenderNames(authorIds);
 
-  const announcementItems: InboxItem[] = announcements.map((row: any) => ({
-    kind: "announcement" as const,
+  const announcementItems: AnnouncementItem[] = announcements.map((row: any) => ({
     announcementId: row.id as string,
     title: row.title as string,
     senderId: row.author_id as string,
@@ -192,12 +191,28 @@ async function fetchAnnouncementItems(
   }));
 
   if (!includeDetails) {
-    return announcementItems;
+    return announcementItems.map((item) => ({
+      kind: "announcement" as const,
+      ...item,
+    }));
   }
 
-  const annIdList = announcementItems.map((item) => item.announcementId);
+  await hydrateAnnouncementDetails(svc, announcementItems, userId);
 
-  // Comentários
+  return announcementItems.map((item) => ({
+    kind: "announcement" as const,
+    ...item,
+  }));
+}
+
+async function hydrateAnnouncementDetails(
+  svc: ReturnType<typeof createServiceClient>,
+  items: AnnouncementItem[],
+  userId: string
+) {
+  if (!items.length) return;
+  const annIdList = items.map((item) => item.announcementId);
+
   const { data: commentRows, error: commentErr } = await svc
     .from("announcement_comments")
     .select("id, announcement_id, author_id, content, created_at")
@@ -231,12 +246,11 @@ async function fetchAnnouncementItems(
       }
     });
 
-    announcementItems.forEach((item) => {
+    items.forEach((item) => {
       item.comments = commentsByAnnouncement.get(item.announcementId) ?? [];
     });
   }
 
-  // Reações
   const { data: reactionRows, error: reactionErr } = await svc
     .from("announcement_reactions")
     .select("announcement_id, author_id, emoji")
@@ -245,7 +259,7 @@ async function fetchAnnouncementItems(
   if (!reactionErr && reactionRows) {
     const reactionMap = new Map<string, AnnouncementReactionSummary[]>();
 
-    announcementItems.forEach((item) => {
+    items.forEach((item) => {
       reactionMap.set(
         item.announcementId,
         ANNOUNCEMENT_REACTIONS.map((emoji) => ({
@@ -270,12 +284,60 @@ async function fetchAnnouncementItems(
       }
     });
 
-    announcementItems.forEach((item) => {
+    items.forEach((item) => {
       item.reactions = reactionMap.get(item.announcementId) ?? [];
     });
   }
+}
 
-  return announcementItems;
+async function fetchAuthoredAnnouncements(
+  userId: string,
+  orgId: string,
+  opts?: { withDetails?: boolean }
+): Promise<AnnouncementItem[]> {
+  const includeDetails = opts?.withDetails ?? false;
+  const svc = createServiceClient();
+
+  const { data: announcements, error } = await svc
+    .from("announcements")
+    .select(
+      "id, org_id, author_id, title, content, allow_comments, allow_reactions, created_at"
+    )
+    .eq("org_id", orgId)
+    .eq("author_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error || !announcements) {
+    console.warn("ANNOUNCEMENTS fetch authored error:", error);
+    return [];
+  }
+
+  const authorIds = Array.from(
+    new Set(announcements.map((row: any) => row.author_id as string).filter(Boolean))
+  );
+  const authorMap = await resolveSenderNames(authorIds);
+
+  const items: AnnouncementItem[] = announcements.map((row: any) => ({
+    announcementId: row.id as string,
+    title: row.title as string,
+    senderId: row.author_id as string,
+    senderName:
+      authorMap[row.author_id]?.full_name ||
+      authorMap[row.author_id]?.email ||
+      null,
+    senderAvatar: authorMap[row.author_id]?.avatar_url ?? null,
+    createdAt: row.created_at as string,
+    allowComments: row.allow_comments as boolean,
+    allowReactions: row.allow_reactions as boolean,
+    contentPreview: toPlain(row.content) ?? "",
+    fullContent: includeDetails ? (row.content as string) : undefined,
+  }));
+
+  if (includeDetails) {
+    await hydrateAnnouncementDetails(svc, items, userId);
+  }
+
+  return items;
 }
 
 async function fetchCalendarEventItems(
@@ -392,4 +454,4 @@ export async function fetchInboxItems(
   return items;
 }
 
-export { fetchAnnouncementItems };
+export { fetchAnnouncementItems, fetchAuthoredAnnouncements };

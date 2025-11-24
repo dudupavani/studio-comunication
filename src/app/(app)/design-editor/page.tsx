@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -121,7 +122,7 @@ export default function DesignFilesPage() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Excluir arquivo</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Tem certeza que deseja excluir "{file.title}"? Essa ação
+                      Tem certeza que deseja excluir “{file.title}”? Essa ação
                       não pode ser desfeita.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
@@ -137,12 +138,14 @@ export default function DesignFilesPage() {
               </AlertDialog>
 
               <Link href={`/design-editor/${file.id}`}>
-                <div className="aspect-video bg-gray-100">
+                <div className="relative aspect-video bg-gray-100">
                   {file.thumbnail_url ? (
-                    <img
+                    <Image
                       src={file.thumbnail_url}
                       alt={file.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="320px"
+                      className="object-cover"
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-500">

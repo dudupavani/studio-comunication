@@ -275,6 +275,7 @@ export function CourseCoverUploader({ courseId, initialUrl }: Props) {
                 onComplete={(c) => setCompletedCrop(c)}
                 aspect={ASPECT}
                 minWidth={50}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   ref={imgRef}
                   alt="Pré-visualização"

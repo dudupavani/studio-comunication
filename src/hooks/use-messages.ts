@@ -114,7 +114,7 @@ export function useMessages(
         if (opts.cursor) params.set("cursor", opts.cursor);
 
         const res = await fetch(
-          `/api/messages/chats/${chatId}/messages?${params.toString()}`,
+          `/api/chats/${chatId}/messages?${params.toString()}`,
           { signal: controller.signal }
         );
 
@@ -177,7 +177,7 @@ export function useMessages(
         abortRef.current = null;
       }
     },
-    [chatId, limit, toast]
+    [chatId, limit, resolveSenders, toast]
   );
 
   const reload = useCallback(() => fetchMessages({ replace: true }), [

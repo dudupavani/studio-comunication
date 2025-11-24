@@ -111,7 +111,7 @@ export default function TeamDialog({
       }
       setSelectedMembers(next);
     }
-  }, [open, mode, teamId, orgUsers, toast]);
+  }, [open, mode, teamId, orgUsers, toast, onOpenChange]);
 
   const normalizedSearch = search.trim().toLowerCase();
   const filteredUsers = useMemo(() => {

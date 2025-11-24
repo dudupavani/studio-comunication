@@ -157,7 +157,7 @@ export default function InboxClient({ items }: Props) {
                 return (
                   <Link
                     key={`chat-${item.chatId}`}
-                    href={`/messages/${item.chatId}`}
+                    href={`/chats/${item.chatId}`}
                     className="block">
                     <Card className="hover:border-primary transition-colors">
                       <CardContent className="flex items-center gap-4 py-4">
@@ -174,6 +174,40 @@ export default function InboxClient({ items }: Props) {
                             </Badge>
                           </div>
                           <div className="flex justify-between text-xs text-muted-foreground mt-3">
+                            <span>
+                              {item.senderName || "Remetente desconhecido"}
+                            </span>
+                            <span>
+                              {new Date(item.createdAt).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              case "announcement":
+                return (
+                  <Link
+                    key={`announcement-${item.announcementId}`}
+                    href="/comunicados"
+                    className="block">
+                    <Card className="hover:border-primary transition-colors">
+                      <CardContent className="flex items-start gap-4 py-4">
+                        <div className="mt-1 rounded-full bg-primary/10 text-primary p-2">
+                          <Megaphone className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold leading-tight">
+                              {item.title}
+                            </h4>
+                            <Badge variant="outline">Comunicado</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {item.contentPreview || "Sem prévia disponível"}
+                          </p>
+                          <div className="flex justify-between text-xs text-muted-foreground">
                             <span>
                               {item.senderName || "Remetente desconhecido"}
                             </span>

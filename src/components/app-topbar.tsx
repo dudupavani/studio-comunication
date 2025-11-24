@@ -1,4 +1,7 @@
-import { SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"; // SidebarInset já está no layout, se preferir use só Trigger aqui
+"use client";
+
+import Link from "next/link";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,
@@ -8,8 +11,17 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { Profile } from "@/lib/types";
 import { UserMenu } from "@/components/user-menu";
+import { Grid3x3 } from "lucide-react";
 
 export function AppTopbar({ user }: { user: Profile }) {
   return (
@@ -31,8 +43,35 @@ export function AppTopbar({ user }: { user: Profile }) {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon" title="Atalhos">
+                <Grid3x3 className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[420px]">
+              <DialogHeader>
+                <DialogTitle>Atalhos rápidos</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { href: "/users", label: "Usuários" },
+                  { href: "/groups", label: "Grupos" },
+                  { href: "/teams", label: "Equipes" },
+                  { href: "/units", label: "Unidades" },
+                ].map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <Button variant="secondary" className="w-full">
+                      {item.label}
+                    </Button>
+                  </Link>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
           <UserMenu user={user} />
+          dddsd
         </div>
       </div>
     </header>

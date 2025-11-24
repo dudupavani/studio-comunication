@@ -258,12 +258,15 @@ export default function Canvas() {
     starts: {},
   });
 
-  const getNodeRefById = (id: string): Konva.Node | null => {
-    if (id === rect.id) return rectNodeRef.current;
-    if (id === text.id) return textNodeRef.current;
-    if (id === image.id) return imageNodeRef.current;
-    return null;
-  };
+  const getNodeRefById = useCallback(
+    (id: string): Konva.Node | null => {
+      if (id === rect.id) return rectNodeRef.current;
+      if (id === text.id) return textNodeRef.current;
+      if (id === image.id) return imageNodeRef.current;
+      return null;
+    },
+    [image.id, rect.id, text.id]
+  );
 
   const getIdFromTarget = (t: Konva.Node | null): string | null => {
     const id = t?.id?.();
@@ -300,7 +303,7 @@ export default function Canvas() {
       });
       multiDrag.current.starts = starts;
     },
-    []
+    [getNodeRefById]
   );
 
   const onStageDragMove = useCallback(
@@ -322,29 +325,32 @@ export default function Canvas() {
       trRef.current?.getLayer()?.batchDraw();
       stageRef.current?.batchDraw();
     },
-    []
+    [getNodeRefById]
   );
 
-  const onStageDragEnd = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
-    if (!multiDrag.current.active) return;
+  const onStageDragEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => {
+      if (!multiDrag.current.active) return;
 
-    const selected = selectedIdsRef.current;
-    selected.forEach((id) => {
-      const n = getNodeRefById(id);
-      if (!n) return;
-      const { x, y } = n.position();
+      const selected = selectedIdsRef.current;
+      selected.forEach((id) => {
+        const n = getNodeRefById(id);
+        if (!n) return;
+        const { x, y } = n.position();
 
-      if (id === rect.id) setRect((r) => ({ ...r, x, y }));
-      else if (id === text.id) setText((t) => ({ ...t, x, y }));
-      else if (id === image.id) setImage((im) => ({ ...im, x, y }));
-    });
+        if (id === rect.id) setRect((r) => ({ ...r, x, y }));
+        else if (id === text.id) setText((t) => ({ ...t, x, y }));
+        else if (id === image.id) setImage((im) => ({ ...im, x, y }));
+      });
 
-    // reset
-    multiDrag.current.active = false;
-    multiDrag.current.driverId = null;
-    multiDrag.current.driverStart = null;
-    multiDrag.current.starts = {};
-  }, []);
+      // reset
+      multiDrag.current.active = false;
+      multiDrag.current.driverId = null;
+      multiDrag.current.driverStart = null;
+      multiDrag.current.starts = {};
+    },
+    [getNodeRefById, image.id, rect.id, text.id]
+  );
 
   // ---- Anexar Transformer aos nós selecionados
   useLayoutEffect(() => {

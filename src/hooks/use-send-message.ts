@@ -36,7 +36,7 @@ export function useSendMessage(): UseSendMessageResult {
 
       setSending(true);
       try {
-        const res = await fetch(`/api/messages/chats/${chatId}/messages`, {
+        const res = await fetch(`/api/chats/${chatId}/messages`, {
           method: "POST",
           body: formData,
         });

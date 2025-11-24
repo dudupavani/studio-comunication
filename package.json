@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "tsc -p tsconfig.tests.json && node .tests-dist/tests/run-tests.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -61,7 +61,7 @@ function InnerEditor({ id }: { id: string }) {
     return () => {
       cancelled = true;
     };
-  }, [id]); // ✅ só depende do id
+  }, [api, id]); // ✅ depende do id e do api
 
   return (
     <div className="flex h-dvh overflow-hidden">

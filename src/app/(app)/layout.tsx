@@ -16,6 +16,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { UserMenu } from "@/components/user-menu";
 import ModuleTitle from "@/components/modules-title";
+import { QuickAccessMenu } from "@/components/quick-access-menu";
 
 // ✅ SSR: finaliza convite sem mexer na UI
 import FinalizeInviteSSR from "@/components/auth/finalize-invite-ssr";
@@ -112,7 +113,8 @@ export default async function AppLayout({
             />
             <ModuleTitle />
 
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-4">
+              <QuickAccessMenu />
               <UserMenu user={userProfile} />
             </div>
           </div>

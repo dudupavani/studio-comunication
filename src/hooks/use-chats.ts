@@ -65,7 +65,7 @@ export function useChats(options: UseChatsOptions = {}): UseChatsResult {
             }
           });
 
-          const res = await fetch(`/api/messages/chats?${params.toString()}`, {
+          const res = await fetch(`/api/chats?${params.toString()}`, {
             signal: controller.signal,
           });
 

@@ -320,122 +320,125 @@ export function StageView() {
   }, [deleteSelected, selectOne]);
 
   // ===== Selection =====
-  const handleSelect = (id: string, isMulti: boolean) => {
-    if (editingId) return;
-    const cur = selectedIdsRef.current;
+  const handleSelect = useCallback(
+    (id: string, isMulti: boolean) => {
+      if (editingId) return;
+      const cur = selectedIdsRef.current;
 
-    if (isMulti) {
-      if (!cur.includes(id)) {
-        selectedIdsRef.current = [...cur, id];
-        toggleSelect(id);
+      if (isMulti) {
+        if (!cur.includes(id)) {
+          selectedIdsRef.current = [...cur, id];
+          toggleSelect(id);
+        }
+        return;
       }
-      return;
-    }
 
-    if (cur.includes(id) && cur.length > 1) {
-      return;
-    }
+      if (cur.includes(id) && cur.length > 1) {
+        return;
+      }
 
-    selectedIdsRef.current = [id];
-    selectOne(id);
-  };
+      selectedIdsRef.current = [id];
+      selectOne(id);
+    },
+    [editingId, selectOne, toggleSelect]
+  );
 
   // ===== Drag =====
-  const handleDragStart = (id: string, node: Konva.Node, isShift?: boolean) => {
-    let ids = selectedIdsRef.current;
-    if (isShift && !ids.includes(id)) ids = [...ids, id];
+  const handleDragStart = useCallback(
+    (id: string, node: Konva.Node, isShift?: boolean) => {
+      let ids = selectedIdsRef.current;
+      if (isShift && !ids.includes(id)) ids = [...ids, id];
 
-    if (!ids.includes(id) || ids.length <= 1) {
-      dragRef.current = {
-        active: false,
-        leaderId: id,
-        leaderStart: null,
-        base: {},
-        ids: [id],
-      };
-      return;
-    }
-
-    const base: Record<string, XY> = {};
-    for (const sid of ids) {
-      const s = shapes[sid];
-      if (s) base[sid] = { x: s.x, y: s.y };
-    }
-
-    dragRef.current = {
-      active: true,
-      leaderId: id,
-      leaderStart: { x: node.x(), y: node.y() },
-      base,
-      ids,
-    };
-  };
-
-  const handleDragMove = (id: string, node: Konva.Node) => {
-    const sess = dragRef.current;
-    if (!sess.active || sess.leaderId !== id || !sess.leaderStart) return;
-
-    const dx = node.x() - sess.leaderStart.x;
-    const dy = node.y() - sess.leaderStart.y;
-
-    const st = stageRef.current;
-    if (!st) return;
-
-    for (const sid of sess.ids) {
-      if (sid === id) continue;
-      const base = sess.base[sid];
-      if (!base) continue;
-      const target = st.findOne<Konva.Node>(`#${sid}`);
-      if (!target) continue;
-
-      const s = shapes[sid];
-      let tx = base.x + dx;
-      let ty = base.y + dy;
-      if (s?.type === "circle") {
-        tx += s.width / 2;
-        ty += s.height / 2;
+      if (!ids.includes(id) || ids.length <= 1) {
+        dragRef.current = {
+          active: false,
+          leaderId: id,
+          leaderStart: null,
+          base: {},
+          ids: [id],
+        };
+        return;
       }
 
-      target.position({ x: tx, y: ty });
-    }
+      const base: Record<string, XY> = {};
+      for (const sid of ids) {
+        const s = shapes[sid];
+        if (s) base[sid] = { x: s.x, y: s.y };
+      }
 
-    trRef.current?.forceUpdate?.();
-    trRef.current?.getLayer()?.batchDraw();
-    stageRef.current?.batchDraw();
-  };
+      dragRef.current = {
+        active: true,
+        leaderId: id,
+        leaderStart: { x: node.x(), y: node.y() },
+        base,
+        ids,
+      };
+    },
+    [shapes]
+  );
 
-  const handleDragEnd = (id: string, node: Konva.Node) => {
-    const sess = dragRef.current;
+  const handleDragMove = useCallback(
+    (id: string, node: Konva.Node) => {
+      const sess = dragRef.current;
+      if (!sess.active || sess.leaderId !== id || !sess.leaderStart) return;
 
-    if (sess.active && sess.leaderId === id && sess.leaderStart) {
       const dx = node.x() - sess.leaderStart.x;
       const dy = node.y() - sess.leaderStart.y;
+
+      const st = stageRef.current;
+      if (!st) return;
 
       for (const sid of sess.ids) {
         if (sid === id) continue;
         const base = sess.base[sid];
         if (!base) continue;
-        updateShape(sid, { x: base.x + dx, y: base.y + dy });
+        const target = st.findOne<Konva.Node>(`#${sid}`);
+        if (!target) continue;
+
+        const s = shapes[sid];
+        let tx = base.x + dx;
+        let ty = base.y + dy;
+        if (s?.type === "circle") {
+          tx += s.width / 2;
+          ty += s.height / 2;
+        }
+
+        target.position({ x: tx, y: ty });
       }
-    }
 
-    const nx = node.x();
-    const ny = node.y();
-    const s = shapes[id];
-    if (s?.type === "circle") {
-      updateShape(id, { x: nx - s.width / 2, y: ny - s.height / 2 });
-    } else {
-      updateShape(id, { x: nx, y: ny });
-    }
+      trRef.current?.forceUpdate?.();
+      trRef.current?.getLayer()?.batchDraw();
+      stageRef.current?.batchDraw();
+    },
+    [shapes]
+  );
 
-    dragRef.current = {
-      active: false,
-      leaderId: null,
-      leaderStart: null,
-      base: {},
-      ids: [],
-    };
-  };
+  const handleDragEnd = useCallback(
+    (id: string, node: Konva.Node) => {
+      const sess = dragRef.current;
+
+      if (sess.active && sess.leaderId === id && sess.leaderStart) {
+        const dx = node.x() - sess.leaderStart.x;
+        const dy = node.y() - sess.leaderStart.y;
+
+        for (const sid of sess.ids) {
+          if (sid === id) continue;
+          const base = sess.base[sid];
+          if (!base) continue;
+          updateShape(sid, { x: base.x + dx, y: base.y + dy });
+        }
+      }
+
+      dragRef.current = {
+        active: false,
+        leaderId: null,
+        leaderStart: null,
+        base: {},
+        ids: [],
+      };
+    },
+    [updateShape]
+  );
 
   // ===== Render nodes =====
   const shapeNodes = useMemo(() => {
@@ -540,7 +543,17 @@ export function StageView() {
 
       return null;
     });
-  }, [order, shapes, editingId, startEditText, updateShape]);
+  }, [
+    order,
+    shapes,
+    editingId,
+    startEditText,
+    updateShape,
+    handleSelect,
+    handleDragStart,
+    handleDragMove,
+    handleDragEnd,
+  ]);
 
   // ===== Transform live handler =====
   useEffect(() => {

@@ -2,6 +2,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { useEditor } from "./store";
 import { Button } from "@/components/ui/button";
 import { X, Upload, Trash2 } from "lucide-react";
@@ -265,16 +266,20 @@ function ThumbCard({
             <UILoader />
           </div>
         )}
-        <img
-          src={item.url}
-          alt={item.name}
-          className={`block w-full h-auto object-contain bg-center ${
-            imgLoaded ? "opacity-100" : "opacity-0"
-          }`}
-          onLoad={() => setImgLoaded(true)}
-          onError={() => setImgLoaded(true)}
-          draggable={false}
-        />
+        <div className="relative h-full w-full">
+          <Image
+            src={item.url}
+            alt={item.name}
+            fill
+            sizes="150px"
+            className={`object-contain bg-center transition ${
+              imgLoaded ? "opacity-100" : "opacity-0"
+            }`}
+            onLoadingComplete={() => setImgLoaded(true)}
+            onError={() => setImgLoaded(true)}
+            draggable={false}
+          />
+        </div>
       </button>
 
       {/* Botão excluir */}

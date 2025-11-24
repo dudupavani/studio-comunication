@@ -16,6 +16,7 @@ import {
   Group,
   LaptopMinimalCheck,
   MessageCircleHeart,
+  Megaphone,
   Inbox,
   BookOpen,
   UsersRound,
@@ -93,29 +94,30 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                       variant="ghost"
                       className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                       asChild>
-                      <Link href="/messages">
+                      <Link href="/chats">
                         <MessageCircleHeart size={20} />
                         <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                          Mensagens
+                          Chats
+                        </span>
+                      </Link>
+                    </Button>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
+                      asChild>
+                      <Link href="/comunicados">
+                        <Megaphone size={20} />
+                        <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                          Comunicados
                         </span>
                       </Link>
                     </Button>
                   </SidebarMenuItem>
                 </>
               )}
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
-                  asChild>
-                  <Link href="/learning">
-                    <BookOpen size={20} />
-                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                      Cursos
-                    </span>
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <Button
                   variant="ghost"
@@ -147,78 +149,23 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                   variant="ghost"
                   className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                   asChild>
+                  <Link href="/learning">
+                    <BookOpen size={20} />
+                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                      Cursos
+                    </span>
+                  </Link>
+                </Button>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
+                  asChild>
                   <Link href="/dashboard">
                     <AppWindowMac size={20} />
                     <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
                       Dashboard
-                    </span>
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
-                  asChild>
-                  <Link href="/users">
-                    <UserCog size={20} />
-                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                      Usuários
-                    </span>
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
-                  asChild>
-                  <Link href="/groups">
-                    <Group size={20} />
-                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                      Grupos
-                    </span>
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
-                  asChild>
-                  <Link href="/teams">
-                    <UsersRound size={20} />
-                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                      Equipes
-                    </span>
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
-
-              {/* Módulos de organização — sempre visíveis; rotas estáveis cuidam do redirect */}
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
-                  asChild>
-                  <Link href="/settings">
-                    <Settings size={20} />
-                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                      Configuração
-                    </span>
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
-                  asChild>
-                  <Link href="/units">
-                    <Warehouse size={20} />
-                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                      Unidades
                     </span>
                   </Link>
                 </Button>

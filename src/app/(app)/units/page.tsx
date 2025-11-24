@@ -31,15 +31,16 @@ export default async function UnitsPage() {
   if (process.env.NODE_ENV !== "production") {
     console.log("DEBUG /units orgId from auth:", orgId);
   }
-  if (!orgId) redirect("/dashboard");
+  const effectiveOrgId = auth.platformRole === "platform_admin" ? (orgId ?? auth.userId ?? undefined) : orgId;
+  if (!effectiveOrgId) redirect("/dashboard");
 
-  const orgRes = await getOrgWithDetails(orgId);
+  const orgRes = await getOrgWithDetails(effectiveOrgId);
   if (!orgRes?.ok || !orgRes?.data) redirect("/dashboard");
   const fullOrg = orgRes.data;
 
   const canAdmin =
     auth.platformRole === "platform_admin" ||
-    (await isOrgAdminFor(fullOrg.id, auth.userId));
+    auth.orgRole === "org_master" || (await isOrgAdminFor(fullOrg.id, auth.userId));
   if (process.env.NODE_ENV !== "production") {
     console.log("DEBUG /units guards:", { canAdmin });
   }

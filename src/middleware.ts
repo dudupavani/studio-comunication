@@ -106,16 +106,6 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  // /org/settings -> /settings
-  if (/^\/org\/settings\/?$/.test(pathname)) {
-    const url = req.nextUrl.clone();
-    url.pathname = `/settings`;
-    return NextResponse.redirect(url, 308);
-  }
-
-  // Removido redirecionamento de /users -> /admin/users
-  // A rota /users agora aponta diretamente para a página de usuários
-
   return NextResponse.next();
 }
 
