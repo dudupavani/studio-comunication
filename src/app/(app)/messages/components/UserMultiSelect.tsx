@@ -129,7 +129,7 @@ export function UserMultiSelect({
         </div>
       ) : null}
 
-      <ScrollArea className="rounded-lg border p-2">
+      <ScrollArea>
         <Input
           placeholder="Buscar usuários"
           value={query}

@@ -18,11 +18,15 @@ type StoredAttachment = {
 const SIGNED_URL_TTL = 60 * 60; // 1h
 const BUCKET = "chat-attachment";
 
-export async function GET(
-  _req: NextRequest,
-  context: { params: { id: string } }
-) {
-  const chatId = context.params.id;
+type RouteContext = { params: Promise<{ id: string }> | { id: string } };
+
+async function resolveChatId(context: RouteContext) {
+  const params = await context.params;
+  return params?.id;
+}
+
+export async function GET(_req: NextRequest, context: RouteContext) {
+  const chatId = await resolveChatId(context);
   if (!chatId) {
     return errorResponse(400, "bad_request", "Chat id is required");
   }

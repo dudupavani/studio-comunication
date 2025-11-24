@@ -6,9 +6,7 @@ import {
   errorResponse,
   handleRouteError,
 } from "@/lib/messages/api-helpers";
-import {
-  addMemberSchema,
-} from "@/lib/messages/validations";
+import { addMemberSchema, removeMemberSchema } from "@/lib/messages/validations";
 import {
   fetchChatMembers,
   isChatAdmin,
@@ -16,11 +14,15 @@ import {
   type TypedSupabaseClient,
 } from "@/lib/messages/queries";
 
-export async function GET(
-  _req: NextRequest,
-  context: { params: { id: string } }
-) {
-  const chatId = context.params.id;
+type RouteContext = { params: Promise<{ id: string }> | { id: string } };
+
+async function resolveChatId(context: RouteContext) {
+  const params = await context.params;
+  return params?.id;
+}
+
+export async function GET(_req: NextRequest, context: RouteContext) {
+  const chatId = await resolveChatId(context);
   if (!chatId) {
     return errorResponse(400, "bad_request", "Chat id is required");
   }
@@ -43,11 +45,8 @@ export async function GET(
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
-  const chatId = context.params.id;
+export async function POST(req: NextRequest, context: RouteContext) {
+  const chatId = await resolveChatId(context);
   if (!chatId) {
     return errorResponse(400, "bad_request", "Chat id is required");
   }
@@ -114,6 +113,60 @@ export async function POST(
         console.error("MESSAGES add member error:", insertError);
         return errorResponse(500, "db_error", "Failed to add member");
       }
+    }
+
+    return new NextResponse(null, { status: 204 });
+  } catch (err) {
+    return handleRouteError(err);
+  }
+}
+
+export async function DELETE(req: NextRequest, context: RouteContext) {
+  const chatId = await resolveChatId(context);
+  if (!chatId) {
+    return errorResponse(400, "bad_request", "Chat id is required");
+  }
+
+  try {
+    const supabase = createServerClientWithCookies();
+    const auth = await getAuthContext(supabase);
+
+    const member = await isChatMember(supabase, chatId, auth.userId);
+    if (!member) {
+      return errorResponse(403, "forbidden", "Access denied to chat");
+    }
+
+    const isAdmin =
+      auth.isPlatformAdmin || (await isChatAdmin(supabase, chatId, auth.userId));
+    if (!isAdmin) {
+      return errorResponse(
+        403,
+        "forbidden",
+        "Only chat admins can remove members"
+      );
+    }
+
+    const rawBody = await req.json().catch(() => null);
+    const parsed = removeMemberSchema.safeParse(rawBody ?? {});
+    if (!parsed.success) {
+      return errorResponse(
+        400,
+        "validation_error",
+        parsed.error.issues.map((i) => i.message).join("; ") || "Invalid payload"
+      );
+    }
+
+    const payload = parsed.data;
+
+    const { error: deleteError } = await supabase
+      .from("chat_members")
+      .delete()
+      .eq("chat_id", chatId)
+      .eq("user_id", payload.userId);
+
+    if (deleteError && deleteError.code !== "PGRST116") {
+      console.error("MESSAGES remove member error:", deleteError);
+      return errorResponse(500, "db_error", "Failed to remove member");
     }
 
     return new NextResponse(null, { status: 204 });

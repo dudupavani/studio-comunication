@@ -37,6 +37,12 @@ export const addMemberSchema = z.object({
 
 export type AddMemberInput = z.infer<typeof addMemberSchema>;
 
+export const removeMemberSchema = z.object({
+  userId: z.string().uuid({ message: "ID de usuário inválido" }),
+});
+
+export type RemoveMemberInput = z.infer<typeof removeMemberSchema>;
+
 export const createMessagesPayloadSchema = z.object({
   title: z.string().trim().min(1, "Título obrigatório").max(255),
   message: z.string().trim().min(1, "Mensagem obrigatória"),

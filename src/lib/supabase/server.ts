@@ -52,15 +52,27 @@ export function createServerClientWithCookies() {
         return store.get(name)?.value;
       },
       set: async (name: string, value: string, options: CookieOptions) => {
-        const store = await cookies();
-        (store as any).set?.({ name, value, ...options });
+        try {
+          const store = await cookies();
+          (store as any).set?.({ name, value, ...options });
+        } catch (err) {
+          if (process.env.NODE_ENV !== "production") {
+            console.warn("[supabase] Unable to set cookie", err);
+          }
+        }
       },
       remove: async (name: string, options: CookieOptions) => {
-        const store = await cookies();
-        if ((store as any).delete) {
-          (store as any).delete(name);
-        } else {
-          (store as any).set?.({ name, value: "", maxAge: 0, ...options });
+        try {
+          const store = await cookies();
+          if ((store as any).delete) {
+            (store as any).delete(name);
+          } else {
+            (store as any).set?.({ name, value: "", maxAge: 0, ...options });
+          }
+        } catch (err) {
+          if (process.env.NODE_ENV !== "production") {
+            console.warn("[supabase] Unable to remove cookie", err);
+          }
         }
       },
     },

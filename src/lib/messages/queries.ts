@@ -87,10 +87,51 @@ export async function fetchChats(
       created_by: row.created_by,
       created_at: row.created_at,
       last_message: null,
+      creator: null,
     });
   });
 
   const baseItems = Array.from(chatsById.values());
+
+  const creatorIds = Array.from(
+    new Set(
+      baseItems
+        .map((chat) => chat.created_by)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+
+  if (creatorIds.length) {
+    const svc = createServiceClient();
+    const { data: identities, error: identityError } = await svc.rpc(
+      "get_user_identity_many",
+      { p_user_ids: creatorIds }
+    );
+
+    if (identityError) {
+      console.warn(
+        "MESSAGES fetch chat creator identity error",
+        identityError
+      );
+    }
+
+    if (Array.isArray(identities)) {
+      const map: Record<string, UserMini> = {};
+      identities.forEach((identity: any) => {
+        if (!identity?.user_id) return;
+        map[identity.user_id] = {
+          id: identity.user_id,
+          full_name: identity.full_name ?? null,
+          avatar_url: identity.avatar_url ?? null,
+          email: identity.email ?? null,
+        };
+      });
+
+      baseItems.forEach((chat) => {
+        chat.creator = chat.created_by ? map[chat.created_by] ?? null : null;
+      });
+    }
+  }
 
   if (baseItems.length) {
     await Promise.all(

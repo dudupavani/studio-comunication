@@ -43,6 +43,7 @@ export interface ChatSummary extends Chat {
     sender_id: string;
     sender_name?: string | null;
   } | null;
+  creator?: UserMini | null;
 }
 
 export interface PaginatedResult<T> {

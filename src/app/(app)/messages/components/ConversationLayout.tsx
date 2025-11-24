@@ -34,12 +34,15 @@ export function ConversationLayout({
     switch (activePanel) {
       case "attachments":
         return (
-          <ChatAttachmentsPanel chatId={chatId} refreshToken={attachmentsVersion} />
+          <ChatAttachmentsPanel
+            chatId={chatId}
+            refreshToken={attachmentsVersion}
+          />
         );
       case "notes":
         return (
           <div className="flex h-full flex-col gap-3 px-5 py-4">
-            <h2 className="text-base font-semibold">Notas</h2>
+            <h3 className="font-semibold">Notas</h3>
             <p className="text-xs text-muted-foreground">
               Espaço para notas internas (em breve).
             </p>
@@ -77,7 +80,11 @@ export function ConversationLayout({
 
       <aside className="hidden w-full max-w-md border-l border-border bg-background xl:flex">
         <div className="flex-1 min-w-[260px]">{renderPanel()}</div>
-        <ChatPanelTabs active={activePanel} onChange={setActivePanel} onClose={onClose} />
+        <ChatPanelTabs
+          active={activePanel}
+          onChange={setActivePanel}
+          onClose={onClose}
+        />
       </aside>
     </div>
   );

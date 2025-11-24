@@ -18,14 +18,16 @@ export default async function MessagesAnnouncements({
   });
 
   return (
-    <div className="flex h-full flex-col gap-4 max-w-4xl">
-      <h2>Comunicados</h2>
-      <div className="flex items-center justify-between">
-        {canCreateAnnouncements ? (
-          <NewAnnouncementModal
-            canCreateAnnouncement={canCreateAnnouncements}
-          />
-        ) : null}
+    <div className="flex flex-col h-full gap-4 max-w-4xl">
+      <div className="flex justify-between items-center">
+        <h2>Comunicados</h2>
+        <div className="flex items-center justify-between">
+          {canCreateAnnouncements ? (
+            <NewAnnouncementModal
+              canCreateAnnouncement={canCreateAnnouncements}
+            />
+          ) : null}
+        </div>
       </div>
 
       {items.length === 0 ? (

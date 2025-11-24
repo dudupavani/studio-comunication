@@ -4,7 +4,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -16,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useChats } from "@/hooks/use-chats";
 import type { ChatFilters } from "./ChatFiltersPanel";
+import type { ChatSummary } from "@/lib/messages/types";
 
 interface ChatListProps {
   activeChatId?: string;
@@ -28,9 +33,8 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
   const { chats, loading, error, hasMore, loadMore, reload } = useChats({
     filters,
   });
-  const [sortKey, setSortKey] = useState<"name" | "type" | "created_at">(
-    "created_at"
-  );
+  const [sortKey, setSortKey] =
+    useState<"name" | "created_at" | "creator">("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const handleSelect = useCallback(
@@ -42,7 +46,7 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
   );
 
   const handleSort = useCallback(
-    (key: "name" | "type" | "created_at") => {
+    (key: "name" | "created_at" | "creator") => {
       if (sortKey === key) {
         setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
       } else {
@@ -58,11 +62,15 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
     return [...chats].sort((a, b) => {
       let compare = 0;
       if (sortKey === "created_at") {
-        compare = new Date(a.created_at).getTime() -
-          new Date(b.created_at).getTime();
-      } else {
+        compare =
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      } else if (sortKey === "name") {
         const av = (a[sortKey] || "").toString().toLowerCase();
         const bv = (b[sortKey] || "").toString().toLowerCase();
+        compare = av.localeCompare(bv);
+      } else {
+        const av = getCreatorName(a).toLowerCase();
+        const bv = getCreatorName(b).toLowerCase();
         compare = av.localeCompare(bv);
       }
       return sortDir === "asc" ? compare : -compare;
@@ -116,29 +124,41 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
       );
     }
 
-    return sortedChats.map((chat) => (
-      <TableRow
-        key={chat.id}
-        onClick={() => handleSelect(chat.id)}
-        className={cn(
-          "cursor-pointer",
-          chat.id === activeChatId && "bg-primary/5"
-        )}>
-        <TableCell className="font-medium">{chat.name || "Conversa"}</TableCell>
-        <TableCell>
-          <Badge variant="outline" className="capitalize">
-            {chat.type}
-          </Badge>
-        </TableCell>
-        <TableCell className="text-sm text-muted-foreground">
-          {new Date(chat.created_at).toLocaleString()}
-        </TableCell>
-      </TableRow>
-    ));
+    return sortedChats.map((chat) => {
+      const creatorName = getCreatorName(chat);
+      return (
+        <TableRow
+          key={chat.id}
+          onClick={() => handleSelect(chat.id)}
+          className={cn(
+            "cursor-pointer",
+            chat.id === activeChatId && "bg-primary/5"
+          )}>
+          <TableCell className="font-medium">
+            {chat.name || "Conversa"}
+          </TableCell>
+          <TableCell>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-8 w-8">
+                <AvatarImage
+                  src={getCreatorAvatar(chat) ?? undefined}
+                  alt={creatorName}
+                />
+                <AvatarFallback>{getInitials(creatorName)}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-foreground">{creatorName}</span>
+            </div>
+          </TableCell>
+          <TableCell className="text-sm text-muted-foreground">
+            {new Date(chat.created_at).toLocaleString()}
+          </TableCell>
+        </TableRow>
+      );
+    });
   }, [activeChatId, chats, error, handleSelect, loading, reload, sortedChats]);
 
   const renderSortIcon = useCallback(
-    (key: "name" | "type" | "created_at") => {
+    (key: "name" | "created_at" | "creator") => {
       if (sortKey !== key) return <ArrowUpDown className="h-4 w-4" />;
       return sortDir === "asc" ? (
         <ArrowUp className="h-4 w-4" />
@@ -159,8 +179,7 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
                 <button
                   type="button"
                   onClick={() => handleSort("name")}
-                  className="flex items-center gap-1"
-                >
+                  className="flex items-center gap-1">
                   Chat
                   {renderSortIcon("name")}
                 </button>
@@ -168,19 +187,17 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
               <TableHead>
                 <button
                   type="button"
-                  onClick={() => handleSort("type")}
-                  className="flex items-center gap-1"
-                >
-                  Tipo
-                  {renderSortIcon("type")}
+                  onClick={() => handleSort("creator")}
+                  className="flex items-center gap-1">
+                  Criado por
+                  {renderSortIcon("creator")}
                 </button>
               </TableHead>
               <TableHead>
                 <button
                   type="button"
                   onClick={() => handleSort("created_at")}
-                  className="flex items-center gap-1"
-                >
+                  className="flex items-center gap-1">
                   Criado em
                   {renderSortIcon("created_at")}
                 </button>
@@ -205,4 +222,27 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
       )}
     </div>
   );
+}
+
+function getCreatorName(chat: ChatSummary) {
+  return (
+    chat.creator?.full_name?.trim() ||
+    chat.creator?.email?.trim() ||
+    chat.created_by ||
+    "Usuário"
+  );
+}
+
+function getCreatorAvatar(chat: ChatSummary) {
+  return (
+    chat.creator?.avatar_url ||
+    (chat.creator as any)?.avatarUrl ||
+    null
+  );
+}
+
+function getInitials(value: string) {
+  if (!value) return "U";
+  const trimmed = value.trim();
+  return trimmed ? trimmed.charAt(0).toUpperCase() : "U";
 }

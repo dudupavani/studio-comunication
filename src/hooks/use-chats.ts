@@ -6,9 +6,7 @@ import type { ChatSummary } from "@/lib/messages/types";
 
 interface UseChatsOptions {
   limit?: number;
-  filters?: {
-    type?: string;
-  };
+  filters?: Record<string, never>;
 }
 
 interface UseChatsResult {
@@ -33,7 +31,7 @@ export function useChats(options: UseChatsOptions = {}): UseChatsResult {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const focusRef = useRef<boolean>(false);
 
-  const typeFilter = options.filters?.type;
+  const filtersKey = JSON.stringify(options.filters ?? {});
 
   const fetchPage = useCallback(
     (opts: { cursor?: string; replace?: boolean } = {}) => {
@@ -56,7 +54,16 @@ export function useChats(options: UseChatsOptions = {}): UseChatsResult {
           const params = new URLSearchParams();
           params.set("limit", String(limit));
           if (opts.cursor) params.set("cursor", opts.cursor);
-          if (typeFilter) params.set("type", typeFilter);
+
+          const parsedFilters = JSON.parse(filtersKey) as Record<
+            string,
+            string | number | boolean
+          >;
+          Object.entries(parsedFilters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+              params.set(key, String(value));
+            }
+          });
 
           const res = await fetch(`/api/messages/chats?${params.toString()}`, {
             signal: controller.signal,
@@ -101,7 +108,7 @@ export function useChats(options: UseChatsOptions = {}): UseChatsResult {
         }
       }, focusRef.current ? 0 : 200);
     },
-    [limit, typeFilter, toast]
+    [filtersKey, limit, toast]
   );
 
   const reload = useCallback(() => fetchPage({ replace: true }), [fetchPage]);
@@ -119,8 +126,7 @@ export function useChats(options: UseChatsOptions = {}): UseChatsResult {
     focusRef.current = true;
     fetchPage({ replace: true });
     focusRef.current = false;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeFilter]);
+  }, [fetchPage]);
 
   useEffect(() => {
     const onVisibility = () => {

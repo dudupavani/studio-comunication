@@ -37,7 +37,9 @@ export function ChatAttachmentsPanel({ chatId, refreshToken }: Props) {
       })
       .then((payload) => {
         if (aborted) return;
-        setAttachments(Array.isArray(payload?.attachments) ? payload.attachments : []);
+        setAttachments(
+          Array.isArray(payload?.attachments) ? payload.attachments : []
+        );
       })
       .catch((err) => {
         if (aborted) return;
@@ -52,19 +54,28 @@ export function ChatAttachmentsPanel({ chatId, refreshToken }: Props) {
   }, [chatId, refreshToken]);
 
   const images = useMemo(
-    () => attachments.filter((att) => typeof att.mime === "string" && att.mime.startsWith("image/")),
+    () =>
+      attachments.filter(
+        (att) => typeof att.mime === "string" && att.mime.startsWith("image/")
+      ),
     [attachments]
   );
   const others = useMemo(
-    () => attachments.filter((att) => !(typeof att.mime === "string" && att.mime.startsWith("image/"))),
+    () =>
+      attachments.filter(
+        (att) =>
+          !(typeof att.mime === "string" && att.mime.startsWith("image/"))
+      ),
     [attachments]
   );
 
   return (
     <div className="flex h-full flex-col gap-4 px-5 py-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">Anexos</h2>
-        {loading ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
+        <h3 className="font-semibold">Anexos</h3>
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : null}
       </div>
       {error ? (
         <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
@@ -81,7 +92,9 @@ export function ChatAttachmentsPanel({ chatId, refreshToken }: Props) {
 
       {images.length > 0 ? (
         <div>
-          <h3 className="mb-2 text-xs font-semibold text-muted-foreground">Imagens</h3>
+          <h3 className="mb-2 text-xs font-semibold text-muted-foreground">
+            Imagens
+          </h3>
           <div className="grid grid-cols-2 gap-3">
             {images.map((att) => (
               <a
@@ -89,8 +102,7 @@ export function ChatAttachmentsPanel({ chatId, refreshToken }: Props) {
                 href={att.url ?? att.path}
                 target="_blank"
                 rel="noreferrer"
-                className="group relative block overflow-hidden rounded-lg border bg-muted/30"
-              >
+                className="group relative block overflow-hidden rounded-lg border bg-muted/30">
                 <img
                   src={att.url ?? undefined}
                   alt={att.name}
@@ -109,7 +121,9 @@ export function ChatAttachmentsPanel({ chatId, refreshToken }: Props) {
 
       {others.length > 0 ? (
         <div>
-          <h3 className="mb-2 text-xs font-semibold text-muted-foreground">Outros arquivos</h3>
+          <h3 className="mb-2 text-xs font-semibold text-muted-foreground">
+            Outros arquivos
+          </h3>
           <div className="space-y-2">
             {others.map((att) => (
               <a
@@ -120,10 +134,11 @@ export function ChatAttachmentsPanel({ chatId, refreshToken }: Props) {
                 className={cn(
                   "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition hover:bg-muted",
                   "border-border"
-                )}
-              >
+                )}>
                 <div className="flex-1 truncate">
-                  <div className="truncate font-medium text-foreground">{att.name || "Anexo"}</div>
+                  <div className="truncate font-medium text-foreground">
+                    {att.name || "Anexo"}
+                  </div>
                   {att.size ? (
                     <div className="text-[11px] text-muted-foreground">
                       {(att.size / 1024).toFixed(1)} KB

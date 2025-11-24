@@ -191,7 +191,7 @@ export function NewMessageModal({
           </DrawerHeader>
 
           <div className="grid grid-cols-6 gap-12">
-            <div className="col-span-4 space-y-6 pb-4 pt-2">
+            <div className="col-span-4 space-y-6 pt-1">
               <div className="space-y-6 pb-4">
                 <div className="space-y-2">
                   <Input

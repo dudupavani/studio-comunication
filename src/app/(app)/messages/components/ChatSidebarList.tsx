@@ -99,6 +99,9 @@ export function ChatSidebarList({
 
   return (
     <div className="flex h-full flex-col">
+      <div className="px-4 py-5 border-b border-border">
+        <h4>Conversas</h4>
+      </div>
       <div>{content}</div>
     </div>
   );

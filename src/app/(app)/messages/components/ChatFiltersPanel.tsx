@@ -1,15 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Filter } from "lucide-react";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 
-export type ChatFilters = {
-  type?: "direct" | "group" | "broadcast";
-};
+export type ChatFilters = Record<string, never>;
 
 interface ChatFiltersPanelProps {
   value: ChatFilters;
@@ -19,7 +16,7 @@ interface ChatFiltersPanelProps {
 export function ChatFiltersPanel({ value, onApply }: ChatFiltersPanelProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<ChatFilters>(value);
-  // TODO: incluir demais filtros quando backend suportar
+  // Placeholder até termos filtros reais
 
   useEffect(() => {
     if (!open) {
@@ -27,18 +24,6 @@ export function ChatFiltersPanel({ value, onApply }: ChatFiltersPanelProps) {
       // futuros filtros resetados aqui também
     }
   }, [open, value]);
-
-  const typeOptions = useMemo(
-    () => [
-      { label: "Direta", value: "direct" },
-      { label: "Grupo", value: "group" },
-    ],
-    []
-  );
-
-  const toggleType = (value: "direct" | "group" | "broadcast") => {
-    setDraft((prev) => ({ type: prev.type === value ? undefined : value }));
-  };
 
   const handleApply = (close: () => void) => {
     onApply(draft);
@@ -67,25 +52,11 @@ export function ChatFiltersPanel({ value, onApply }: ChatFiltersPanelProps) {
             </div>
 
             <div className="space-y-3">
-              <Label>Tipo</Label>
-              <div className="space-y-2">
-                {typeOptions.map((option) => (
-                  <label
-                    key={option.value}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 hover:bg-muted"
-                  >
-                    <Checkbox
-                      checked={draft.type === option.value}
-                      onCheckedChange={() => toggleType(option.value)}
-                    />
-                    <span className="text-sm text-foreground">{option.label}</span>
-                  </label>
-                ))}
+              <Label>Filtros disponíveis em breve</Label>
+              <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                Assim que as novas opções estiverem disponíveis, você poderá
+                filtrar conversas por status, participantes ou período.
               </div>
-            </div>
-
-            <div className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
-              Outros filtros (busca, não lidas, respostas) serão adicionados em breve.
             </div>
           </div>
 

@@ -47,7 +47,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
 
   const canSeeMessages = !auth
     ? true
-    : auth.platformRole === "platform_admin" || !!auth.orgRole || !!auth.orgId;
+    : auth.platformRole === "platform_admin" || !!auth.orgRole;
 
   return (
     <Sidebar variant="inset" collapsible="icon">
