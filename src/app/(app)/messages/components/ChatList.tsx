@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useChats } from "@/hooks/use-chats";
 import type { ChatFilters } from "./ChatFiltersPanel";
-import type { ChatSummary } from "@/lib/messages/types";
+import type { ChatSummary, UserMini } from "@/lib/messages/types";
 
 interface ChatListProps {
   activeChatId?: string;
@@ -36,6 +36,8 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
   const [sortKey, setSortKey] =
     useState<"name" | "created_at" | "creator">("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [identityMap, setIdentityMap] = useState<Partial<Record<string, UserMini>>>({});
+  const requestedIdentities = useRef<Set<string>>(new Set());
 
   const handleSelect = useCallback(
     (chatId: string) => {
@@ -69,13 +71,98 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
         const bv = (b[sortKey] || "").toString().toLowerCase();
         compare = av.localeCompare(bv);
       } else {
-        const av = getCreatorName(a).toLowerCase();
-        const bv = getCreatorName(b).toLowerCase();
+        const av = getCreatorName(
+          a,
+          resolveCreatorIdentity(a, identityMap)
+        ).toLowerCase();
+        const bv = getCreatorName(
+          b,
+          resolveCreatorIdentity(b, identityMap)
+        ).toLowerCase();
         compare = av.localeCompare(bv);
       }
       return sortDir === "asc" ? compare : -compare;
     });
-  }, [chats, sortDir, sortKey]);
+  }, [chats, identityMap, sortDir, sortKey]);
+
+  useEffect(() => {
+    const missingSet = new Set<string>();
+    chats.forEach((chat) => {
+      const creatorId = chat.created_by;
+      if (!creatorId) return;
+      const hasServerIdentity =
+        Boolean(chat.creator?.full_name) ||
+        Boolean(chat.creator?.email) ||
+        Boolean(chat.creator?.avatar_url);
+      if (hasServerIdentity) return;
+      const cached = identityMap[creatorId];
+      const hasCachedIdentity =
+        Boolean(cached?.full_name) ||
+        Boolean(cached?.email) ||
+        Boolean(cached?.avatar_url);
+      if (hasCachedIdentity) return;
+      if (requestedIdentities.current.has(creatorId)) return;
+      missingSet.add(creatorId);
+    });
+
+    const missing = Array.from(missingSet);
+    if (!missing.length) {
+      return;
+    }
+
+    missing.forEach((id) => requestedIdentities.current.add(id));
+    let canceled = false;
+
+    const resolveIdentities = async () => {
+      try {
+        const res = await fetch("/api/identity/resolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userIds: missing }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`Falha ao resolver identidades (${res.status})`);
+        }
+
+        const payload = (await res.json()) as {
+          byId?: Record<
+            string,
+            {
+              user_id: string;
+              full_name: string | null;
+              email: string | null;
+              avatar_url: string | null;
+            }
+          >;
+        };
+
+        if (canceled) return;
+
+        setIdentityMap((prev) => {
+          const next = { ...prev };
+          Object.values(payload.byId ?? {}).forEach((identity) => {
+            next[identity.user_id] = {
+              id: identity.user_id,
+              full_name: identity.full_name,
+              email: identity.email,
+              avatar_url: identity.avatar_url,
+            };
+          });
+          return next;
+        });
+      } catch (err) {
+        console.error("Erro ao carregar identidades de criadores", err);
+        missing.forEach((id) => requestedIdentities.current.delete(id));
+      }
+    };
+
+    resolveIdentities();
+
+    return () => {
+      canceled = true;
+    };
+  }, [chats, identityMap]);
 
   const tableContent = useMemo(() => {
     if (loading && chats.length === 0) {
@@ -125,7 +212,9 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
     }
 
     return sortedChats.map((chat) => {
-      const creatorName = getCreatorName(chat);
+      const resolvedCreator = resolveCreatorIdentity(chat, identityMap);
+      const creatorName = getCreatorName(chat, resolvedCreator);
+      const creatorAvatar = getCreatorAvatar(chat, resolvedCreator);
       return (
         <TableRow
           key={chat.id}
@@ -141,7 +230,7 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8">
                 <AvatarImage
-                  src={getCreatorAvatar(chat) ?? undefined}
+                  src={creatorAvatar ?? undefined}
                   alt={creatorName}
                 />
                 <AvatarFallback>{getInitials(creatorName)}</AvatarFallback>
@@ -155,7 +244,7 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
         </TableRow>
       );
     });
-  }, [activeChatId, chats, error, handleSelect, loading, reload, sortedChats]);
+  }, [activeChatId, chats, error, handleSelect, identityMap, loading, reload, sortedChats]);
 
   const renderSortIcon = useCallback(
     (key: "name" | "created_at" | "creator") => {
@@ -224,18 +313,30 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
   );
 }
 
-function getCreatorName(chat: ChatSummary) {
+function resolveCreatorIdentity(
+  chat: ChatSummary,
+  map: Partial<Record<string, UserMini>>
+) {
+  if (chat.created_by && map[chat.created_by]) {
+    return map[chat.created_by];
+  }
+  return chat.creator ?? null;
+}
+
+function getCreatorName(chat: ChatSummary, identity?: UserMini | null) {
+  const source = identity ?? chat.creator ?? null;
   return (
-    chat.creator?.full_name?.trim() ||
-    chat.creator?.email?.trim() ||
+    source?.full_name?.trim() ||
+    source?.email?.trim() ||
     chat.created_by ||
     "Usuário"
   );
 }
 
-function getCreatorAvatar(chat: ChatSummary) {
+function getCreatorAvatar(chat: ChatSummary, identity?: UserMini | null) {
+  const source = identity ?? chat.creator ?? null;
   return (
-    chat.creator?.avatar_url ||
+    source?.avatar_url ||
     (chat.creator as any)?.avatarUrl ||
     null
   );

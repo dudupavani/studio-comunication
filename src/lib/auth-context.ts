@@ -32,24 +32,31 @@ export type AuthContext = {
 
 async function _getAuthContext(): Promise<AuthContext | null> {
   const isDev = process.env.NODE_ENV !== "production";
+  const makeLabel = (prefix: string) =>
+    `${prefix}:${Date.now().toString(36)}:${Math.random()
+      .toString(36)
+      .slice(2, 6)}`;
   const supabase = createClient();
 
   // 1) Sessão primeiro; fallback para getUser()
-  if (isDev) console.time("auth:getSession");
+  const labelSession = isDev ? makeLabel("auth:getSession") : null;
+  if (labelSession) console.time(labelSession);
   const { data: sessionData } = await supabase.auth.getSession();
-  if (isDev) console.timeEnd("auth:getSession");
+  if (labelSession) console.timeEnd(labelSession);
 
   let user: User | null = sessionData?.session?.user ?? null;
   if (!user) {
-    if (isDev) console.time("auth:getUser");
+    const labelUser = isDev ? makeLabel("auth:getUser") : null;
+    if (labelUser) console.time(labelUser);
     const { data: userData, error: userErr } = await supabase.auth.getUser();
-    if (isDev) console.timeEnd("auth:getUser");
+    if (labelUser) console.timeEnd(labelUser);
     if (userErr || !userData?.user) return null;
     user = userData.user;
   }
 
   // 2) Consultas paralelas já filtradas por este usuário
-  if (isDev) console.time("auth:parallel");
+  const labelParallel = isDev ? makeLabel("auth:parallel") : null;
+  if (labelParallel) console.time(labelParallel);
   const [profileRes, orgRes, unitRes] = await Promise.all([
     supabase
       .from("profiles")
@@ -62,7 +69,7 @@ async function _getAuthContext(): Promise<AuthContext | null> {
       .select("unit_id, org_id")
       .eq("user_id", user.id),
   ]);
-  if (isDev) console.timeEnd("auth:parallel");
+  if (labelParallel) console.timeEnd(labelParallel);
 
   // 3) Platform role
   let platformRole: PlatformRole | null = null;

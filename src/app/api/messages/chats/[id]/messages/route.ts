@@ -10,6 +10,7 @@ import {
 } from "@/lib/messages/api-helpers";
 import {
   fetchChatMessages,
+  fetchChatMembers,
   isChatMember,
   type TypedSupabaseClient,
 } from "@/lib/messages/queries";
@@ -84,17 +85,31 @@ export async function GET(
       cursor,
     });
 
+    const adminClient = createServiceClient() as unknown as TypedSupabaseClient;
+    const memberProfiles = await fetchChatMembers(adminClient, chatId);
+    const memberMap = new Map(
+      memberProfiles.map((member) => [
+        member.user_id,
+        member.user ? { ...member.user } : null,
+      ])
+    );
+
     // Reassina URLs de anexos antes de devolver (mantém bucket privado)
     const adminStorage = createServiceClient().storage;
     const items = await Promise.all(
       result.items.map(async (msg) => {
-        if (!msg.attachments || !Array.isArray(msg.attachments)) return msg;
+        const senderInfo = msg.sender_id
+          ? memberMap.get(msg.sender_id) ?? null
+          : null;
+        const base = senderInfo ? { ...msg, sender: senderInfo } : msg;
+
+        if (!base.attachments || !Array.isArray(base.attachments)) return base;
         const signed = await signAttachments(
           adminStorage,
           "chat-attachment",
-          msg.attachments as StoredAttachment[]
+          base.attachments as StoredAttachment[]
         );
-        return { ...msg, attachments: signed };
+        return { ...base, attachments: signed };
       })
     );
 

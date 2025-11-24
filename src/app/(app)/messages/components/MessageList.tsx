@@ -34,9 +34,8 @@ export function MessageList({
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-5 py-4"
-      style={{ scrollBehavior: "smooth" }}
-    >
+      className="flex-1 overflow-y-auto px-6 py-6"
+      style={{ scrollBehavior: "smooth" }}>
       <div className="flex flex-col gap-4">
         {hasMore && (
           <Button
@@ -44,8 +43,7 @@ export function MessageList({
             size="sm"
             className="self-center"
             onClick={onLoadMore}
-            disabled={loadingMore}
-          >
+            disabled={loadingMore}>
             {loadingMore ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Carregando...

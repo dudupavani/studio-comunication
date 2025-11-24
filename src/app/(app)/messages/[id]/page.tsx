@@ -15,9 +15,9 @@ import { ChatFullscreenModal } from "../components/ChatFullscreenModal";
 export default async function MessagesChatPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const chatId = params.id;
+  const { id: chatId } = await params;
   const supabase = createServerClientReadOnly();
   const auth = await getAuthContext(supabase);
 

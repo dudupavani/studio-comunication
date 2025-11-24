@@ -177,8 +177,8 @@ export function NewMessageModal({
           Nova conversa
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="min-h-[95vh]">
-        <div className="mx-auto flex w-full flex-col overflow-y-auto px-4 pb-8 sm:px-12">
+      <DrawerContent className="h-full max-h-[95vh]">
+        <div className="mx-auto flex w-full h-full flex-col overflow-y-auto px-4 pb-8 sm:px-12">
           <DrawerHeader className="px-0 pb-4">
             <div className="flex items-center justify-between">
               <DrawerTitle>Enviar mensagem</DrawerTitle>
@@ -190,7 +190,7 @@ export function NewMessageModal({
             </div>
           </DrawerHeader>
 
-          <div className="grid grid-cols-6 gap-12">
+          <div className="grid grid-cols-6 gap-12 h-full">
             <div className="col-span-4 space-y-6 pt-1">
               <div className="space-y-6 pb-4">
                 <div className="space-y-2">

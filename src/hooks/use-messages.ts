@@ -39,6 +39,46 @@ export function useMessages(
 
   const abortRef = useRef<AbortController | null>(null);
 
+  const resolveSenders = useCallback(
+    async (ids: string[]): Promise<Record<string, UserMini>> => {
+      const unique = Array.from(new Set(ids.filter(Boolean)));
+      if (!unique.length) return {};
+      try {
+        const res = await fetch("/api/identity/resolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userIds: unique }),
+        });
+        if (!res.ok) return {};
+        const payload = (await res.json()) as {
+          byId?: Record<
+            string,
+            {
+              user_id: string;
+              full_name: string | null;
+              email: string | null;
+              avatar_url: string | null;
+            }
+          >;
+        };
+        const map: Record<string, UserMini> = {};
+        Object.values(payload.byId ?? {}).forEach((row) => {
+          map[row.user_id] = {
+            id: row.user_id,
+            full_name: row.full_name,
+            email: row.email,
+            avatar_url: row.avatar_url,
+          };
+        });
+        return map;
+      } catch (err) {
+        console.warn("useMessages identity resolve failed", err);
+        return {};
+      }
+    },
+    []
+  );
+
   const appendMessage = useCallback((message: ChatMessageWithSender) => {
     setMessages((prev) => {
       const exists = prev.some((m) => m.id === message.id);
@@ -98,8 +138,26 @@ export function useMessages(
 
         const normalized = [...payload.items].reverse();
 
+        const missingSenderIds = normalized
+          .map((m) => m.sender_id)
+          .filter((id): id is string => Boolean(id))
+          .filter((id, idx, arr) => arr.indexOf(id) === idx)
+          .filter((id) => {
+            const msg = normalized.find((m) => m.sender_id === id);
+            return !msg?.sender?.full_name && !msg?.sender?.email && !msg?.sender?.avatar_url;
+          });
+
+        const identityMap = await resolveSenders(missingSenderIds);
+        const hydrated = normalized.map((msg) => {
+          const identity = msg.sender_id ? identityMap[msg.sender_id] : null;
+          if (identity) {
+            return { ...msg, sender: identity };
+          }
+          return msg;
+        });
+
         setMessages((prev) =>
-          opts.replace ? normalized : [...normalized, ...prev]
+          opts.replace ? hydrated : [...hydrated, ...prev]
         );
         setCursor(payload.nextCursor);
         setHasMore(Boolean(payload.nextCursor));

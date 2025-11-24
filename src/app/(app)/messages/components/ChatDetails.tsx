@@ -180,7 +180,7 @@ export function ChatDetails({
   );
 
   return (
-    <aside className="flex h-full flex-col gap-4 border-l border-border bg-background px-5 py-4">
+    <aside className="flex h-full flex-col gap-4 border-l border-border bg-background px-4 py-4">
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">Participantes</h3>

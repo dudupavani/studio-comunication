@@ -78,8 +78,8 @@ export function ConversationLayout({
         />
       </div>
 
-      <aside className="hidden w-full max-w-md border-l border-border bg-background xl:flex">
-        <div className="flex-1 min-w-[260px]">{renderPanel()}</div>
+      <aside className="hidden w-full max-w-sm border-l border-border bg-background xl:flex">
+        <div className="flex-1 min-w-[200px]">{renderPanel()}</div>
         <ChatPanelTabs
           active={activePanel}
           onChange={setActivePanel}
