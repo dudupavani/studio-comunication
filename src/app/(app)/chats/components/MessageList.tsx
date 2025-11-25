@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import type { ChatMessageWithSender } from "@/hooks/use-messages";
+import type { ChatMemberWithUser } from "./types";
 import { Button } from "@/components/ui/button";
 import { MessageItem } from "./MessageItem";
 
@@ -13,6 +14,7 @@ interface MessageListProps {
   loadingMore: boolean;
   hasMore: boolean;
   onLoadMore: () => void;
+  members: ChatMemberWithUser[];
 }
 
 export function MessageList({
@@ -22,6 +24,7 @@ export function MessageList({
   loadingMore,
   hasMore,
   onLoadMore,
+  members,
 }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -34,9 +37,9 @@ export function MessageList({
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-6 py-6"
+      className="flex-1 overflow-y-auto px-6 py-6 bg-gray-50"
       style={{ scrollBehavior: "smooth" }}>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         {hasMore && (
           <Button
             variant="outline"
@@ -65,6 +68,8 @@ export function MessageList({
             key={message.id}
             message={message}
             isOwn={message.sender_id === currentUserId}
+            members={members}
+            currentUserId={currentUserId}
           />
         ))}
 

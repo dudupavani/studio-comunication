@@ -19,6 +19,14 @@ export interface ChatMember {
   joined_at: string;
 }
 
+export interface ChatMessageMention {
+  id: number;
+  type: "user" | "all";
+  mentioned_user_id: string | null;
+  raw_label: string | null;
+  user?: UserMini | null;
+}
+
 export interface ChatMessage {
   id: number;
   chat_id: string;
@@ -26,6 +34,7 @@ export interface ChatMessage {
   message: string;
   attachments: any | null;
   created_at: string;
+  mentions?: ChatMessageMention[];
 }
 
 export interface UserMini {

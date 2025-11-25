@@ -1,20 +1,28 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { ChatMessageWithSender } from "@/hooks/use-messages";
-import type { UserMini } from "@/lib/messages/types";
+import type { ChatMessageMention, UserMini } from "@/lib/messages/types";
+import type { ChatMemberWithUser } from "./types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Paperclip } from "lucide-react";
 
 interface MessageItemProps {
   message: ChatMessageWithSender;
   isOwn: boolean;
+  currentUserId: string;
+  members: ChatMemberWithUser[];
 }
 
-export function MessageItem({ message, isOwn }: MessageItemProps) {
+export function MessageItem({
+  message,
+  isOwn,
+  currentUserId,
+  members,
+}: MessageItemProps) {
   const [sender, setSender] = useState<UserMini | null>(message.sender ?? null);
 
   useEffect(() => {
@@ -83,6 +91,24 @@ export function MessageItem({ message, isOwn }: MessageItemProps) {
     sender?.email?.trim() ||
     message.sender_id ||
     "Usuário";
+  const effectiveMentions =
+    message.mentions && message.mentions.length > 0
+      ? message.mentions
+      : deriveMentionsFromText(message.message, members);
+
+  const hasMentionHighlight = effectiveMentions.some(
+    (mention) =>
+      mention.type === "all" || mention.mentioned_user_id === currentUserId
+  );
+  const renderedContent = renderMessageWithMentions(
+    message.message,
+    effectiveMentions,
+    currentUserId
+  );
+  const isMentioned = effectiveMentions.some(
+    (mention) =>
+      mention.type === "all" || mention.mentioned_user_id === currentUserId
+  );
 
   return (
     <div
@@ -111,13 +137,14 @@ export function MessageItem({ message, isOwn }: MessageItemProps) {
 
           <div
             className={cn(
-              "w-fit rounded-2xl px-4 py-4 text-sm shadow-sm",
+              "w-fit rounded-2xl px-4 py-4 text-sm shadow-sm leading-5",
               isOwn
-                ? "bg-primary text-primary-foreground leading-5"
-                : "bg-gray-200 text-primary leading-5"
-            )}
-            dangerouslySetInnerHTML={{ __html: message.message }}
-          />
+                ? "bg-white border text-primary"
+                : "bg-gray-200 text-primary",
+              hasMentionHighlight ? "bg-amber-50 ring-1 ring-amber-200" : ""
+            )}>
+            {renderedContent}
+          </div>
           <span className="text-xs px-2">
             <span className="mx-1 text-gray-400">{absoluteTime} -</span>
             <span className="text-muted-foreground">{time}</span>
@@ -182,4 +209,128 @@ function getInitials(value: string) {
   if (!value) return "U";
   const trimmed = value.trim();
   return trimmed ? trimmed.charAt(0).toUpperCase() : "U";
+}
+
+function renderMessageWithMentions(
+  text: string,
+  mentions: ChatMessageMention[],
+  currentUserId: string
+) {
+  if (!text) return null;
+  const items: ReactNode[] = [];
+  const sorted = [...mentions].sort((a, b) => a.id - b.id);
+  let cursor = 0;
+
+  sorted.forEach((mention, idx) => {
+    const searchLabel =
+      mention.raw_label?.trim() || buildMentionLabel(mention).trim();
+    if (!searchLabel) return;
+    const slice = text.slice(cursor);
+    const match = new RegExp(`@${escapeRegExp(searchLabel)}`, "i").exec(slice);
+    if (!match) return;
+
+    const start = cursor + match.index;
+    const end = start + match[0].length;
+
+    if (start > cursor) {
+      items.push(
+        ...renderPlainText(text.slice(cursor, start), `text-${idx}-${cursor}`)
+      );
+    }
+
+    items.push(
+      <MentionPill key={`mention-${mention.id}-${idx}`} mention={mention} />
+    );
+
+    cursor = end;
+  });
+
+  if (cursor < text.length) {
+    items.push(...renderPlainText(text.slice(cursor), `text-tail-${cursor}`));
+  }
+
+  if (items.length === 0) {
+    return renderPlainText(text, "text-full");
+  }
+
+  return items;
+}
+
+function renderPlainText(text: string, key: string) {
+  const parts = text.split(/\n/);
+  return parts.map((part, idx) => (
+    <span key={`${key}-${idx}`}>
+      {part}
+      {idx < parts.length - 1 ? <br /> : null}
+    </span>
+  ));
+}
+
+function deriveMentionsFromText(
+  text: string,
+  members: ChatMemberWithUser[]
+): ChatMessageMention[] {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  const derived: ChatMessageMention[] = [];
+
+  if (lower.includes("@todos")) {
+    derived.push({
+      id: Number.MIN_SAFE_INTEGER,
+      type: "all",
+      mentioned_user_id: null,
+      raw_label: "Todos",
+    });
+  }
+
+  members.forEach((member, index) => {
+    const label =
+      member.user?.full_name?.trim() ||
+      member.user?.email?.trim() ||
+      member.user_id;
+    if (!label) return;
+    const normalized = label.toLowerCase();
+    if (lower.includes(`@${normalized}`)) {
+      derived.push({
+        id: Number.MIN_SAFE_INTEGER + index + 1,
+        type: "user",
+        mentioned_user_id: member.user_id,
+        raw_label: label,
+        user: member.user,
+      });
+    }
+  });
+
+  return derived;
+}
+
+function MentionPill({ mention }: { mention: ChatMessageMention }) {
+  const isAllMention = mention.type === "all";
+  const baseLabel =
+    mention.type === "all" ? "Todos" : buildMentionLabel(mention);
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center font-bold text-sm whitespace-nowrap",
+        isAllMention ? "text-amber-900" : "bg-gray-50  rounded-full px-2 py-1"
+      )}>
+      <span className="font-semibold">@</span>
+      <span className="ml-0.5">{baseLabel}</span>
+    </span>
+  );
+}
+
+function buildMentionLabel(mention: ChatMessageMention) {
+  if (mention.type === "all") return "Todos";
+  return (
+    mention.user?.full_name?.trim() ||
+    mention.user?.email?.trim() ||
+    mention.raw_label?.trim() ||
+    "Usuário"
+  );
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

@@ -4,7 +4,8 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { updateUnitDetailsAction } from "@/app/(app)/units/unit-actions";
-import { useActionState, useEffect } from "react";
+import { useEffect } from "react";
+import { useFormState } from "react-dom";
 import { useToast } from "@/hooks/use-toast";
 
 type Unit = {
@@ -18,7 +19,10 @@ type Unit = {
 
 export default function UnitDetailsForm({ unit }: { unit: Unit }) {
   const { toast } = useToast();
-  const [state, action] = useActionState(updateUnitDetailsAction, {});
+  const [state, action] = useFormState(updateUnitDetailsAction, {
+    ok: false,
+    error: "",
+  });
 
   // Show toast when state changes
   useEffect(() => {
@@ -27,14 +31,17 @@ export default function UnitDetailsForm({ unit }: { unit: Unit }) {
         title: "Sucesso",
         description: "Dados atualizados com sucesso!",
       });
-    } else if (state?.error) {
+    } else {
+      const errorMsg = (state as { error?: string }).error;
+      if (errorMsg) {
       toast({
         title: "Erro",
-        description: state.error,
+        description: errorMsg,
         variant: "destructive",
       });
+      }
     }
-  }, [state?.ok, state?.error, toast]);
+  }, [state, toast]);
 
   return (
     <form action={action} className="space-y-4 max-w-2xl">

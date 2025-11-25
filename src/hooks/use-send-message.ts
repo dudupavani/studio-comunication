@@ -2,13 +2,14 @@
 
 import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import type { ChatMessage } from "@/lib/messages/types";
 import type { ChatMessageWithSender } from "./use-messages";
+import type { SendMessageMentionInput } from "@/lib/messages/validations";
 
 interface SendOptions {
   chatId: string;
   message: string;
   attachments?: File[];
+  mentions?: SendMessageMentionInput[];
 }
 
 interface UseSendMessageResult {
@@ -23,13 +24,14 @@ export function useSendMessage(): UseSendMessageResult {
   const [sending, setSending] = useState(false);
 
   const send = useCallback(
-    async ({ chatId, message, attachments }: SendOptions) => {
+    async ({ chatId, message, attachments, mentions }: SendOptions) => {
       if (!chatId) return null;
       const trimmed = message.trim();
       if (!trimmed) return null;
 
       const formData = new FormData();
       formData.set("message", trimmed);
+      formData.set("mentions", JSON.stringify(mentions ?? []));
       (attachments ?? []).forEach((file) => {
         formData.append("files", file);
       });

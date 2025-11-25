@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createServerClientWithCookies } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import type { Database } from "@/lib/supabase/types";
 import { getAuthContext } from "@/lib/messages/auth-context";
 import {
   errorResponse,
@@ -14,7 +15,7 @@ import {
   isChatMember,
   type TypedSupabaseClient,
 } from "@/lib/messages/queries";
-import { sendMessageSchema } from "@/lib/messages/validations";
+import { sendMessageSchema, type SendMessageMentionInput } from "@/lib/messages/validations";
 
 type StoredAttachment = {
   name: string;
@@ -53,8 +54,49 @@ async function signAttachments(
       }
       return { ...att, url: signed?.signedUrl ?? null };
     })
-  );
+    );
   return withUrls;
+}
+
+function parseMentions(raw: unknown): SendMessageMentionInput[] {
+  const schema = sendMessageSchema.shape.mentions;
+  const parsed = schema.safeParse(raw ?? []);
+  if (!parsed.success) {
+    throw new Error(
+      parsed.error.issues.map((i) => i.message).join("; ") || "Menções inválidas"
+    );
+  }
+  return parsed.data ?? [];
+}
+
+function normalizeMentions(
+  mentions: SendMessageMentionInput[],
+  memberIds: Set<string>
+): SendMessageMentionInput[] {
+  const normalized: SendMessageMentionInput[] = [];
+  let hasAll = false;
+  const seenUsers = new Set<string>();
+
+  mentions.forEach((mention) => {
+    const label = mention.label?.trim() || null;
+    if (mention.type === "all") {
+      if (hasAll) return;
+      hasAll = true;
+      normalized.push({ type: "all", label });
+      return;
+    }
+
+    const userId = mention.userId;
+    if (!userId) return;
+    if (!memberIds.has(userId)) {
+      throw new Error("Menção inválida: usuário não pertence ao chat");
+    }
+    if (seenUsers.has(userId)) return;
+    seenUsers.add(userId);
+    normalized.push({ type: "user", userId, label });
+  });
+
+  return normalized;
 }
 
 export async function GET(
@@ -101,7 +143,18 @@ export async function GET(
         const senderInfo = msg.sender_id
           ? memberMap.get(msg.sender_id) ?? null
           : null;
-        const base = senderInfo ? { ...msg, sender: senderInfo } : msg;
+        const mentions = (msg.mentions ?? []).map((mention) => {
+          const user =
+            mention.mentioned_user_id && memberMap.has(mention.mentioned_user_id)
+              ? memberMap.get(mention.mentioned_user_id) ?? null
+              : mention.user ?? null;
+          return { ...mention, user };
+        });
+        const base = {
+          ...msg,
+          sender: senderInfo,
+          mentions,
+        };
 
         if (!base.attachments || !Array.isArray(base.attachments)) return base;
         const signed = await signAttachments(
@@ -143,6 +196,7 @@ export async function POST(
     // Suporta multipart/form-data (com anexos) e JSON (legado)
     let messageText = "";
     let files: File[] = [];
+    let mentionsInput: SendMessageMentionInput[] = [];
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
@@ -150,6 +204,26 @@ export async function POST(
       files = (formData.getAll("files") || []).filter(
         (f): f is File => typeof f !== "string" && f instanceof File
       );
+      const mentionsRaw = formData.get("mentions");
+      if (mentionsRaw !== null) {
+        if (typeof mentionsRaw !== "string") {
+          return errorResponse(
+            400,
+            "validation_error",
+            "Formato de menções inválido"
+          );
+        }
+        try {
+          const parsedMentions = JSON.parse(mentionsRaw);
+          mentionsInput = parseMentions(parsedMentions);
+        } catch (err: any) {
+          return errorResponse(
+            400,
+            "validation_error",
+            err?.message ?? "Menções inválidas"
+          );
+        }
+      }
     } else {
       const rawBody = await req.json().catch(() => null);
       const parsed = sendMessageSchema.safeParse(rawBody ?? {});
@@ -162,6 +236,7 @@ export async function POST(
       }
       messageText = parsed.data.message;
       files = [];
+      mentionsInput = parsed.data.mentions ?? [];
     }
 
     if (!messageText || messageText.trim().length === 0) {
@@ -180,6 +255,27 @@ export async function POST(
       if (f.size > MAX_FILE_SIZE) {
         return errorResponse(400, "validation_error", `Arquivo muito grande: ${f.name}`);
       }
+    }
+
+    const adminClient = admin as unknown as TypedSupabaseClient;
+    const memberProfiles = await fetchChatMembers(adminClient, chatId);
+    const memberIds = new Set(memberProfiles.map((member) => member.user_id));
+    const memberMap = new Map(
+      memberProfiles.map((member) => [
+        member.user_id,
+        member.user ? { ...member.user } : null,
+      ])
+    );
+
+    let normalizedMentions: SendMessageMentionInput[] = [];
+    try {
+      normalizedMentions = normalizeMentions(mentionsInput, memberIds);
+    } catch (err: any) {
+      return errorResponse(
+        400,
+        "validation_error",
+        err?.message ?? "Menções inválidas"
+      );
     }
 
     const attachments: StoredAttachment[] = [];
@@ -210,17 +306,14 @@ export async function POST(
         : null;
 
     const { data, error } = await supabase
-      .from("chat_messages")
-      .insert({
-        chat_id: chatId,
-        sender_id: auth.userId,
-        message: messageText,
-        attachments: signedAttachments,
-      })
-      .select(
-        `id, chat_id, sender_id, message, attachments, created_at,
-         profiles:sender_id (id, full_name, avatar_url)
-        `
+      .rpc(
+        "create_chat_message_with_mentions",
+        {
+          p_chat_id: chatId,
+          p_message: messageText,
+          p_attachments: signedAttachments,
+          p_mentions: normalizedMentions,
+        }
       )
       .maybeSingle();
 
@@ -229,20 +322,35 @@ export async function POST(
       return errorResponse(500, "db_error", "Failed to send message");
     }
 
+    const messageRow = data as Database["public"]["Tables"]["chat_messages"]["Row"];
+
+    const { data: mentionRows, error: mentionError } = await supabase
+      .from("chat_message_mentions")
+      .select("id, message_id, type, mentioned_user_id, raw_label")
+      .eq("message_id", messageRow.id)
+      .order("id", { ascending: true });
+
+    if (mentionError) {
+      console.warn("MESSAGES fetch mentions for message error:", mentionError);
+    }
+
+    const mentions = (mentionRows ?? []).map((row: any) => ({
+      id: row.id,
+      type: row.type,
+      mentioned_user_id: row.mentioned_user_id,
+      raw_label: row.raw_label ?? null,
+      user: row.mentioned_user_id ? memberMap.get(row.mentioned_user_id) ?? null : null,
+    }));
+
     const response = {
-      id: data.id,
-      chat_id: data.chat_id,
-      sender_id: data.sender_id,
-      message: data.message,
-      attachments: data.attachments,
-      created_at: data.created_at,
-      sender: data.profiles
-        ? {
-            id: data.profiles.id,
-            full_name: data.profiles.full_name,
-            avatar_url: data.profiles.avatar_url,
-          }
-        : null,
+      id: messageRow.id,
+      chat_id: messageRow.chat_id,
+      sender_id: messageRow.sender_id,
+      message: messageRow.message,
+      attachments: messageRow.attachments,
+      created_at: messageRow.created_at,
+      sender: memberMap.get(messageRow.sender_id) ?? null,
+      mentions,
     };
 
     return NextResponse.json(response, { status: 201 });

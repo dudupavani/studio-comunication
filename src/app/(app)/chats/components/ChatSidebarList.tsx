@@ -63,7 +63,7 @@ export function ChatSidebarList({
     }
 
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-col h-svh overflow-y-auto">
         {chats.map((chat) => (
           <ChatListItem
             key={chat.id}

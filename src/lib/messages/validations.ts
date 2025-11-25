@@ -19,6 +19,35 @@ export const createChatSchema = z.object({
 
 export type CreateChatInput = z.infer<typeof createChatSchema>;
 
+const mentionSchema = z
+  .object({
+    type: z.enum(["user", "all"]),
+    userId: z.string().uuid({ message: "ID de usuário inválido" }).optional(),
+    label: z
+      .string()
+      .trim()
+      .max(255, "Rótulo muito longo")
+      .optional()
+      .nullable()
+      .transform((val) => (val && val.length ? val : null)),
+  })
+  .superRefine((val, ctx) => {
+    if (val.type === "user" && !val.userId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Menção de usuário exige userId",
+        path: ["userId"],
+      });
+    }
+    if (val.type === "all" && val.userId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Menção @TODOS não deve enviar userId",
+        path: ["userId"],
+      });
+    }
+  });
+
 export const sendMessageSchema = z.object({
   message: z
     .string()
@@ -26,9 +55,11 @@ export const sendMessageSchema = z.object({
     .min(1, "Mensagem obrigatória")
     .max(5000, "Mensagem muito longa"),
   attachments: z.any().optional().nullable(),
+  mentions: z.array(mentionSchema).max(50, "Menções demais na mensagem").default([]),
 });
 
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
+export type SendMessageMentionInput = z.infer<typeof mentionSchema>;
 
 export const addMemberSchema = z.object({
   userId: z.string().uuid({ message: "ID de usuário inválido" }),

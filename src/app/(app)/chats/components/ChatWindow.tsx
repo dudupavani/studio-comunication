@@ -10,6 +10,7 @@ import { useMessages } from "@/hooks/use-messages";
 import type { ChatMessageWithSender } from "@/hooks/use-messages";
 import { useSendMessage } from "@/hooks/use-send-message";
 import { useRealtimeMessages } from "@/hooks/use-realtime-messages";
+import type { SendMessageMentionInput } from "@/lib/messages/validations";
 
 interface ChatWindowProps {
   chat: Chat;
@@ -40,7 +41,13 @@ export function ChatWindow({
   const handleRealtime = useCallback(
     (message: ChatMessageWithSender) => {
       const senderUser = memberMap.get(message.sender_id)?.user ?? null;
-      appendMessage({ ...message, sender: senderUser });
+      const mentions = (message.mentions ?? []).map((mention) => {
+        if (mention.user) return mention;
+        if (!mention.mentioned_user_id) return mention;
+        const resolved = memberMap.get(mention.mentioned_user_id)?.user ?? null;
+        return { ...mention, user: resolved };
+      });
+      appendMessage({ ...message, sender: senderUser, mentions });
     },
     [appendMessage, memberMap]
   );
@@ -48,14 +55,27 @@ export function ChatWindow({
   useRealtimeMessages(chatId, handleRealtime);
 
   const handleSend = useCallback(
-    async ({ message, files }: { message: string; files: File[] }) => {
-      const result = await send({ chatId, message, attachments: files });
+    async ({
+      message,
+      files,
+      mentions,
+    }: {
+      message: string;
+      files: File[];
+      mentions: SendMessageMentionInput[];
+    }) => {
+      const result = await send({ chatId, message, attachments: files, mentions });
       if (result) {
         const senderUser =
           memberMap.get(result.sender_id)?.user ??
           memberMap.get(currentUserId)?.user ??
           null;
-        appendMessage({ ...result, sender: senderUser });
+        const mentionsWithUsers = (result.mentions ?? []).map((mention) => {
+          if (mention.user || !mention.mentioned_user_id) return mention;
+          const resolved = memberMap.get(mention.mentioned_user_id)?.user ?? null;
+          return { ...mention, user: resolved };
+        });
+        appendMessage({ ...result, sender: senderUser, mentions: mentionsWithUsers });
         if (result.attachments && Array.isArray(result.attachments) && result.attachments.length > 0) {
           onAttachmentsAdded?.();
         }
@@ -74,6 +94,7 @@ export function ChatWindow({
         loadingMore={loadingMore}
         hasMore={hasMore}
         onLoadMore={loadMore}
+        members={members}
       />
       {!chat.allow_replies ? (
         <div className="border-t border-border px-5 py-2 text-xs text-muted-foreground">
@@ -81,6 +102,7 @@ export function ChatWindow({
         </div>
       ) : null}
       <ChatInput
+        members={members}
         onSend={handleSend}
         disabled={sending || !chat.allow_replies}
       />

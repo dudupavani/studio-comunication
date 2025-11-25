@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       },
       ...Array.from(memberIds).map((userId) => ({
         chat_id: chatId,
-        user_id,
+        user_id: userId,
         role: "member" as const,
       })),
     ];

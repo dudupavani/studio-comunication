@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
       const memberRows = unique([auth.userId, ...recipients]).map((userId) => ({
         chat_id: chatId,
         user_id: userId,
-        role: userId === auth.userId ? "admin" : "member",
+        role: (userId === auth.userId ? "admin" : "member") as "admin" | "member",
       }));
 
       if (memberRows.length) {
@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
       id: crypto.randomUUID(),
       org_id: auth.orgId,
       name: payload.title,
-      type: "direct",
+      type: "direct" as const,
       allow_replies: allowReplies,
       created_by: auth.userId,
       _recipient: userId,

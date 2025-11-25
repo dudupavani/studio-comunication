@@ -1,11 +1,12 @@
 // src/lib/messages/queries.ts
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/supabase";
+import type { Database } from "@/lib/supabase/types";
 import { createServiceClient } from "@/lib/supabase/service";
 import type {
   Chat,
   ChatMember,
   ChatMessage,
+  ChatMessageMention,
   ChatSummary,
   PaginatedResult,
   UserMini,
@@ -277,7 +278,9 @@ export async function fetchChatMessages(
   supabase: TypedSupabaseClient,
   chatId: string,
   params: { limit?: number; cursor?: string }
-): Promise<PaginatedResult<ChatMessage & { sender?: UserMini | null }>> {
+): Promise<
+  PaginatedResult<ChatMessage & { sender?: UserMini | null; mentions?: ChatMessageMention[] }>
+> {
   const limit = Math.min(Math.max(params.limit ?? 50, 1), 200);
   const cursor = decodeCursor(params.cursor);
 
@@ -321,12 +324,56 @@ export async function fetchChatMessages(
       : null,
   }));
 
+  const messageIds = items.map((m) => m.id);
+  const mentionsByMessage = new Map<number, ChatMessageMention[]>();
+
+  if (messageIds.length) {
+    const { data: mentionRows, error: mentionError } = await supabase
+      .from("chat_message_mentions")
+      .select(
+        `id, message_id, type, mentioned_user_id, raw_label,
+         profiles:mentioned_user_id (id, full_name, avatar_url)
+        `
+      )
+      .in("message_id", messageIds)
+      .order("id", { ascending: true });
+
+    if (mentionError) {
+      console.warn("MESSAGES fetch mentions error", mentionError);
+    }
+
+    (mentionRows ?? []).forEach((row: any) => {
+      const messageKey = Number(row.message_id);
+      const mention: ChatMessageMention = {
+        id: row.id,
+        type: row.type,
+        mentioned_user_id: row.mentioned_user_id,
+        raw_label: row.raw_label ?? null,
+        user: row.profiles
+          ? {
+              id: row.profiles.id,
+              full_name: row.profiles.full_name,
+              avatar_url: row.profiles.avatar_url,
+            }
+          : null,
+      };
+      const list = mentionsByMessage.get(row.message_id) ?? [];
+      list.push(mention);
+      mentionsByMessage.set(messageKey, list);
+    });
+  }
+
+  const itemsWithMentions = items.map((item) => ({
+    ...item,
+    mentions: mentionsByMessage.get(item.id) ?? [],
+  }));
+
   const tail = itemsRaw[itemsRaw.length - 1];
   const nextCursor = hasNext && tail
     ? encodeCursor({ created_at: tail.created_at, id: String(tail.id) })
     : undefined;
 
-  return { items, nextCursor };
+  return { items: itemsWithMentions, nextCursor };
 }
 
 export async function isChatAdmin(

@@ -286,7 +286,7 @@ export async function createOrg(name: string): Promise<Result<Org>> {
       const { data, error } = await supabase
         .from("orgs")
         .insert({ name: trimmed, slug: candidate })
-        .select("id, name, slug, cidade")
+        .select("id, name, slug, city")
         .single();
 
       if (!error && data) {
@@ -330,7 +330,7 @@ export async function updateOrg(
         .from("orgs")
         .update({ name: trimmed, slug: candidate })
         .eq("id", orgId)
-        .select("id, name, slug, cidade")
+        .select("id, name, slug, city")
         .single();
 
       if (!error && data) {

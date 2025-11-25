@@ -1,7 +1,8 @@
 // src/lib/auth-context.ts
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import type { User } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 import type { PlatformRole, OrgRole, UnitRole } from "@/lib/types/roles";
 
 const PLATFORM_ADMIN: PlatformRole = "platform_admin";
@@ -30,13 +31,15 @@ export type AuthContext = {
   user?: User;
 };
 
-async function _getAuthContext(): Promise<AuthContext | null> {
+async function _getAuthContext(
+  supabaseClient?: SupabaseClient<Database>
+): Promise<AuthContext | null> {
   const isDev = process.env.NODE_ENV !== "production";
   const makeLabel = (prefix: string) =>
     `${prefix}:${Date.now().toString(36)}:${Math.random()
       .toString(36)
       .slice(2, 6)}`;
-  const supabase = createClient();
+  const supabase = supabaseClient ?? createClient();
 
   // 1) Sessão primeiro; fallback para getUser()
   const labelSession = isDev ? makeLabel("auth:getSession") : null;
@@ -122,6 +125,14 @@ async function _getAuthContext(): Promise<AuthContext | null> {
 }
 
 // memo por request + exports explícitos
-const getAuthContext = cache(_getAuthContext);
-export { getAuthContext };
+// Memo apenas para a versão sem cliente fornecido
+const getAuthContextCached = cache(() => _getAuthContext());
+
+export function getAuthContext(
+  supabaseClient?: SupabaseClient<Database>
+): Promise<AuthContext | null> {
+  if (supabaseClient) return _getAuthContext(supabaseClient);
+  return getAuthContextCached();
+}
+
 export default getAuthContext;

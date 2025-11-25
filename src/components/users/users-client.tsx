@@ -88,13 +88,14 @@ export default function UsersClient({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams?.toString() ?? "";
 
   // Estado do filtro (UI)
   const [roleFilter, setRoleFilter] = useState<string | null>(
     initialRoleFilter
   );
   const [statusFilter, setStatusFilter] = useState<string>(
-    (searchParams.get("status") as string) || "all"
+    (searchParams?.get("status") as string) || "all"
   );
 
   const filteredUsers = useMemo(() => {
@@ -131,7 +132,7 @@ export default function UsersClient({
     setRoleFilter(value);
 
     // Atualiza a URL com o parâmetro de filtro
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParamsString);
     if (value && value !== "all") {
       params.set("role", value);
     } else {
@@ -144,7 +145,7 @@ export default function UsersClient({
     setStatusFilter(value);
 
     // Atualiza a URL com o parâmetro de filtro
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParamsString);
     if (value && value !== "all") {
       params.set("status", value);
     } else {

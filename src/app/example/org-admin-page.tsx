@@ -1,13 +1,17 @@
 // src/app/example/org-admin-page.tsx
-import { requireOrgAdmin } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthContext } from "@/lib/auth-context";
+import { notFound } from "next/navigation";
 
 export default async function OrgAdminPage({ params }: { params: Promise<{ orgId: string }> }) {
   // In newer versions of Next.js, params is a Promise that must be awaited
   const { orgId } = await params;
   
-  // Protege a página - só org_admin ou platform_admin podem acessar
-  const auth = await requireOrgAdmin(orgId);
+  // Protege a página - só org_admin ou platform_admin podem acessar (simplificado)
+  const auth = await getAuthContext();
+  if (!auth || auth.orgId !== orgId || !auth.platformRole && auth.orgRole !== "org_admin") {
+    notFound();
+  }
   
   const supabase = createClient();
   

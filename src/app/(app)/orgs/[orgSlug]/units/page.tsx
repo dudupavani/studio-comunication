@@ -1,2 +1,6 @@
 // src/app/(app)/orgs/[orgSlug]/units/page.tsx
-export default function LegacyUnits(){ redirect("/units"); }
+import { redirect } from "next/navigation";
+
+export default function LegacyUnits() {
+  redirect("/units");
+}

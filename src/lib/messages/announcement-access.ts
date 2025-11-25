@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/supabase";
+import type { Database } from "@/lib/supabase/types";
 import type { AuthContext } from "@/lib/messages/auth-context";
 
 export type AnnouncementAccessRecord = {

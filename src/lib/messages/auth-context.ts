@@ -1,7 +1,7 @@
 // src/lib/messages/auth-context.ts
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerClientReadOnly } from "@/lib/supabase/server";
-import type { Database } from "@/types/supabase";
+import type { Database } from "@/lib/supabase/types";
 
 export type AuthContext = {
   userId: string;

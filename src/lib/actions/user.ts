@@ -450,8 +450,7 @@ export async function updateUser(formData: FormData) {
 
   const id = formData.get("id") as string;
   const rawName = formData.get("name");
-  const name =
-    typeof rawName === "string" ? rawName.trim() : (rawName as string);
+  const name = typeof rawName === "string" ? rawName.trim() : "";
 
   if (!id) return { error: "ID do usuário é obrigatório." };
   if (!name) return { error: "Nome é obrigatório." };

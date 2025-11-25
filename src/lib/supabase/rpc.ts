@@ -32,19 +32,23 @@ export async function updateProfileSelfRPC(input: {
   const supabase = createClient();
   const AVATAR_KEEP = "__KEEP_AVATAR__";
 
-  // A função SQL aceita exatamente (text, text, text)
+  const normalizedName =
+    typeof input.full_name === "string" && input.full_name.trim().length > 0
+      ? input.full_name.trim()
+      : null;
+  const normalizedPhone =
+    typeof input.phone === "string" && input.phone.trim().length > 0
+      ? input.phone.trim()
+      : null;
+  const avatarArg =
+    typeof input.avatar_url === "undefined"
+      ? AVATAR_KEEP
+      : input.avatar_url ?? null;
+
   const { error } = await supabase.rpc("update_profile_self", {
-    p_full_name: input.full_name ?? null,
-    p_phone: input.phone ?? null,
-    // Para "manter como está", a função trata null como "não alterar phone".
-    // Para avatar usamos um sentinel específico:
-    // - undefined => "__KEEP_AVATAR__" (mantém)
-    // - null => remove
-    // - string => novo valor
-    p_avatar_url:
-      typeof input.avatar_url === "undefined"
-        ? AVATAR_KEEP
-        : input.avatar_url,
+    p_full_name: normalizedName,
+    p_phone: normalizedPhone,
+    p_avatar_url: avatarArg,
   });
 
   if (error) {

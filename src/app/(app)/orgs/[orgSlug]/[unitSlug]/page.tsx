@@ -136,7 +136,6 @@ export default async function UnitPage({
           <TabsContent value="members" className="mt-6">
             <MembersTabServer
               orgId={org.id}
-              orgSlug={orgSlug}
               unitId={unit.id}
               unitSlug={unitSlug}
             />

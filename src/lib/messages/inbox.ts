@@ -45,10 +45,21 @@ function toPlain(text: string | null | undefined) {
   return plain.length ? plain : null;
 }
 
-async function resolveSenderNames(ids: string[]) {
+async function resolveSenderNames(
+  ids: string[]
+): Promise<
+  Record<
+    string,
+    { full_name: string | null; email?: string | null; avatar_url?: string | null }
+  >
+> {
   const svc = createServiceClient();
   const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
-  if (uniqueIds.length === 0) return {} as Record<string, { full_name: string | null; email?: string | null }>;
+  if (uniqueIds.length === 0)
+    return {} as Record<
+      string,
+      { full_name: string | null; email?: string | null; avatar_url?: string | null }
+    >;
 
   const identityMap: Record<
     string,
