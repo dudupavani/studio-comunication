@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useEffect, useState, type ReactNode } from "react";
-import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { ChatMessageWithSender } from "@/hooks/use-messages";
 import type { ChatMessageMention, UserMini } from "@/lib/messages/types";
@@ -82,9 +81,6 @@ export function MessageItem({
     sender?.id,
   ]);
 
-  const time = formatDistanceToNow(new Date(message.created_at), {
-    addSuffix: true,
-  });
   const absoluteTime = new Date(message.created_at).toLocaleString();
   const senderName =
     sender?.full_name?.trim() ||
@@ -121,7 +117,7 @@ export function MessageItem({
           "flex items-start gap-3",
           isOwn ? "flex-row-reverse" : "flex-row"
         )}>
-        <Avatar className="h-10 w-10 shrink-0 shadow-md border-2 border-white">
+        <Avatar className="h-10 w-10 shrink-0 shadow-md border-1 border-white">
           <AvatarImage src={sender?.avatar_url ?? undefined} alt={senderName} />
           <AvatarFallback>{getInitials(senderName)}</AvatarFallback>
         </Avatar>
@@ -137,22 +133,21 @@ export function MessageItem({
 
           <div
             className={cn(
-              "w-fit rounded-2xl px-4 py-4 text-sm shadow-sm leading-5",
+              "w-fit rounded-2xl px-4 py-4 text-sm leading-5",
               isOwn
                 ? "bg-white border text-primary"
                 : "bg-gray-200 text-primary",
               hasMentionHighlight ? "bg-amber-50 ring-1 ring-amber-200" : ""
             )}>
             {renderedContent}
+            <span className="mt-2 block text-right text-xs text-gray-500">
+              {absoluteTime}
+            </span>
           </div>
-          <span className="text-xs px-2">
-            <span className="mx-1 text-gray-400">{absoluteTime} -</span>
-            <span className="text-muted-foreground">{time}</span>
-          </span>
 
           {Array.isArray(message.attachments) &&
           message.attachments.length > 0 ? (
-            <div className="mt-1 flex w-full max-w-[320px] flex-col gap-2">
+            <div className="mt-1 flex flex-col gap-2">
               {message.attachments.map((att: any) => {
                 const isImage =
                   typeof att?.mime === "string"
@@ -168,11 +163,13 @@ export function MessageItem({
                     target="_blank"
                     rel="noreferrer"
                     className={cn(
-                      "flex items-center max-w-xs gap-2 rounded-lg border px-3 py-3 text-xs transition hover:bg-muted shadow-sm hover:shadow-md",
-                      isOwn ? "border-primary/40" : "border-border"
+                      "flex items-center gap-2 rounded-lg border px-3 py-3 text-xs transition bg-white shadow-sm hover:shadow-md",
+                      isOwn
+                        ? "border-border hover:border-gray-400"
+                        : "border-border"
                     )}>
                     {isImage && att.url ? (
-                      <div className="relative h-16 w-16 overflow-hidden rounded-md bg-muted">
+                      <div className="relative min-h-20 min-w-20 overflow-hidden rounded-md bg-muted">
                         <Image
                           src={att.url}
                           alt={att.name || "Anexo"}
@@ -184,7 +181,7 @@ export function MessageItem({
                     ) : (
                       <Paperclip className="h-4 w-4" />
                     )}
-                    <div className="flex-1 ">
+                    <div className="flex flex-col overflow-hidden">
                       <div className="line-clamp-2 font-medium text-foreground">
                         {att.name || "Anexo"}
                       </div>
@@ -193,6 +190,9 @@ export function MessageItem({
                           {(att.size / 1024).toFixed(1)} KB
                         </div>
                       ) : null}
+                      <span className="mt-2 block text-right text-xs text-gray-500">
+                        {absoluteTime}
+                      </span>
                     </div>
                   </a>
                 );

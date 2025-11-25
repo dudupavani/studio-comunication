@@ -6,6 +6,7 @@ import type { ChatMessageWithSender } from "@/hooks/use-messages";
 import type { ChatMemberWithUser } from "./types";
 import { Button } from "@/components/ui/button";
 import { MessageItem } from "./MessageItem";
+import { Spinner } from "@/components/ui/spinner";
 
 interface MessageListProps {
   messages: ChatMessageWithSender[];
@@ -39,7 +40,7 @@ export function MessageList({
       ref={containerRef}
       className="flex-1 overflow-y-auto px-6 py-6 bg-gray-50"
       style={{ scrollBehavior: "smooth" }}>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         {hasMore && (
           <Button
             variant="outline"
@@ -74,8 +75,9 @@ export function MessageList({
         ))}
 
         {loading && messages.length === 0 ? (
-          <div className="flex items-center justify-center gap-2 text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Carregando mensagens...
+          <div className="flex flex-colitems-center justify-center gap-4 text-muted-foreground">
+            <Spinner size="md" />
+            <span>Carregando mensagens...</span>
           </div>
         ) : null}
 
