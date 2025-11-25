@@ -10,15 +10,15 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 
 import {
-  Drawer,
-  DrawerTrigger,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerFooter,
-  DrawerClose,
-  DrawerDescription,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet";
 
 import {
   Table,
@@ -36,7 +36,7 @@ type UserItem = {
   id: string;
   name: string | null;
   email: string | null;
-  // avatarUrl?: string | null; // (se no futuro vier do endpoint, já suportamos)
+  avatarUrl?: string | null;
 };
 
 export default function AddUnitMemberModal({
@@ -165,34 +165,33 @@ export default function AddUnitMemberModal({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button>
           <Plus size={22} />
           Adicionar
         </Button>
-      </DrawerTrigger>
+      </SheetTrigger>
 
-      <DrawerContent className="min-h-[70vh] max-h-[85vh] px-6">
-        <DrawerHeader className="p-0">
-          <DrawerTitle className="text-xl">
-            Adicionar membros à unidade
-          </DrawerTitle>
-          <DrawerDescription>
-            Selecione um ou mais usuários para vincular com esta unidade.
-          </DrawerDescription>
-        </DrawerHeader>
+      <SheetContent side="right" className="w-full sm:max-w-xl px-6">
+        <div className="flex h-full flex-col gap-4 py-4">
+          <SheetHeader className="text-left mb-1">
+            <SheetTitle className="text-xl">
+              Adicionar membros à unidade
+            </SheetTitle>
+            <SheetDescription>
+              Selecione um ou mais usuários para vincular com esta unidade
+            </SheetDescription>
+          </SheetHeader>
 
-        <div className="py-6">
-          <div className="pb-2">
+          <div className="pb-0">
             <Input
-              placeholder="Buscar usuários..."
+              placeholder="Buscar"
               onChange={(e) => searchUsers(e.target.value)}
-              className="mb-2 max-w-md"
             />
           </div>
 
-          <div className="space-y-2 max-h-[90vh] overflow-y-auto pr-1">
+          <div className="flex-1 overflow-y-auto pr-1">
             {loadingList && (
               <div className="flex flex-col items-center justify-center py-8 gap-3 text-muted-foreground">
                 <Spinner className="h-12 w-12" />
@@ -221,7 +220,7 @@ export default function AddUnitMemberModal({
                           id={u.id}
                           name={u.name}
                           email={u.email}
-                          // avatarUrl={u.avatarUrl ?? null} // quando vier no payload
+                          avatarUrl={u.avatarUrl ?? null}
                           size="md"
                           orientation="stacked"
                           withCopy
@@ -240,17 +239,17 @@ export default function AddUnitMemberModal({
               </Table>
             )}
           </div>
-        </div>
 
-        <DrawerFooter className="p-0 pb-8">
-          <DrawerClose asChild>
-            <Button variant="ghost">Cancelar</Button>
-          </DrawerClose>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Adicionando..." : "Adicionar"}
-          </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+          <SheetFooter className="pt-4">
+            <SheetClose asChild>
+              <Button variant="ghost">Cancelar</Button>
+            </SheetClose>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? "Adicionando..." : "Adicionar"}
+            </Button>
+          </SheetFooter>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

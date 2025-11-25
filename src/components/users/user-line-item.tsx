@@ -46,9 +46,7 @@ export default function UserLineItem({
   // ======== helpers ========
   function computeInitials(nameArg?: string | null, emailArg?: string | null) {
     const twoGraphemes = (s: string) => {
-      // Usa Intl.Segmenter quando disponível para segmentar por grafemas
       try {
-        // @ts-expect-error: Intl.Segmenter nem sempre tipado
         const seg = new Intl.Segmenter("pt-BR", { granularity: "grapheme" });
         const parts: string[] = [];
         for (const { segment } of seg.segment(s)) {

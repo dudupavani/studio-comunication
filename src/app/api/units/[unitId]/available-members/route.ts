@@ -107,7 +107,7 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
     // 7) Membros da organização (com nome em profiles)
     const { data: orgUsers, error: orgErr } = await supabase
       .from("org_members")
-      .select("user_id, profiles!inner(full_name)")
+      .select("user_id, profiles!inner(full_name, avatar_url)")
       .eq("org_id", orgIdFromUnit);
 
     if (orgErr) {
@@ -124,6 +124,8 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
           id: r.user_id as string,
           name: (r.profiles?.full_name as string | null) ?? null,
           email: null as string | null, // preenchido abaixo
+          avatarUrl:
+            (r.profiles?.avatar_url as string | null | undefined) ?? null,
         }))
         .filter((u) => !alreadyIds.has(u.id)) ?? [];
 

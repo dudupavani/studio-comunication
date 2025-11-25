@@ -17,6 +17,7 @@ import { updateUserRoles } from "@/lib/actions/user";
 import { getRoleLabel } from "@/lib/role-labels";
 
 type Unit = { id: string; name: string };
+type Team = { id: string; name: string };
 type UnitRole = "unit_master" | "unit_user";
 type OrgRole = "org_master" | "org_admin";
 type TargetRole = OrgRole | UnitRole;
@@ -27,8 +28,10 @@ type Props = {
   defaultName?: string | null;
   defaultEmail?: string | null;
   units: Unit[];
-  currentOrgRole?: OrgRole | null;
-  currentUnitRoles?: { unitId: string; role: UnitRole }[];
+  teams: Team[];
+  currentRole?: TargetRole | null;
+  currentUnitId?: string | null;
+  currentTeamId?: string | null;
 };
 
 export default function EditUserForm(props: Props) {
@@ -38,73 +41,69 @@ export default function EditUserForm(props: Props) {
     defaultName,
     defaultEmail,
     units,
-    currentOrgRole,
-    currentUnitRoles,
+    teams,
+    currentRole,
+    currentUnitId,
+    currentTeamId,
   } = props;
   const { toast } = useToast();
 
-  // Função inicial: dá prioridade ao papel de organização se existir
-  const initialTargetRole: TargetRole | "" = (() => {
-    if (currentOrgRole === "org_admin") return "org_admin";
-    if (currentOrgRole === "org_master") return "org_master";
-    if (currentUnitRoles && currentUnitRoles.length > 0) {
-      return currentUnitRoles[0].role;
-    }
-    return "";
-  })();
+  // Função preferida: valor atual do membership (org ou unit role)
+  const preferredRole: TargetRole | "" = currentRole ?? "";
 
   // Unidade inicial: 1ª unidade dos unit_roles (se houver)
-  const initialUnitId: string =
-    currentUnitRoles && currentUnitRoles.length > 0
-      ? currentUnitRoles[0].unitId
-      : "";
+  const initialUnitId: string = currentUnitId ?? "";
+  const initialTeamId: string = currentTeamId ?? "";
 
   const [saving, setSaving] = useState(false);
-  const [targetRole, setTargetRole] = useState<TargetRole | "">(
-    initialTargetRole
-  );
+  const [targetRole, setTargetRole] = useState<TargetRole | "">(preferredRole);
   const [selectedUnitId, setSelectedUnitId] = useState<string>(initialUnitId);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(initialTeamId);
 
   const unitOptions = useMemo(() => units ?? [], [units]);
+  const teamOptions = useMemo(() => teams ?? [], [teams]);
   const needsUnit = targetRole === "unit_master" || targetRole === "unit_user";
 
-  // Ao trocar para role de UNIDADE e não houver unidade escolhida:
-  // - Se houver apenas 1 unidade disponível, seleciona automaticamente
-  // - Senão, limpa para forçar a escolha
   useEffect(() => {
-    if (needsUnit) {
-      if (!selectedUnitId) {
-        if (unitOptions.length === 1) {
-          setSelectedUnitId(unitOptions[0].id);
-        } else {
-          setSelectedUnitId("");
-        }
-      }
-    } else {
-      // Ao trocar para role de ORG, limpar unidade
-      if (selectedUnitId) setSelectedUnitId("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetRole]);
+    setTargetRole(preferredRole);
+  }, [preferredRole, userId]);
+
+  useEffect(() => {
+    setSelectedUnitId(
+      initialUnitId || (unitOptions.length === 1 ? unitOptions[0].id : "")
+    );
+  }, [initialUnitId, unitOptions, userId]);
+
+  useEffect(() => {
+    setSelectedTeamId(
+      initialTeamId || (teamOptions.length === 1 ? teamOptions[0].id : "")
+    );
+  }, [initialTeamId, teamOptions, userId]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const payloadUnitId = selectedUnitId || null;
+    const payloadTeamId = selectedTeamId || null;
+
     if (!targetRole) {
       toast({ title: "Selecione uma função", variant: "destructive" });
       return;
     }
-    if (needsUnit && !selectedUnitId) {
-      toast({ title: "Selecione a unidade", variant: "destructive" });
+    if (!payloadUnitId && needsUnit) {
+      toast({
+        title: "Selecione a unidade do colaborador",
+        variant: "destructive",
+      });
       return;
     }
-
     setSaving(true);
     const res = await updateUserRoles({
       userId,
       orgId,
       // agora suporta org_admin também
       targetRole: targetRole as OrgRole | UnitRole,
-      unitId: needsUnit ? selectedUnitId : null,
+      unitId: needsUnit ? payloadUnitId : null,
+      teamId: payloadTeamId,
     });
     setSaving(false);
 
@@ -116,7 +115,7 @@ export default function EditUserForm(props: Props) {
       });
       return;
     }
-    toast({ title: "Função atualizada com sucesso" });
+    toast({ title: "Dados do usuário atualizados com sucesso" });
   }
 
   return (
@@ -140,10 +139,6 @@ export default function EditUserForm(props: Props) {
           value={targetRole}
           onValueChange={(v) => {
             setTargetRole(v as TargetRole | "");
-            // Se mudar para role de organização, limpa unidade
-            if (v !== "unit_master" && v !== "unit_user") {
-              setSelectedUnitId("");
-            }
           }}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione a função" />
@@ -167,26 +162,53 @@ export default function EditUserForm(props: Props) {
         </Select>
       </div>
 
-      {/* Unidade (só para unit_* ) */}
-      {needsUnit && (
-        <div className="space-y-2">
-          <Label>Unidade</Label>
-          <Select
-            value={selectedUnitId}
-            onValueChange={(v) => setSelectedUnitId(v)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione a unidade" />
-            </SelectTrigger>
-            <SelectContent>
-              {unitOptions.map((u) => (
+      <div className="space-y-2">
+        <Label>Unidade</Label>
+        <Select
+          value={selectedUnitId || UNIT_NONE_VALUE}
+          onValueChange={(v) =>
+            setSelectedUnitId(v === UNIT_NONE_VALUE ? "" : v)
+          }>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione a unidade ou Matriz" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={UNIT_NONE_VALUE}>
+              Matriz (sem unidade)
+            </SelectItem>
+            {unitOptions.length === 0 ? null : (
+              unitOptions.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.name}
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+              ))
+            )}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Equipe</Label>
+        <Select
+          value={selectedTeamId || TEAM_NONE_VALUE}
+          onValueChange={(v) =>
+            setSelectedTeamId(v === TEAM_NONE_VALUE ? "" : v)
+          }>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione a equipe (opcional)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={TEAM_NONE_VALUE}>Sem equipe</SelectItem>
+            {teamOptions.length === 0 ? null : (
+              teamOptions.map((team) => (
+                <SelectItem key={team.id} value={team.id}>
+                  {team.name}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="flex justify-end">
         <Button type="submit" disabled={saving}>
@@ -196,3 +218,5 @@ export default function EditUserForm(props: Props) {
     </form>
   );
 }
+const UNIT_NONE_VALUE = "__unit_none__";
+const TEAM_NONE_VALUE = "__team_none__";

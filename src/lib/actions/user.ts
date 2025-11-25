@@ -1,10 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { revalidatePath } from "next/cache";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { Profile } from "../types";
-import type { PlatformRole, OrgRole } from "@/lib/types/roles";
+import type { PlatformRole, OrgRole, UnitRole } from "@/lib/types/roles";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import { safeDeleteUser } from "@/lib/auth/safe-delete";
 
@@ -42,7 +43,7 @@ async function isPlatformAdmin(): Promise<boolean> {
 /** Retorna { org_id, role } do usuário logado em org_members (modelo 1 usuário -> 1 org) */
 async function getMyOrgMembership(): Promise<{
   org_id: string;
-  role: OrgRole;
+  role: OrgRole | UnitRole;
 } | null> {
   const supabase = createClient();
   const uid = await getSessionUserId();
@@ -520,12 +521,47 @@ type UpdateUserRolesInput = {
   userId: string;
   orgId: string;
   targetRole: "org_admin" | "org_master" | "unit_master" | "unit_user";
-  unitId?: string | null;
+  unitId?: string | null; // null => Matriz (sem unidade)
+  teamId?: string | null; // null => sem equipe
 };
 
 export async function updateUserRoles(input: UpdateUserRolesInput) {
-  const { userId, orgId, targetRole, unitId } = input;
-  const supabase = await createClient();
+  const {
+    userId,
+    orgId,
+    targetRole,
+    unitId,
+    teamId,
+  } = input;
+  const supabase = await createClient(); // RLS para validar sessão/permissões
+  const supabaseAdmin = createServiceClient(); // service role para evitar recursion em policies
+  const needsUnitRole =
+    targetRole === "unit_master" || targetRole === "unit_user";
+  const membershipUnitId = unitId ?? null;
+  const membershipTeamId = teamId ?? null;
+  // validações de integridade cruzada
+  if (membershipUnitId) {
+    const { data: unitRow, error: unitErr } = await supabaseAdmin
+      .from("units")
+      .select("id, org_id")
+      .eq("id", membershipUnitId)
+      .maybeSingle();
+    if (unitErr) return { ok: false, error: unitErr.message };
+    if (!unitRow || unitRow.org_id !== orgId) {
+      return { ok: false, error: "Unidade não pertence à organização." };
+    }
+  }
+  if (membershipTeamId) {
+    const { data: teamRow, error: teamErr } = await supabaseAdmin
+      .from("equipes")
+      .select("id, org_id")
+      .eq("id", membershipTeamId)
+      .maybeSingle();
+    if (teamErr) return { ok: false, error: teamErr.message };
+    if (!teamRow || teamRow.org_id !== orgId) {
+      return { ok: false, error: "Equipe não pertence à organização." };
+    }
+  }
 
   // Verifica quem está executando
   const {
@@ -545,16 +581,18 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
   const isPlat = Boolean(canDo);
 
   if (!isPlat) {
-    const { data: meIsOrgAdmin, error: orgCheckErr } = await supabase
+    const { data: meOrgRole, error: orgCheckErr } = await supabase
       .from("org_members")
       .select("role")
       .eq("org_id", orgId)
       .eq("user_id", user.id)
-      .eq("role", "org_admin")
       .maybeSingle();
 
     if (orgCheckErr) return { ok: false, error: orgCheckErr.message };
-    if (!meIsOrgAdmin) return { ok: false, error: "Forbidden" };
+    const role = meOrgRole?.role as OrgRole | UnitRole | null;
+    const allowed =
+      role === "org_admin" || role === "org_master" || role === "unit_master";
+    if (!allowed) return { ok: false, error: "Forbidden" };
   }
 
   // Garante que o usuário de destino tem o vínculo org_members (necessário para unit_members FK)
@@ -568,43 +606,75 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
   if (omErr) return { ok: false, error: omErr.message };
 
   if (!membership) {
-    // cria vínculo mínimo com papel inicial coerente com o objetivo
-    const initialRole =
-      targetRole === "org_master" ? "org_master" : "org_admin";
-    const { error: insertOmErr } = await supabase.from("org_members").insert({
-      org_id: orgId,
-      user_id: userId,
-      role: initialRole,
-    });
+    const { error: insertOmErr } = await supabaseAdmin
+      .from("org_members")
+      .insert({
+        org_id: orgId,
+        user_id: userId,
+        role: targetRole,
+      });
     if (insertOmErr) return { ok: false, error: insertOmErr.message };
-  }
-
-  // ===== roles de organização
-  if (targetRole === "org_admin" || targetRole === "org_master") {
-    const { error: upOmErr } = await supabase
+  } else {
+    const { error: upOmErr } = await supabaseAdmin
       .from("org_members")
       .update({ role: targetRole })
       .eq("org_id", orgId)
       .eq("user_id", userId);
     if (upOmErr) return { ok: false, error: upOmErr.message };
-
-    return { ok: true };
   }
 
-  // ===== roles de unidade exigem unitId
-  if (!unitId) return { ok: false, error: "unitId is required for unit roles" };
+  if (needsUnitRole && !unitId) {
+    return { ok: false, error: "unitId is required for unit roles" };
+  }
 
-  // Upsert em unit_members (sem role, apenas vínculo)
-  const { error: upUmErr } = await supabase.from("unit_members").upsert(
-    {
-      unit_id: unitId,
-      user_id: userId,
-      org_id: orgId,
-    },
-    { onConflict: "unit_id,user_id" }
-  );
-  if (upUmErr) return { ok: false, error: upUmErr.message };
+  // ===== vínculo de unidade para colaboradores (independente do role)
+  // Estratégia: zera vínculos da org e cria o vínculo único selecionado (ou nenhum = Matriz)
+  const { error: delUnitsErr } = await supabaseAdmin
+    .from("unit_members")
+    .delete()
+    .eq("org_id", orgId)
+    .eq("user_id", userId);
+  if (delUnitsErr) return { ok: false, error: delUnitsErr.message };
 
+  if (membershipUnitId) {
+    const { error: upMembershipErr } = await supabaseAdmin
+      .from("unit_members")
+      .upsert(
+        {
+          unit_id: membershipUnitId,
+          user_id: userId,
+          org_id: orgId,
+        },
+        { onConflict: "unit_id,user_id" }
+      );
+    if (upMembershipErr) return { ok: false, error: upMembershipErr.message };
+  }
+
+  // ===== vínculo de equipe
+  // Estratégia: vínculo único por usuário na org
+  const { error: delTeamsErr } = await supabaseAdmin
+    .from("equipe_members")
+    .delete()
+    .eq("org_id", orgId)
+    .eq("user_id", userId);
+  if (delTeamsErr) return { ok: false, error: delTeamsErr.message };
+
+  if (membershipTeamId) {
+    const { error: upTeamErr } = await supabaseAdmin
+      .from("equipe_members")
+      .upsert(
+        {
+          equipe_id: membershipTeamId,
+          user_id: userId,
+          org_id: orgId,
+        },
+        { onConflict: "equipe_id,user_id" }
+      );
+    if (upTeamErr) return { ok: false, error: upTeamErr.message };
+  }
+
+  revalidatePath("/users");
+  revalidatePath(`/users/${userId}/edit`);
   return { ok: true };
 }
 
@@ -612,15 +682,16 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 type UserRoles = {
-  orgRole: "org_master" | "org_admin" | null;
-  unitRoles: { unitId: string }[]; // papel efetivo vem de org_members.role
+  role: (OrgRole | UnitRole) | null;
+  unitId: string | null; // se null => Matriz
+  teamId: string | null;
 };
 
 export async function getUserRoles(
   userId: string,
   orgId: string
 ): Promise<Result<UserRoles>> {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   // Get org role
   const { data: orgMembership, error: orgErr } = await supabase
@@ -637,19 +708,34 @@ export async function getUserRoles(
     .from("unit_members")
     .select("unit_id")
     .eq("org_id", orgId)
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .limit(1);
 
   if (unitErr) return { ok: false, error: unitErr.message };
 
-  const unitRoles = (unitMemberships || []).map((um: any) => ({
-    unitId: um.unit_id,
-  }));
+  // Get team memberships (único por usuário na org)
+  const { data: teamMemberships, error: teamErr } = await supabase
+    .from("equipe_members")
+    .select("equipe_id")
+    .eq("org_id", orgId)
+    .eq("user_id", userId)
+    .limit(1);
+
+  if (teamErr) return { ok: false, error: teamErr.message };
+
+  const unitId = unitMemberships && unitMemberships[0]?.unit_id
+    ? (unitMemberships[0].unit_id as string)
+    : null;
+  const teamId = teamMemberships && teamMemberships[0]?.equipe_id
+    ? (teamMemberships[0].equipe_id as string)
+    : null;
 
   return {
     ok: true,
     data: {
-      orgRole: (orgMembership?.role as "org_master" | "org_admin") || null,
-      unitRoles,
+      role: (orgMembership?.role as OrgRole | UnitRole | null) ?? null,
+      unitId,
+      teamId,
     },
   };
 }

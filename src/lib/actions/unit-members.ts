@@ -16,7 +16,11 @@ export type UnitMember = {
   role: UnitRole | null;
   // ⚠️ Em seu schema atual, profiles NÃO tem 'email'.
   // Mantemos o campo por compatibilidade de tipos, preenchendo como null.
-  profiles: { full_name: string | null; email: string | null } | null;
+  profiles: {
+    full_name: string | null;
+    email: string | null;
+    avatar_url?: string | null;
+  } | null;
 };
 
 export type UnitMemberWithEmail = UnitMember & {
@@ -77,7 +81,8 @@ export async function listUnitMembers(orgId: string, unitId: string) {
       user_id,
       profiles:profiles!inner (
         id,
-        full_name
+        full_name,
+        avatar_url
       )
     `
     )
@@ -97,6 +102,7 @@ export async function listUnitMembers(orgId: string, unitId: string) {
       profiles: {
         full_name: (r.profiles?.full_name as string | null) ?? null,
         email: null as string | null,
+        avatar_url: (r.profiles?.avatar_url as string | null) ?? null,
       },
     })) ?? [];
 
@@ -128,8 +134,15 @@ export async function listUnitMembersWithEmail(orgId: string, unitId: string) {
     email: emailById.get(r.user_id) ?? null,
     // opcionalmente também poderíamos preencher profiles.email para simplificar consumo:
     profiles: r.profiles
-      ? { ...r.profiles, email: emailById.get(r.user_id) ?? null }
-      : { full_name: null, email: emailById.get(r.user_id) ?? null },
+      ? {
+          ...r.profiles,
+          email: emailById.get(r.user_id) ?? null,
+        }
+      : {
+          full_name: null,
+          email: emailById.get(r.user_id) ?? null,
+          avatar_url: null,
+        },
   }));
 
   return { ok: true as const, data: enriched };

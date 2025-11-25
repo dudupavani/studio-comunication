@@ -63,6 +63,7 @@ export default async function MembersTabServer({
                 const userId = m.user_id as string;
                 const userName = m.profiles?.full_name ?? "Sem nome";
                 const email = m.email ?? m.profiles?.email ?? null;
+                const avatarUrl = m.profiles?.avatar_url ?? null;
 
                 return (
                   <TableRow key={userId}>
@@ -71,7 +72,7 @@ export default async function MembersTabServer({
                         id={userId}
                         name={userName}
                         email={email}
-                        // avatarUrl: se no futuro vier no payload, é só passar aqui
+                        avatarUrl={avatarUrl}
                         size="md"
                         orientation="stacked"
                         withCopy

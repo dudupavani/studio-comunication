@@ -9,6 +9,9 @@ import { isOrgAdminFor, isUnitMasterFor } from "@/lib/permissions-org";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MembersTabServer from "@/components/units/members/members-tab.server";
 import UnitDetailsForm from "@/components/units/unit-details-form";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default async function UnitDetailPage({
   params,
@@ -46,11 +49,18 @@ export default async function UnitDetailPage({
 
   return (
     <div className="p-8">
-      <div className="mb-6 space-y-1">
-        <h1 className="text-2xl font-bold">{unit.name}</h1>
-        <p className="text-sm text-muted-foreground">
-          Gerencie os detalhes e membros da unidade.
-        </p>
+      <div className="flex items-censtartter gap-4 mb-8 self-start">
+        <Button variant="outline" size="icon-sm" asChild>
+          <Link href="/units">
+            <ArrowLeft />
+          </Link>
+        </Button>
+        <div className="flex flex-col gap-1">
+          <h2>{unit.name}</h2>
+          <p className="text-sm text-muted-foreground">
+            Configurações da unidade
+          </p>
+        </div>
       </div>
 
       <Tabs defaultValue="details" className="w-full">

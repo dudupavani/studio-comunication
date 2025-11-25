@@ -7,6 +7,7 @@ import { getUserById, getUserRoles } from "@/lib/actions/user"; // <-- SINGULAR
 import { getAuthContext } from "@/lib/auth-context";
 import { canManageUsers } from "@/lib/permissions-users";
 import { listUnits } from "@/lib/actions/units";
+import { createClient } from "@/lib/supabase/server";
 
 // Em versões recentes do Next, params pode ser Promise em Server Components
 export default async function EditUserPage({
@@ -29,11 +30,20 @@ export default async function EditUserPage({
     redirect("/profile");
   }
 
-  const [userResult, unitsResult, rolesResult] = await Promise.all([
-    getUserById(id),
-    listUnits(auth.orgId),
-    getUserRoles(id, auth.orgId),
-  ]);
+  const supabase = createClient();
+
+  const [userResult, unitsResult, rolesResult, teamsResult] = await Promise.all(
+    [
+      getUserById(id),
+      listUnits(auth.orgId),
+      getUserRoles(id, auth.orgId),
+      supabase
+        .from("equipes")
+        .select("id, name")
+        .eq("org_id", auth.orgId)
+        .order("name"),
+    ]
+  );
 
   if (!userResult) {
     notFound();
@@ -42,7 +52,12 @@ export default async function EditUserPage({
   const units = unitsResult.ok ? unitsResult.data : [];
   const userRoles = rolesResult.ok
     ? rolesResult.data
-    : { orgRole: null, unitRoles: [] };
+    : { role: null, unitId: null, teamId: null };
+  const teams =
+    teamsResult?.data?.map((team: any) => ({
+      id: team.id as string,
+      name: team.name as string,
+    })) ?? [];
 
   return (
     <div className="container flex flex-col pt-8 pb-12 px-8">
@@ -53,9 +68,7 @@ export default async function EditUserPage({
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight font-headline">
-            Detalhes do usuário
-          </h1>
+          <h3>Detalhes do usuário</h3>
         </div>
       </div>
 
@@ -65,8 +78,10 @@ export default async function EditUserPage({
         defaultName={userResult.full_name}
         defaultEmail={userResult.email}
         units={units}
-        currentOrgRole={userRoles.orgRole}
-        currentUnitRoles={userRoles.unitRoles}
+        teams={teams}
+        currentRole={userRoles.role}
+        currentUnitId={userRoles.unitId}
+        currentTeamId={userRoles.teamId}
       />
     </div>
   );

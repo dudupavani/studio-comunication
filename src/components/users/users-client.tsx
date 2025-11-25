@@ -111,8 +111,8 @@ export default function UsersClient({
         if (roleFilter === "org_admin") return user.org_role === "org_admin";
         if (roleFilter === "org_master") return user.org_role === "org_master";
         if (roleFilter === "unit_master")
-          return unitRoles.includes("unit_master");
-        if (roleFilter === "unit_user") return unitRoles.includes("unit_user");
+          return user.org_role === "unit_master";
+        if (roleFilter === "unit_user") return user.org_role === "unit_user";
         return false;
       });
     }

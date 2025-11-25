@@ -8,9 +8,16 @@ import { canManageUsers } from "@/lib/permissions-users";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: { id: string } };
+type Params =
+  | { params: { id: string } }
+  | Promise<{ params: { id: string } }>;
 
-export async function POST(_req: Request, { params }: Params) {
+async function resolveParams(ctx: Params) {
+  const resolved = await Promise.resolve(ctx);
+  return resolved.params;
+}
+
+export async function POST(_req: Request, ctx: Params) {
   const auth = await getAuthContext();
   if (!auth || !canManageUsers(auth)) {
     return NextResponse.json(
@@ -19,7 +26,7 @@ export async function POST(_req: Request, { params }: Params) {
     );
   }
 
-  const userId = params.id;
+  const { id: userId } = await resolveParams(ctx);
   if (!userId) {
     return NextResponse.json(
       { ok: false, error: "missing user id" },
