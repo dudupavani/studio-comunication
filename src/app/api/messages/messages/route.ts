@@ -8,6 +8,8 @@ import {
   errorResponse,
   handleRouteError,
 } from "@/lib/messages/api-helpers";
+import { publishNotificationEvent } from "@/lib/notifications";
+import { logError } from "@/lib/log";
 
 function unique<T>(items: Iterable<T>): T[] {
   return Array.from(new Set(items));
@@ -136,14 +138,16 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      const { error: messageError } = await supabaseWriter
+      const { data: insertedMessage, error: messageError } = await supabaseWriter
         .from("chat_messages")
         .insert({
           chat_id: chatId,
           sender_id: auth.userId,
           message: messageContent,
           attachments: null,
-        });
+        })
+        .select("id")
+        .maybeSingle();
 
       if (messageError) {
         console.error("MESSAGES create message error:", messageError);
@@ -153,6 +157,22 @@ export async function POST(req: NextRequest) {
           messageError.message ?? "Failed to send message"
         );
       }
+
+      const messageId = (insertedMessage as any)?.id ?? chatId;
+
+      await publishNotificationEvent({
+        eventType: "chat.message_received",
+        orgId: auth.orgId,
+        actorId: auth.userId,
+        actorName: null,
+        targetUserIds: recipients,
+        payload: {
+          chatId,
+          chatName: payload.title,
+          messageId,
+          preview: messageContent,
+        },
+      }).catch((err) => logError("NOTIFICATIONS chat create group", err));
 
       return NextResponse.json({ ok: true, mode: "group", chatIds: [chatId] });
     }
@@ -217,8 +237,13 @@ export async function POST(req: NextRequest) {
       attachments: null,
     }));
 
+    const insertedMessages: Array<{ chat_id: string; id: number }> = [];
+
     for (const chunk of chunkArray(messageRows, 100)) {
-      const { error: messageError } = await supabaseWriter.from("chat_messages").insert(chunk);
+      const { data: chunkData, error: messageError } = await supabaseWriter
+        .from("chat_messages")
+        .insert(chunk)
+        .select("id, chat_id");
       if (messageError) {
         console.error("MESSAGES create broadcast message error:", messageError);
         return errorResponse(
@@ -227,7 +252,38 @@ export async function POST(req: NextRequest) {
           messageError.message ?? "Failed to send message"
         );
       }
+      if (Array.isArray(chunkData)) {
+        insertedMessages.push(
+          ...chunkData.map((row: any) => ({
+            chat_id: String(row.chat_id),
+            id: row.id as number,
+          }))
+        );
+      }
     }
+
+    const messageIdByChat = new Map<string, number>();
+    insertedMessages.forEach((row) => {
+      messageIdByChat.set(String(row.chat_id), row.id);
+    });
+
+    const notificationPromises = chatEntries.map((entry) =>
+      publishNotificationEvent({
+        eventType: "chat.message_received",
+        orgId: auth.orgId,
+        actorId: auth.userId,
+        actorName: null,
+        targetUserIds: [entry._recipient],
+        payload: {
+          chatId: entry.id,
+          chatName: payload.title,
+          messageId: messageIdByChat.get(entry.id) ?? entry.id,
+          preview: messageContent,
+        },
+      }).catch((err) => logError("NOTIFICATIONS chat create individual", err))
+    );
+
+    await Promise.all(notificationPromises);
 
     return NextResponse.json({
       ok: true,

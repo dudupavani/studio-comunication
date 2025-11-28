@@ -16,6 +16,8 @@ import {
   type TypedSupabaseClient,
 } from "@/lib/messages/queries";
 import { sendMessageSchema, type SendMessageMentionInput } from "@/lib/messages/validations";
+import { publishNotificationEvent } from "@/lib/notifications";
+import { logError } from "@/lib/log";
 
 type StoredAttachment = {
   name: string;
@@ -352,6 +354,64 @@ export async function POST(
       sender: memberMap.get(messageRow.sender_id) ?? null,
       mentions,
     };
+
+    const otherMembers = Array.from(memberIds).filter((id) => id !== auth.userId);
+    const mentionUserIds = Array.from(
+      new Set(
+        mentions
+          .filter((mention) => mention.type === "user" && mention.mentioned_user_id)
+          .map((mention) => mention.mentioned_user_id as string)
+      )
+    );
+    const actorIdentity = memberMap.get(auth.userId) ?? null;
+    const actorName =
+      (actorIdentity as any)?.full_name ||
+      (actorIdentity as any)?.email ||
+      null;
+    const preview = messageRow.message;
+
+    const notificationPromises: Array<Promise<unknown>> = [];
+    notificationPromises.push(
+      publishNotificationEvent({
+        eventType: "chat.message_received",
+        orgId: auth.orgId,
+        actorId: auth.userId,
+        actorName,
+        targetUserIds: otherMembers,
+        payload: {
+          chatId,
+          chatName: null,
+          messageId: messageRow.id,
+          preview,
+        },
+      })
+    );
+
+    if (mentionUserIds.length) {
+      notificationPromises.push(
+        publishNotificationEvent({
+          eventType: "chat.mention",
+          orgId: auth.orgId,
+          actorId: auth.userId,
+          actorName,
+          targetUserIds: mentionUserIds,
+          payload: {
+            chatId,
+            chatName: null,
+            messageId: messageRow.id,
+            preview,
+            mentionType: "user",
+            mentionedUserId: mentionUserIds.length === 1 ? mentionUserIds[0] : null,
+          },
+        })
+      );
+    }
+
+    await Promise.all(
+      notificationPromises.map((promise) =>
+        promise.catch((err) => logError("NOTIFICATIONS chat dispatch", err))
+      )
+    );
 
     return NextResponse.json(response, { status: 201 });
   } catch (err) {

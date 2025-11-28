@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createServerClientWithCookies } from "@/lib/supabase/server";
+import { publishNotificationEvent } from "@/lib/notifications";
+import { logError } from "@/lib/log";
 
 function getUserClient() {
   return createServerClientWithCookies();
@@ -59,6 +61,23 @@ export async function POST(req: Request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const { data: authUser } = await userClient.auth.getUser();
+  const actorId = authUser?.user?.id ?? data?.user_id ?? body.user_id ?? null;
+
+  if (data?.id && data?.org_id && data?.user_id && actorId) {
+    await publishNotificationEvent({
+      eventType: "designer.asset_ready",
+      orgId: data.org_id,
+      actorId,
+      actorName: null,
+      targetUserIds: [data.user_id],
+      payload: {
+        assetId: data.id,
+        title: data.title ?? "Arte disponível",
+      },
+    }).catch((err) => logError("NOTIFICATIONS designer asset", err));
   }
 
   return NextResponse.json(data);

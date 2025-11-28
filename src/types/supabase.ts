@@ -79,38 +79,47 @@ export type Database = {
       }
       notifications: {
         Row: {
+          action_url: string
+          body: string
           created_at: string
-          event_id: string | null
           id: string
-          message: string
-          read: boolean
+          metadata: Json
+          org_id: string
+          read_at: string | null
           title: string
+          type: Database["public"]["Enums"]["notification_type"]
           user_id: string
         }
         Insert: {
+          action_url: string
+          body: string
           created_at?: string
-          event_id?: string | null
           id?: string
-          message: string
-          read?: boolean
+          metadata?: Json
+          org_id: string
+          read_at?: string | null
           title: string
+          type: Database["public"]["Enums"]["notification_type"]
           user_id: string
         }
         Update: {
+          action_url?: string
+          body?: string
           created_at?: string
-          event_id?: string | null
           id?: string
-          message?: string
-          read?: boolean
+          metadata?: Json
+          org_id?: string
+          read_at?: string | null
           title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "notifications_event_id_fkey"
-            columns: ["event_id"]
+            foreignKeyName: "notifications_org_id_fkey"
+            columns: ["org_id"]
             isOneToOne: false
-            referencedRelation: "calendar_events"
+            referencedRelation: "orgs"
             referencedColumns: ["id"]
           },
           {
@@ -717,6 +726,62 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          keys: Json
+          org_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          keys: Json
+          org_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          keys?: Json
+          org_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       unit_members: {
         Row: {
@@ -1560,6 +1625,12 @@ export type Database = {
       app_role: "org_admin" | "org_master" | "unit_master" | "unit_user"
       chat_member_role: "admin" | "member"
       chat_type: "direct" | "group" | "broadcast"
+      notification_type:
+        | "chat.message"
+        | "chat.mention"
+        | "announcement.sent"
+        | "designer.asset_ready"
+        | "calendar.event_created"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1688,6 +1759,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["org_admin", "org_master", "unit_master", "unit_user"],
+      notification_type: [
+        "chat.message",
+        "chat.mention",
+        "announcement.sent",
+        "designer.asset_ready",
+        "calendar.event_created",
+      ],
     },
   },
 } as const

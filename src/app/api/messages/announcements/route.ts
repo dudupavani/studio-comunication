@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 import { createServerClientWithCookies } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getAuthContext } from "@/lib/messages/auth-context";
 import { createAnnouncementSchema } from "@/lib/messages/validations";
 import { errorResponse, handleRouteError } from "@/lib/messages/api-helpers";
+import { publishNotificationEvent } from "@/lib/notifications";
+import { logError } from "@/lib/log";
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,6 +59,25 @@ export async function POST(req: NextRequest) {
       (teamMembers ?? []).forEach((row: any) => {
         if (row?.user_id) userIdSet.add(row.user_id as string);
       });
+    }
+
+    if (groupIds.length > 0) {
+      const { data: groupMembers, error: groupMembersError } = await supabaseUser
+        .from("user_group_members")
+        .select("user_id")
+        .in("group_id", groupIds)
+        .eq("org_id", auth.orgId);
+
+      if (groupMembersError) {
+        console.error(
+          "ANNOUNCEMENTS load group members error:",
+          groupMembersError
+        );
+      } else {
+        (groupMembers ?? []).forEach((row: any) => {
+          if (row?.user_id) userIdSet.add(row.user_id as string);
+        });
+      }
     }
 
     const userIds = Array.from(userIdSet);
@@ -117,6 +137,30 @@ export async function POST(req: NextRequest) {
           "Failed to assign recipients to announcement"
         );
       }
+    }
+
+    const excerpt =
+      payload.content
+        ?.replace(/<[^>]+>/g, " ")
+        ?.replace(/\s+/g, " ")
+        ?.trim()
+        ?.slice(0, 280) ?? null;
+
+    const notificationTargets = userIds.filter((id) => id !== auth.userId);
+
+    if (notificationTargets.length) {
+      await publishNotificationEvent({
+        eventType: "announcement.sent",
+        orgId: auth.orgId,
+        actorId: auth.userId,
+        actorName: null,
+        targetUserIds: notificationTargets,
+        payload: {
+          announcementId: inserted.id,
+          title: payload.title,
+          excerpt,
+        },
+      }).catch((err) => logError("NOTIFICATIONS announcement sent", err));
     }
 
     return NextResponse.json({

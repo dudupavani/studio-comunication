@@ -16,6 +16,7 @@ export type InboxItem =
       title: string;
       senderName: string | null;
       senderId: string | null;
+      senderAvatar: string | null;
       preview: string | null;
       createdAt: string;
     }
@@ -444,12 +445,15 @@ export async function fetchInboxItems(
       chat.last_message?.sender_id || chat.created_by || null;
     const senderName =
       (senderId && (identityMap[senderId]?.full_name || identityMap[senderId]?.email)) || null;
+    const senderAvatar =
+      (senderId && identityMap[senderId]?.avatar_url) || null;
     return {
       kind: "conversation",
       chatId: chat.id,
       title: chat.name || "Conversa",
       senderName,
       senderId,
+      senderAvatar,
       preview: toPlain(chat.last_message?.message ?? null),
       createdAt: chat.last_message?.created_at || chat.created_at,
     };
