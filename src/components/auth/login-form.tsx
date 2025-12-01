@@ -7,13 +7,6 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Form,
   FormControl,
   FormField,
@@ -57,59 +50,64 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="text-left">
-        <CardTitle className="text-2xl">Login</CardTitle>
-        <CardDescription>
-          Digite seu e-mail abaixo para acessar sua conta
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="nome@exemplo.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center">
-                    <FormLabel>Password</FormLabel>
-                    <Link
-                      href="/forgot-password"
-                      className="inline-block ml-auto text-xs font-medium text-gray-700 hover:text-primary"
-                      tabIndex={-1}>
-                      Esqueceu a senha?
-                    </Link>
-                  </div>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Logging in..." : "Login"}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+    <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[380px]">
+      <div className="space-y-2 text-left">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Acesse sua conta
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Utilize o e-mail corporativo fornecido pela sua organização.
+        </p>
+      </div>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="nome@exemplo.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center">
+                  <FormLabel>Senha</FormLabel>
+                  <Link
+                    href="/forgot-password"
+                    className="ml-auto text-xs font-medium text-muted-foreground hover:text-primary"
+                    tabIndex={-1}>
+                    Esqueceu a senha?
+                  </Link>
+                </div>
+                <FormControl>
+                  <Input type="password" placeholder="••••••••" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Entrando..." : "Entrar"}
+          </Button>
+        </form>
+      </Form>
+      <p className="px-2 text-center text-xs text-muted-foreground">
+        Precisa de acesso? Fale com o administrador da sua organização.
+      </p>
+    </div>
   );
 }
