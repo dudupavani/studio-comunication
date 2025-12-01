@@ -53,6 +53,8 @@ export interface ChatSummary extends Chat {
     sender_name?: string | null;
   } | null;
   creator?: UserMini | null;
+  unread_count?: number;
+  last_unread_at?: string | null;
 }
 
 export interface PaginatedResult<T> {

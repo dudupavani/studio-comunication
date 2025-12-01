@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Chat } from "@/lib/messages/types";
 import type { ChatMemberWithUser } from "./types";
 import { ChatSidebarList } from "./ChatSidebarList";
@@ -29,6 +29,31 @@ export function ConversationLayout({
   const [members, setMembers] = useState<ChatMemberWithUser[]>(initialMembers);
   const [activePanel, setActivePanel] = useState<ChatPanelTab>("details");
   const [attachmentsVersion, setAttachmentsVersion] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const markAsRead = async () => {
+      try {
+        const res = await fetch("/api/notifications/mark-read", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scope: "chat", chatId }),
+        });
+        if (!res.ok) {
+          throw new Error(`Mark chat notification failed (${res.status})`);
+        }
+        if (!cancelled && typeof window !== "undefined") {
+          window.dispatchEvent(new Event("notifications:refresh"));
+        }
+      } catch (err) {
+        console.warn("CHAT mark notifications error", err);
+      }
+    };
+    markAsRead();
+    return () => {
+      cancelled = true;
+    };
+  }, [chatId]);
 
   const renderPanel = () => {
     switch (activePanel) {

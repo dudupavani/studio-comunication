@@ -1,41 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClientWithCookies } from "@/lib/supabase/server";
 import { getAuthContext } from "@/lib/messages/auth-context";
-import {
-  errorResponse,
-  handleRouteError,
-} from "@/lib/messages/api-helpers";
-import { updateNotificationsReadState } from "@/lib/notifications/queries";
-import { markReadSchema } from "@/lib/notifications/validations";
+
+type Scope = "inbox" | "chats" | "chat";
 
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
-    const rawBody = await req.json().catch(() => null);
-    const parsed = markReadSchema.safeParse(rawBody ?? {});
 
-    if (!parsed.success) {
-      return errorResponse(
-        400,
-        "validation_error",
-        parsed.error.issues.map((i) => i.message).join("; ") || "Payload inválido"
+    const payload = (await req.json().catch(() => null)) as
+      | { scope?: Scope; chatId?: string }
+      | null;
+
+    const scope = payload?.scope;
+    const chatId = payload?.chatId?.trim() || null;
+
+    if (!chatId && scope !== "inbox" && scope !== "chats") {
+      return NextResponse.json(
+        { error: { message: "Escopo inválido" } },
+        { status: 400 }
       );
     }
 
-    const payload = parsed.data;
-    const ids = payload.all ? null : payload.ids;
+    const now = new Date().toISOString();
+    let query = supabase
+      .from("notifications")
+      .update({ read_at: now })
+      .eq("user_id", auth.userId)
+      .is("read_at", null);
 
-    const result = await updateNotificationsReadState(
-      supabase,
-      auth.userId,
-      auth.orgId,
-      ids,
-      payload.read
-    );
+    if (chatId) {
+      query = query
+        .eq("type", "chat.message")
+        .filter("metadata->>chat_id", "eq", chatId);
+    } else if (scope === "chats") {
+      query = query.eq("type", "chat.message");
+    } else {
+      query = query.neq("type", "chat.message");
+    }
 
-    return NextResponse.json({ updated: result.updated, read: payload.read });
-  } catch (err) {
-    return handleRouteError(err);
+    const { error } = await query;
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    const status = typeof err?.status === "number" ? err.status : 500;
+    const message = err?.message ?? "Falha ao atualizar notificações";
+    return NextResponse.json({ error: { message } }, { status });
   }
 }

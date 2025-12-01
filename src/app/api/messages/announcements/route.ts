@@ -7,6 +7,18 @@ import { errorResponse, handleRouteError } from "@/lib/messages/api-helpers";
 import { publishNotificationEvent } from "@/lib/notifications";
 import { logError } from "@/lib/log";
 
+function buildAnnouncementSnippet(content: string) {
+  const plain = content
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!plain) {
+    return "Novo comunicado disponível.";
+  }
+  const limit = 200;
+  return plain.length > limit ? `${plain.slice(0, limit - 1).trim()}…` : plain;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabaseUser = createServerClientWithCookies();
@@ -139,28 +151,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const excerpt =
-      payload.content
-        ?.replace(/<[^>]+>/g, " ")
-        ?.replace(/\s+/g, " ")
-        ?.trim()
-        ?.slice(0, 280) ?? null;
+    // Notificações: usa recipients já resolvidos (incluindo grupos/equipes)
+    const finalRecipients = new Set<string>(userIds);
+    finalRecipients.delete(auth.userId);
 
-    const notificationTargets = userIds.filter((id) => id !== auth.userId);
+    const snippet = buildAnnouncementSnippet(payload.content);
+    const notificationRows = Array.from(finalRecipients).map((userId) => ({
+      org_id: auth.orgId,
+      user_id: userId,
+      type: "announcement.sent" as const,
+      title: payload.title,
+      body: snippet,
+      action_url: "/comunicados",
+      metadata: {
+        announcement_id: inserted.id,
+        org_id: auth.orgId,
+        title: payload.title,
+      },
+    }));
 
-    if (notificationTargets.length) {
-      await publishNotificationEvent({
-        eventType: "announcement.sent",
-        orgId: auth.orgId,
-        actorId: auth.userId,
-        actorName: null,
-        targetUserIds: notificationTargets,
-        payload: {
-          announcementId: inserted.id,
-          title: payload.title,
-          excerpt,
-        },
-      }).catch((err) => logError("NOTIFICATIONS announcement sent", err));
+    if (notificationRows.length) {
+      const { error: notifErr } = await supabaseSvc
+        .from("notifications")
+        .insert(notificationRows);
+
+      if (notifErr) {
+        console.error("ANNOUNCEMENTS notifications error:", notifErr);
+        return errorResponse(
+          500,
+          "db_error",
+          "Failed to create announcement notifications"
+        );
+      }
     }
 
     return NextResponse.json({

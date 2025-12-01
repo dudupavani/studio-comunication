@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { updateUserRoles } from "@/lib/actions/user";
 import { getRoleLabel } from "@/lib/role-labels";
@@ -27,6 +29,9 @@ type Props = {
   orgId: string;
   defaultName?: string | null;
   defaultEmail?: string | null;
+  defaultPhone?: string | null;
+  defaultCargo?: string | null;
+  defaultEntryDate?: string | null;
   units: Unit[];
   teams: Team[];
   currentRole?: TargetRole | null;
@@ -40,6 +45,9 @@ export default function EditUserForm(props: Props) {
     orgId,
     defaultName,
     defaultEmail,
+    defaultPhone,
+    defaultCargo,
+    defaultEntryDate,
     units,
     teams,
     currentRole,
@@ -56,6 +64,8 @@ export default function EditUserForm(props: Props) {
   const initialTeamId: string = currentTeamId ?? "";
 
   const [saving, setSaving] = useState(false);
+  const [cargo, setCargo] = useState(defaultCargo ?? "");
+  const [entryDate, setEntryDate] = useState(defaultEntryDate ?? "");
   const [targetRole, setTargetRole] = useState<TargetRole | "">(preferredRole);
   const [selectedUnitId, setSelectedUnitId] = useState<string>(initialUnitId);
   const [selectedTeamId, setSelectedTeamId] = useState<string>(initialTeamId);
@@ -67,6 +77,14 @@ export default function EditUserForm(props: Props) {
   useEffect(() => {
     setTargetRole(preferredRole);
   }, [preferredRole, userId]);
+
+  useEffect(() => {
+    setCargo(defaultCargo ?? "");
+  }, [defaultCargo, userId]);
+
+  useEffect(() => {
+    setEntryDate(defaultEntryDate ?? "");
+  }, [defaultEntryDate, userId]);
 
   useEffect(() => {
     setSelectedUnitId(
@@ -97,121 +115,183 @@ export default function EditUserForm(props: Props) {
       return;
     }
     setSaving(true);
-    const res = await updateUserRoles({
-      userId,
-      orgId,
-      // agora suporta org_admin também
-      targetRole: targetRole as OrgRole | UnitRole,
-      unitId: needsUnit ? payloadUnitId : null,
-      teamId: payloadTeamId,
-    });
-    setSaving(false);
+    try {
+      const employeeResponse = await fetch(`/api/users/${userId}/employee`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cargo: cargo.trim() ? cargo.trim() : null,
+          dataEntrada: entryDate || null,
+        }),
+      });
+      const employeePayload = await employeeResponse.json().catch(() => null);
+      if (!employeeResponse.ok) {
+        throw new Error(
+          employeePayload?.error ?? "Falha ao salvar dados corporativos."
+        );
+      }
 
-    if (!res.ok) {
+      const roleRes = await updateUserRoles({
+        userId,
+        orgId,
+        targetRole: targetRole as OrgRole | UnitRole,
+        unitId: needsUnit ? payloadUnitId : null,
+        teamId: payloadTeamId,
+      });
+
+      if (!roleRes.ok) {
+        throw new Error(roleRes.error ?? "Falha ao salvar dados de acesso.");
+      }
+
+      toast({
+        title: "Colaborador atualizado",
+        description: "Dados corporativos e permissões salvos com sucesso.",
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Falha ao salvar alterações.";
       toast({
         title: "Erro ao salvar",
-        description: res.error ?? "Falha inesperada.",
+        description: message,
         variant: "destructive",
       });
-      return;
+    } finally {
+      setSaving(false);
     }
-    toast({ title: "Dados do usuário atualizados com sucesso" });
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-md space-y-6">
-      {/* Nome */}
-      <div className="space-y-2">
-        <Label>Nome</Label>
-        <Input value={defaultName ?? ""} disabled />
-      </div>
+    <form onSubmit={onSubmit} className="space-y-8">
+      <section className="space-y-6">
+        <div className="space-y-2">
+          <h4>Dados pessoais</h4>
+          <p className="text-sm text-muted-foreground">
+            Informações básicas do colaborador
+          </p>
+        </div>
 
-      {/* Email */}
-      <div className="space-y-2">
-        <Label>E-mail</Label>
-        <Input value={defaultEmail ?? ""} disabled />
-      </div>
+        <div className="flex flex-col gap-6">
+          <div className="space-y-2">
+            <Label>Nome</Label>
+            <Input value={defaultName ?? ""} disabled />
+          </div>
+          <div className="space-y-2">
+            <Label>E-mail</Label>
+            <Input value={defaultEmail ?? ""} disabled />
+          </div>
+          <div className="space-y-2">
+            <Label>Telefone</Label>
+            <Input value={defaultPhone ?? ""} disabled />
+          </div>
+        </div>
+      </section>
 
-      {/* Função */}
-      <div className="space-y-2">
-        <Label>Função</Label>
-        <Select
-          value={targetRole}
-          onValueChange={(v) => {
-            setTargetRole(v as TargetRole | "");
-          }}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a função" />
-          </SelectTrigger>
-          <SelectContent>
-            {/* Roles de organização */}
-            <SelectItem value="org_admin">
-              {getRoleLabel("org_admin")}
-            </SelectItem>
-            <SelectItem value="org_master">
-              {getRoleLabel("org_master")}
-            </SelectItem>
-            {/* Roles de unidade */}
-            <SelectItem value="unit_master">
-              {getRoleLabel("unit_master")}
-            </SelectItem>
-            <SelectItem value="unit_user">
-              {getRoleLabel("unit_user")}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Separator />
 
-      <div className="space-y-2">
-        <Label>Unidade</Label>
-        <Select
-          value={selectedUnitId || UNIT_NONE_VALUE}
-          onValueChange={(v) =>
-            setSelectedUnitId(v === UNIT_NONE_VALUE ? "" : v)
-          }>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a unidade ou Matriz" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={UNIT_NONE_VALUE}>
-              Matriz (sem unidade)
-            </SelectItem>
-            {unitOptions.length === 0 ? null : (
-              unitOptions.map((u) => (
-                <SelectItem key={u.id} value={u.id}>
-                  {u.name}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-      </div>
+      <section className="space-y-6">
+        <div className="space-y-2">
+          <h4>Função e vínculos</h4>
+          <p className="text-sm text-muted-foreground">
+            Defina o nível de acesso do colaborador, sua unidade, e a equipe à
+            qual ele pertence.
+          </p>
+        </div>
 
-      <div className="space-y-2">
-        <Label>Equipe</Label>
-        <Select
-          value={selectedTeamId || TEAM_NONE_VALUE}
-          onValueChange={(v) =>
-            setSelectedTeamId(v === TEAM_NONE_VALUE ? "" : v)
-          }>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a equipe (opcional)" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={TEAM_NONE_VALUE}>Sem equipe</SelectItem>
-            {teamOptions.length === 0 ? null : (
-              teamOptions.map((team) => (
-                <SelectItem key={team.id} value={team.id}>
-                  {team.name}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-      </div>
+        <div className="space-y-2">
+          <Label>Função na plataforma</Label>
+          <Select
+            value={targetRole}
+            onValueChange={(v) => {
+              setTargetRole(v as TargetRole | "");
+            }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a função" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="org_admin">
+                {getRoleLabel("org_admin")}
+              </SelectItem>
+              <SelectItem value="org_master">
+                {getRoleLabel("org_master")}
+              </SelectItem>
+              <SelectItem value="unit_master">
+                {getRoleLabel("unit_master")}
+              </SelectItem>
+              <SelectItem value="unit_user">
+                {getRoleLabel("unit_user")}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="cargo">Cargo</Label>
+          <Input
+            id="cargo"
+            placeholder="Ex: Analista de Projetos"
+            value={cargo}
+            onChange={(event) => setCargo(event.target.value)}
+          />
+        </div>
+        <div className="space-y-2 max-w-[180px]">
+          <Label htmlFor="dataEntrada">Data de entrada</Label>
+          <DatePicker
+            value={entryDate || null}
+            onChange={(value) => setEntryDate(value ?? "")}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Unidade</Label>
+          <Select
+            value={selectedUnitId || UNIT_NONE_VALUE}
+            onValueChange={(v) =>
+              setSelectedUnitId(v === UNIT_NONE_VALUE ? "" : v)
+            }>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a unidade ou Matriz" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={UNIT_NONE_VALUE}>
+                Matriz (sem unidade)
+              </SelectItem>
+              {unitOptions.length === 0
+                ? null
+                : unitOptions.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.name}
+                    </SelectItem>
+                  ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Equipe</Label>
+          <Select
+            value={selectedTeamId || TEAM_NONE_VALUE}
+            onValueChange={(v) =>
+              setSelectedTeamId(v === TEAM_NONE_VALUE ? "" : v)
+            }>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a equipe (opcional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TEAM_NONE_VALUE}>Sem equipe</SelectItem>
+              {teamOptions.length === 0
+                ? null
+                : teamOptions.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </section>
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={saving}>
+        <Button type="submit" disabled={saving} className="w-full sm:w-auto">
           {saving ? "Salvando..." : "Salvar"}
         </Button>
       </div>

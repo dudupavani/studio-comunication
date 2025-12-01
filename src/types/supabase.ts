@@ -126,18 +126,60 @@ export type Database = {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "org_users_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          keys: Json
+          org_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          keys: Json
+          org_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          keys?: Json
+          org_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "notifications_user_id_fkey"
+            foreignKeyName: "push_subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "unit_users_view"
@@ -177,13 +219,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "chat_messages"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_message_mentions_mentioned_user_id_fkey"
-            columns: ["mentioned_user_id"]
-            isOneToOne: false
-            referencedRelation: "org_users_view"
-            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "chat_message_mentions_mentioned_user_id_fkey"
@@ -238,13 +273,6 @@ export type Database = {
             foreignKeyName: "chat_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "org_users_view"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "chat_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -294,13 +322,6 @@ export type Database = {
             foreignKeyName: "chat_messages_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
-            referencedRelation: "org_users_view"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "chat_messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -342,13 +363,6 @@ export type Database = {
           type?: Database["public"]["Enums"]["chat_type"]
         }
         Relationships: [
-          {
-            foreignKeyName: "chats_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "org_users_view"
-            referencedColumns: ["user_id"]
-          },
           {
             foreignKeyName: "chats_created_by_fkey"
             columns: ["created_by"]
@@ -599,6 +613,61 @@ export type Database = {
           },
         ]
       }
+      employee_profile: {
+        Row: {
+          cargo: string | null
+          created_at: string
+          data_entrada: string | null
+          id: string
+          org_id: string
+          time_principal_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cargo?: string | null
+          created_at?: string
+          data_entrada?: string | null
+          id?: string
+          org_id: string
+          time_principal_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cargo?: string | null
+          created_at?: string
+          data_entrada?: string | null
+          id?: string
+          org_id?: string
+          time_principal_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_profile_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_profile_time_principal_id_fkey"
+            columns: ["time_principal_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_members: {
         Row: {
           created_at: string
@@ -625,13 +694,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orgs"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "org_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "org_users_view"
-            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "org_members_user_id_fkey"
@@ -820,13 +882,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "unit_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "org_users_view"
-            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "unit_members_user_id_fkey"
@@ -1477,21 +1532,33 @@ export type Database = {
       }
     }
     Views: {
-      org_users_view: {
+      team_members: {
         Row: {
-          avatar_url: string | null
-          full_name: string | null
+          created_at: string | null
           org_id: string | null
-          org_role: Database["public"]["Enums"]["app_role"] | null
-          phone: string | null
+          team_id: string | null
           user_id: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "org_members_org_id_fkey"
+            foreignKeyName: "equipe_members_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_members_equipe_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1538,6 +1605,14 @@ export type Database = {
           full_name: string
           org_id: string
           user_id: string
+        }[]
+      }
+      get_unread_chat_notifications: {
+        Args: { p_user_id: string }
+        Returns: {
+          chat_id: string | null
+          unread_count: number | null
+          last_notification_at: string | null
         }[]
       }
       group_unit: {

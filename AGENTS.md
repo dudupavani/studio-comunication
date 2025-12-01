@@ -15,3 +15,7 @@
 
 - **Typecheck**
   - Antes de entregar mudanças em mensagens/chats ou no schema Supabase, rode `npm run typecheck -- --pretty false` e garanta que está limpo.
+
+- **Notificações / Inbox**
+  - A central de notificações é o módulo `inbox`, que concentra notificações e conteúdos recentes.
+  - O módulo de `chat` é a única exceção: possui notificações próprias devido à dinâmica distinta, apesar de reutilizar a mesma infraestrutura base quando necessário.

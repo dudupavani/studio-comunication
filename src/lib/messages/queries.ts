@@ -94,6 +94,26 @@ export async function fetchChats(
 
   const baseItems = Array.from(chatsById.values());
 
+  const unreadMap = new Map<string, { count: number; last: string | null }>();
+  try {
+    const { data: unreadRows, error: unreadError } = await supabase.rpc(
+      "get_unread_chat_notifications",
+      { p_user_id: userId }
+    );
+    if (unreadError) {
+      console.warn("MESSAGES fetch unread chat notifications error", unreadError);
+    }
+    (unreadRows ?? []).forEach((row: any) => {
+      if (!row?.chat_id) return;
+      unreadMap.set(String(row.chat_id), {
+        count: Number(row.unread_count ?? 0),
+        last: row.last_notification_at ?? null,
+      });
+    });
+  } catch (err) {
+    console.warn("MESSAGES fetch unread chat notifications failure", err);
+  }
+
   const creatorIds = Array.from(
     new Set(
       baseItems
@@ -137,6 +157,10 @@ export async function fetchChats(
   if (baseItems.length) {
     await Promise.all(
       baseItems.map(async (chat) => {
+        const unreadInfo = unreadMap.get(chat.id);
+        chat.unread_count = unreadInfo?.count ?? 0;
+        chat.last_unread_at = unreadInfo?.last ?? null;
+
         const { data: last, error: lastError } = await supabase
           .from("chat_messages")
           .select("id, message, created_at, sender_id")
@@ -249,12 +273,19 @@ export async function fetchChatMembers(
   }
 
   return rows.map((row: any) => {
-    const profileFromJoin =
-      row.profiles && (row.profiles.full_name || row.profiles.avatar_url)
-        ? row.profiles
-        : null;
+    const joinProfile = row.profiles ?? null;
     const identity = identityMap[row.user_id];
-    const profile = profileFromJoin || identity;
+
+    const fullName =
+      joinProfile?.full_name?.trim() ||
+      identity?.full_name?.trim() ||
+      identity?.email?.trim() ||
+      null;
+    const avatarUrl = joinProfile?.avatar_url ?? identity?.avatar_url ?? null;
+    const email = identity?.email ?? null;
+    const profileId = joinProfile?.id ?? identity?.id ?? row.user_id;
+
+    const hasProfileData = fullName || avatarUrl || email;
 
     return {
       id: row.id,
@@ -262,12 +293,12 @@ export async function fetchChatMembers(
       user_id: row.user_id,
       role: row.role,
       joined_at: row.joined_at,
-      user: profile
+      user: hasProfileData
         ? {
-            id: profile.id ?? row.user_id,
-            full_name: profile.full_name,
-            avatar_url: profile.avatar_url,
-            email: (profile as any).email ?? null,
+            id: profileId,
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            email,
           }
         : null,
     };
@@ -320,9 +351,79 @@ export async function fetchChatMessages(
           id: row.profiles.id,
           full_name: row.profiles.full_name,
           avatar_url: row.profiles.avatar_url,
+          email: null,
         }
       : null,
   }));
+
+  const senderIdsNeedingIdentity = Array.from(
+    new Set(
+      items
+        .filter(
+          (item) =>
+            !item.sender ||
+            (!item.sender.full_name && !item.sender.avatar_url)
+        )
+        .map((item) => item.sender_id)
+        .filter(Boolean)
+    )
+  );
+
+  let identityMap: Record<string, UserMini> = {};
+
+  if (senderIdsNeedingIdentity.length) {
+    try {
+      const svc = createServiceClient();
+      const { data: identities, error: identityError } = await svc.rpc(
+        "get_user_identity_many",
+        { p_user_ids: senderIdsNeedingIdentity }
+      );
+      if (identityError) {
+        console.warn("MESSAGES fetch sender identity error", identityError);
+      } else if (Array.isArray(identities)) {
+        identityMap = identities.reduce(
+          (acc, identity: any) => {
+            if (!identity?.user_id) return acc;
+            acc[identity.user_id] = {
+              id: identity.user_id,
+              full_name: identity.full_name ?? null,
+              avatar_url: identity.avatar_url ?? null,
+              email: identity.email ?? null,
+            };
+            return acc;
+          },
+          {} as Record<string, UserMini>
+        );
+      }
+    } catch (err) {
+      console.warn("MESSAGES fetch sender identity failure", err);
+    }
+  }
+
+  const itemsWithSenders = items.map((item) => {
+    const identity = identityMap[item.sender_id];
+    if (!identity) {
+      return item;
+    }
+
+    const fullName =
+      item.sender?.full_name?.trim() ||
+      identity.full_name?.trim() ||
+      identity.email?.trim() ||
+      null;
+    const avatarUrl = item.sender?.avatar_url ?? identity.avatar_url ?? null;
+    const email = item.sender?.email ?? identity.email ?? null;
+
+    return {
+      ...item,
+      sender: {
+        id: item.sender?.id ?? identity.id ?? item.sender_id,
+        full_name: fullName,
+        avatar_url: avatarUrl,
+        email,
+      },
+    };
+  });
 
   const messageIds = items.map((m) => m.id);
   const mentionsByMessage = new Map<number, ChatMessageMention[]>();

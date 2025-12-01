@@ -7,7 +7,7 @@ export default async function ChatsPage() {
     auth.isPlatformAdmin || auth.isOrgAdmin || auth.isUnitMaster;
 
   return (
-    <div className="h-full p-6">
+    <div className="h-full p-2 sm:p-6">
       <MessagesInbox canCreateConversation={canCreateConversation} />
     </div>
   );

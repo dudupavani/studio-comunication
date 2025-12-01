@@ -19,7 +19,7 @@ export default async function InboxPage() {
   });
 
   return (
-    <div>
+    <div className="p-6 space-y-6">
       <InboxClient items={items} />
     </div>
   );

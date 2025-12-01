@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClientWithCookies } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { getAuthContext } from "@/lib/messages/auth-context";
 import { errorResponse, handleRouteError } from "@/lib/messages/api-helpers";
 
@@ -42,11 +43,52 @@ export async function GET(req: NextRequest) {
     const hasNext = rows.length > limit;
     const slice = hasNext ? rows.slice(0, limit) : rows;
 
-    const items = slice.map((row: any) => ({
-      id: row.id as string,
-      full_name: row.full_name as string | null,
-      avatar_url: row.avatar_url as string | null,
-    }));
+    const missingIds = slice
+      .filter((row: any) => !row.full_name)
+      .map((row: any) => row.id as string)
+      .filter(Boolean);
+
+    let fallbackNames: Record<string, { full_name?: string | null; email?: string | null }> =
+      {};
+
+    if (missingIds.length) {
+      try {
+        const svc = createServiceClient();
+        const { data: identities, error: identityError } = await svc.rpc(
+          "get_user_identity_many",
+          { p_user_ids: missingIds }
+        );
+        if (identityError) {
+          console.warn("MESSAGES recipients resolve identity error:", identityError);
+        } else if (Array.isArray(identities)) {
+          identities.forEach((identity: any) => {
+            if (!identity?.user_id) return;
+            fallbackNames[identity.user_id] = {
+              full_name: identity.full_name ?? null,
+              email: identity.email ?? null,
+            };
+          });
+        }
+      } catch (err) {
+        console.warn("MESSAGES recipients resolve identity failure:", err);
+      }
+    }
+
+    const items = slice.map((row: any) => {
+      const id = row.id as string;
+      const fallback = fallbackNames[id] ?? {};
+      const fullName =
+        row.full_name ??
+        fallback.full_name ??
+        fallback.email ??
+        null;
+
+      return {
+        id,
+        full_name: fullName,
+        avatar_url: row.avatar_url as string | null,
+      };
+    });
 
     return NextResponse.json({
       items,
