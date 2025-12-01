@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 import { createServerClientWithCookies } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getAuthContext } from "@/lib/messages/auth-context";
 import { createAnnouncementSchema } from "@/lib/messages/validations";
 import { errorResponse, handleRouteError } from "@/lib/messages/api-helpers";
+
+function buildAnnouncementSnippet(content: string) {
+  const plain = content
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!plain) {
+    return "Novo comunicado disponível.";
+  }
+  const limit = 200;
+  return plain.length > limit ? `${plain.slice(0, limit - 1).trim()}…` : plain;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -115,6 +126,60 @@ export async function POST(req: NextRequest) {
           500,
           "db_error",
           "Failed to assign recipients to announcement"
+        );
+      }
+    }
+
+    const finalRecipients = new Set<string>(userIds);
+
+    if (groupIds.length > 0) {
+      const { data: groupMembers, error: groupErr } = await supabaseSvc
+        .from("user_group_members")
+        .select("user_id")
+        .in("group_id", groupIds)
+        .eq("org_id", auth.orgId);
+
+      if (groupErr) {
+        console.error("ANNOUNCEMENTS group members fetch error:", groupErr);
+        return errorResponse(500, "db_error", "Failed to load group recipients");
+      }
+
+      (groupMembers ?? []).forEach((row: any) => {
+        const uid = row?.user_id ? String(row.user_id) : null;
+        if (uid) {
+          finalRecipients.add(uid);
+        }
+      });
+    }
+
+    finalRecipients.delete(auth.userId);
+
+    const snippet = buildAnnouncementSnippet(payload.content);
+    const notificationRows = Array.from(finalRecipients).map((userId) => ({
+      org_id: auth.orgId,
+      user_id: userId,
+      type: "announcement.sent" as const,
+      title: payload.title,
+      body: snippet,
+      action_url: "/comunicados",
+      metadata: {
+        announcement_id: inserted.id,
+        org_id: auth.orgId,
+        title: payload.title,
+      },
+    }));
+
+    if (notificationRows.length) {
+      const { error: notifErr } = await supabaseSvc
+        .from("notifications")
+        .insert(notificationRows);
+
+      if (notifErr) {
+        console.error("ANNOUNCEMENTS notifications error:", notifErr);
+        return errorResponse(
+          500,
+          "db_error",
+          "Failed to create announcement notifications"
         );
       }
     }

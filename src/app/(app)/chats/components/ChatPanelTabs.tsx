@@ -27,38 +27,40 @@ interface Props {
 
 export function ChatPanelTabs({ active, onChange, onClose }: Props) {
   return (
-    <div className="flex w-14 flex-col items-center gap-3 border-l border-border bg-muted/30 py-4">
+    <div className="flex w-14 flex-col items-center border-l border-border bg-muted/30">
       {onClose ? (
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-md"
           onClick={onClose}
           aria-label="Fechar painel"
-          className="text-muted-foreground hover:bg-muted">
+          className="border-b border-border rounded-none w-14 h-14 hover:bg-gray-200">
           <X className="h-4 w-4" />
         </Button>
       ) : null}
-      {TABS.map((tab) => {
-        const Icon = tab.icon;
-        const selected = active === tab.key;
-        return (
-          <Button
-            key={tab.key}
-            type="button"
-            size="icon"
-            variant="ghost"
-            onClick={() => onChange(tab.key)}
-            className={cn(
-              "text-muted-foreground",
-              selected &&
-                "bg-gray-300 border border-gray-600 text-primary shadow-md"
-            )}
-            aria-label={tab.label}
-            title={tab.label}>
-            <Icon className="h-5 w-5" />
-          </Button>
-        );
-      })}
+      <div className="flex flex-col py-4 gap-3">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const selected = active === tab.key;
+          return (
+            <Button
+              key={tab.key}
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={() => onChange(tab.key)}
+              className={cn(
+                "text-muted-foreground",
+                selected &&
+                  "bg-gray-300 border border-gray-600 text-primary shadow-md"
+              )}
+              aria-label={tab.label}
+              title={tab.label}>
+              <Icon className="h-5 w-5" />
+            </Button>
+          );
+        })}
+      </div>
     </div>
   );
 }

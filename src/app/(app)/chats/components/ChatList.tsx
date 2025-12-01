@@ -18,13 +18,23 @@ import { useChats } from "@/hooks/use-chats";
 import type { ChatFilters } from "./ChatFiltersPanel";
 import type { ChatSummary, UserMini } from "@/lib/messages/types";
 
+type ChatNotificationMap = Record<string, { count: number }>;
+
 interface ChatListProps {
   activeChatId?: string;
   onSelect?: (chatId: string) => void;
   filters?: ChatFilters;
+  unreadMap?: ChatNotificationMap;
+  onChatViewed?: (chatId: string) => void;
 }
 
-export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
+export function ChatList({
+  activeChatId,
+  onSelect,
+  filters,
+  unreadMap,
+  onChatViewed,
+}: ChatListProps) {
   const router = useRouter();
   const { chats, loading, error, hasMore, loadMore, reload } = useChats({
     filters,
@@ -40,10 +50,11 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
 
   const handleSelect = useCallback(
     (chatId: string) => {
+      onChatViewed?.(chatId);
       if (onSelect) onSelect(chatId);
       else router.push(`/chats/${chatId}`);
     },
-    [onSelect, router]
+    [onChatViewed, onSelect, router]
   );
 
   const handleSort = useCallback(
@@ -214,6 +225,10 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
       const resolvedCreator = resolveCreatorIdentity(chat, identityMap);
       const creatorName = getCreatorName(chat, resolvedCreator);
       const creatorAvatar = getCreatorAvatar(chat, resolvedCreator);
+      const unreadCount = unreadMap?.[chat.id]?.count ?? chat.unread_count ?? 0;
+      const lastMessageText = chat.last_message?.message ?? "";
+      const createdAtValue = new Date(chat.created_at).toLocaleString();
+
       return (
         <TableRow
           key={chat.id}
@@ -222,23 +237,49 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
             "cursor-pointer",
             chat.id === activeChatId && "bg-primary/5"
           )}>
-          <TableCell className="font-medium">
-            {chat.name || "Conversa"}
-          </TableCell>
-          <TableCell>
+          <TableCell className="font-medium w-1/2">
             <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage
-                  src={creatorAvatar ?? undefined}
-                  alt={creatorName}
-                />
-                <AvatarFallback>{getInitials(creatorName)}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-foreground">{creatorName}</span>
+              <div className="relative">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage
+                    src={creatorAvatar ?? undefined}
+                    alt={chat.name ?? undefined}
+                  />
+                  <AvatarFallback>
+                    {getInitials(chat.name || creatorName)}
+                  </AvatarFallback>
+                </Avatar>
+                {unreadCount > 0 ? (
+                  <span className="absolute -top-1 -right-1 min-w-[20px] min-h-[20px] max-w-[20px] max-h-[20px] rounded-full bg-green-600 text-[11px] font-semibold text-center border border-white shadow-sm text-white ">
+                    {formatBadgeValue(unreadCount)}
+                  </span>
+                ) : null}
+              </div>
+              <div className="flex flex-col">
+                <span className="line-clamp-1">{chat.name || "Conversa"}</span>
+                {lastMessageText ? (
+                  <span className="text-xs text-muted-foreground line-clamp-1">
+                    {lastMessageText}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+            <div className="mt-2 space-y-1 text-xs text-muted-foreground md:hidden">
+              <div>
+                <span className="font-medium text-foreground">Criado por:</span>{" "}
+                {creatorName}
+              </div>
+              <div>
+                <span className="font-medium text-foreground">Criado em:</span>{" "}
+                {createdAtValue}
+              </div>
             </div>
           </TableCell>
-          <TableCell className="text-sm text-muted-foreground">
-            {new Date(chat.created_at).toLocaleString()}
+          <TableCell className="hidden md:table-cell align-top w-1/4">
+            <span className="text-sm text-foreground">{creatorName}</span>
+          </TableCell>
+          <TableCell className="hidden lg:table-cell text-sm text-muted-foreground align-top w-1/4">
+            {createdAtValue}
           </TableCell>
         </TableRow>
       );
@@ -252,6 +293,7 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
     loading,
     reload,
     sortedChats,
+    unreadMap,
   ]);
 
   const renderSortIcon = useCallback(
@@ -269,10 +311,10 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
   return (
     <div className="flex h-full flex-col gap-3">
       <div className="flex-1 overflow-hidden rounded-lg border border-border">
-        <Table>
+        <Table className="table-fixed w-full">
           <TableHeader>
             <TableRow>
-              <TableHead>
+              <TableHead className="hidden md:table-cell w-1/2">
                 <button
                   type="button"
                   onClick={() => handleSort("name")}
@@ -281,7 +323,7 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
                   {renderSortIcon("name")}
                 </button>
               </TableHead>
-              <TableHead>
+              <TableHead className="hidden md:table-cell w-1/4">
                 <button
                   type="button"
                   onClick={() => handleSort("creator")}
@@ -290,7 +332,7 @@ export function ChatList({ activeChatId, onSelect, filters }: ChatListProps) {
                   {renderSortIcon("creator")}
                 </button>
               </TableHead>
-              <TableHead>
+              <TableHead className="hidden lg:table-cell w-1/4">
                 <button
                   type="button"
                   onClick={() => handleSort("created_at")}
@@ -339,6 +381,11 @@ function getCreatorName(chat: ChatSummary, identity?: UserMini | null) {
     chat.created_by ||
     "Usuário"
   );
+}
+
+function formatBadgeValue(value: number) {
+  if (value > 99) return "99+";
+  return String(value);
 }
 
 function getCreatorAvatar(chat: ChatSummary, identity?: UserMini | null) {

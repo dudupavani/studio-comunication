@@ -672,6 +672,27 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
     if (upTeamErr) return { ok: false, error: upTeamErr.message };
   }
 
+  // Sincroniza equipe principal no employee_profile (quando existir)
+  if (membershipTeamId) {
+    await supabaseAdmin
+      .from("employee_profile")
+      .upsert(
+        {
+          org_id: orgId,
+          user_id: userId,
+          time_principal_id: membershipTeamId,
+        },
+        { onConflict: "org_id,user_id" }
+      );
+  } else {
+    // Se removido, zera o campo
+    await supabaseAdmin
+      .from("employee_profile")
+      .update({ time_principal_id: null })
+      .eq("org_id", orgId)
+      .eq("user_id", userId);
+  }
+
   revalidatePath("/users");
   revalidatePath(`/users/${userId}/edit`);
   return { ok: true };

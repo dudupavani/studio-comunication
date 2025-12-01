@@ -24,7 +24,7 @@ const buttonVariants = cva(
         warning: "bg-orange-500 text-white hover:bg-orange-500/90",
       },
       size: {
-        default: "h-10 px-4 py-2 [&_svg]:size-4",
+        default: "h-10 px-4 py-2 [&_svg]:size-[18px]",
         sm: "h-8 rounded-md px-3 [&_svg]:size-3.5",
         lg: "h-12 rounded-md px-8 [&_svg]:size-5 text-base",
         icon: "h-10 w-10",

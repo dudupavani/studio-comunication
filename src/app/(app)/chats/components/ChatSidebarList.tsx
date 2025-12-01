@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChats } from "@/hooks/use-chats";
 import { ChatListItem } from "./ChatListItem";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import { useNotificationBadges } from "@/hooks/use-notification-badges";
 
 interface ChatSidebarListProps {
   activeChatId?: string;
@@ -18,13 +20,20 @@ export function ChatSidebarList({
 }: ChatSidebarListProps) {
   const router = useRouter();
   const { chats, loading, error, hasMore, loadMore, reload } = useChats();
+  const { auth } = useAuthContext();
+  const { chatMap, markChatAsRead } = useNotificationBadges({
+    enabled: !!auth,
+    userId: auth?.userId ?? null,
+    pollMs: 25_000,
+  });
 
   const handleSelect = useCallback(
     (chatId: string) => {
+      void markChatAsRead(chatId);
       if (onSelect) onSelect(chatId);
       else router.push(`/chats/${chatId}`);
     },
-    [onSelect, router]
+    [markChatAsRead, onSelect, router]
   );
 
   const content = useMemo(() => {
@@ -63,12 +72,13 @@ export function ChatSidebarList({
     }
 
     return (
-      <div className="flex flex-col h-svh overflow-y-auto">
+      <div className="flex flex-col h-dvh overflow-y-auto">
         {chats.map((chat) => (
           <ChatListItem
             key={chat.id}
             chat={chat}
             active={chat.id === activeChatId}
+            unreadCount={chatMap[chat.id]?.count ?? chat.unread_count ?? 0}
             onSelect={handleSelect}
           />
         ))}
@@ -92,6 +102,7 @@ export function ChatSidebarList({
     error,
     handleSelect,
     hasMore,
+    chatMap,
     loadMore,
     loading,
     reload,

@@ -182,8 +182,8 @@ export function NewMessageModal({
           className="gap-2"
           disabled={!canCreateConversation}
           title={disabledReason ?? undefined}>
-          <MessageSquarePlus className="h-4 w-4" />
-          Nova conversa
+          <MessageSquarePlus className="w-12 h-12" />
+          <span className="hidden sm:block">Conversa</span>
         </Button>
       </DrawerTrigger>
       <DrawerContent className="h-full max-h-[95vh]">

@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import EditUserForm from "@/components/users/edit-user-form";
 import { getUserById, getUserRoles } from "@/lib/actions/user"; // <-- SINGULAR
 import { getAuthContext } from "@/lib/auth-context";
@@ -32,8 +33,8 @@ export default async function EditUserPage({
 
   const supabase = createClient();
 
-  const [userResult, unitsResult, rolesResult, teamsResult] = await Promise.all(
-    [
+  const [userResult, unitsResult, rolesResult, teamsResult, employeeResult] =
+    await Promise.all([
       getUserById(id),
       listUnits(auth.orgId),
       getUserRoles(id, auth.orgId),
@@ -42,8 +43,13 @@ export default async function EditUserPage({
         .select("id, name")
         .eq("org_id", auth.orgId)
         .order("name"),
-    ]
-  );
+      supabase
+        .from("employee_profile")
+        .select("cargo, data_entrada")
+        .eq("org_id", auth.orgId)
+        .eq("user_id", id)
+        .maybeSingle(),
+    ]);
 
   if (!userResult) {
     notFound();
@@ -59,8 +65,10 @@ export default async function EditUserPage({
       name: team.name as string,
     })) ?? [];
 
+  const employeeProfile = employeeResult?.data ?? null;
+
   return (
-    <div className="container flex flex-col pt-8 pb-12 px-8">
+    <div className="container flex flex-col pt-6 pb-20 px-4 sm:pt-8 sm:pb-12 sm:px-8">
       <div className="flex items-center gap-4 mb-8 self-start">
         <Button variant="outline" size="icon-sm" asChild>
           <Link href="/users">
@@ -72,17 +80,24 @@ export default async function EditUserPage({
         </div>
       </div>
 
-      <EditUserForm
-        userId={id}
-        orgId={auth.orgId}
-        defaultName={userResult.full_name}
-        defaultEmail={userResult.email}
-        units={units}
-        teams={teams}
-        currentRole={userRoles.role}
-        currentUnitId={userRoles.unitId}
-        currentTeamId={userRoles.teamId}
-      />
+      <Card className="max-w-3xl">
+        <CardContent className="pt-6">
+          <EditUserForm
+            userId={id}
+            orgId={auth.orgId}
+            defaultName={userResult.full_name}
+            defaultEmail={userResult.email}
+            defaultPhone={userResult.phone}
+            defaultCargo={employeeProfile?.cargo ?? null}
+            defaultEntryDate={employeeProfile?.data_entrada ?? null}
+            units={units}
+            teams={teams}
+            currentRole={userRoles.role}
+            currentUnitId={userRoles.unitId}
+            currentTeamId={userRoles.teamId}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

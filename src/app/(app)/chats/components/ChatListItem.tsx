@@ -4,14 +4,35 @@ import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { ChatSummary, UserMini } from "@/lib/messages/types";
-import { User } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 export interface ChatListItemProps {
   chat: ChatSummary;
   active?: boolean;
   onSelect?: (chatId: string) => void;
+  unreadCount?: number;
 }
 
-export function ChatListItem({ chat, active, onSelect }: ChatListItemProps) {
+function initialsFrom(value: string | null | undefined) {
+  if (!value) return "C";
+  return value
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function formatBadgeValue(value: number) {
+  return value > 99 ? "99+" : String(value);
+}
+
+export function ChatListItem({
+  chat,
+  active,
+  onSelect,
+  unreadCount = 0,
+}: ChatListItemProps) {
   const [creator, setCreator] = useState<UserMini | null>(chat.creator ?? null);
 
   useEffect(() => {
@@ -58,7 +79,7 @@ export function ChatListItem({ chat, active, onSelect }: ChatListItemProps) {
           });
         }
       } catch {
-        // Silently ignore; falling back to creator ID is acceptable
+        // ignore
       }
     };
 
@@ -91,21 +112,37 @@ export function ChatListItem({ chat, active, onSelect }: ChatListItemProps) {
           ? "bg-primary/10 border-primary border-r-2"
           : "hover:bg-muted border-border"
       )}>
-      <div className="flex flex-col gap-0">
-        <div className="flex items-center justify-between mb-1">
-          <h6 className="line-clamp-1">{title}</h6>
-          {relativeTime ? (
-            <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-              {relativeTime}
+      <div className="flex items-start gap-3">
+        <div className="relative">
+          <Avatar className="h-10 w-10">
+            <AvatarImage
+              src={creator?.avatar_url ?? undefined}
+              alt={creatorName ?? undefined}
+            />
+            <AvatarFallback>{initialsFrom(title)}</AvatarFallback>
+          </Avatar>
+          {unreadCount > 0 ? (
+            <span className="absolute -top-1 -right-1 min-w-[20px] min-h-[20px] max-w-[20px] max-h-[20px] rounded-full bg-green-600 text-[11px] font-semibold text-center border border-white shadow-sm text-white ">
+              {formatBadgeValue(unreadCount)}
             </span>
           ) : null}
         </div>
-        {creatorName ? (
-          <span className="truncate text-xs">{creatorName}</span>
-        ) : null}
-        <p className="text-xs text-muted-foreground leading-5 line-clamp-2 mt-4 whitespace-break-spaces">
-          {lastMessageText}
-        </p>
+        <div className="flex flex-1 flex-col gap-0">
+          <div className="flex items-center justify-between mb-1">
+            <h6 className="line-clamp-1">{title}</h6>
+            {relativeTime ? (
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                {relativeTime}
+              </span>
+            ) : null}
+          </div>
+          {creatorName ? (
+            <span className="truncate text-xs">{creatorName}</span>
+          ) : null}
+          <p className="text-xs text-muted-foreground leading-5 line-clamp-2 mt-2 whitespace-break-spaces">
+            {lastMessageText}
+          </p>
+        </div>
       </div>
     </button>
   );
