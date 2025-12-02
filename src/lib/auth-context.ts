@@ -1,5 +1,4 @@
 // src/lib/auth-context.ts
-import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
@@ -124,9 +123,19 @@ async function _getAuthContext(
   return authContext;
 }
 
+function createAsyncCache<T>(fn: () => Promise<T>) {
+  let promise: Promise<T> | null = null;
+  return () => {
+    if (!promise) {
+      promise = fn();
+    }
+    return promise;
+  };
+}
+
 // memo por request + exports explícitos
 // Memo apenas para a versão sem cliente fornecido
-const getAuthContextCached = cache(() => _getAuthContext());
+const getAuthContextCached = createAsyncCache(() => _getAuthContext());
 
 export function getAuthContext(
   supabaseClient?: SupabaseClient<Database>

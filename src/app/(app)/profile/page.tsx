@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import type { Profile } from "@/lib/types";
 import { getLoggedUserProfile } from "@/lib/queries/profile";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProfilePage() {
   const {
     user,

@@ -139,18 +139,25 @@ export async function updateUserProfile(formData: FormData) {
   }
 
   // 3) Atualizar PROFILE diretamente (somente campos permitidos)
-  const profilePayload: Record<string, unknown> = {};
+  const profilePayload: Record<string, unknown> = { id: user.id };
+  let hasProfileUpdates = false;
   if (typeof name === "string" && name.length > 0) {
     profilePayload.full_name = name;
+    hasProfileUpdates = true;
   }
-  if (typeof phone !== "undefined") profilePayload.phone = phone || null;
-  if (typeof avatar_url !== "undefined") profilePayload.avatar_url = avatar_url;
+  if (typeof phone !== "undefined") {
+    profilePayload.phone = phone || null;
+    hasProfileUpdates = true;
+  }
+  if (typeof avatar_url !== "undefined") {
+    profilePayload.avatar_url = avatar_url;
+    hasProfileUpdates = true;
+  }
 
-  if (Object.keys(profilePayload).length) {
+  if (hasProfileUpdates) {
     const { error: profileErr } = await supabase
       .from("profiles")
-      .update(profilePayload)
-      .eq("id", user.id);
+      .upsert(profilePayload, { onConflict: "id" });
 
     if (profileErr) {
       return { error: profileErr.message };
@@ -322,6 +329,62 @@ export async function getUsers(
     console.error("Erro buscando unit_members:", unitMembersErr);
   }
 
+  // 4) equipes (time principal)
+  let teamMembersData: any[] = [];
+  let teamMembersErr: any = null;
+  if (pageUserIds.length > 0) {
+    const teamMembersQuery = supabaseAdmin
+      .from("equipe_members")
+      .select(
+        `
+        user_id,
+        equipe_id,
+        equipes!inner (
+          id,
+          name
+        )
+      `
+      )
+      .in("user_id", pageUserIds);
+
+    const teamMembersResult = orgId
+      ? await teamMembersQuery.eq("org_id", orgId)
+      : await teamMembersQuery;
+
+    teamMembersErr = teamMembersResult.error;
+    if (!teamMembersErr && teamMembersResult.data) {
+      teamMembersData = teamMembersResult.data;
+    }
+  }
+
+  if (teamMembersErr) {
+    console.error("Erro buscando equipe_members:", teamMembersErr);
+  }
+
+  // 5) employee_profile (cargo, data de entrada)
+  const employeeProfileMap = new Map<
+    string,
+    { cargo: string | null; dataEntrada: string | null }
+  >();
+  if (pageUserIds.length > 0) {
+    const { data: employeeProfiles, error: employeeProfilesErr } =
+      await supabaseAdmin
+        .from("employee_profile")
+        .select("user_id, cargo, data_entrada")
+        .in("user_id", pageUserIds);
+
+    if (employeeProfilesErr) {
+      console.error("Erro buscando employee_profile:", employeeProfilesErr);
+    } else if (employeeProfiles) {
+      employeeProfiles.forEach((row: any) => {
+        employeeProfileMap.set(row.user_id as string, {
+          cargo: row.cargo ?? null,
+          dataEntrada: row.data_entrada ?? null,
+        });
+      });
+    }
+  }
+
   const safeProfiles: any[] = Array.isArray(profiles) ? profiles : [];
   const orgRoleMap = new Map<string, string>();
   if (Array.isArray(orgMems)) {
@@ -346,6 +409,20 @@ export async function getUsers(
     });
   }
 
+  const teamNamesMap = new Map<string, string[]>();
+  if (Array.isArray(teamMembersData)) {
+    teamMembersData.forEach((teamMember) => {
+      const userId = teamMember.user_id as string;
+      if (!teamNamesMap.has(userId)) {
+        teamNamesMap.set(userId, []);
+      }
+      const teamName = teamMember.equipes?.name ?? null;
+      if (teamName) {
+        teamNamesMap.get(userId)?.push(teamName);
+      }
+    });
+  }
+
   // ✅ Monta o resultado SOMENTE com os perfis da página
   const result = safeProfiles.map((p: any) => {
     const userId = p.id as string;
@@ -362,6 +439,9 @@ export async function getUsers(
       org_role: orgRole,
       unit_roles: unitRoles,
       unit_names: unitNames,
+      team_names: teamNamesMap.get(userId) ?? [],
+      employee_cargo: employeeProfileMap.get(userId)?.cargo ?? null,
+      employee_entry_date: employeeProfileMap.get(userId)?.dataEntrada ?? null,
       created_at: p.created_at ?? new Date().toISOString(),
       phone: p.phone ?? null,
       avatar_url: p.avatar_url ?? null,
@@ -620,10 +700,6 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
       .eq("org_id", orgId)
       .eq("user_id", userId);
     if (upOmErr) return { ok: false, error: upOmErr.message };
-  }
-
-  if (needsUnitRole && !unitId) {
-    return { ok: false, error: "unitId is required for unit roles" };
   }
 
   // ===== vínculo de unidade para colaboradores (independente do role)

@@ -50,19 +50,17 @@ export function LoginForm() {
   }
 
   return (
-    <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[380px]">
-      <div className="space-y-2 text-left">
+    <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px]">
+      <div className="space-y-1 text-left">
         <h1 className="text-2xl font-semibold tracking-tight">
           Acesse sua conta
         </h1>
         <p className="text-sm text-muted-foreground">
-          Utilize o e-mail corporativo fornecido pela sua organização.
+          Utilize o seu e-mail corporativo
         </p>
       </div>
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="email"
@@ -105,9 +103,6 @@ export function LoginForm() {
           </Button>
         </form>
       </Form>
-      <p className="px-2 text-center text-xs text-muted-foreground">
-        Precisa de acesso? Fale com o administrador da sua organização.
-      </p>
     </div>
   );
 }

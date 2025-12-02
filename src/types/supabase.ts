@@ -789,62 +789,6 @@ export type Database = {
         }
         Relationships: []
       }
-      push_subscriptions: {
-        Row: {
-          created_at: string
-          endpoint: string
-          id: string
-          keys: Json
-          org_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          endpoint: string
-          id?: string
-          keys: Json
-          org_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          endpoint?: string
-          id?: string
-          keys?: Json
-          org_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_subscriptions_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "org_users_view"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "unit_users_view"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
       unit_members: {
         Row: {
           org_id: string | null

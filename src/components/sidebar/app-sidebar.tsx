@@ -11,17 +11,12 @@ import { useNotificationBadges } from "@/hooks/use-notification-badges";
 
 import {
   AppWindowMac,
-  UserCog,
-  Settings,
-  Warehouse,
   Calendar,
-  Group,
   LaptopMinimalCheck,
-  MessageCircleHeart,
+  MessageSquare,
   Megaphone,
   Inbox,
   BookOpen,
-  UsersRound,
 } from "lucide-react";
 
 import {
@@ -128,7 +123,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                         href="/chats"
                         className="flex w-full items-center gap-2">
                         <span className="relative inline-flex">
-                          <MessageCircleHeart size={20} />
+                          <MessageSquare size={20} />
                           {counts.chats > 0 ? (
                             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500" />
                           ) : null}

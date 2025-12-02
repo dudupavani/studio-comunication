@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +14,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { UserCheck } from "lucide-react";
 
 type Props = {
   userId: string;
@@ -21,38 +22,38 @@ type Props = {
   onSuccess?: () => void;
 };
 
-export default function EnableUserDialog({
+export default function DeleteUserDialog({
   userId,
   userName,
   trigger,
   onSuccess,
 }: Props) {
   const { toast } = useToast();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function onConfirm() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/users/${userId}/enable`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok || !payload?.ok) {
         throw new Error(payload?.error || `Falha (HTTP ${res.status})`);
       }
       toast({
-        title: "Usuário ativado",
-        description: `O acesso de ${userName ?? "usuário"} foi reativado.`,
+        title: "Usuário removido",
+        description: `${userName ?? "Usuário"} foi excluído da plataforma.`,
       });
       setOpen(false);
+      router.refresh();
       onSuccess?.();
     } catch (err: any) {
       toast({
         variant: "destructive",
-        title: "Erro ao ativar",
+        title: "Erro ao excluir",
         description: err?.message ?? "Tente novamente.",
       });
     } finally {
@@ -64,28 +65,31 @@ export default function EnableUserDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button size="sm" variant="success">
-            <UserCheck className="h-4 w-4 mr-2" />
-            Ativar
+          <Button variant="destructive" size="sm">
+            Remover
           </Button>
         )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <UserCheck className="h-5 w-5 text-green-600" />
+            <div className="p-2 bg-red-100 rounded-lg">
+              <Trash className="h-5 w-5 text-red-600" />
             </div>
-            Ativar usuário
+            Remover usuário
           </DialogTitle>
           <DialogDescription>
-            Isso irá restaurar o acesso de{" "}
-            <strong>{userName ?? "este usuário"}</strong>. Confirmar ativação?
+            Essa ação exclui permanentemente o usuário e todo o seu acesso.
+            Deseja continuar com a remoção de{" "}
+            <strong>{userName ?? "este usuário"}</strong>?
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-1">
-          <Button onClick={onConfirm} disabled={loading} variant={"success"}>
-            {loading ? "Ativando..." : "Ativar"}
+          <Button
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={loading}>
+            {loading ? "Removendo..." : "Remover"}
           </Button>
           <Button
             variant="ghost"

@@ -39,11 +39,11 @@ export function QuickAccessMenu() {
         <DropdownMenuLabel>Configurações</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {LINKS.map((item) => (
-          <DropdownMenuItem key={item.href} asChild>
+          <DropdownMenuItem key={item.href} asChild className="space-y-1">
             <Link
               href={item.href}
-              className="flex items-center gap-2 cursor-pointer">
-              <item.icon className="h-4 w-4" />
+              className="flex items-center gap-3 px-3 cursor-pointer">
+              <item.icon size={18} />
               <span>{item.label}</span>
             </Link>
           </DropdownMenuItem>

@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import EditUserForm from "@/components/users/edit-user-form";
 import { getUserById, getUserRoles } from "@/lib/actions/user"; // <-- SINGULAR
 import { getAuthContext } from "@/lib/auth-context";
@@ -80,8 +79,8 @@ export default async function EditUserPage({
         </div>
       </div>
 
-      <Card className="max-w-3xl">
-        <CardContent className="pt-6">
+      <div className="max-w-4xl">
+        <div className="pt-6">
           <EditUserForm
             userId={id}
             orgId={auth.orgId}
@@ -96,8 +95,8 @@ export default async function EditUserPage({
             currentUnitId={userRoles.unitId}
             currentTeamId={userRoles.teamId}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

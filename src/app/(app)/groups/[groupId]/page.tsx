@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import MembersTable from "./MembersTable";
 import GroupColorSquare from "@/components/groups/GroupColorSquare";
 import HeaderEditButton from "@/components/groups/HeaderEditButton";
+import AddMembersDrawer from "./AddMembersDrawer";
 
 export const dynamic = "force-dynamic";
 
@@ -33,13 +34,14 @@ export default async function GroupPage(props: Props) {
   const { groupId } = await Promise.resolve((props as any).params as Params);
 
   const supabase = createClient();
+  const serviceSupabase = createServiceClient();
 
   // Sessão
   const { data: u } = await supabase.auth.getUser();
   const userId = u?.user?.id ?? null;
 
   // Grupo
-  const { data: group } = await supabase
+  const { data: group } = await serviceSupabase
     .from("user_groups")
     .select("id, org_id, name, description, color, created_at")
     .eq("id", groupId)
@@ -65,19 +67,28 @@ export default async function GroupPage(props: Props) {
   }
 
   // Contagem
-  const { count: membersCount } = await supabase
+  const { count: membersCount } = await serviceSupabase
     .from("user_group_members")
     .select("*", { count: "exact", head: true })
     .eq("group_id", groupId);
 
   // Lista de membros (IDs)
-  const { data: membersRows } = await supabase
+  const { data: membersRows } = await serviceSupabase
     .from("user_group_members")
-    .select("user_id, unit_id, added_at")
+    .select("user_id, unit_id, org_id, added_at")
     .eq("group_id", groupId)
     .order("added_at", { ascending: true });
 
   const userIds = (membersRows ?? []).map((r) => r.user_id);
+  const orgIdsFromMembership = Array.from(
+    new Set((membersRows ?? []).map((r) => r.org_id).filter(Boolean))
+  );
+  const effectiveOrgIds =
+    orgIdsFromMembership.length > 0
+      ? orgIdsFromMembership
+      : group?.org_id
+      ? [group.org_id]
+      : [];
 
   // Perfis (nome/avatar)
   let profilesMap: Record<
@@ -90,7 +101,7 @@ export default async function GroupPage(props: Props) {
     }
   > = {};
   if (userIds.length > 0) {
-    const { data: profilesRows } = await supabase
+    const { data: profilesRows } = await serviceSupabase
       .from("profiles")
       .select("id, full_name, avatar_url, phone")
       .in("id", userIds);
@@ -100,16 +111,57 @@ export default async function GroupPage(props: Props) {
 
   // Roles (org_members)
   let rolesMap: Record<string, string> = {};
-  if (userIds.length > 0 && group?.org_id) {
-    const { data: orgMembersRows } = await supabase
+  if (userIds.length > 0) {
+    const { data: orgMembersRows } = await serviceSupabase
       .from("org_members")
-      .select("user_id, role")
-      .in("user_id", userIds)
-      .eq("org_id", group.org_id);
-    if (orgMembersRows)
-      rolesMap = Object.fromEntries(
-        orgMembersRows.map((o) => [o.user_id, o.role])
-      );
+      .select("user_id, org_id, role")
+      .in("user_id", userIds);
+
+    if (orgMembersRows) {
+      const temp = new Map<string, string>();
+      orgMembersRows.forEach((row) => {
+        const key = row.user_id;
+        // Prioriza orgs do grupo; se não houver, fica com a primeira encontrada
+        if (!temp.has(key)) {
+          temp.set(key, row.role);
+        }
+        if (
+          effectiveOrgIds.length > 0 &&
+          effectiveOrgIds.includes(row.org_id) &&
+          temp.get(key) !== row.role
+        ) {
+          temp.set(key, row.role);
+        }
+      });
+      rolesMap = Object.fromEntries(temp);
+    }
+  }
+
+  // Employee profiles (cargo)
+  let employeeProfileCargo: Record<string, string | null> = {};
+  if (userIds.length > 0) {
+    const { data: employeeRows } = await serviceSupabase
+      .from("employee_profile")
+      .select("user_id, org_id, cargo")
+      .in("user_id", userIds);
+
+    if (employeeRows) {
+      const temp = new Map<string, string | null>();
+      employeeRows.forEach((row) => {
+        const key = row.user_id;
+        if (!temp.has(key)) {
+          temp.set(key, row.cargo ?? null);
+        }
+        if (
+          effectiveOrgIds.length > 0 &&
+          effectiveOrgIds.includes(row.org_id) &&
+          temp.get(key) !== row.cargo
+        ) {
+          temp.set(key, row.cargo ?? null);
+        }
+      });
+      employeeProfileCargo = Object.fromEntries(temp);
+    }
   }
 
   // Identidades (email via RPC)
@@ -133,21 +185,47 @@ export default async function GroupPage(props: Props) {
     }
   }
 
+  // Units (names) para exibir na tabela
+  let unitsById: Record<string, string | null> = {};
+  const unitIds = Array.from(
+    new Set(
+      (membersRows ?? [])
+        .map((r) => r.unit_id as string | null)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+  if (unitIds.length > 0) {
+    const { data: units } = await serviceSupabase
+      .from("units")
+      .select("id, name")
+      .in("id", unitIds);
+    if (units) {
+      unitsById = Object.fromEntries(
+        units.map((u) => [u.id as string, (u.name as string | null) ?? null])
+      );
+    }
+  }
+
   // Linhas normalizadas para a tabela
   const rows = (membersRows ?? []).map((m) => {
     const identity = identityById[m.user_id] ?? null;
     const profile = profilesMap[m.user_id] ?? null;
-    const name = identity?.full_name ?? profile?.full_name ?? "Sem nome";
+    const name = profile?.full_name ?? identity?.full_name ?? "Sem nome";
     const email = identity?.email ?? null;
     const avatar = profile?.avatar_url ?? null;
     const role = rolesMap[m.user_id] ?? null;
+    const cargo = employeeProfileCargo[m.user_id] ?? null;
+    const unitName =
+      (m.unit_id ? unitsById[m.unit_id as string] ?? null : null) ?? null;
 
     return {
       id: m.user_id,
       name,
       email,
       avatarUrl: avatar,
+      cargo,
       roleLabel: roleLabel(role),
+      unitName,
       addedAt: m.added_at,
     };
   });
@@ -187,12 +265,15 @@ export default async function GroupPage(props: Props) {
 
       {/* ===== Membros ===== */}
       <section>
-        <h2 className="text-lg sm:text-xl font-bold mb-6">
-          Membros{" "}
-          <span className="font-light text-muted-foreground">
-            ({membersCount ?? rows.length})
-          </span>
-        </h2>
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h2 className="text-lg sm:text-xl font-bold">
+            Membros{" "}
+            <span className="font-light text-muted-foreground">
+              ({membersCount ?? rows.length})
+            </span>
+          </h2>
+          {group && <AddMembersDrawer groupId={group.id} />}
+        </div>
 
         {/* ✅ Tabela dinâmica (client) */}
         <MembersTable rows={rows} totalCount={membersCount ?? rows.length} />

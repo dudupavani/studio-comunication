@@ -11,8 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Image from "next/image";
-import EmailCopy from "@/components/EmailCopy";
+import UserSummary from "@/components/shared/user-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -22,7 +21,9 @@ type Row = {
   name: string;
   email: string | null;
   avatarUrl: string | null;
+  cargo: string | null;
   roleLabel: string | null;
+  unitName: string | null;
   addedAt: string;
 };
 
@@ -34,7 +35,7 @@ type Props = {
 export default function MembersTable({ rows, totalCount }: Props) {
   // Busca e ordenação
   const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "email" | "addedAt">("name");
+  const [sortBy, setSortBy] = useState<"name" | "unit" | "addedAt">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   // Paginação local (preparo para backend pagination no próximo passo)
@@ -44,11 +45,16 @@ export default function MembersTable({ rows, totalCount }: Props) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const base = q
-      ? rows.filter(
-          (r) =>
-            r.name?.toLowerCase().includes(q) ||
-            r.email?.toLowerCase().includes(q)
-        )
+      ? rows.filter((r) => {
+          const name = r.name ?? "";
+          const email = r.email ?? "";
+          const unit = r.unitName ?? "";
+          return (
+            name.toLowerCase().includes(q) ||
+            email.toLowerCase().includes(q) ||
+            unit.toLowerCase().includes(q)
+          );
+        })
       : rows;
 
     const sorted = [...base].sort((a, b) => {
@@ -57,9 +63,9 @@ export default function MembersTable({ rows, totalCount }: Props) {
       if (sortBy === "name") {
         A = a.name ?? "";
         B = b.name ?? "";
-      } else if (sortBy === "email") {
-        A = a.email ?? "";
-        B = b.email ?? "";
+      } else if (sortBy === "unit") {
+        A = a.unitName ?? "";
+        B = b.unitName ?? "";
       } else {
         A = new Date(a.addedAt).getTime();
         B = new Date(b.addedAt).getTime();
@@ -76,7 +82,7 @@ export default function MembersTable({ rows, totalCount }: Props) {
   const start = (page - 1) * pageSize;
   const paged = filtered.slice(start, start + pageSize);
 
-  function toggleSort(col: "name" | "email" | "addedAt") {
+  function toggleSort(col: "name" | "unit" | "addedAt") {
     if (col === sortBy) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else {
       setSortBy(col);
@@ -104,7 +110,6 @@ export default function MembersTable({ rows, totalCount }: Props) {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[48px]"></TableHead>
               <TableHead
                 role="button"
                 onClick={() => toggleSort("name")}
@@ -114,18 +119,18 @@ export default function MembersTable({ rows, totalCount }: Props) {
               </TableHead>
               <TableHead
                 role="button"
-                onClick={() => toggleSort("email")}
+                onClick={() => toggleSort("unit")}
                 className="cursor-pointer select-none"
-                title="Ordenar por e-mail">
-                E-mail{" "}
-                {sortBy === "email" ? (sortDir === "asc" ? "↑" : "↓") : ""}
+                title="Ordenar por unidade">
+                Unidade{" "}
+                {sortBy === "unit" ? (sortDir === "asc" ? "↑" : "↓") : ""}
               </TableHead>
               <TableHead
                 role="button"
                 onClick={() => toggleSort("addedAt")}
                 className="cursor-pointer select-none"
                 title="Ordenar por data de entrada">
-                Adicionado{" "}
+                Adicionado em
                 {sortBy === "addedAt" ? (sortDir === "asc" ? "↑" : "↓") : ""}
               </TableHead>
               <TableHead className="w-[160px] text-right">Função</TableHead>
@@ -136,32 +141,16 @@ export default function MembersTable({ rows, totalCount }: Props) {
             {paged.map((r) => (
               <TableRow key={r.id}>
                 <TableCell className="py-2">
-                  {r.avatarUrl ? (
-                    <Image
-                      src={r.avatarUrl}
-                      alt={r.name}
-                      width={32}
-                      height={32}
-                      className="rounded-full"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-300" />
-                  )}
+                  <UserSummary
+                    avatarUrl={r.avatarUrl}
+                    name={r.name}
+                    subtitle={r.cargo ?? undefined}
+                    fallback={r.email ?? undefined}
+                  />
                 </TableCell>
-                <TableCell className="py-2">
-                  <div className="font-semibold">{r.name}</div>
-                </TableCell>
-                <TableCell className="py-2">
-                  {r.email ? (
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm text-muted-foreground">
-                        {r.email}
-                      </span>
-                      <EmailCopy email={r.email} />
-                    </div>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">—</span>
-                  )}
+
+                <TableCell className="py-2 text-sm">
+                  {r.unitName ?? "—"}
                 </TableCell>
                 <TableCell className="py-2">
                   <span className="text-sm text-muted-foreground">
@@ -171,7 +160,7 @@ export default function MembersTable({ rows, totalCount }: Props) {
                 <TableCell className="py-2">
                   <div className="flex justify-end">
                     {r.roleLabel ? (
-                      <Badge variant="secondary">{r.roleLabel}</Badge>
+                      <Badge variant="outline">{r.roleLabel}</Badge>
                     ) : null}
                   </div>
                 </TableCell>
@@ -181,7 +170,7 @@ export default function MembersTable({ rows, totalCount }: Props) {
             {paged.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={4}
                   className="text-center text-sm text-muted-foreground py-6">
                   Nenhum resultado.
                 </TableCell>

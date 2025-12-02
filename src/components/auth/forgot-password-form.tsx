@@ -1,18 +1,18 @@
-'use client'
+"use client";
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import Link from 'next/link'
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import Link from "next/link";
 
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -20,50 +20,51 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { useToast } from '@/hooks/use-toast'
-import { sendPasswordResetEmail } from '@/lib/actions/auth'
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { sendPasswordResetEmail } from "@/lib/actions/auth";
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email.' }),
-})
+  email: z.string().email({ message: "Please enter a valid email." }),
+});
 
 export function ForgotPasswordForm() {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      email: "",
     },
-  })
+  });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const formData = new FormData()
-    formData.append('email', values.email)
+    const formData = new FormData();
+    formData.append("email", values.email);
 
-    const { error } = await sendPasswordResetEmail(formData)
+    const { error } = await sendPasswordResetEmail(formData);
 
     if (error) {
       toast({
-        variant: 'destructive',
-        title: 'Error',
+        variant: "destructive",
+        title: "Error",
         description: error,
-      })
+      });
     } else {
       toast({
-        title: 'Check your email',
-        description: 'A password reset link has been sent to your email address.',
-      })
+        title: "Check your email",
+        description:
+          "A password reset link has been sent to your email address.",
+      });
     }
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Forgot Password</CardTitle>
+    <Card className="w-full max-w-md mx-auto p-6">
+      <CardHeader className="text-left">
+        <CardTitle className="text-xl">Resgatar senha</CardTitle>
         <CardDescription>
-          Enter your email and we&apos;ll send you a link to reset your password.
+          Insira seu e-mail para receber um link de redefinição de senha
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -76,7 +77,7 @@ export function ForgotPasswordForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@example.com" {...field} />
+                    <Input placeholder="nome@email.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -85,21 +86,12 @@ export function ForgotPasswordForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={form.formState.isSubmitting}
-            >
-              {form.formState.isSubmitting
-                ? 'Sending...'
-                : 'Send Reset Link'}
+              disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Enviando..." : "Enviar"}
             </Button>
           </form>
         </Form>
-        <div className="mt-4 text-sm text-center">
-          Remembered your password?{' '}
-          <Link href="/login" className="underline">
-            Login
-          </Link>
-        </div>
       </CardContent>
     </Card>
-  )
+  );
 }

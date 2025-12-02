@@ -19,3 +19,14 @@
 - **Notificações / Inbox**
   - A central de notificações é o módulo `inbox`, que concentra notificações e conteúdos recentes.
   - O módulo de `chat` é a única exceção: possui notificações próprias devido à dinâmica distinta, apesar de reutilizar a mesma infraestrutura base quando necessário.
+
+- **UI**
+  - Textos em `<p>` que NÃO forem subtítulos/descrições auxiliares devem usar a cor padrão (primary); não setar classe de cor manualmente nesses casos.
+  - Textos dentro de `TableCell` usam, por padrão, cor primária (sem classe de cor explícita) e tamanho `text-sm`.
+
+- **Usuários / lifecycle**
+  - Estados conceituais: `ativo`, `desativado`, `removido da organização/arquivado` e `excluído permanentemente`.
+  - Na UI padrão só existem as ações **Desativar** e **Remover**:
+    - **Desativar**: usuário perde acesso e deixa de aparecer em fluxos da organização, mas todo conteúdo/histórico permanece visível (podendo aparecer como “usuário desativado”).
+    - **Remover**: remove vínculos do usuário com a organização (org_members, unidades, equipes etc.), fazendo-o sumir da UI da org; o registro base (auth.users/profiles) e o histórico continuam existindo para fins de auditoria e relatórios.
+  - **Exclusão permanente** é operação excepcional, interna à plataforma (platform_admin), e deve usar a service role + `auth.admin.deleteUser` no projeto correto; não expor essa ação na UI de clientes.

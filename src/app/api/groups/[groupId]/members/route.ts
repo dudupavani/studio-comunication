@@ -7,7 +7,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { toLoggableError } from "@/lib/log";
 
 // Client direto do supabase-js (quando vier Authorization: Bearer ...)
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/service";
 
 // Utilitários já existentes no projeto
 import {
@@ -71,28 +71,6 @@ function extractBearerToken(req: Request): string | null {
  * Cria Supabase client que carrega o Authorization da requisição (para respeitar RLS)
  * Obs.: usa as variáveis públicas; não usa service_role aqui!
  */
-function createClientFromAuth(req: Request) {
-  const token = extractBearerToken(req);
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anon) {
-    throw new Error(
-      "Faltam variáveis NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY."
-    );
-  }
-
-  return createSupabaseClient(url, anon, {
-    global: token ? { headers: { Authorization: `Bearer ${token}` } } : {},
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  });
-}
-
 /**
  * Garante que o grupo existe e retorna { id, org_id } ou null
  * Aceita qualquer client com .from() (SSR ou supabase-js)
@@ -180,7 +158,7 @@ export async function POST(req: Request, ctx: { params: { groupId: string } }) {
     const raw = await resolveParams<{ groupId: string }>(ctx);
     const { groupId } = Params.parse(raw);
 
-    const supabase = createClientFromAuth(req); // sempre via Bearer
+    const supabase = createServiceClient();
 
     const body = await req.json();
     const { members } = PostBody.parse(body);
@@ -234,7 +212,7 @@ export async function DELETE(
     const raw = await resolveParams<{ groupId: string }>(ctx);
     const { groupId } = Params.parse(raw);
 
-    const supabase = createClientFromAuth(req); // sempre via Bearer
+    const supabase = createServiceClient();
 
     const body = await req.json();
     const { userIds } = DeleteBody.parse(body);

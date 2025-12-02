@@ -17,6 +17,14 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { updateUserRoles } from "@/lib/actions/user";
 import { getRoleLabel } from "@/lib/role-labels";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { InfoIcon } from "lucide-react";
+
 
 type Unit = { id: string; name: string };
 type Team = { id: string; name: string };
@@ -60,14 +68,16 @@ export default function EditUserForm(props: Props) {
   const preferredRole: TargetRole | "" = currentRole ?? "";
 
   // Unidade inicial: 1ª unidade dos unit_roles (se houver)
-  const initialUnitId: string = currentUnitId ?? "";
+  const initialUnitId: string | null = currentUnitId ?? null;
   const initialTeamId: string = currentTeamId ?? "";
 
   const [saving, setSaving] = useState(false);
   const [cargo, setCargo] = useState(defaultCargo ?? "");
   const [entryDate, setEntryDate] = useState(defaultEntryDate ?? "");
   const [targetRole, setTargetRole] = useState<TargetRole | "">(preferredRole);
-  const [selectedUnitId, setSelectedUnitId] = useState<string>(initialUnitId);
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(
+    initialUnitId
+  );
   const [selectedTeamId, setSelectedTeamId] = useState<string>(initialTeamId);
 
   const unitOptions = useMemo(() => units ?? [], [units]);
@@ -88,7 +98,7 @@ export default function EditUserForm(props: Props) {
 
   useEffect(() => {
     setSelectedUnitId(
-      initialUnitId || (unitOptions.length === 1 ? unitOptions[0].id : "")
+      initialUnitId ?? (unitOptions.length === 1 ? unitOptions[0].id : null)
     );
   }, [initialUnitId, unitOptions, userId]);
 
@@ -100,18 +110,11 @@ export default function EditUserForm(props: Props) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const payloadUnitId = selectedUnitId || null;
+    const payloadUnitId = selectedUnitId;
     const payloadTeamId = selectedTeamId || null;
 
     if (!targetRole) {
       toast({ title: "Selecione uma função", variant: "destructive" });
-      return;
-    }
-    if (!payloadUnitId && needsUnit) {
-      toast({
-        title: "Selecione a unidade do colaborador",
-        variant: "destructive",
-      });
       return;
     }
     setSaving(true);
@@ -161,8 +164,8 @@ export default function EditUserForm(props: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <section className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-12">
+      <section className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-20">
         <div className="space-y-2">
           <h4>Dados pessoais</h4>
           <p className="text-sm text-muted-foreground">
@@ -170,7 +173,7 @@ export default function EditUserForm(props: Props) {
           </p>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="col-span-2 flex flex-col gap-6">
           <div className="space-y-2">
             <Label>Nome</Label>
             <Input value={defaultName ?? ""} disabled />
@@ -188,105 +191,124 @@ export default function EditUserForm(props: Props) {
 
       <Separator />
 
-      <section className="space-y-6">
+      <section className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-20">
         <div className="space-y-2">
-          <h4>Função e vínculos</h4>
+          <h4>Vínculos</h4>
           <p className="text-sm text-muted-foreground">
-            Defina o nível de acesso do colaborador, sua unidade, e a equipe à
-            qual ele pertence.
+            Defina os vínculos do colaborador na plataforma e na organização.
           </p>
         </div>
 
-        <div className="space-y-2">
-          <Label>Função na plataforma</Label>
-          <Select
-            value={targetRole}
-            onValueChange={(v) => {
-              setTargetRole(v as TargetRole | "");
-            }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione a função" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="org_admin">
-                {getRoleLabel("org_admin")}
-              </SelectItem>
-              <SelectItem value="org_master">
-                {getRoleLabel("org_master")}
-              </SelectItem>
-              <SelectItem value="unit_master">
-                {getRoleLabel("unit_master")}
-              </SelectItem>
-              <SelectItem value="unit_user">
-                {getRoleLabel("unit_user")}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="col-span-2 flex flex-col gap-6">
+          <div className="space-y-2">
+            <Label>Função na plataforma</Label>
+            <Select
+              value={targetRole}
+              onValueChange={(v) => {
+                setTargetRole(v as TargetRole | "");
+              }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a função" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="org_admin">
+                  {getRoleLabel("org_admin")}
+                </SelectItem>
+                <SelectItem value="org_master">
+                  {getRoleLabel("org_master")}
+                </SelectItem>
+                <SelectItem value="unit_master">
+                  {getRoleLabel("unit_master")}
+                </SelectItem>
+                <SelectItem value="unit_user">
+                  {getRoleLabel("unit_user")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="cargo">Cargo</Label>
-          <Input
-            id="cargo"
-            placeholder="Ex: Analista de Projetos"
-            value={cargo}
-            onChange={(event) => setCargo(event.target.value)}
-          />
-        </div>
-        <div className="space-y-2 max-w-[180px]">
-          <Label htmlFor="dataEntrada">Data de entrada</Label>
-          <DatePicker
-            value={entryDate || null}
-            onChange={(value) => setEntryDate(value ?? "")}
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="cargo">Cargo</Label>
+            <Input
+              id="cargo"
+              placeholder="Ex: Analista de Projetos"
+              value={cargo}
+              onChange={(event) => setCargo(event.target.value)}
+            />
+          </div>
+          <div className="space-y-2 max-w-[220px]">
+            <div className="flex items-center gap-1">
+              <Label htmlFor="dataEntrada">Data de admissão</Label>
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="ml-1 rounded-full border border-transparent p-1 text-muted-foreground transition hover:text-foreground"
+                      aria-label="Sobre a data de admissão">
+                      <InfoIcon size={14} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    Esta data pode ser utilizada para enviar mensagens
+                    programadas na plataforma.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <DatePicker
+              value={entryDate || null}
+              onChange={(value) => setEntryDate(value ?? "")}
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label>Unidade</Label>
-          <Select
-            value={selectedUnitId || UNIT_NONE_VALUE}
-            onValueChange={(v) =>
-              setSelectedUnitId(v === UNIT_NONE_VALUE ? "" : v)
-            }>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione a unidade ou Matriz" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={UNIT_NONE_VALUE}>
-                Matriz (sem unidade)
-              </SelectItem>
-              {unitOptions.length === 0
-                ? null
-                : unitOptions.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.name}
-                    </SelectItem>
-                  ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="space-y-2">
+            <Label>Unidade</Label>
+            <Select
+              value={selectedUnitId ?? UNIT_NONE_VALUE}
+              onValueChange={(v) =>
+                setSelectedUnitId(v === UNIT_NONE_VALUE ? null : v)
+              }>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a unidade ou Matriz" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNIT_NONE_VALUE}>
+                  Matriz (sem unidade)
+                </SelectItem>
+                {unitOptions.length === 0
+                  ? null
+                  : unitOptions.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name}
+                      </SelectItem>
+                    ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-2">
-          <Label>Equipe</Label>
-          <Select
-            value={selectedTeamId || TEAM_NONE_VALUE}
-            onValueChange={(v) =>
-              setSelectedTeamId(v === TEAM_NONE_VALUE ? "" : v)
-            }>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione a equipe (opcional)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TEAM_NONE_VALUE}>Sem equipe</SelectItem>
-              {teamOptions.length === 0
-                ? null
-                : teamOptions.map((team) => (
-                    <SelectItem key={team.id} value={team.id}>
-                      {team.name}
-                    </SelectItem>
-                  ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-2">
+            <Label>Equipe</Label>
+            <Select
+              value={selectedTeamId || TEAM_NONE_VALUE}
+              onValueChange={(v) =>
+                setSelectedTeamId(v === TEAM_NONE_VALUE ? "" : v)
+              }>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a equipe (opcional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TEAM_NONE_VALUE}>Sem equipe</SelectItem>
+                {teamOptions.length === 0
+                  ? null
+                  : teamOptions.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </section>
 

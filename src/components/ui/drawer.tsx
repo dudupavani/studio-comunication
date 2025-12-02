@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
+import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -56,15 +57,23 @@ DrawerContent.displayName = "DrawerContent";
 
 const DrawerHeader = ({
   className,
+  children,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "grid gap-1.5 pt-0 pb-4 px-4 text-center sm:text-left",
+      "relative grid gap-1.5 pt-0 pb-4 px-4 text-center sm:text-left",
       className
     )}
-    {...props}
-  />
+    {...props}>
+    {children}
+    <DrawerClose className="absolute right-3 -top-3 inline-flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-primary">
+      <span className="text-lg leading-none">
+        <X />
+      </span>
+      <span className="sr-only">Fechar</span>
+    </DrawerClose>
+  </div>
 );
 DrawerHeader.displayName = "DrawerHeader";
 
@@ -73,7 +82,10 @@ const DrawerFooter = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex items-center justify-end gap-2 p-4", className)}
+    className={cn(
+      "flex items-center justify-end gap-3 px-4 pt-2 pb-8",
+      className
+    )}
     {...props}
   />
 );
