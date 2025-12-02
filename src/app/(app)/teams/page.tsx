@@ -5,6 +5,7 @@ import { getAuthContext } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/server";
 import TeamsClient from "@/components/teams/TeamsClient";
 import type { OrgUserOption, TeamSummary } from "@/components/teams/types";
+import { enrichOrgUsersWithAuthMetadata } from "@/lib/teams/enrich-org-users";
 
 const TEAM_MANAGER_ROLES = new Set([
   "org_admin",
@@ -71,12 +72,7 @@ export default async function TeamsPage() {
           avatar_url
         ),
         members:equipe_members (
-          user_id,
-          profiles:profiles!inner (
-            id,
-            full_name,
-            avatar_url
-          )
+          user_id
         )
       `
       )
@@ -112,28 +108,7 @@ export default async function TeamsPage() {
     );
   }
 
-  const teams: TeamSummary[] =
-    teamsRes.data?.map((team: any) => {
-      const members = Array.isArray(team.members)
-        ? team.members.map((member: any) => ({
-            id: member.user_id as string,
-            name: member.profiles?.full_name ?? "Sem nome",
-            avatarUrl: member.profiles?.avatar_url ?? null,
-          }))
-        : [];
-      return {
-        id: team.id as string,
-        name: team.name as string,
-        leaderId: (team.leader_user_id as string) ?? null,
-        leaderName: team.leader?.full_name ?? null,
-        leaderAvatarUrl: team.leader?.avatar_url ?? null,
-        membersCount: members.length,
-        members,
-        updatedAt: team.updated_at ?? null,
-      };
-    }) ?? [];
-
-  const orgUsers: OrgUserOption[] =
+  let orgUsers: OrgUserOption[] =
     usersRes.data
       ?.map((row: any) => ({
         id: row.user_id as string,
@@ -147,6 +122,40 @@ export default async function TeamsPage() {
           sensitivity: "base",
         })
       ) ?? [];
+
+  orgUsers = await enrichOrgUsersWithAuthMetadata(orgUsers);
+
+  const orgUsersMap = new Map(orgUsers.map((user) => [user.id, user]));
+
+  const teams: TeamSummary[] =
+    teamsRes.data?.map((team: any) => {
+      const members = Array.isArray(team.members)
+        ? team.members.map((member: any) => {
+            const memberId = member.user_id as string;
+            const info = orgUsersMap.get(memberId);
+            return {
+              id: memberId,
+              name: info?.name ?? "Sem nome",
+              avatarUrl: info?.avatarUrl ?? null,
+            };
+          })
+        : [];
+
+      const leaderInfo =
+        orgUsersMap.get(team.leader_user_id as string) ?? null;
+
+      return {
+        id: team.id as string,
+        name: team.name as string,
+        leaderId: (team.leader_user_id as string) ?? null,
+        leaderName: team.leader?.full_name ?? leaderInfo?.name ?? null,
+        leaderAvatarUrl:
+          team.leader?.avatar_url ?? leaderInfo?.avatarUrl ?? null,
+        membersCount: members.length,
+        members,
+        updatedAt: team.updated_at ?? null,
+      };
+    }) ?? [];
 
   return (
     <div className="p-6">

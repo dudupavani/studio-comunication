@@ -40,21 +40,13 @@ async function _getAuthContext(
       .slice(2, 6)}`;
   const supabase = supabaseClient ?? createClient();
 
-  // 1) Sessão primeiro; fallback para getUser()
-  const labelSession = isDev ? makeLabel("auth:getSession") : null;
-  if (labelSession) console.time(labelSession);
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (labelSession) console.timeEnd(labelSession);
-
-  let user: User | null = sessionData?.session?.user ?? null;
-  if (!user) {
-    const labelUser = isDev ? makeLabel("auth:getUser") : null;
-    if (labelUser) console.time(labelUser);
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
-    if (labelUser) console.timeEnd(labelUser);
-    if (userErr || !userData?.user) return null;
-    user = userData.user;
-  }
+  // 1) Autenticação validada pelo Auth server (evita aviso de getSession)
+  const labelUser = isDev ? makeLabel("auth:getUser") : null;
+  if (labelUser) console.time(labelUser);
+  const { data: userData, error: userErr } = await supabase.auth.getUser();
+  if (labelUser) console.timeEnd(labelUser);
+  if (userErr || !userData?.user) return null;
+  const user: User = userData.user;
 
   // 2) Consultas paralelas já filtradas por este usuário
   const labelParallel = isDev ? makeLabel("auth:parallel") : null;

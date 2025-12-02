@@ -28,12 +28,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import {
   Table,
   TableBody,
   TableCell,
@@ -47,6 +41,7 @@ import { getRoleLabel } from "@/lib/role-labels";
 
 import TeamDialog from "./TeamDialog";
 import type { OrgUserOption, TeamMemberSummary, TeamSummary } from "./types";
+import { UserListPopover } from "@/components/shared/user-list-popover";
 
 type Props = {
   canManage: boolean;
@@ -138,17 +133,16 @@ export default function TeamsClient({
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Equipes</h1>
+        <div className="space-y-1">
+          <h3>Estrutura organizacional</h3>
           <p className="text-sm text-muted-foreground">
-            Crie equipes internas, defina membros e escolha o líder de cada
-            time.
+            As equipes devem refletir o organograma da empresa
           </p>
         </div>
         {canManage ? (
           <Button onClick={openCreateDialog} disabled={disableCreate}>
             <CirclePlus />
-            Criar
+            Criar equipe
           </Button>
         ) : null}
       </div>
@@ -182,7 +176,7 @@ export default function TeamsClient({
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Líder</TableHead>
-                <TableHead>Qtd. membros</TableHead>
+                <TableHead>Membros</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -194,10 +188,10 @@ export default function TeamsClient({
                 return (
                   <TableRow key={team.id}>
                     <TableCell>
-                      <p className="font-medium text-gray-900">{team.name}</p>
+                      <p className="text-base font-semibold">{team.name}</p>
                       {team.updatedAt ? (
                         <p className="text-xs text-muted-foreground">
-                          Atualizado em{" "}
+                          Atualizado em:{" "}
                           {new Date(team.updatedAt).toLocaleDateString("pt-BR")}
                         </p>
                       ) : null}
@@ -314,75 +308,5 @@ export default function TeamsClient({
 }
 
 function TeamMembersPreview({ members }: { members: TeamMemberSummary[] }) {
-  if (!members.length) {
-    return (
-      <span className="text-xs font-medium text-muted-foreground">
-        Sem membros
-      </span>
-    );
-  }
-
-  const preview = members.slice(0, 3);
-  const remaining = members.length - preview.length;
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-md bg-transparent border border-transparent px-2 py-1 transition hover:bg-white hover:border-gray-200">
-          <div className="flex -space-x-3">
-            {preview.map((member) => (
-              <Avatar
-                key={member.id}
-                className="h-8 w-8 border-2 border-white ">
-                <AvatarImage src={member.avatarUrl ?? undefined} />
-                <AvatarFallback>
-                  {getInitials(member.name) ?? "?"}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-            {remaining > 0 ? (
-              <div className="flex items-center justify-center">
-                +{remaining}
-              </div>
-            ) : null}
-          </div>
-          <Badge variant="secondary">{members.length}</Badge>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 p-2" align="start" sideOffset={8}>
-        <div className="max-h-64 space-y-3 overflow-y-auto">
-          {members.map((member) => (
-            <div
-              key={member.id}
-              className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={member.avatarUrl ?? undefined} />
-                <AvatarFallback>
-                  {getInitials(member.name) ?? "?"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">
-                  {member.name ?? "Sem nome"}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function getInitials(name?: string | null) {
-  if (!name) return "??";
-  const trimmed = name.trim();
-  if (!trimmed) return "??";
-  const parts = trimmed.split(/\s+/);
-  const first = parts[0]?.[0] ?? "";
-  const second = parts[1]?.[0] ?? "";
-  const initials = `${first}${second}`.toUpperCase();
-  return initials || trimmed[0]?.toUpperCase() || "??";
+  return <UserListPopover users={members} />;
 }

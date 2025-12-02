@@ -8,6 +8,7 @@ import {
   createServerClientWithCookies,
 } from "@/lib/supabase/server";
 import { toLoggableError } from "@/lib/log";
+import { enrichOrgUsersWithAuthMetadata } from "@/lib/teams/enrich-org-users";
 
 const TEAM_MANAGER_ROLES = new Set([
   "org_admin",
@@ -78,12 +79,7 @@ export async function GET() {
             avatar_url
           ),
           members:equipe_members (
-            user_id,
-            profiles:profiles!inner (
-              id,
-              full_name,
-              avatar_url
-            )
+            user_id
           )
         `
         )
@@ -120,28 +116,7 @@ export async function GET() {
       );
     }
 
-    const teams =
-      teamsRes.data?.map((row: any) => {
-        const members = Array.isArray(row.members)
-          ? row.members.map((member: any) => ({
-              id: member.user_id as string,
-              name: member.profiles?.full_name ?? "Sem nome",
-              avatarUrl: member.profiles?.avatar_url ?? null,
-            }))
-          : [];
-        return {
-          id: row.id as string,
-          name: row.name as string,
-          leaderId: (row.leader_user_id as string) ?? null,
-          leaderName: row.leader?.full_name ?? null,
-          leaderAvatarUrl: row.leader?.avatar_url ?? null,
-          membersCount: members.length,
-          members,
-          updatedAt: row.updated_at ?? null,
-        };
-      }) ?? [];
-
-    const users =
+    let users =
       usersRes.data
         ?.map((row: any) => ({
           id: row.user_id as string,
@@ -155,6 +130,39 @@ export async function GET() {
             sensitivity: "base",
           })
         ) ?? [];
+
+    users = await enrichOrgUsersWithAuthMetadata(users);
+
+    const userMap = new Map(users.map((user) => [user.id, user]));
+
+    const teams =
+      teamsRes.data?.map((row: any) => {
+        const members = Array.isArray(row.members)
+          ? row.members.map((member: any) => {
+              const memberId = member.user_id as string;
+              const info = userMap.get(memberId);
+              return {
+                id: memberId,
+                name: info?.name ?? "Sem nome",
+                avatarUrl: info?.avatarUrl ?? null,
+              };
+            })
+          : [];
+
+        const leaderInfo = userMap.get(row.leader_user_id as string);
+
+        return {
+          id: row.id as string,
+          name: row.name as string,
+          leaderId: (row.leader_user_id as string) ?? null,
+          leaderName: row.leader?.full_name ?? leaderInfo?.name ?? null,
+          leaderAvatarUrl:
+            row.leader?.avatar_url ?? leaderInfo?.avatarUrl ?? null,
+          membersCount: members.length,
+          members,
+          updatedAt: row.updated_at ?? null,
+        };
+      }) ?? [];
 
     return NextResponse.json({ teams, users });
   } catch (error) {

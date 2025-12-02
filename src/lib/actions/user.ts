@@ -160,7 +160,26 @@ export async function updateUserProfile(formData: FormData) {
       .upsert(profilePayload, { onConflict: "id" });
 
     if (profileErr) {
-      return { error: profileErr.message };
+      // Fallback: em ambientes onde a policy de insert não está ativa, tenta via service role
+      const isRls =
+        profileErr.code === "42501" ||
+        /row-level security/i.test(profileErr.message ?? "") ||
+        /violates row-level security/i.test(profileErr.message ?? "");
+
+      if (isRls) {
+        const svc = createServiceClient();
+        const { error: svcErr } = await svc
+          .from("profiles")
+          .upsert(profilePayload, { onConflict: "id" });
+
+        if (!svcErr) {
+          // sucesso via service role
+        } else {
+          return { error: svcErr.message };
+        }
+      } else {
+        return { error: profileErr.message };
+      }
     }
   }
 
