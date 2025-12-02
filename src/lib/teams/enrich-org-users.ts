@@ -5,6 +5,7 @@ type AdminMeta = {
   name: string | null;
   email: string | null;
   avatarUrl: string | null;
+  title: string | null;
 };
 
 const FALLBACK_NAME = "Sem nome";
@@ -39,16 +40,18 @@ export async function enrichOrgUsersWithAuthMetadata(
         );
         if (error || !data?.user) return;
         const authUser = data.user;
-        metaMap.set(user.id, {
-          name:
-            (authUser.user_metadata?.name as string | null | undefined) ??
-            authUser.email ??
-            null,
-          email: authUser.email ?? null,
-          avatarUrl:
-            (authUser.user_metadata?.avatar_url as string | null | undefined) ??
-            null,
-        });
+      metaMap.set(user.id, {
+        name:
+          (authUser.user_metadata?.name as string | null | undefined) ??
+          authUser.email ??
+          null,
+        email: authUser.email ?? null,
+        avatarUrl:
+          (authUser.user_metadata?.avatar_url as string | null | undefined) ??
+          null,
+        title:
+          (authUser.user_metadata?.title as string | null | undefined) ?? null,
+      });
       } catch (error) {
         console.warn(
           "[teams] Falha ao buscar metadata do usuário",
@@ -69,6 +72,7 @@ export async function enrichOrgUsersWithAuthMetadata(
       name: meta.name ?? user.name,
       email: meta.email ?? user.email,
       avatarUrl: user.avatarUrl ?? meta.avatarUrl ?? null,
+      title: user.title ?? meta.title ?? null,
     };
   });
 }

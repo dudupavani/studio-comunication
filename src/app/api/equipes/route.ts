@@ -124,6 +124,7 @@ export async function GET() {
           name: row.profiles?.full_name ?? "Sem nome",
           email: null,
           avatarUrl: row.profiles?.avatar_url ?? null,
+          title: null,
         }))
         .sort((a, b) =>
           (a.name ?? "").localeCompare(b.name ?? "", "pt-BR", {

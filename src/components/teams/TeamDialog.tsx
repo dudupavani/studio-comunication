@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Users } from "lucide-react";
+import { Shield, Users } from "lucide-react";
 
 import {
   Dialog,
@@ -12,14 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { getRoleLabel } from "@/lib/role-labels";
 import { useToast } from "@/hooks/use-toast";
 
 import type { OrgUserOption } from "./types";
+import UserSummary from "@/components/shared/user-summary";
+import { Toggle } from "@/components/ui/toggle";
 
 type TeamDialogProps = {
   mode: "create" | "edit";
@@ -120,7 +120,8 @@ export default function TeamDialog({
       const needle = normalizedSearch;
       return (
         user.name.toLowerCase().includes(needle) ||
-        (user.email ?? "").toLowerCase().includes(needle)
+        (user.email ?? "").toLowerCase().includes(needle) ||
+        (user.title ?? "").toLowerCase().includes(needle)
       );
     });
   }, [orgUsers, normalizedSearch]);
@@ -240,7 +241,7 @@ export default function TeamDialog({
             </p>
           </div>
         ) : orgUsers.length === 0 ? (
-          <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 py-6 text-center text-sm text-muted-foreground">
+          <div className="flex  min-h-[200px] flex-col items-center justify-center gap-3 py-6 text-center text-sm text-muted-foreground">
             <Users size={20} />
             <p>
               Nenhum usuário disponível nesta organização. Adicione usuários
@@ -248,7 +249,7 @@ export default function TeamDialog({
             </p>
           </div>
         ) : (
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-8" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="team-name">Nome</Label>
               <Input
@@ -261,45 +262,30 @@ export default function TeamDialog({
             </div>
 
             <div className="space-y-3">
-              <div className="flex flex-col mb-4 gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h5>Membros da equipe</h5>
-                  <p className="text-xs text-muted-foreground">
-                    Marque os usuários que farão parte da equipe. O líder deve
-                    estar selecionado.
-                  </p>
+              <div className="mb-4 space-y-1">
+                <div className="flex gap-1 items-center">
+                  <h5>Membros da equipe </h5>
+                  <span className="text-lg text-light leading-[1.5rem]">
+                    {membersCount > 0 ? `(${membersCount})` : ""}
+                  </span>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {membersCount === 0
-                    ? "Nenhum membro selecionado"
-                    : `${membersCount} membro${
-                        membersCount > 1 ? "s" : ""
-                      } selecionado${membersCount > 1 ? "s" : ""}`}
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Selecione um Líder e os membros que farão parte desta equipe
+                </p>
               </div>
 
               <Input
-                placeholder="Buscar por nome ou email"
+                placeholder="Buscar por nome ou cargo"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 disabled={submitting}
               />
 
               <ScrollArea className="h-64 rounded-md border">
-                <RadioGroup
-                  value={leaderId}
-                  onValueChange={(value) => {
-                    if (selectedMembers.has(value)) {
-                      setLeaderId(value);
-                    } else {
-                      toast({
-                        title: "Selecione o membro primeiro",
-                        description:
-                          "Para definir alguém como líder, selecione-o como membro.",
-                      });
-                    }
-                  }}
-                  className="divide-y">
+                <div
+                  className="divide-y"
+                  role="group"
+                  aria-label="Selecionar líder da equipe">
                   {filteredUsers.length === 0 ? (
                     <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
                       Nenhum usuário encontrado.
@@ -308,48 +294,60 @@ export default function TeamDialog({
                     filteredUsers.map((user) => {
                       const checked = selectedMembers.has(user.id);
                       const disabled = submitting;
+                      const isLeader = leaderId === user.id;
                       return (
-                        <label
+                        <div
                           key={user.id}
-                          className={`flex cursor-pointer items-center gap-3 px-4 py-3 transition hover:bg-muted/60 ${
+                          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-3 px-4 py-3 transition hover:bg-muted/60 ${
                             !checked ? "opacity-75" : ""
                           }`}>
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={() => toggleMember(user.id)}
-                            disabled={disabled}
-                          />
-                          <Avatar className="h-9 w-9">
-                            <AvatarImage src={user.avatarUrl ?? undefined} />
-                            <AvatarFallback>
-                              {user.name.charAt(0).toUpperCase() || "U"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-1 flex-col">
-                            <span className="text-sm font-medium">
-                              {user.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {user.email || "sem email"}
-                            </span>
-                          </div>
-                          <Badge variant="outline">
-                            {user.role ? getRoleLabel(user.role) : "Membro"}
-                          </Badge>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              Líder
-                            </span>
-                            <RadioGroupItem
-                              value={user.id}
-                              disabled={!checked || disabled}
+                          <div className="flex flex-1 items-center gap-3">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() => toggleMember(user.id)}
+                              disabled={disabled}
                             />
+                            <div className="flex flex-1">
+                              <UserSummary
+                                avatarUrl={user.avatarUrl}
+                                name={user.name}
+                                subtitle={user.title ?? "Sem cargo"}
+                                fallback="Sem nome"
+                              />
+                            </div>
+                            <Badge variant="outline">
+                              {user.role ? getRoleLabel(user.role) : "Membro"}
+                            </Badge>
                           </div>
-                        </label>
+                          <div className="flex justify-center items-center gap-2">
+                            <Toggle
+                              aria-label={`Definir ${user.name} como líder`}
+                              pressed={isLeader}
+                              onPressedChange={(pressed) => {
+                                if (!selectedMembers.has(user.id)) {
+                                  toast({
+                                    title: "Selecione o membro primeiro",
+                                    description:
+                                      "Para definir alguém como líder, selecione-o como membro.",
+                                  });
+                                  return;
+                                }
+                                if (!pressed) return;
+                                setLeaderId(user.id);
+                              }}
+                              disabled={
+                                !selectedMembers.has(user.id) || submitting
+                              }
+                              className="h-8 px-3 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                              <Shield className="h-4 w-4" />
+                              <span className="ml-1 font-medium">Líder</span>
+                            </Toggle>
+                          </div>
+                        </div>
                       );
                     })
                   )}
-                </RadioGroup>
+                </div>
               </ScrollArea>
             </div>
 

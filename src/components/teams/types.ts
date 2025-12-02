@@ -21,6 +21,7 @@ export type OrgUserOption = {
   email: string | null;
   avatarUrl: string | null;
   role: string | null;
+  title?: string | null;
 };
 
 export type TeamFormValues = {

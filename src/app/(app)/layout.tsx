@@ -19,7 +19,6 @@ import ModuleTitle from "@/components/modules-title";
 import { QuickAccessMenu } from "@/components/quick-access-menu";
 
 // ✅ SSR: finaliza convite sem mexer na UI
-import FinalizeInviteSSR from "@/components/auth/finalize-invite-ssr";
 // ✅ CSR fallback: garante a finalização mesmo se o SSR não rodar
 import FinalizeInviteCSR from "@/components/auth/finalize-invite-csr";
 
@@ -111,8 +110,7 @@ export default async function AppLayout({
       <AppSidebar activeOrgSlug={null} />
 
       <SidebarInset className="min-h-screen">
-        {/* 🔄 Finalização automática do convite (SSR) + fallback em cliente (CSR) */}
-        <FinalizeInviteSSR />
+        {/* 🔄 Fallback em cliente (CSR) */}
         <FinalizeInviteCSR />
 
         {/* Topbar */}

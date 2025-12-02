@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import TeamsClient from "@/components/teams/TeamsClient";
 import type { OrgUserOption, TeamSummary } from "@/components/teams/types";
 import { enrichOrgUsersWithAuthMetadata } from "@/lib/teams/enrich-org-users";
+import { enrichOrgUsersWithEmployeeProfile } from "@/lib/teams/user-directory";
 
 const TEAM_MANAGER_ROLES = new Set([
   "org_admin",
@@ -116,6 +117,7 @@ export default async function TeamsPage() {
         name: row.profiles?.full_name ?? "Sem nome",
         email: null,
         avatarUrl: row.profiles?.avatar_url ?? null,
+        title: null,
       }))
       .sort((a, b) =>
         (a.name ?? "").localeCompare(b.name ?? "", "pt-BR", {
@@ -124,6 +126,7 @@ export default async function TeamsPage() {
       ) ?? [];
 
   orgUsers = await enrichOrgUsersWithAuthMetadata(orgUsers);
+  orgUsers = await enrichOrgUsersWithEmployeeProfile(orgUsers);
 
   const orgUsersMap = new Map(orgUsers.map((user) => [user.id, user]));
 

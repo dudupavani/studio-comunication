@@ -35,9 +35,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { getRoleLabel } from "@/lib/role-labels";
+import UserSummary from "@/components/shared/user-summary";
 
 import TeamDialog from "./TeamDialog";
 import type { OrgUserOption, TeamMemberSummary, TeamSummary } from "./types";
@@ -132,7 +132,7 @@ export default function TeamsClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="space-y-1">
           <h3>Estrutura organizacional</h3>
           <p className="text-sm text-muted-foreground">
@@ -170,91 +170,156 @@ export default function TeamsClient({
           ) : null}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border bg-white">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Líder</TableHead>
-                <TableHead>Membros</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {teams.map((team) => {
-                const leaderInfo = orgUsers.find(
-                  (user) => user.id === team.leaderId
-                );
-                return (
-                  <TableRow key={team.id}>
-                    <TableCell>
-                      <p className="text-base font-semibold">{team.name}</p>
+        <>
+          {/* Mobile list (sm and below) */}
+          <div className="space-y-3 sm:hidden">
+            {teams.map((team) => {
+              const leaderInfo = orgUsers.find(
+                (user) => user.id === team.leaderId
+              );
+              return (
+                <div
+                  key={team.id}
+                  className="rounded-lg border bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3 mb-6">
+                    <div className="space-y-1">
+                      <p className="text-lg font-semibold">{team.name}</p>
                       {team.updatedAt ? (
                         <p className="text-xs text-muted-foreground">
-                          Atualizado em:{" "}
+                          Atualizado em{" "}
                           {new Date(team.updatedAt).toLocaleDateString("pt-BR")}
                         </p>
                       ) : null}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage
-                            src={team.leaderAvatarUrl ?? undefined}
-                          />
-                          <AvatarFallback>
-                            {team.leaderName?.charAt(0).toUpperCase() ?? "L"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">
-                            {team.leaderName ?? "Sem líder"}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {leaderInfo
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          disabled={!canManage}>
+                          <EllipsisVertical />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          disabled={!canManage}
+                          onClick={() => openEditDialog(team)}>
+                          <Pencil />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={!canManage}
+                          onClick={() => openDelete(team)}>
+                          <Trash />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <UserSummary
+                        avatarUrl={team.leaderAvatarUrl}
+                        name={team.leaderName ?? "Sem líder"}
+                        subtitle={
+                          leaderInfo
+                            ? getRoleLabel(leaderInfo.role)
+                            : team.leaderId
+                            ? "Usuário da organização"
+                            : "—"
+                        }
+                        fallback="L"
+                      />
+                    </div>
+
+                    <div>
+                      <TeamMembersPreview members={team.members} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop table (sm and up) */}
+          <div className="hidden overflow-hidden rounded-lg border bg-white sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Líder</TableHead>
+                  <TableHead>Membros</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {teams.map((team) => {
+                  const leaderInfo = orgUsers.find(
+                    (user) => user.id === team.leaderId
+                  );
+                  return (
+                    <TableRow key={team.id}>
+                      <TableCell>
+                        <p className="text-base font-semibold">{team.name}</p>
+                        {team.updatedAt ? (
+                          <p className="text-xs text-muted-foreground">
+                            Atualizado em:{" "}
+                            {new Date(team.updatedAt).toLocaleDateString(
+                              "pt-BR"
+                            )}
+                          </p>
+                        ) : null}
+                      </TableCell>
+                      <TableCell>
+                        <UserSummary
+                          avatarUrl={team.leaderAvatarUrl}
+                          name={team.leaderName ?? "Sem líder"}
+                          subtitle={
+                            leaderInfo
                               ? getRoleLabel(leaderInfo.role)
                               : team.leaderId
                               ? "Usuário da organização"
-                              : "—"}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <TeamMembersPreview members={team.members} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            disabled={!canManage}>
-                            <EllipsisVertical />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            disabled={!canManage}
-                            onClick={() => openEditDialog(team)}>
-                            <Pencil />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={!canManage}
-                            onClick={() => openDelete(team)}>
-                            <Trash />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                              : "—"
+                          }
+                          fallback="L"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TeamMembersPreview members={team.members} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              disabled={!canManage}>
+                              <EllipsisVertical />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              disabled={!canManage}
+                              onClick={() => openEditDialog(team)}>
+                              <Pencil />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={!canManage}
+                              onClick={() => openDelete(team)}>
+                              <Trash />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
 
       {deleteTarget ? (

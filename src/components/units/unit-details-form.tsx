@@ -1,10 +1,10 @@
 // src/components/units/unit-details-form.tsx
 "use client";
 
+import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { updateUnitDetailsAction } from "@/app/(app)/units/unit-actions";
-import { useEffect } from "react";
 import { useFormState } from "react-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,13 +19,18 @@ type Unit = {
 
 export default function UnitDetailsForm({ unit }: { unit: Unit }) {
   const { toast } = useToast();
-  const [state, action] = useFormState(updateUnitDetailsAction, {
+  const useActionState =
+    (React as any).useActionState ??
+    ((...args: Parameters<typeof useFormState>) =>
+      (useFormState as any)(...args));
+
+  const [state, action] = useActionState(updateUnitDetailsAction, {
     ok: false,
     error: "",
   });
 
   // Show toast when state changes
-  useEffect(() => {
+  React.useEffect(() => {
     if (state?.ok) {
       toast({
         title: "Sucesso",

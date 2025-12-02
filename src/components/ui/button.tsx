@@ -24,15 +24,15 @@ const buttonVariants = cva(
         warning: "bg-orange-500 text-white hover:bg-orange-500/90",
       },
       size: {
-        default: "h-9 px-4 py-2 [&_svg]:size-[18px]",
-        xs: "h-7 rounded-md px-3 text-xs [&_svg]:size-3.5",
-        sm: "h-8 rounded-md px-3.5 [&_svg]:size-3.5",
-        lg: "h-10 rounded-md px-6 text-base [&_svg]:size-5 text-base",
+        default: "h-9 px-4 py-2 [&_svg]:size-[20px]",
+        xs: "h-7 rounded-md px-3 text-xs [&_svg]:size-[16px]",
+        sm: "h-8 rounded-md px-3.5 [&_svg]:size-[18px]",
+        lg: "h-10 rounded-md px-6 text-base [&_svg]:[22px] text-base",
         icon: "h-10 w-10",
-        "icon-xs": "h-6 w-6 [&_svg]:size-3.5", // Tamanho para ícone pequeno
-        "icon-sm": "h-8 w-8 [&_svg]:size-4.2", // Tamanho para ícone pequeno
-        "icon-md": "h-10 w-10 [&_svg]:size-5", // Tamanho para ícone médio
-        "icon-lg": "h-12 w-12 [&_svg]:size-7", // Tamanho para ícone grande
+        "icon-xs": "h-6 w-6 [&_svg]:size-[16px]", // Tamanho para ícone pequeno
+        "icon-sm": "h-8 w-8 [&_svg]:size-[18px]", // Tamanho para ícone pequeno
+        "icon-md": "h-10 w-10 [&_svg]:size-[20px]", // Tamanho para ícone médio
+        "icon-lg": "h-12 w-12 [&_svg]:size-[22px]", // Tamanho para ícone grande
       },
     },
     defaultVariants: {

@@ -27,6 +27,8 @@ export type UnitMemberWithEmail = UnitMember & {
   // Campo redundante para facilitar consumo direto na UI (opcional),
   // mantendo compatibilidade com o shape atual.
   email: string | null;
+  org_role?: string | null;
+  cargo?: string | null;
 };
 
 // ============================
@@ -129,19 +131,48 @@ export async function listUnitMembersWithEmail(orgId: string, unitId: string) {
   const ids = rows.map((r) => r.user_id);
   const emailById = await fetchEmailsByUserIds(ids);
 
+   // Buscar org_role e cargo via service client
+  const svc = createServiceClient();
+  const [rolesRes, cargoRes] = await Promise.all([
+    svc
+      .from("org_members")
+      .select("user_id, role")
+      .eq("org_id", orgId)
+      .in("user_id", ids),
+    svc
+      .from("employee_profile")
+      .select("user_id, cargo")
+      .eq("org_id", orgId)
+      .in("user_id", ids),
+  ]);
+
+  const roleMap = new Map<string, string | null>();
+  (rolesRes.data ?? []).forEach((row: any) =>
+    roleMap.set(row.user_id as string, row.role ?? null)
+  );
+
+  const cargoMap = new Map<string, string | null>();
+  (cargoRes.data ?? []).forEach((row: any) =>
+    cargoMap.set(row.user_id as string, row.cargo ?? null)
+  );
+
   const enriched: UnitMemberWithEmail[] = rows.map((r) => ({
     ...r,
     email: emailById.get(r.user_id) ?? null,
+    org_role: roleMap.get(r.user_id) ?? null,
+    cargo: cargoMap.get(r.user_id) ?? null,
     // opcionalmente também poderíamos preencher profiles.email para simplificar consumo:
     profiles: r.profiles
       ? {
           ...r.profiles,
           email: emailById.get(r.user_id) ?? null,
+          title: cargoMap.get(r.user_id) ?? null,
         }
       : {
           full_name: null,
           email: emailById.get(r.user_id) ?? null,
           avatar_url: null,
+          title: cargoMap.get(r.user_id) ?? null,
         },
   }));
 

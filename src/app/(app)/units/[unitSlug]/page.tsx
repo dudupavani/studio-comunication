@@ -47,6 +47,12 @@ export default async function UnitDetailPage({
 
   if (!canPlatform && !canOrgAdmin && !canUnitMaster) redirect("/units");
 
+  const membersTab = await MembersTabServer({
+    orgId: fullOrg.id,
+    unitId: unit.id,
+    unitSlug: unit.slug,
+  });
+
   return (
     <div className="p-8">
       <div className="flex items-censtartter gap-4 mb-8 self-start">
@@ -74,11 +80,7 @@ export default async function UnitDetailPage({
         </TabsContent>
 
         <TabsContent value="members" className="pt-4">
-          <MembersTabServer
-            orgId={fullOrg.id}
-            unitId={unit.id}
-            unitSlug={unit.slug}
-          />
+          {membersTab}
         </TabsContent>
       </Tabs>
     </div>

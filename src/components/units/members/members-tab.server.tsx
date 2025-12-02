@@ -3,6 +3,7 @@ import { listUnitMembersWithEmail } from "@/lib/actions/unit-members";
 import AddUnitMemberModal from "./add-unit-member-modal";
 import RemoveUnitMemberButton from "./remove-unit-member-button";
 import { UserRoundX } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableHeader,
@@ -11,7 +12,8 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import UserLineItem from "@/components/users/user-line-item"; // ⬅️ novo padrão
+import UserSummary from "@/components/shared/user-summary";
+import { getRoleLabel } from "@/lib/role-labels";
 
 export default async function MembersTabServer({
   orgId,
@@ -54,7 +56,7 @@ export default async function MembersTabServer({
             <TableHeader>
               <TableRow>
                 <TableHead>Membro</TableHead>
-                {/* <TableHead>Função</TableHead> */}
+                <TableHead>Função</TableHead>
                 <TableHead className="w-[80px] text-right">Ação</TableHead>
               </TableRow>
             </TableHeader>
@@ -62,24 +64,27 @@ export default async function MembersTabServer({
               {members.map((m) => {
                 const userId = m.user_id as string;
                 const userName = m.profiles?.full_name ?? "Sem nome";
+                const role = (m as any).org_role ?? null;
                 const email = m.email ?? m.profiles?.email ?? null;
                 const avatarUrl = m.profiles?.avatar_url ?? null;
 
                 return (
                   <TableRow key={userId}>
                     <TableCell className="py-2">
-                      <UserLineItem
-                        id={userId}
-                        name={userName}
-                        email={email}
+                      <UserSummary
                         avatarUrl={avatarUrl}
-                        size="md"
-                        orientation="stacked"
-                        withCopy
+                        name={userName}
+                        subtitle={email ?? undefined}
+                        fallback="SN"
                       />
                     </TableCell>
 
-                    {/* <TableCell>{m.role ?? "-"}</TableCell> */}
+                    <TableCell className="py-2 text-sm text-muted-foreground">
+                      <Badge variant={"outline"}>
+                        {role ? getRoleLabel(role) : "—"}
+                      </Badge>
+                    </TableCell>
+
                     <TableCell className="text-right">
                       <RemoveUnitMemberButton
                         orgId={orgId}

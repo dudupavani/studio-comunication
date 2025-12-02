@@ -150,7 +150,7 @@ export default function MembersTable({ rows, totalCount }: Props) {
                 </TableCell>
 
                 <TableCell className="py-2 text-sm">
-                  {r.unitName ?? "—"}
+                  {r.unitName ?? "Matriz"}
                 </TableCell>
                 <TableCell className="py-2">
                   <span className="text-sm text-muted-foreground">

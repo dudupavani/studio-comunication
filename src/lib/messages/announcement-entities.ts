@@ -1,4 +1,4 @@
-export const ANNOUNCEMENT_REACTIONS = ["👍", "❤️", "🤩", "👏", "👏"] as const;
+export const ANNOUNCEMENT_REACTIONS = ["👍", "❤️", "🤩", "👏"] as const;
 
 export type AnnouncementComment = {
   id: string;

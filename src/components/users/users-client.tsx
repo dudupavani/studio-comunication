@@ -452,7 +452,7 @@ export default function UsersClient({
                         ))}
                       </div>
                     ) : (
-                      <span>Sem equipe</span>
+                      <span>--</span>
                     )}
                   </TableCell>
 
@@ -469,10 +469,7 @@ export default function UsersClient({
                   <TableCell className="px-4 py-3 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          className="p-2 hover:bg-muted rounded-md"
-                          variant="ghost"
-                          size="icon-sm">
+                        <Button variant="ghost" size="icon-sm">
                           <MoreHorizontal />
                         </Button>
                       </DropdownMenuTrigger>
@@ -552,7 +549,7 @@ export default function UsersClient({
       </div>
 
       {/* Cards responsivos (mobile) */}
-      <div className="sm:hidden space-y-4">
+      <div className="sm:hidden space-y-3">
         {filteredUsers.length === 0 ? (
           <div className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
             <UserRoundX className="mx-auto mb-3 h-8 w-8" />
@@ -562,8 +559,8 @@ export default function UsersClient({
           filteredUsers.map((user: any) => (
             <div
               key={user.id}
-              className="rounded-lg border p-4 space-y-3 bg-white shadow-sm">
-              <div className="flex items-start justify-between gap-3">
+              className="rounded-lg border p-4 bg-white shadow-sm">
+              <div className="flex items-start justify-between gap-3 mb-4">
                 <UserSummary
                   avatarUrl={user.avatar_url}
                   name={user.full_name ?? user.email}
@@ -644,7 +641,22 @@ export default function UsersClient({
                 </DropdownMenu>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <div>
+                  <span className="font-medium text-foreground">Unidade: </span>
+                  {Array.isArray(user.unit_names) && user.unit_names.length
+                    ? user.unit_names.join(", ")
+                    : "Matriz"}
+                </div>
+                <div>
+                  <span className="font-medium text-foreground">Equipe: </span>
+                  {Array.isArray(user.team_names) && user.team_names.length
+                    ? user.team_names.join(", ")
+                    : "Sem equipe"}
+                </div>
+              </div>
+
+              <div className="flex justify-end flex-wrap gap-2 mt-1">
                 {user.org_role ? (
                   <Badge
                     variant={
@@ -660,21 +672,6 @@ export default function UsersClient({
                 <Badge variant={user?.disabled ? "destructive" : "green"}>
                   {user?.disabled ? "Desativado" : "Ativo"}
                 </Badge>
-              </div>
-
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <div>
-                  <span className="font-medium text-foreground">Unidade: </span>
-                  {Array.isArray(user.unit_names) && user.unit_names.length
-                    ? user.unit_names.join(", ")
-                    : "Matriz"}
-                </div>
-                <div>
-                  <span className="font-medium text-foreground">Equipe: </span>
-                  {Array.isArray(user.team_names) && user.team_names.length
-                    ? user.team_names.join(", ")
-                    : "Sem equipe"}
-                </div>
               </div>
             </div>
           ))

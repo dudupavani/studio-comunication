@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { logError, toLoggableError } from "@/lib/log";
 import type { Profile } from "@/lib/types";
 
@@ -14,11 +15,31 @@ export async function getLoggedUserProfile() {
   const user = userRes?.user ?? null;
   if (!user) return { user: null, profile: null, error: null, status: 401 };
 
-  const { data: profileRow, error: profileError, status } = await supabase
+  let {
+    data: profileRow,
+    error: profileError,
+    status,
+  } = await supabase
     .from("profiles")
     .select("id, full_name, phone, avatar_url, created_at, global_role")
     .eq("id", user.id)
     .maybeSingle();
+
+  // Se não veio dado (mesmo sem erro), tenta via service role para evitar cenários em que o RLS bloqueia o próprio usuário
+  if (!profileRow && !profileError) {
+    const svc = createServiceClient();
+    const { data: svcData, error: svcError, status: svcStatus } = await svc
+      .from("profiles")
+      .select("id, full_name, phone, avatar_url, created_at, global_role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (svcData) {
+      profileRow = svcData;
+      status = svcStatus ?? status;
+    }
+    profileError = svcError;
+  }
 
   const conditionedProfile = profileRow
     ? {
