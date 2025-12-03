@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Send, Paperclip, AtSign } from "lucide-react";
+import { Send, Paperclip, AtSign, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { SendMessageMentionInput } from "@/lib/messages/validations";
 import type { ChatMemberWithUser } from "./types";
@@ -74,6 +75,7 @@ function findMentionTrigger(text: string, cursor: number) {
 }
 
 export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
+  const { toast } = useToast();
   const [value, setValue] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [mentions, setMentions] = useState<SendMessageMentionInput[]>([]);
@@ -82,6 +84,7 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
     query: string;
   } | null>(null);
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
+  const [correcting, setCorrecting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -220,6 +223,61 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
     []
   );
 
+  const handleCorrect = useCallback(async () => {
+    if (disabled || correcting) return;
+    const currentText = value;
+    if (!currentText.trim()) return;
+
+    setCorrecting(true);
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    try {
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 10_000);
+
+      const response = await fetch("/api/chat/correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: currentText }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error("REQUEST_FAILED");
+      }
+
+      const payload = (await response.json().catch(() => null)) as {
+        corrected?: string;
+      };
+      const corrected = payload?.corrected;
+
+      if (!corrected || typeof corrected !== "string") {
+        throw new Error("INVALID_RESPONSE");
+      }
+
+      setValue(corrected);
+      setMentions((prev) => filterMentionsInText(corrected, prev));
+      setMentionTrigger(null);
+
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        if (el) {
+          const end = corrected.length;
+          el.focus();
+          el.setSelectionRange(end, end);
+        }
+      });
+    } catch (err) {
+      toast({
+        title: "Erro ao corrigir texto",
+        variant: "destructive",
+      });
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+      setCorrecting(false);
+    }
+  }, [correcting, disabled, toast, value]);
+
   return (
     <div className="border-t border-border">
       <div className="flex items-end gap-3 px-6 pt-6 pb-4">
@@ -336,6 +394,20 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
           className="hidden"
           onChange={handleFileChange}
         />
+        <Button
+          onClick={handleCorrect}
+          disabled={
+            disabled || correcting || value.trim().length === 0
+          }>
+          {correcting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Corrigindo...
+            </>
+          ) : (
+            "Corrigir com AI"
+          )}
+        </Button>
         <Button
           onClick={submit}
           disabled={disabled || value.trim().length === 0}
