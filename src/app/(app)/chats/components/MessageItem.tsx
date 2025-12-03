@@ -1,13 +1,22 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type ReactNode,
+  Children,
+  isValidElement,
+  cloneElement,
+} from "react";
 import { cn } from "@/lib/utils";
 import type { ChatMessageWithSender } from "@/hooks/use-messages";
 import type { ChatMessageMention, UserMini } from "@/lib/messages/types";
 import type { ChatMemberWithUser } from "./types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Paperclip } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface MessageItemProps {
   message: ChatMessageWithSender;
@@ -101,10 +110,6 @@ export function MessageItem({
     effectiveMentions,
     currentUserId
   );
-  const isMentioned = effectiveMentions.some(
-    (mention) =>
-      mention.type === "all" || mention.mentioned_user_id === currentUserId
-  );
 
   return (
     <div
@@ -125,7 +130,7 @@ export function MessageItem({
         <div
           className={cn(
             "flex max-w-[75%] flex-col gap-1",
-            isOwn ? "items-end text-right" : "items-start"
+            isOwn ? "items-end text-left" : "items-start"
           )}>
           <div className="flex items-center gap-2 text-sm">
             <span className="font-semibold text-foreground">{senderName}</span>
@@ -217,7 +222,87 @@ function renderMessageWithMentions(
   currentUserId: string
 ) {
   if (!text) return null;
-  const items: ReactNode[] = [];
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        p: ({ children }) => (
+          <p className="mb-2 last:mb-0 whitespace-pre-wrap break-words">
+            {renderNodesWithMentions(children, mentions, currentUserId)}
+          </p>
+        ),
+        ul: ({ children }) => (
+          <ul className="mb-2 last:mb-0 list-disc space-y-1 pl-5">
+            {renderNodesWithMentions(children, mentions, currentUserId)}
+          </ul>
+        ),
+        ol: ({ children }) => (
+          <ol className="mb-2 last:mb-0 list-decimal space-y-1 pl-5">
+            {renderNodesWithMentions(children, mentions, currentUserId)}
+          </ol>
+        ),
+        li: ({ children }) => (
+          <li className="leading-relaxed">
+            {renderNodesWithMentions(children, mentions, currentUserId)}
+          </li>
+        ),
+        strong: ({ children }) => (
+          <strong>
+            {renderNodesWithMentions(children, mentions, currentUserId)}
+          </strong>
+        ),
+        em: ({ children }) => (
+          <em>{renderNodesWithMentions(children, mentions, currentUserId)}</em>
+        ),
+      }}>
+      {text}
+    </ReactMarkdown>
+  );
+}
+
+function renderNodesWithMentions(
+  children: ReactNode,
+  mentions: ChatMessageMention[],
+  currentUserId: string
+): ReactNode {
+  return Children.toArray(children).flatMap((child, idx) => {
+    if (typeof child === "string") {
+      return splitTextByMentions(child, mentions, currentUserId, `txt-${idx}`);
+    }
+
+    if (isValidElement(child)) {
+      const inner =
+        child.props?.children !== undefined
+          ? renderNodesWithMentions(
+              child.props.children,
+              mentions,
+              currentUserId
+            )
+          : child.props?.value && typeof child.props.value === "string"
+          ? splitTextByMentions(
+              child.props.value,
+              mentions,
+              currentUserId,
+              `txt-${idx}-val`
+            )
+          : child.props?.children;
+
+      return cloneElement(child, { key: child.key ?? idx }, inner);
+    }
+
+    return child;
+  });
+}
+
+function splitTextByMentions(
+  text: string,
+  mentions: ChatMessageMention[],
+  currentUserId: string,
+  keyPrefix: string
+) {
+  if (!text) return [text];
+
+  const nodes: ReactNode[] = [];
   const sorted = [...mentions].sort((a, b) => a.id - b.id);
   let cursor = 0;
 
@@ -233,37 +318,29 @@ function renderMessageWithMentions(
     const end = start + match[0].length;
 
     if (start > cursor) {
-      items.push(
-        ...renderPlainText(text.slice(cursor, start), `text-${idx}-${cursor}`)
-      );
+      nodes.push(text.slice(cursor, start));
     }
 
-    items.push(
-      <MentionPill key={`mention-${mention.id}-${idx}`} mention={mention} />
+    nodes.push(
+      <MentionPill
+        key={`${keyPrefix}-mention-${mention.id}-${idx}-${start}`}
+        mention={mention}
+        isCurrentUser={
+          mention.type === "all"
+            ? false
+            : mention.mentioned_user_id === currentUserId
+        }
+      />
     );
 
     cursor = end;
   });
 
   if (cursor < text.length) {
-    items.push(...renderPlainText(text.slice(cursor), `text-tail-${cursor}`));
+    nodes.push(text.slice(cursor));
   }
 
-  if (items.length === 0) {
-    return renderPlainText(text, "text-full");
-  }
-
-  return items;
-}
-
-function renderPlainText(text: string, key: string) {
-  const parts = text.split(/\n/);
-  return parts.map((part, idx) => (
-    <span key={`${key}-${idx}`}>
-      {part}
-      {idx < parts.length - 1 ? <br /> : null}
-    </span>
-  ));
+  return nodes;
 }
 
 function deriveMentionsFromText(
@@ -304,7 +381,13 @@ function deriveMentionsFromText(
   return derived;
 }
 
-function MentionPill({ mention }: { mention: ChatMessageMention }) {
+function MentionPill({
+  mention,
+  isCurrentUser,
+}: {
+  mention: ChatMessageMention;
+  isCurrentUser?: boolean;
+}) {
   const isAllMention = mention.type === "all";
   const baseLabel =
     mention.type === "all" ? "Todos" : buildMentionLabel(mention);
@@ -313,7 +396,8 @@ function MentionPill({ mention }: { mention: ChatMessageMention }) {
     <span
       className={cn(
         "inline-flex items-center font-bold text-sm whitespace-nowrap",
-        isAllMention ? "text-amber-900" : "bg-gray-50  rounded-full px-2 py-1"
+        isAllMention ? "text-amber-900" : "rounded-full bg-gray-50 px-2 py-1",
+        isCurrentUser ? "ring-1 ring-primary/40" : ""
       )}>
       <span className="font-semibold">@</span>
       <span className="ml-0.5">{baseLabel}</span>

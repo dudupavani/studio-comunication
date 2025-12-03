@@ -38,7 +38,7 @@ export function MessageList({
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-6 py-6 bg-gray-50"
+      className="overflow-y-auto px-6 py-6 bg-gray-50"
       style={{ scrollBehavior: "smooth" }}>
       <div className="flex flex-col gap-8">
         {hasMore && (

@@ -1,7 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Send, Paperclip, AtSign, Loader2, Sparkles } from "lucide-react";
+import {
+  Send,
+  Paperclip,
+  AtSign,
+  Loader2,
+  Sparkles,
+  Bold,
+  Italic,
+  List,
+  Smile,
+} from "lucide-react";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +21,11 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { SendMessageMentionInput } from "@/lib/messages/validations";
 import type { ChatMemberWithUser } from "./types";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
@@ -89,6 +106,7 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
     start: number;
     query: string;
   } | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
   const [correcting, setCorrecting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -131,6 +149,37 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
     autoResize();
   }, [value, autoResize]);
 
+  const updateValueAndSelection = useCallback(
+    (nextValue: string, selectionStart: number, selectionEnd?: number) => {
+      setValue(nextValue);
+      setMentions((prev) => filterMentionsInText(nextValue, prev));
+
+      const cursor = selectionEnd ?? selectionStart;
+      const trigger = findMentionTrigger(nextValue, cursor);
+      setMentionTrigger(trigger);
+      if (trigger) setActiveMentionIndex(0);
+
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+
+        const clampedStart = Math.max(
+          0,
+          Math.min(selectionStart, nextValue.length)
+        );
+        const clampedEnd = Math.max(
+          0,
+          Math.min(selectionEnd ?? selectionStart, nextValue.length)
+        );
+
+        el.focus();
+        el.setSelectionRange(clampedStart, clampedEnd);
+        autoResize();
+      });
+    },
+    [autoResize]
+  );
+
   const updateTriggerFromCursor = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -141,6 +190,92 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
       setActiveMentionIndex(0);
     }
   }, []);
+
+  const insertAtCursor = useCallback(
+    (snippet: string) => {
+      if (disabled) return;
+      const el = textareaRef.current;
+      if (!el) return;
+      const start = el.selectionStart ?? value.length;
+      const end = el.selectionEnd ?? start;
+
+      const nextValue = `${value.slice(0, start)}${snippet}${value.slice(end)}`;
+      const nextCursor = start + snippet.length;
+
+      updateValueAndSelection(nextValue, nextCursor);
+    },
+    [disabled, updateValueAndSelection, value]
+  );
+
+  const wrapSelection = useCallback(
+    (before: string, after: string) => {
+      if (disabled) return;
+      const el = textareaRef.current;
+      if (!el) return;
+      const start = el.selectionStart ?? 0;
+      const end = el.selectionEnd ?? start;
+      const hasSelection = start !== end;
+      const selected = value.slice(start, end);
+      const wrapped = hasSelection
+        ? `${before}${selected}${after}`
+        : `${before}${after}`;
+
+      const nextValue = `${value.slice(0, start)}${wrapped}${value.slice(end)}`;
+
+      if (hasSelection) {
+        const nextStart = start + before.length;
+        const nextEnd = nextStart + selected.length;
+        updateValueAndSelection(nextValue, nextStart, nextEnd);
+        return;
+      }
+
+      const caretPosition = start + before.length;
+      updateValueAndSelection(nextValue, caretPosition);
+    },
+    [disabled, updateValueAndSelection, value]
+  );
+
+  const insertListPrefix = useCallback(() => {
+    if (disabled) return;
+    const el = textareaRef.current;
+    if (!el) return;
+    const text = value;
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? start;
+
+    const rangeStart = text.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+    const nextLineBreak = text.indexOf("\n", end);
+    const rangeEnd = nextLineBreak === -1 ? text.length : nextLineBreak;
+
+    const segment = text.slice(rangeStart, rangeEnd);
+    const lines = segment.split("\n");
+    const prefixed = lines.map((line) =>
+      line.startsWith("- ") ? line : `- ${line}`
+    );
+    const nextSegment = prefixed.join("\n");
+    const nextValue = `${text.slice(0, rangeStart)}${nextSegment}${text.slice(
+      rangeEnd
+    )}`;
+
+    const addedPerLine = prefixed.map(
+      (line, idx) => line.length - lines[idx].length
+    );
+    const linesBeforeStart =
+      text.slice(rangeStart, start).split("\n").length - 1;
+    const linesBeforeEnd = text.slice(rangeStart, end).split("\n").length - 1;
+
+    const addedBeforeStart = addedPerLine
+      .slice(0, linesBeforeStart + 1)
+      .reduce((acc, curr) => acc + curr, 0);
+    const addedBeforeEnd = addedPerLine
+      .slice(0, linesBeforeEnd + 1)
+      .reduce((acc, curr) => acc + curr, 0);
+
+    const nextStart = start + addedBeforeStart;
+    const nextEnd = end + addedBeforeEnd;
+
+    updateValueAndSelection(nextValue, nextStart, nextEnd);
+  }, [disabled, updateValueAndSelection, value]);
 
   const insertMention = useCallback(
     (option: MentionOption) => {
@@ -179,6 +314,7 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
       setMentions(filterMentionsInText(nextValue, nextMentions));
       setMentionTrigger(null);
       setActiveMentionIndex(0);
+      setShowEmojiPicker(false);
 
       requestAnimationFrame(() => {
         const targetPos = before.length + mentionText.length + 1;
@@ -200,6 +336,7 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
     setMentions([]);
     setMentionTrigger(null);
     setActiveMentionIndex(0);
+    setShowEmojiPicker(false);
   }, [disabled, files, mentions, onSend, value]);
 
   const handleFileChange = useCallback(
@@ -286,15 +423,16 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
 
   return (
     <div className="border-t border-border">
-      <div className="flex items-end gap-3 px-6 pt-6 pb-4">
+      <div className="flex flex-col gap-1 px-3 pt-2 pb-6">
         <div className="relative flex-1">
           <Textarea
             ref={textareaRef}
-            className="min-h-[120px] flex-1 resize-none border-none bg-transparent px-0 py-0 text-base focus-visible:ring-0"
+            className="flex-1 resize-none border-none bg-transparent px-0 py-0 text-base focus-visible:ring-0"
             placeholder="Digite uma mensagem"
             value={value}
             disabled={disabled}
-            rows={1}
+            minHeight={60}
+            maxHeight={240}
             onChange={handleTextareaChange}
             onClick={updateTriggerFromCursor}
             onKeyUp={updateTriggerFromCursor}
@@ -387,46 +525,109 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
           ) : null}
         </div>
 
-        <TooltipProvider delayDuration={100}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={handleCorrect}
-                disabled={disabled || correcting || value.trim().length === 0}
-                size="icon"
-                variant="outline">
-                {correcting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              Corrigir ortografia com IA
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <Button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled}
-          variant="outline"
-          size="icon-md">
-          <Paperclip size={22} />
-        </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={handleFileChange}
-        />
-        <Button
-          onClick={submit}
-          disabled={disabled || value.trim().length === 0}>
-          <Send size={22} />
-          <span>Enviar</span>
-        </Button>
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              size="icon-xs"
+              variant="ghost"
+              disabled={disabled}
+              onClick={() => wrapSelection("**", "**")}
+              aria-label="Negrito">
+              <Bold className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              size="icon-xs"
+              variant="ghost"
+              disabled={disabled}
+              onClick={() => wrapSelection("*", "*")}
+              aria-label="Itálico">
+              <Italic className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              size="icon-xs"
+              variant="ghost"
+              disabled={disabled}
+              onClick={insertListPrefix}
+              aria-label="Lista">
+              <List className="h-4 w-4" />
+            </Button>
+            <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  size="icon-xs"
+                  variant="ghost"
+                  disabled={disabled}
+                  aria-label="Inserir emoji">
+                  <Smile className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="top"
+                align="start"
+                className="w-[320px] p-0 shadow-xl">
+                <Picker
+                  data={data}
+                  set="native"
+                  previewPosition="none"
+                  navPosition="bottom"
+                  onEmojiSelect={(emoji: { native?: string }) => {
+                    if (!emoji?.native) return;
+                    insertAtCursor(emoji.native);
+                    setShowEmojiPicker(false);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="flex items-center gap-3">
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleCorrect}
+                    disabled={
+                      disabled || correcting || value.trim().length === 0
+                    }
+                    size="icon"
+                    variant="outline">
+                    {correcting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Corrigir ortografia com IA
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={disabled}
+              variant="outline"
+              size="icon-md">
+              <Paperclip size={22} />
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <Button
+              onClick={submit}
+              disabled={disabled || value.trim().length === 0}>
+              <Send size={22} />
+              <span>Enviar</span>
+            </Button>
+          </div>
+        </div>
       </div>
 
       {files.length > 0 ? (

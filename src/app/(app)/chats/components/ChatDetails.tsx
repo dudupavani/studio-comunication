@@ -186,7 +186,12 @@ export function ChatDetails({
     <aside className="flex h-full flex-col gap-4 border-l border-border bg-background px-4 py-4">
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4>Participantes</h4>
+          <h4>
+            Participantes{" "}
+            <span className="text-muted-foreground">
+              ({localMembers.length})
+            </span>
+          </h4>
           {canManageMembers ? (
             <Button
               size="icon"
