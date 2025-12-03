@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       }
     );
   } catch (err: any) {
-    console.error("chat correct AI error:", err);
+    console.error("ROUTE_CORRECT_ERROR:", err);
     return NextResponse.json(
       { error: "AI_ERROR" },
       {

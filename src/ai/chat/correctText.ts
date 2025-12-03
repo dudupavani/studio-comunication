@@ -31,6 +31,7 @@ export async function correctText(input: string): Promise<string> {
 
     return corrected.trim();
   } catch (err) {
-    throw new Error("AI_ERROR", { cause: err });
+    console.error("GROQ_INTERNAL_ERROR:", err);
+    throw err;
   }
 }
