@@ -1,5 +1,5 @@
 const DEFAULT_TIMEOUT_MS = 8000;
-const DEFAULT_MODEL = "llama3-8b-versatile";
+const DEFAULT_MODEL = "llama-3.1-8b-instant";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 type GroqMessage = {
