@@ -4,6 +4,8 @@ export type AnnouncementComment = {
   id: string;
   authorId: string;
   authorName: string | null;
+  authorAvatar?: string | null;
+  authorTitle?: string | null;
   content: string;
   createdAt: string;
   isMine: boolean;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import {
   type AnnouncementItem,
 } from "@/lib/messages/announcement-entities";
 import AnnouncementModal from "./AnnouncementModal";
+import DOMPurify from "dompurify";
+import UserSummary from "@/components/shared/user-summary";
 
 export default function AnnouncementCard({
   announcement,
@@ -25,6 +27,14 @@ export default function AnnouncementCard({
   const [comment, setComment] = useState(myComment?.content ?? "");
   const [isPending, startTransition] = useTransition();
   const [reactionPending, setReactionPending] = useState(false);
+
+  const sanitizedPreview = useMemo(
+    () =>
+      DOMPurify.sanitize(
+        announcement.contentPreview ?? announcement.fullContent ?? ""
+      ),
+    [announcement.contentPreview, announcement.fullContent]
+  );
 
   useEffect(() => {
     setComment(myComment?.content ?? "");
@@ -131,10 +141,7 @@ export default function AnnouncementCard({
               <div
                 className="text-sm max-w-none text-muted-foreground line-clamp-3"
                 dangerouslySetInnerHTML={{
-                  __html:
-                    announcement.contentPreview ??
-                    announcement.fullContent ??
-                    "",
+                  __html: sanitizedPreview,
                 }}
               />
             </div>
@@ -165,13 +172,21 @@ export default function AnnouncementCard({
                 announcement.comments.map((comment) => (
                   <div
                     key={comment.id}
-                    className="rounded-md border p-4 text-sm">
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span className="text-primary font-semibold">
-                        {comment.authorName || "Usuário"}{" "}
-                        {comment.isMine ? "(você)" : ""}
-                      </span>
-                      <span className="text-xs">
+                    className="rounded-md border p-4 text-sm space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <UserSummary
+                        avatarUrl={comment.authorAvatar}
+                        name={
+                          comment.authorName
+                            ? comment.isMine
+                              ? `${comment.authorName} (você)`
+                              : comment.authorName
+                            : "Usuário"
+                        }
+                        subtitle={comment.authorTitle ?? undefined}
+                        fallback="Usuário"
+                      />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
                         {new Date(comment.createdAt).toLocaleString()}
                       </span>
                     </div>

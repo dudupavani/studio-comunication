@@ -51,7 +51,12 @@ async function resolveSenderNames(
 ): Promise<
   Record<
     string,
-    { full_name: string | null; email?: string | null; avatar_url?: string | null }
+    {
+      full_name: string | null;
+      email?: string | null;
+      avatar_url?: string | null;
+      title?: string | null;
+    }
   >
 > {
   const svc = createServiceClient();
@@ -59,13 +64,16 @@ async function resolveSenderNames(
   if (uniqueIds.length === 0)
     return {} as Record<
       string,
-      { full_name: string | null; email?: string | null; avatar_url?: string | null }
+      {
+        full_name: string | null;
+        email?: string | null;
+        avatar_url?: string | null;
+        title?: string | null;
+      }
     >;
 
-  const identityMap: Record<
-    string,
-    { full_name: string | null; email?: string | null; avatar_url?: string | null }
-  > = {};
+  const identityMap: Record<string, { full_name: string | null; email?: string | null; avatar_url?: string | null; title?: string | null }> =
+    {};
 
   // 1) Perfis (fonte principal)
   const { data: profiles, error: profilesError } = await svc
@@ -82,8 +90,34 @@ async function resolveSenderNames(
       full_name: p.full_name ?? null,
       email: null,
       avatar_url: p.avatar_url ?? null,
+      title: null,
     };
   });
+
+  // 1.1) Cargo (employee_profile)
+  try {
+    const { data: cargoRows } = await svc
+      .from("employee_profile")
+      .select("user_id, cargo")
+      .in("user_id", uniqueIds);
+
+    (cargoRows ?? []).forEach((row: any) => {
+      const existing = identityMap[row.user_id as string];
+      const cargo = (row?.cargo as string | null) ?? null;
+      if (existing) {
+        existing.title = cargo ?? existing.title ?? null;
+      } else {
+        identityMap[row.user_id as string] = {
+          full_name: null,
+          email: null,
+          avatar_url: null,
+          title: cargo,
+        };
+      }
+    });
+  } catch (err) {
+    console.warn("MESSAGES inbox cargo lookup error:", err);
+  }
 
   // 2) Fallback: Auth admin (caso profile não tenha nome)
   const missing = uniqueIds.filter((id) => !identityMap[id] || !identityMap[id].full_name);
@@ -246,6 +280,8 @@ async function hydrateAnnouncementDetails(
           commentAuthorMap[row.author_id]?.full_name ||
           commentAuthorMap[row.author_id]?.email ||
           null,
+        authorAvatar: commentAuthorMap[row.author_id]?.avatar_url ?? null,
+        authorTitle: commentAuthorMap[row.author_id]?.title ?? null,
         content: row.content as string,
         createdAt: row.created_at as string,
         isMine: row.author_id === userId,

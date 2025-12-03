@@ -30,9 +30,7 @@ export function ChatHeader({ chat, members }: ChatHeaderProps) {
   return (
     <div className="flex items-center justify-between border-b border-border px-5 py-3">
       <div>
-        <h1 className="text-lg font-semibold text-foreground">
-          {chat.name ?? "Conversa"}
-        </h1>
+        <h6 className="font-semibold">{chat.name ?? "Conversa"}</h6>
         <p className="text-xs text-muted-foreground">{subtitle}</p>
       </div>
       <Button variant="ghost" size="icon">

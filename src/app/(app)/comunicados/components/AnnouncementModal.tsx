@@ -6,12 +6,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { ReactNode } from "react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, CalendarClock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AnnouncementItem } from "@/lib/messages/announcement-entities";
 import { ANNOUNCEMENT_REACTIONS } from "@/lib/messages/announcement-entities";
+import DOMPurify from "dompurify";
+import UserSummary from "@/components/shared/user-summary";
 
 type Props = {
   announcement: AnnouncementItem;
@@ -26,6 +28,14 @@ export default function AnnouncementModal({ announcement, children }: Props) {
   const [comment, setComment] = useState(myComment?.content ?? "");
   const [isPending, startTransition] = useTransition();
   const [reactionPending, setReactionPending] = useState(false);
+
+  const sanitizedContent = useMemo(
+    () =>
+      DOMPurify.sanitize(
+        announcement.fullContent ?? announcement.contentPreview ?? ""
+      ),
+    [announcement.contentPreview, announcement.fullContent]
+  );
 
   useEffect(() => {
     setComment(myComment?.content ?? "");
@@ -92,16 +102,21 @@ export default function AnnouncementModal({ announcement, children }: Props) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-[1000px] w-full h-screen p-0">
         <ScrollArea className="h-full">
-          <div className="px-12 pt-12 pb-20 space-y-6">
+          <div className="px-12 pt-12 pb-20 space-y-12">
             <div>
-              <h2 className="text-2xl font-semibold mb-4">
-                {announcement.title}
-              </h2>
+              <div className="mb-8 space-y-2">
+                <h3 className="font-semibold">{announcement.title}</h3>
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <div className="p-1 rounded-md bg-muted">
+                    <CalendarClock size={16} />
+                  </div>
+                  {new Date(announcement.createdAt).toLocaleString()}
+                </div>
+              </div>
               <div
                 className="prose prose-sm max-w-none text-muted-foreground"
                 dangerouslySetInnerHTML={{
-                  __html:
-                    announcement.fullContent ?? announcement.contentPreview,
+                  __html: sanitizedContent,
                 }}
               />
             </div>
@@ -122,12 +137,9 @@ export default function AnnouncementModal({ announcement, children }: Props) {
                       .toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div>
+                <div className="space-y-1">
                   <div className="font-semibold">
                     {announcement.senderName || "Remetente desconhecido"}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(announcement.createdAt).toLocaleString()}
                   </div>
                 </div>
               </div>
@@ -164,15 +176,18 @@ export default function AnnouncementModal({ announcement, children }: Props) {
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="Escreva um comentário..."
-                    className="min-h-[32px]"
+                    autoResize
+                    minHeight={32}
+                    maxHeight={240}
+                    className="pr-16"
                   />
                   <div className="flex justify-end mt-2 relative">
                     <Button
                       type="button"
                       size="icon-md"
-                      variant="ghost"
+                      variant="secondary"
                       disabled={isPending}
-                      className=" absolute right-2 bottom-3"
+                      className=" absolute right-2.5 bottom-4"
                       onClick={submitComment}>
                       {isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -188,17 +203,25 @@ export default function AnnouncementModal({ announcement, children }: Props) {
                     announcement.comments.map((comment) => (
                       <div
                         key={comment.id}
-                        className="rounded-md border p-4 text-sm">
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <span className="text-primary font-semibold">
-                            {comment.authorName || "Usuário"}{" "}
-                            {comment.isMine ? "(você)" : ""}
-                          </span>
-                          <span>
+                        className="rounded-md border p-4 text-sm space-y-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <UserSummary
+                            avatarUrl={comment.authorAvatar}
+                            name={
+                              comment.authorName
+                                ? comment.isMine
+                                  ? `${comment.authorName} (você)`
+                                  : comment.authorName
+                                : "Usuário"
+                            }
+                            subtitle={comment.authorTitle ?? undefined}
+                            fallback="Usuário"
+                          />
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
                             {new Date(comment.createdAt).toLocaleString()}
                           </span>
                         </div>
-                        <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">
+                        <p className="p-4 whitespace-pre-wrap text-sm text-foreground">
                           {comment.content}
                         </p>
                       </div>

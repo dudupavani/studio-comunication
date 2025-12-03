@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { RichTextEditor } from "@/components/communication/RichTextEditor";
+import { CKEditorComponent } from "@/components/rich-text/CKEditorComponent";
 import {
   UserMultiSelect,
   type UserOption,
@@ -95,6 +95,7 @@ export function NewAnnouncementModal({
     }
     const plainContent = content
       .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/gi, " ")
       .replace(/\s+/g, " ")
       .trim();
     if (!plainContent) {
@@ -195,10 +196,11 @@ export function NewAnnouncementModal({
                 </div>
                 <div className="space-y-2">
                   <Label>Conteúdo</Label>
-                  <RichTextEditor
+                  <CKEditorComponent
                     value={content}
                     onChange={setContent}
                     placeholder="Escreva o comunicado..."
+                    chatId="comunicados"
                   />
                 </div>
                 <SelectedRecipients
