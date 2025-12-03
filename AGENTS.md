@@ -30,3 +30,38 @@
     - **Desativar**: usuário perde acesso e deixa de aparecer em fluxos da organização, mas todo conteúdo/histórico permanece visível (podendo aparecer como “usuário desativado”).
     - **Remover**: remove vínculos do usuário com a organização (org_members, unidades, equipes etc.), fazendo-o sumir da UI da org; o registro base (auth.users/profiles) e o histórico continuam existindo para fins de auditoria e relatórios.
   - **Exclusão permanente** é operação excepcional, interna à plataforma (platform_admin), e deve usar a service role + `auth.admin.deleteUser` no projeto correto; não expor essa ação na UI de clientes.
+
+## Padrões para integrações de AI (Groq / LLMs)
+
+- **Cliente HTTP dedicado**
+  - Centralizar chamadas em um cliente único (ex.: `src/lib/ai/clients/groq.ts`), em vez de espalhar `fetch` pela aplicação.
+  - Ler apenas as envs necessárias (ex.: `GROQ_API_KEY`) e nunca logar valores de chaves.
+  - Implementar timeout explícito (AbortController) para cada requisição de rede.
+  - Tratar `!response.ok` com mensagens claras (incluindo status), sem expor payloads sensíveis.
+
+- **Modelos**
+  - Manter o identificador do modelo em uma constante única (`DEFAULT_MODEL`) no cliente de AI.
+  - Ao trocar ou descontinuar modelos, atualizar só essa constante e registrar o motivo aqui.
+  - Evitar hardcode de modelo em múltiplos pontos; sempre passar pelo cliente.
+
+- **Funções de domínio (ex.: `correctText`)**
+  - Validar tipo e conteúdo de entrada (string não vazia, limite de tamanho) antes da chamada à LLM.
+  - Aplicar truncamento explícito com indicação visual (como `…`) quando passar do limite.
+  - Construir prompts determinísticos, com prefixo fixo e regras claras de comportamento da LLM.
+  - Retornar apenas o dado útil ao domínio (ex.: texto corrigido), já normalizado (`trim` etc.).
+  - Logar erros internos com um prefixo claro (ex.: `INTERNAL_AI_ERROR`) e relançar o erro original; o mapeamento para mensagens genéricas deve ser feito na camada de rota/API.
+
+- **Rotas HTTP para AI**
+  - Validar payload de entrada e responder `400` para inputs inválidos.
+  - Impor timeout máximo de operação (ex.: `Promise.race` com timeout) além do timeout do cliente HTTP.
+  - Logar erros de orquestração com um prefixo próprio (ex.: `ROUTE_AI_ERROR`) antes de responder.
+  - Sempre responder JSON com `Content-Type: application/json` e códigos `200/4xx/5xx` coerentes.
+
+- **Frontend / UX para ações de AI**
+  - Botões de AI devem desabilitar durante a requisição e exibir estado de carregamento.
+  - Evitar efeitos colaterais implícitos (ex.: não enviar automaticamente após usar AI, a menos que isso faça parte da especificação).
+  - Em falhas, exibir toasts curtos e genéricos (sem detalhes técnicos ou mensagens de erro da LLM).
+
+- **Diagnóstico**
+  - Sempre inspecionar logs da plataforma (ex.: Vercel) para messages como `INTERNAL_AI_ERROR`/`ROUTE_AI_ERROR` antes de alterar código.
+  - Muitos 500 em rotas de AI tendem a ser causados por envs ausentes, problemas de rede ou modelo inválido; verificar essas três coisas primeiro.

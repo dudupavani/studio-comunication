@@ -2,7 +2,7 @@ import { getGroqClient } from "@/lib/ai/clients/groq";
 
 const MAX_INPUT_LENGTH = 800;
 const PROMPT_PREFIX =
-  "Corrija APENAS a ortografia do texto abaixo. Não mude o sentido. Não reescreva frases. Não melhore estilo. Não interprete. Não peça contexto. Não adicione ou remova palavras. Não explique. Retorne somente o texto corrigido.\n\nTexto:\n";
+  "Corrija apenas a ortografia. Não altere sentido, estilo, frases, palavras, nem peça contexto. Retorne só o texto corrigido:\n\n";
 
 export async function correctText(input: string): Promise<string> {
   const trimmed = typeof input === "string" ? input.trim() : "";

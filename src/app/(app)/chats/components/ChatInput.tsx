@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Send, Paperclip, AtSign, Loader2 } from "lucide-react";
+import { Send, Paperclip, AtSign, Loader2, Sparkles } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +9,12 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { SendMessageMentionInput } from "@/lib/messages/validations";
 import type { ChatMemberWithUser } from "./types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ChatInputProps {
   disabled?: boolean;
@@ -380,6 +386,27 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
             </div>
           ) : null}
         </div>
+
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={handleCorrect}
+                disabled={disabled || correcting || value.trim().length === 0}
+                size="icon"
+                variant="outline">
+                {correcting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              Corrigir ortografia com IA
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <Button
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
@@ -395,24 +422,10 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
           onChange={handleFileChange}
         />
         <Button
-          onClick={handleCorrect}
-          disabled={
-            disabled || correcting || value.trim().length === 0
-          }>
-          {correcting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Corrigindo...
-            </>
-          ) : (
-            "Corrigir com AI"
-          )}
-        </Button>
-        <Button
           onClick={submit}
-          disabled={disabled || value.trim().length === 0}
-          size="icon">
+          disabled={disabled || value.trim().length === 0}>
           <Send size={22} />
+          <span>Enviar</span>
         </Button>
       </div>
 
