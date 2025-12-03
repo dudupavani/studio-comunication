@@ -2,7 +2,7 @@ import { getGroqClient } from "@/lib/ai/clients/groq";
 
 const MAX_INPUT_LENGTH = 800;
 const PROMPT_PREFIX =
-  "Reescreva o texto abaixo seguindo o português brasileiro, corrigindo erros gramaticais, mantendo o mesmo significado e um tom natural:\n\n";
+  "Corrija APENAS a ortografia do texto abaixo. Não mude o sentido. Não reescreva frases. Não melhore estilo. Não interprete. Não peça contexto. Não adicione ou remova palavras. Não explique. Retorne somente o texto corrigido.\n\nTexto:\n";
 
 export async function correctText(input: string): Promise<string> {
   const trimmed = typeof input === "string" ? input.trim() : "";
