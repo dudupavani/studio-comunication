@@ -62,17 +62,13 @@ export default async function MessagesAnnouncements({
             {sentItems.length === 0 ? (
               <Card className="border-dashed">
                 <CardContent className="py-8 text-center text-sm text-muted-foreground space-y-2">
-                  <div>Você ainda não enviou comunicados.</div>
-                  <div className="text-xs">
-                    Utilize o botão &quot;Novo comunicado&quot; para publicar um
-                    novo anúncio.
-                  </div>
+                  <div>Você ainda não enviou comunicados</div>
                 </CardContent>
               </Card>
             ) : (
-              <Card>
+              <div className="sm:border sm:border-border sm:rounded-lg">
                 <SentAnnouncementsTable items={sentItems} />
-              </Card>
+              </div>
             )}
           </TabsContent>
         ) : null}

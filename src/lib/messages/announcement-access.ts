@@ -8,6 +8,7 @@ export type AnnouncementAccessRecord = {
   author_id: string;
   allow_comments: boolean;
   allow_reactions: boolean;
+  status?: string;
 };
 
 export async function getAnnouncementIfRecipient(
@@ -17,7 +18,7 @@ export async function getAnnouncementIfRecipient(
 ): Promise<AnnouncementAccessRecord | null> {
   const { data: announcement, error } = await svc
     .from("announcements")
-    .select("id, org_id, author_id, allow_comments, allow_reactions")
+    .select("id, org_id, author_id, allow_comments, allow_reactions, status")
     .eq("id", announcementId)
     .maybeSingle();
 
@@ -27,6 +28,10 @@ export async function getAnnouncementIfRecipient(
 
   if (announcement.author_id === auth.userId) {
     return announcement;
+  }
+
+  if ((announcement as any).status && (announcement as any).status !== "sent") {
+    return null;
   }
 
   const { data: recipients } = await svc

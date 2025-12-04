@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { CKEditorComponent } from "@/components/rich-text/CKEditorComponent";
@@ -29,7 +28,8 @@ import {
   TeamMultiSelect,
   type TeamOption,
 } from "@/components/communication/TeamMultiSelect";
-import { Loader2, Megaphone, X, Send } from "lucide-react";
+import { Loader2, CirclePlus, X, Send } from "lucide-react";
+import { SelectedRecipients } from "./SelectedRecipients";
 
 export function NewAnnouncementModal({
   canCreateAnnouncement = true,
@@ -46,6 +46,8 @@ export function NewAnnouncementModal({
   const [users, setUsers] = useState<UserOption[]>([]);
   const [groups, setGroups] = useState<UserGroupOption[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [sendAt, setSendAt] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
   const totalRecipients = useMemo(
@@ -73,6 +75,8 @@ export function NewAnnouncementModal({
     setTeams([]);
     setAllowComments(true);
     setAllowReactions(true);
+    setScheduleEnabled(false);
+    setSendAt("");
     setSubmitting(false);
   }, []);
 
@@ -111,6 +115,26 @@ export function NewAnnouncementModal({
       return;
     }
 
+    let sendAtIso: string | null = null;
+    if (scheduleEnabled) {
+      if (!sendAt.trim()) {
+        toast({
+          title: "Informe a data/hora de envio",
+          description: "Para agendar, escolha o momento do disparo.",
+        });
+        return;
+      }
+      const parsed = new Date(sendAt);
+      if (Number.isNaN(parsed.getTime())) {
+        toast({
+          title: "Data inválida",
+          description: "Use uma data e hora válidas para o agendamento.",
+        });
+        return;
+      }
+      sendAtIso = parsed.toISOString();
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/comunicados", {
@@ -121,6 +145,7 @@ export function NewAnnouncementModal({
           content,
           allowComments,
           allowReactions,
+          ...(sendAtIso ? { sendAt: sendAtIso } : {}),
           userIds: users.map((u) => u.id),
           groupIds: groups.map((g) => g.id),
           teamIds: teams.map((t) => t.id),
@@ -162,11 +187,10 @@ export function NewAnnouncementModal({
       <DrawerTrigger asChild>
         <Button
           variant="default"
-          className="gap-2"
           disabled={!canCreateAnnouncement}
           title={disabledReason ?? undefined}>
-          <Megaphone className="h-4 w-4" />
-          Novo comunicado
+          <CirclePlus />
+          Criar comunicado
         </Button>
       </DrawerTrigger>
       <DrawerContent className="max-h-[95vh]">
@@ -246,6 +270,40 @@ export function NewAnnouncementModal({
                   </div>
                 </div>
               </div>
+
+              <div className="rounded-lg border border-border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold">Agendar envio</p>
+                    <p className="text-xs text-muted-foreground">
+                      Defina quando o comunicado será disparado e exibido no
+                      calendário.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={scheduleEnabled}
+                    onCheckedChange={(checked) =>
+                      setScheduleEnabled(Boolean(checked))
+                    }
+                  />
+                </div>
+                {scheduleEnabled ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="announcement-send-at">Data e hora</Label>
+                    <Input
+                      id="announcement-send-at"
+                      type="datetime-local"
+                      value={sendAt}
+                      onChange={(e) => setSendAt(e.target.value)}
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      O comunicado será enviado no horário definido e um
+                      marcador aparecerá no calendário.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
             </div>
 
             <div className="col-span-2 flex flex-col gap-6">
@@ -313,94 +371,5 @@ export function NewAnnouncementModal({
         </div>
       </DrawerContent>
     </Drawer>
-  );
-}
-
-type SelectedRecipientsProps = {
-  users: UserOption[];
-  groups: UserGroupOption[];
-  teams: TeamOption[];
-  total: number;
-  onRemoveUser: (id: string) => void;
-  onRemoveGroup: (id: string) => void;
-  onRemoveTeam: (id: string) => void;
-};
-
-function SelectedRecipients({
-  users,
-  groups,
-  teams,
-  total,
-  onRemoveUser,
-  onRemoveGroup,
-  onRemoveTeam,
-}: SelectedRecipientsProps) {
-  if (!users.length && !groups.length && !teams.length) {
-    return (
-      <div className="rounded-lg border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
-        Nenhum destinatário selecionado ainda. Utilize as abas à direita para
-        adicionar usuários, grupos ou equipes.
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3 rounded-lg border border-border px-4 py-3">
-      <div className="flex items-center justify-between text-sm font-semibold">
-        <span>Destinatários selecionados</span>
-        <span className="text-xs text-muted-foreground">{total} no total</span>
-      </div>
-      {users.length ? (
-        <RecipientBadgeList
-          label="Usuários"
-          items={users.map((u) => ({ id: u.id, label: u.full_name || u.id }))}
-          onRemove={onRemoveUser}
-        />
-      ) : null}
-      {groups.length ? (
-        <RecipientBadgeList
-          label="Grupos"
-          items={groups.map((g) => ({ id: g.id, label: g.name }))}
-          onRemove={onRemoveGroup}
-        />
-      ) : null}
-      {teams.length ? (
-        <RecipientBadgeList
-          label="Equipes"
-          items={teams.map((t) => ({ id: t.id, label: t.name }))}
-          onRemove={onRemoveTeam}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-function RecipientBadgeList({
-  label,
-  items,
-  onRemove,
-}: {
-  label: string;
-  items: { id: string; label: string }[];
-  onRemove: (id: string) => void;
-}) {
-  return (
-    <div className="space-y-1">
-      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
-      <div className="flex flex-wrap gap-2">
-        {items.map((item) => (
-          <Badge key={item.id} variant="secondary" className="gap-2">
-            {item.label}
-            <Button
-              type="button"
-              size="icon-xs"
-              variant="ghost"
-              onClick={() => onRemove(item.id)}>
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        ))}
-      </div>
-    </div>
   );
 }

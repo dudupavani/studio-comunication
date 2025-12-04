@@ -36,6 +36,7 @@ export default function AnnouncementModal({ announcement, children }: Props) {
       ),
     [announcement.contentPreview, announcement.fullContent]
   );
+  const isScheduled = announcement.status === "scheduled";
 
   useEffect(() => {
     setComment(myComment?.content ?? "");
@@ -110,7 +111,12 @@ export default function AnnouncementModal({ announcement, children }: Props) {
                   <div className="p-1 rounded-md bg-muted">
                     <CalendarClock size={16} />
                   </div>
-                  {new Date(announcement.createdAt).toLocaleString()}
+                  <span>{new Date(announcement.createdAt).toLocaleString()}</span>
+                  {isScheduled ? (
+                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                      Agendado
+                    </span>
+                  ) : null}
                 </div>
               </div>
               <div
@@ -141,6 +147,12 @@ export default function AnnouncementModal({ announcement, children }: Props) {
                   <div className="font-semibold">
                     {announcement.senderName || "Remetente desconhecido"}
                   </div>
+                  {isScheduled && announcement.sendAt ? (
+                    <div className="text-xs text-muted-foreground">
+                      Envio agendado para{" "}
+                      {new Date(announcement.sendAt).toLocaleString()}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 

@@ -36,6 +36,7 @@ import {
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import Link from "next/link";
 
 /** ===== Helpers compatíveis com o NewEventDialog ===== */
 const MINUTE_STEP = 15;
@@ -144,6 +145,19 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  const announcementMeta = React.useMemo(() => {
+    const meta = event?.metadata as any;
+    if (meta && meta.kind === "announcement") {
+      return {
+        announcementId: meta.announcement_id as string | undefined,
+        title: meta.title as string | undefined,
+      };
+    }
+    return null;
+  }, [event]);
+  const isAnnouncementEvent = !!announcementMeta;
+  const editingDisabled = isAnnouncementEvent;
+
   // Preencher campos quando abrir com um evento
   React.useEffect(() => {
     if (!open || !event) return;
@@ -164,6 +178,7 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
 
   async function handleSave(e?: React.FormEvent) {
     e?.preventDefault();
+    if (isAnnouncementEvent) return;
     if (!event) return;
 
     try {
@@ -248,6 +263,27 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
               </div>
             )}
 
+            {isAnnouncementEvent ? (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-3 text-sm">
+                <div className="font-semibold text-blue-900">
+                  Comunicado agendado
+                </div>
+                <div className="text-blue-900/80">
+                  {announcementMeta?.title ?? "Comunicado"}
+                </div>
+                {announcementMeta?.announcementId ? (
+                  <Link
+                    href="/comunicados"
+                    className="mt-2 inline-flex text-xs font-semibold text-blue-800 underline">
+                    Ver comunicado
+                  </Link>
+                ) : null}
+                <p className="mt-2 text-xs text-blue-900/70">
+                  Apenas o autor do comunicado pode alterar a data de envio.
+                </p>
+              </div>
+            ) : null}
+
             {/* título */}
             <div>
               <Label htmlFor="title" className="mb-1 block text-sm font-medium">
@@ -259,6 +295,7 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
+                disabled={editingDisabled}
               />
             </div>
 
@@ -268,6 +305,7 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
                 id="allDay"
                 checked={allDay}
                 onCheckedChange={(v) => setAllDay(!!v)}
+                disabled={editingDisabled}
               />
               <Label htmlFor="allDay" className="text-sm">
                 Dia inteiro
@@ -284,7 +322,8 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full bg-muted px-3 justify-start">
+                      className="w-full bg-muted px-3 justify-start"
+                      disabled={editingDisabled}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {startDate
                         ? format(startDate, "dd/MM/yyyy", { locale: ptBR })
@@ -306,7 +345,7 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
                   id="start-time"
                   value={startTime}
                   onChange={setStartTime}
-                  disabled={allDay}
+                  disabled={allDay || editingDisabled}
                 />
               </div>
 
@@ -318,7 +357,8 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full bg-muted px-3 justify-start">
+                      className="w-full bg-muted px-3 justify-start"
+                      disabled={editingDisabled}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {endDate
                         ? format(endDate, "dd/MM/yyyy", { locale: ptBR })
@@ -340,7 +380,7 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
                   id="end-time"
                   value={endTime}
                   onChange={setEndTime}
-                  disabled={allDay}
+                  disabled={allDay || editingDisabled}
                 />
               </div>
             </div>
@@ -359,6 +399,7 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
                   className="h-10"
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
+                  disabled={editingDisabled}
                 />
               </div>
 
@@ -393,6 +434,7 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
                 placeholder="Opcional"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                disabled={editingDisabled}
               />
             </div>
 
@@ -402,7 +444,13 @@ export function EditEventModal({ open, onClose, event, onUpdated }: Props) {
                 type="submit"
                 variant="default"
                 className="disabled:opacity-60"
-                disabled={submitting || !title.trim() || !startDate || !endDate}
+                disabled={
+                  submitting ||
+                  !title.trim() ||
+                  !startDate ||
+                  !endDate ||
+                  editingDisabled
+                }
                 onClick={handleSave}>
                 {submitting ? "Salvando…" : "Salvar"}
               </Button>

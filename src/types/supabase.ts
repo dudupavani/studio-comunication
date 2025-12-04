@@ -391,30 +391,42 @@ export type Database = {
           allow_comments: boolean
           allow_reactions: boolean
           author_id: string
+          calendar_event_id: string | null
           content: string
           created_at: string
           id: string
           org_id: string
+          send_at: string | null
+          sent_at: string | null
+          status: string
           title: string
         }
         Insert: {
           allow_comments?: boolean
           allow_reactions?: boolean
           author_id: string
+          calendar_event_id?: string | null
           content: string
           created_at?: string
           id?: string
           org_id: string
+          send_at?: string | null
+          sent_at?: string | null
+          status?: string
           title: string
         }
         Update: {
           allow_comments?: boolean
           allow_reactions?: boolean
           author_id?: string
+          calendar_event_id?: string | null
           content?: string
           created_at?: string
           id?: string
           org_id?: string
+          send_at?: string | null
+          sent_at?: string | null
+          status?: string
           title?: string
         }
         Relationships: [
@@ -430,6 +442,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_calendar_event_id_fkey"
+            columns: ["calendar_event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
             referencedColumns: ["id"]
           },
         ]

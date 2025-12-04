@@ -6,6 +6,7 @@ import { createAnnouncementSchema } from "@/lib/messages/validations";
 import { errorResponse, handleRouteError } from "@/lib/messages/api-helpers";
 import { publishNotificationEvent } from "@/lib/notifications";
 import { logError } from "@/lib/log";
+import type { Database } from "@/lib/supabase/types";
 
 function buildAnnouncementSnippet(content: string) {
   const plain = content
@@ -41,6 +42,17 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = parsed.data;
+    const now = Date.now();
+    const sendAtDate = payload.sendAt ? new Date(payload.sendAt) : null;
+    const sendAtIso =
+      sendAtDate && !Number.isNaN(sendAtDate.getTime())
+        ? sendAtDate.toISOString()
+        : null;
+    const isScheduled = !!sendAtIso && sendAtDate!.getTime() > now + 15000;
+    const markerEndIso =
+      sendAtDate && !Number.isNaN(sendAtDate.getTime())
+        ? new Date(sendAtDate.getTime() + 5 * 60 * 1000).toISOString()
+        : null;
     const userIdSet = new Set<string>(
       (payload.userIds ?? []).filter((id): id is string => !!id)
     );
@@ -112,6 +124,9 @@ export async function POST(req: NextRequest) {
         content: payload.content,
         allow_comments: payload.allowComments,
         allow_reactions: payload.allowReactions,
+        send_at: sendAtIso,
+        status: isScheduled ? "scheduled" : "sent",
+        sent_at: isScheduled ? null : new Date(now).toISOString(),
       })
       .select("id, created_at")
       .maybeSingle();
@@ -151,37 +166,75 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Notificações: usa recipients já resolvidos (incluindo grupos/equipes)
-    const finalRecipients = new Set<string>(userIds);
-    finalRecipients.delete(auth.userId);
+    // Scheduled: cria marcador no calendário; Enviado agora: cria notificações
+    if (isScheduled && sendAtIso) {
+      const snippet = buildAnnouncementSnippet(payload.content);
+      const eventTitle = payload.title.slice(0, 180);
+      const { data: calendarEvent, error: calendarErr } = await supabaseSvc
+        .from("calendar_events")
+        .insert({
+          org_id: auth.orgId,
+          unit_id: null,
+          title: `Comunicado: ${eventTitle}`,
+          description: snippet,
+          start_time: sendAtIso,
+          end_time: markerEndIso ?? sendAtIso,
+          all_day: false,
+          color: "#0EA5E9",
+          metadata: {
+            kind: "announcement",
+            announcement_id: inserted.id,
+            title: payload.title,
+          } satisfies Database["public"]["Tables"]["calendar_events"]["Row"]["metadata"],
+          created_by: auth.userId,
+        })
+        .select("id")
+        .maybeSingle();
 
-    const snippet = buildAnnouncementSnippet(payload.content);
-    const notificationRows = Array.from(finalRecipients).map((userId) => ({
-      org_id: auth.orgId,
-      user_id: userId,
-      type: "announcement.sent" as const,
-      title: payload.title,
-      body: snippet,
-      action_url: "/comunicados",
-      metadata: {
-        announcement_id: inserted.id,
+      if (calendarErr || !calendarEvent?.id) {
+        console.error("ANNOUNCEMENTS calendar event error:", calendarErr);
+      } else {
+        const { error: linkErr } = await supabaseSvc
+          .from("announcements")
+          .update({ calendar_event_id: calendarEvent.id })
+          .eq("id", inserted.id);
+        if (linkErr) {
+          console.error("ANNOUNCEMENTS link calendar error:", linkErr);
+        }
+      }
+    } else {
+      // Notificações: usa recipients já resolvidos (incluindo grupos/equipes)
+      const finalRecipients = new Set<string>(userIds);
+      finalRecipients.delete(auth.userId);
+
+      const snippet = buildAnnouncementSnippet(payload.content);
+      const notificationRows = Array.from(finalRecipients).map((userId) => ({
         org_id: auth.orgId,
+        user_id: userId,
+        type: "announcement.sent" as const,
         title: payload.title,
-      },
-    }));
+        body: snippet,
+        action_url: "/comunicados",
+        metadata: {
+          announcement_id: inserted.id,
+          org_id: auth.orgId,
+          title: payload.title,
+        },
+      }));
 
-    if (notificationRows.length) {
-      const { error: notifErr } = await supabaseSvc
-        .from("notifications")
-        .insert(notificationRows);
+      if (notificationRows.length) {
+        const { error: notifErr } = await supabaseSvc
+          .from("notifications")
+          .insert(notificationRows);
 
-      if (notifErr) {
-        console.error("ANNOUNCEMENTS notifications error:", notifErr);
-        return errorResponse(
-          500,
-          "db_error",
-          "Failed to create announcement notifications"
-        );
+        if (notifErr) {
+          console.error("ANNOUNCEMENTS notifications error:", notifErr);
+          return errorResponse(
+            500,
+            "db_error",
+            "Failed to create announcement notifications"
+          );
+        }
       }
     }
 
@@ -190,6 +243,8 @@ export async function POST(req: NextRequest) {
       announcement: {
         id: inserted.id,
         createdAt: inserted.created_at,
+        status: isScheduled ? "scheduled" : "sent",
+        sendAt: sendAtIso,
       },
     });
   } catch (err) {

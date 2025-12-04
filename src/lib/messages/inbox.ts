@@ -205,9 +205,10 @@ async function fetchAnnouncementItems(
   const { data: announcements, error: annErr } = await svc
     .from("announcements")
     .select(
-      "id, org_id, author_id, title, content, allow_comments, allow_reactions, created_at"
+      "id, org_id, author_id, title, content, allow_comments, allow_reactions, created_at, status, send_at, sent_at"
     )
     .in("id", announcementIds)
+    .eq("status", "sent")
     .order("created_at", { ascending: false });
 
   if (annErr || !announcements) {
@@ -230,6 +231,9 @@ async function fetchAnnouncementItems(
       null,
     senderAvatar: authorMap[row.author_id]?.avatar_url ?? null,
     createdAt: row.created_at as string,
+    sendAt: (row.send_at as string | null) ?? null,
+    sentAt: (row.sent_at as string | null) ?? null,
+    status: (row.status as "sent" | "scheduled" | null) ?? "sent",
     allowComments: row.allow_comments as boolean,
     allowReactions: row.allow_reactions as boolean,
     contentPreview: toPlain(row.content) ?? "",
@@ -349,7 +353,7 @@ async function fetchAuthoredAnnouncements(
   const { data: announcements, error } = await svc
     .from("announcements")
     .select(
-      "id, org_id, author_id, title, content, allow_comments, allow_reactions, created_at"
+      "id, org_id, author_id, title, content, allow_comments, allow_reactions, created_at, status, send_at, sent_at, calendar_event_id"
     )
     .eq("org_id", orgId)
     .eq("author_id", userId)
@@ -375,6 +379,9 @@ async function fetchAuthoredAnnouncements(
       null,
     senderAvatar: authorMap[row.author_id]?.avatar_url ?? null,
     createdAt: row.created_at as string,
+    sendAt: (row.send_at as string | null) ?? null,
+    sentAt: (row.sent_at as string | null) ?? null,
+    status: (row.status as "sent" | "scheduled" | null) ?? undefined,
     allowComments: row.allow_comments as boolean,
     allowReactions: row.allow_reactions as boolean,
     contentPreview: toPlain(row.content) ?? "",

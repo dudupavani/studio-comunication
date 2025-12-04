@@ -24,6 +24,9 @@ export type AnnouncementItem = {
   senderId: string | null;
   senderAvatar?: string | null;
   createdAt: string;
+  sendAt?: string | null;
+  sentAt?: string | null;
+  status?: "sent" | "scheduled";
   allowComments: boolean;
   allowReactions: boolean;
   contentPreview: string;

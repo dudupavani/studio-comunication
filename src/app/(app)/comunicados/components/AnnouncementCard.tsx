@@ -47,25 +47,27 @@ export default function AnnouncementCard({
       toast({ title: "Comentário vazio", variant: "destructive" });
       return;
     }
-    startTransition(async () => {
-      const res = await fetch(
-        `/api/comunicados/${announcement.announcementId}/comments`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: trimmed }),
+    startTransition(() => {
+      (async () => {
+        const res = await fetch(
+          `/api/comunicados/${announcement.announcementId}/comments`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: trimmed }),
+          }
+        );
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          toast({
+            title: "Erro ao comentar",
+            description: body?.error ?? res.statusText,
+            variant: "destructive",
+          });
+          return;
         }
-      );
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        toast({
-          title: "Erro ao comentar",
-          description: body?.error ?? res.statusText,
-          variant: "destructive",
-        });
-        return;
-      }
-      router.refresh();
+        router.refresh();
+      })();
     });
   };
 
@@ -104,6 +106,8 @@ export default function AnnouncementCard({
       reacted: false,
     }));
 
+  const isScheduled = announcement.status === "scheduled";
+
   return (
     <Card className="shadow-md border border-gray-200">
       <CardContent className="px-4 py-6 md:py-8 md:px-8">
@@ -130,8 +134,13 @@ export default function AnnouncementCard({
                 <div className="font-semibold">
                   {announcement.senderName || "Remetente desconhecido"}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {new Date(announcement.createdAt).toLocaleString()}
+                <div className="text-xs text-muted-foreground flex items-center gap-2">
+                  <span>{new Date(announcement.createdAt).toLocaleString()}</span>
+                  {isScheduled ? (
+                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                      Agendado
+                    </span>
+                  ) : null}
                 </div>
               </div>
             </div>

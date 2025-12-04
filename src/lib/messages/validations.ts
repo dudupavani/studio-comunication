@@ -93,12 +93,34 @@ export const createAnnouncementSchema = z.object({
   content: z.string().trim().min(1, "Conteúdo obrigatório"),
   allowComments: z.boolean().default(true),
   allowReactions: z.boolean().default(true),
+  sendAt: z.coerce.date().optional(),
   userIds: z.array(z.string().uuid()).default([]),
   groupIds: z.array(z.string().uuid()).default([]),
   teamIds: z.array(z.string().uuid()).default([]),
 });
 
 export type CreateAnnouncementInput = z.infer<typeof createAnnouncementSchema>;
+
+const sendAtInput = z
+  .preprocess((value) => {
+    if (value === null || value === undefined || value === "") return null;
+    if (value instanceof Date) return value;
+    return new Date(String(value));
+  }, z.date().nullable())
+  .optional();
+
+export const updateAnnouncementSchema = z.object({
+  title: z.string().trim().min(1, "Título obrigatório").max(255),
+  content: z.string().trim().min(1, "Conteúdo obrigatório"),
+  allowComments: z.boolean().default(true),
+  allowReactions: z.boolean().default(true),
+  sendAt: sendAtInput,
+  userIds: z.array(z.string().uuid()).default([]),
+  groupIds: z.array(z.string().uuid()).default([]),
+  teamIds: z.array(z.string().uuid()).default([]),
+});
+
+export type UpdateAnnouncementInput = z.infer<typeof updateAnnouncementSchema>;
 
 export const listAnnouncementsSchema = z.object({
   limit: z.number().int().min(1).max(100).default(20),
