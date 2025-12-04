@@ -88,7 +88,7 @@ export function ConversationLayout({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-dvh">
+    <div className="flex flex-col lg:flex-row h-screen">
       <aside className="h-full hidden w-full max-w-xs lg:block border-r">
         <ChatSidebarList activeChatId={chatId} />
       </aside>

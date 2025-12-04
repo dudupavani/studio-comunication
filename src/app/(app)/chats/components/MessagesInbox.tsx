@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ChatFiltersPanel, type ChatFilters } from "./ChatFiltersPanel";
+import type { ChatFilters } from "@/lib/messages/types";
+import { ChatFiltersPanel } from "./ChatFiltersPanel";
 import { NewMessageModal } from "./NewMessageModal";
 import { ChatList } from "./ChatList";
 import { useNotificationBadges } from "@/hooks/use-notification-badges";
 import { useAuthContext } from "@/hooks/use-auth-context";
 
-const DEFAULT_FILTERS: ChatFilters = {};
+const DEFAULT_FILTERS: ChatFilters = {
+  creatorIds: [],
+  createdFrom: null,
+  createdTo: null,
+};
 
 export function MessagesInbox({
   canCreateConversation,

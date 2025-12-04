@@ -15,8 +15,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { useChats } from "@/hooks/use-chats";
-import type { ChatFilters } from "./ChatFiltersPanel";
-import type { ChatSummary, UserMini } from "@/lib/messages/types";
+import type { ChatSummary, ChatFilters, UserMini } from "@/lib/messages/types";
 
 type ChatNotificationMap = Record<string, { count: number }>;
 

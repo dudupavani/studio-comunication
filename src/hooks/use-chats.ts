@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import type { ChatSummary } from "@/lib/messages/types";
+import type { ChatFilters, ChatSummary } from "@/lib/messages/types";
 
 interface UseChatsOptions {
   limit?: number;
-  filters?: Record<string, never>;
+  filters?: ChatFilters;
 }
 
 interface UseChatsResult {
@@ -57,12 +57,17 @@ export function useChats(options: UseChatsOptions = {}): UseChatsResult {
 
           const parsedFilters = JSON.parse(filtersKey) as Record<
             string,
-            string | number | boolean
+            string | number | boolean | string[] | null
           >;
           Object.entries(parsedFilters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-              params.set(key, String(value));
+            if (value === undefined || value === null) return;
+            if (Array.isArray(value)) {
+              if (value.length === 0) return;
+              params.set(key, value.join(","));
+              return;
             }
+            if (value === "") return;
+            params.set(key, String(value));
           });
 
           const res = await fetch(`/api/chats?${params.toString()}`, {

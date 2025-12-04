@@ -29,7 +29,14 @@ export async function fetchChats(
   supabase: TypedSupabaseClient,
   userId: string,
   orgId: string,
-  params: { limit?: number; cursor?: string; type?: "direct" | "group" | "broadcast" } = {}
+  params: {
+    limit?: number;
+    cursor?: string;
+    type?: "direct" | "group" | "broadcast";
+    creatorIds?: string[];
+    createdFrom?: string;
+    createdTo?: string;
+  } = {}
 ): Promise<PaginatedResult<ChatSummary>> {
   const limit = Math.min(Math.max(params.limit ?? 30, 1), 100);
   const cursorInput = decodeCursor(params.cursor);
@@ -68,6 +75,30 @@ export async function fetchChats(
 
   if (params.type) {
     chatQuery = chatQuery.eq("type", params.type);
+  }
+
+  if (params.creatorIds?.length) {
+    chatQuery = chatQuery.in("created_by", params.creatorIds);
+  }
+
+  const toIsoStart = (value: string) => {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  };
+  const toIsoEnd = (value: string) => {
+    const date = new Date(`${value}T23:59:59.999Z`);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  };
+
+  const createdFromIso = params.createdFrom ? toIsoStart(params.createdFrom) : null;
+  const createdToIso = params.createdTo ? toIsoEnd(params.createdTo) : null;
+
+  if (createdFromIso) {
+    chatQuery = chatQuery.gte("created_at", createdFromIso);
+  }
+
+  if (createdToIso) {
+    chatQuery = chatQuery.lte("created_at", createdToIso);
   }
 
   const { data: chatRows, error: chatsError } = await chatQuery;

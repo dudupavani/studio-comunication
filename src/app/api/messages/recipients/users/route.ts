@@ -11,6 +11,11 @@ export async function GET(req: NextRequest) {
 
     const searchParams = req.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim() ?? "";
+    const idsParam = searchParams.get("ids") ?? "";
+    const requestedIds = idsParam
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
     const limitParam = Number(searchParams.get("limit") ?? 20);
     const limit = Math.min(Math.max(Number.isFinite(limitParam) ? limitParam : 20, 1), 100);
     const cursorParam = searchParams.get("cursor");
@@ -19,18 +24,25 @@ export async function GET(req: NextRequest) {
     const start = offset;
     const end = start + limit;
 
+    const baseSelect =
+      `id, full_name, avatar_url, org_members!inner ( org_id ), employee_profile!left ( cargo )`;
+
     let query = supabase
       .from("profiles")
-      .select(
-        `id, full_name, avatar_url, org_members!inner ( org_id )`
-      )
-      .eq("org_members.org_id", auth.orgId)
-      .order("full_name", { ascending: true, nullsFirst: true })
-      .range(start, end);
+      .select(baseSelect)
+      .eq("org_members.org_id", auth.orgId);
 
-    if (q) {
-      const like = `%${q.replace(/%/g, "").replace(/_/g, "")}%`;
-      query = query.ilike("full_name", like);
+    if (requestedIds.length) {
+      query = query.in("id", requestedIds);
+    } else {
+      query = query
+        .order("full_name", { ascending: true, nullsFirst: true })
+        .range(start, end);
+
+      if (q) {
+        const like = `%${q.replace(/%/g, "").replace(/_/g, "")}%`;
+        query = query.ilike("full_name", like);
+      }
     }
 
     const { data, error } = await query;
@@ -40,8 +52,8 @@ export async function GET(req: NextRequest) {
     }
 
     const rows = Array.isArray(data) ? data : [];
-    const hasNext = rows.length > limit;
-    const slice = hasNext ? rows.slice(0, limit) : rows;
+    const hasNext = requestedIds.length ? false : rows.length > limit;
+    const slice = requestedIds.length ? rows : hasNext ? rows.slice(0, limit) : rows;
 
     const missingIds = slice
       .filter((row: any) => !row.full_name)
@@ -82,11 +94,15 @@ export async function GET(req: NextRequest) {
         fallback.full_name ??
         fallback.email ??
         null;
+      const profile = Array.isArray(row.employee_profile)
+        ? row.employee_profile[0]
+        : row.employee_profile;
 
       return {
         id,
         full_name: fullName,
         avatar_url: row.avatar_url as string | null,
+        cargo: profile?.cargo ?? null,
       };
     });
 

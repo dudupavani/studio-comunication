@@ -13,6 +13,7 @@ export interface UserOption {
   id: string;
   full_name: string | null;
   avatar_url?: string | null;
+  cargo?: string | null;
 }
 
 interface UserMultiSelectProps {

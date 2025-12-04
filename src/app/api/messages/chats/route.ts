@@ -9,6 +9,14 @@ import {
 } from "@/lib/messages/api-helpers";
 import { createChatSchema } from "@/lib/messages/validations";
 
+function parseDate(value: string | null) {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return undefined;
+  const parsed = new Date(`${trimmed}T00:00:00Z`);
+  return Number.isNaN(parsed.getTime()) ? undefined : trimmed;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const supabase = createServerClientWithCookies();
@@ -23,10 +31,22 @@ export async function GET(req: NextRequest) {
         ? (typeParam as "direct" | "group" | "broadcast")
         : undefined;
 
+    const creatorsParam = req.nextUrl.searchParams.get("creatorIds") ?? "";
+    const creatorIds =
+      creatorsParam
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean) || [];
+    const createdFrom = parseDate(req.nextUrl.searchParams.get("createdFrom"));
+    const createdTo = parseDate(req.nextUrl.searchParams.get("createdTo"));
+
     const result = await fetchChats(supabase, auth.userId, auth.orgId, {
       limit,
       cursor,
       type: normalizedType,
+      creatorIds: creatorIds.length ? creatorIds : undefined,
+      createdFrom,
+      createdTo,
     });
 
     return NextResponse.json(result);

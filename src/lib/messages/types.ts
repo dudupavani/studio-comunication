@@ -61,3 +61,9 @@ export interface PaginatedResult<T> {
   items: T[];
   nextCursor?: string;
 }
+
+export interface ChatFilters {
+  creatorIds: string[];
+  createdFrom: string | null;
+  createdTo: string | null;
+}

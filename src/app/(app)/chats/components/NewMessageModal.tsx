@@ -31,7 +31,7 @@ import {
   TeamMultiSelect,
   type TeamOption,
 } from "@/components/communication/TeamMultiSelect";
-import { Loader2, MessageSquarePlus, Send, X } from "lucide-react";
+import { Loader2, CirclePlus, Send, X } from "lucide-react";
 
 export function NewMessageModal({
   canCreateConversation = true,
@@ -182,7 +182,7 @@ export function NewMessageModal({
           className="gap-2"
           disabled={!canCreateConversation}
           title={disabledReason ?? undefined}>
-          <MessageSquarePlus className="w-12 h-12" />
+          <CirclePlus />
           <span className="hidden sm:block">Conversa</span>
         </Button>
       </DrawerTrigger>
