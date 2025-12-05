@@ -18,6 +18,7 @@ type DatePickerProps = {
   onChange?: (value: string | null) => void;
   placeholder?: string;
   className?: string;
+  onOpenChange?: (open: boolean) => void;
 };
 
 function safeParseDate(value?: string | null) {
@@ -35,13 +36,19 @@ export function DatePicker({
   onChange,
   placeholder,
   className,
+  onOpenChange,
 }: DatePickerProps) {
   const date = safeParseDate(value);
 
+  const handleSelect = (selected: Date | undefined) => {
+    onChange?.(selected ? format(selected, "yyyy-MM-dd") : null);
+  };
+
   return (
-    <Popover>
+    <Popover onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           className={cn(
             "w-full justify-between text-left font-normal bg-muted focus:outline-none focus:ring-1 focus:ring-ring focus:ring-offset-2 focus:bg-white",
@@ -54,13 +61,14 @@ export function DatePicker({
           <CalendarIcon className="mr-2 h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent
+        className="w-auto p-0"
+        align="start"
+        data-datepicker-content="true">
         <Calendar
           mode="single"
           selected={date}
-          onSelect={(selected) =>
-            onChange?.(selected ? format(selected, "yyyy-MM-dd") : null)
-          }
+          onSelect={handleSelect}
           initialFocus
         />
       </PopoverContent>

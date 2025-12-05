@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { CirclePlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAuthContext } from "@/lib/messages/auth-context";
@@ -5,9 +7,9 @@ import {
   fetchAnnouncementItems,
   fetchAuthoredAnnouncements,
 } from "@/lib/messages/inbox";
-import { NewAnnouncementModal } from "./NewAnnouncementModal";
 import AnnouncementCard from "./AnnouncementCard";
 import { SentAnnouncementsTable } from "./SentAnnouncementsTable";
+import { Button } from "@/components/ui/button";
 
 export default async function MessagesAnnouncements({
   canCreateAnnouncements,
@@ -51,9 +53,12 @@ export default async function MessagesAnnouncements({
             <TabsTrigger value="received">Recebidos</TabsTrigger>
           </TabsList>
           {canCreateAnnouncements ? (
-            <NewAnnouncementModal
-              canCreateAnnouncement={canCreateAnnouncements}
-            />
+            <Button asChild>
+              <Link href="/comunicados/novo">
+                <CirclePlus className="mr-2 h-4 w-4" />
+                Criar comunicado
+              </Link>
+            </Button>
           ) : null}
         </div>
 

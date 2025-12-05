@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    const svc = createServiceClient();
 
     const searchParams = req.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim() ?? "";
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
     const baseSelect =
       `id, full_name, avatar_url, org_members!inner ( org_id ), employee_profile!left ( cargo )`;
 
-    let query = supabase
+    let query = svc
       .from("profiles")
       .select(baseSelect)
       .eq("org_members.org_id", auth.orgId);

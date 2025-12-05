@@ -313,7 +313,7 @@ function SelectedRecipients({
 
   if (!hasAny) {
     return (
-      <div className="rounded-lg border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-gray-200 text-center px-4 py-3 text-sm text-muted-foreground">
         Nenhum destinatário selecionado ainda. Utilize as abas ao lado para
         adicionar usuários, grupos ou equipes.
       </div>
@@ -321,35 +321,37 @@ function SelectedRecipients({
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-border px-4 py-3">
+    <div className="px-4 py-3">
       <div className="flex items-center justify-between text-sm font-semibold">
         <span>Destinatários selecionados</span>
         <span className="text-xs text-muted-foreground">{total} no total</span>
       </div>
-      {users.length ? (
-        <RecipientBadgeList
-          label="Usuários"
-          items={users.map((u) => ({
-            id: u.id,
-            label: u.full_name || u.id,
-          }))}
-          onRemove={onRemoveUser}
-        />
-      ) : null}
-      {groups.length ? (
-        <RecipientBadgeList
-          label="Grupos"
-          items={groups.map((g) => ({ id: g.id, label: g.name }))}
-          onRemove={onRemoveGroup}
-        />
-      ) : null}
-      {teams.length ? (
-        <RecipientBadgeList
-          label="Equipes"
-          items={teams.map((t) => ({ id: t.id, label: t.name }))}
-          onRemove={onRemoveTeam}
-        />
-      ) : null}
+      <div className="space-y-3 rounded-lg border border-border px-4 py-3">
+        {users.length ? (
+          <RecipientBadgeList
+            label="Usuários"
+            items={users.map((u) => ({
+              id: u.id,
+              label: u.full_name || u.id,
+            }))}
+            onRemove={onRemoveUser}
+          />
+        ) : null}
+        {groups.length ? (
+          <RecipientBadgeList
+            label="Grupos"
+            items={groups.map((g) => ({ id: g.id, label: g.name }))}
+            onRemove={onRemoveGroup}
+          />
+        ) : null}
+        {teams.length ? (
+          <RecipientBadgeList
+            label="Equipes"
+            items={teams.map((t) => ({ id: t.id, label: t.name }))}
+            onRemove={onRemoveTeam}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }

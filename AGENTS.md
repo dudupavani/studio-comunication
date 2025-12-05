@@ -23,6 +23,7 @@
 - **UI**
   - Textos em `<p>` que NÃO forem subtítulos/descrições auxiliares devem usar a cor padrão (primary); não setar classe de cor manualmente nesses casos.
   - Textos dentro de `TableCell` usam, por padrão, cor primária (sem classe de cor explícita) e tamanho `text-sm`.
+  - Elementos de heading (`h1` ... `h6`) não devem receber classes adicionais de tamanho, peso de fonte, font-size ou cor; usar apenas o estilo padrão.
 
 - **Usuários / lifecycle**
   - Estados conceituais: `ativo`, `desativado`, `removido da organização/arquivado` e `excluído permanentemente`.

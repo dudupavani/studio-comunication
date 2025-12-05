@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export interface UserOption {
   id: string;
@@ -21,6 +22,7 @@ interface UserMultiSelectProps {
   onChange: (users: UserOption[]) => void;
   showSelectedSummary?: boolean;
   apiBase?: string;
+  stretchList?: boolean;
 }
 
 export function UserMultiSelect({
@@ -28,6 +30,7 @@ export function UserMultiSelect({
   onChange,
   showSelectedSummary = true,
   apiBase = "/api/chats/recipients",
+  stretchList = false,
 }: UserMultiSelectProps) {
   const { toast } = useToast();
   const [items, setItems] = useState<UserOption[]>([]);
@@ -35,6 +38,7 @@ export function UserMultiSelect({
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState<string | undefined>();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const load = useCallback(
     async ({
@@ -46,6 +50,11 @@ export function UserMultiSelect({
       cursor?: string;
       query: string;
     }) => {
+      if (abortRef.current) {
+        abortRef.current.abort();
+      }
+      const controller = new AbortController();
+      abortRef.current = controller;
       setLoading(true);
       try {
         const params = new URLSearchParams();
@@ -53,9 +62,11 @@ export function UserMultiSelect({
         if (queryArg) params.set("q", queryArg);
         if (cursorArg) params.set("cursor", cursorArg);
 
-        const res = await fetch(
-          `${apiBase}/users?${params.toString()}`
-        );
+        const res = await fetch(`${apiBase}/users?${params.toString()}`, {
+          credentials: "include",
+          cache: "no-store",
+          signal: controller.signal,
+        });
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as any;
           throw new Error(body?.error?.message || `HTTP ${res.status}`);
@@ -69,6 +80,7 @@ export function UserMultiSelect({
         );
         setCursor(payload.nextCursor);
       } catch (err: any) {
+        if (err?.name === "AbortError") return;
         console.error("UserMultiSelect load error", err);
         toast({
           title: "Erro ao carregar usuários",
@@ -86,6 +98,7 @@ export function UserMultiSelect({
     load({ append: false, cursor: undefined, query: "" });
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      abortRef.current?.abort();
     };
   }, [load]);
 
@@ -109,7 +122,11 @@ export function UserMultiSelect({
   );
 
   return (
-    <div className="space-y-3">
+    <div
+      className={cn(
+        "space-y-3",
+        stretchList && "flex h-full min-h-0 flex-col"
+      )}>
       {showSelectedSummary ? (
         <div className="flex flex-wrap gap-2">
           {value.map((user) => (
@@ -132,48 +149,58 @@ export function UserMultiSelect({
         </div>
       ) : null}
 
-      <ScrollArea>
+      <div
+        className={cn(
+          "rounded-md border p-2",
+          stretchList ? "flex flex-1 min-h-0 flex-col gap-2" : "space-y-2"
+        )}>
         <Input
           placeholder="Buscar usuários"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <div className="space-y-1 pt-2">
-          {items.map((user) => {
-            const checked = value.some((item) => item.id === user.id);
-            return (
-              <label
-                key={user.id}
-                className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1 hover:bg-muted">
-                <Checkbox
-                  checked={checked}
-                  onCheckedChange={() => toggleUser(user)}
-                />
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">
-                    {user.full_name || "Usuário sem nome"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {user.id}
-                  </span>
-                </div>
-              </label>
-            );
-          })}
+        <ScrollArea
+          className={cn(
+            "rounded-md",
+            stretchList ? "flex-1 min-h-0" : "max-h-64"
+          )}>
+          <div className="space-y-1">
+            {items.map((user) => {
+              const checked = value.some((item) => item.id === user.id);
+              return (
+                <label
+                  key={user.id}
+                  className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1 hover:bg-muted">
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={() => toggleUser(user)}
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">
+                      {user.full_name || "Usuário sem nome"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {user.id}
+                    </span>
+                  </div>
+                </label>
+              );
+            })}
 
-          {items.length === 0 && !loading ? (
-            <p className="px-2 py-4 text-center text-sm text-muted-foreground">
-              Nenhum resultado.
-            </p>
-          ) : null}
+            {items.length === 0 && !loading ? (
+              <p className="px-2 py-4 text-center text-sm text-muted-foreground">
+                Nenhum resultado.
+              </p>
+            ) : null}
 
-          {loading ? (
-            <p className="px-2 py-3 text-sm text-muted-foreground">
-              Carregando...
-            </p>
-          ) : null}
-        </div>
-      </ScrollArea>
+            {loading ? (
+              <p className="px-2 py-3 text-sm text-muted-foreground">
+                Carregando...
+              </p>
+            ) : null}
+          </div>
+        </ScrollArea>
+      </div>
 
       {cursor ? (
         <Button

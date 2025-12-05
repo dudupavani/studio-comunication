@@ -23,6 +23,7 @@ import {
 } from "@/components/communication/TeamMultiSelect";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CalendarClock } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
 import { AnnouncementDeleteButton } from "./AnnouncementDeleteButton";
 import { SelectedRecipients } from "./SelectedRecipients";
 
@@ -79,6 +80,35 @@ export function EditAnnouncementForm({
     initialScheduleEnabled ? toDatetimeLocal(initialSendAt) : ""
   );
   const [submitting, setSubmitting] = useState(false);
+
+  const sendAtDate = sendAt ? sendAt.split("T")[0] ?? "" : "";
+  const sendAtTime =
+    sendAt && sendAt.includes("T")
+      ? sendAt.split("T")[1]?.slice(0, 5) ?? ""
+      : "";
+
+  const handleScheduleDateChange = useCallback(
+    (value: string | null) => {
+      if (!value) {
+        setSendAt("");
+        return;
+      }
+      const timeValue = sendAtTime || "00:00";
+      setSendAt(`${value}T${timeValue}`);
+    },
+    [sendAtTime]
+  );
+
+  const handleScheduleTimeChange = useCallback(
+    (value: string) => {
+      if (!sendAtDate) {
+        return;
+      }
+      const timeValue = value || "00:00";
+      setSendAt(`${sendAtDate}T${timeValue}`);
+    },
+    [sendAtDate]
+  );
 
   const scheduleLocked = status === "sent";
 
@@ -209,16 +239,15 @@ export function EditAnnouncementForm({
         <div className="space-y-6 lg:col-span-4">
           <div className="space-y-6 rounded-lg border border-border p-4">
             <div className="space-y-2">
-              <Label htmlFor="announcement-title">Título</Label>
               <Input
                 id="announcement-title"
                 value={title}
+                className="h-12"
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Assunto do comunicado"
+                placeholder="Título"
               />
             </div>
             <div className="space-y-2">
-              <Label>Conteúdo</Label>
               <CKEditorComponent
                 value={content}
                 onChange={setContent}
@@ -271,7 +300,7 @@ export function EditAnnouncementForm({
             <div className="rounded-lg border border-border p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold">Agendar envio</p>
+                  <h6>Agendar envio</h6>
                   <p className="text-xs text-muted-foreground">
                     Defina quando o comunicado será disparado e exibido no
                     calendário.
@@ -293,15 +322,36 @@ export function EditAnnouncementForm({
                 </p>
               ) : null}
               {scheduleEnabled && !scheduleLocked ? (
-                <div className="space-y-2">
-                  <Label htmlFor="announcement-send-at">Data e hora</Label>
-                  <Input
-                    id="announcement-send-at"
-                    type="datetime-local"
-                    value={sendAt}
-                    onChange={(e) => setSendAt(e.target.value)}
-                    min={new Date().toISOString().slice(0, 16)}
-                  />
+                <div className="space-y-3">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label>Data</Label>
+                      <DatePicker
+                        value={sendAt || null}
+                        onChange={handleScheduleDateChange}
+                        placeholder="Selecione a data"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="announcement-send-at-time-edit">
+                        Horário
+                      </Label>
+                      <Input
+                        id="announcement-send-at-time-edit"
+                        type="time"
+                        value={sendAtTime}
+                        onChange={(event) =>
+                          handleScheduleTimeChange(event.target.value)
+                        }
+                        disabled={!sendAtDate}
+                      />
+                      {!sendAtDate ? (
+                        <p className="text-xs text-muted-foreground">
+                          Escolha a data antes de definir o horário.
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     O comunicado será enviado no horário definido e um marcador
                     aparecerá no calendário.
@@ -312,14 +362,14 @@ export function EditAnnouncementForm({
           </div>
         </div>
 
-        <div className="lg:col-span-2 space-y-4">
-          <Tabs defaultValue="users" className="space-y-4">
+        <div className="col-span-6 lg:col-span-2 flex flex-col gap-4">
+          <Tabs defaultValue="users" className="flex h-full flex-col gap-4">
             <TabsList className="grid grid-cols-3">
               <TabsTrigger value="users">Usuários</TabsTrigger>
               <TabsTrigger value="groups">Grupos</TabsTrigger>
               <TabsTrigger value="teams">Equipes</TabsTrigger>
             </TabsList>
-            <TabsContent value="users" className="space-y-2">
+            <TabsContent value="users" className="flex h-full flex-col gap-2">
               <p className="text-xs text-muted-foreground">
                 Pesquise e selecione usuários específicos.
               </p>
@@ -328,11 +378,12 @@ export function EditAnnouncementForm({
                 onChange={setUsers}
                 apiBase="/api/comunicados/recipients"
                 showSelectedSummary={false}
+                stretchList
               />
             </TabsContent>
             <TabsContent value="groups" className="space-y-2">
-              <p className="text-xs text-muted-foreground">
-                Adicione grupos para incluir todos os membros automaticamente.
+              <p className="text-xs text-center text-muted-foreground">
+                Todos os membros do grupo serão adicionados
               </p>
               <GroupMultiSelect
                 value={groups}
@@ -342,8 +393,8 @@ export function EditAnnouncementForm({
               />
             </TabsContent>
             <TabsContent value="teams" className="space-y-2">
-              <p className="text-xs text-muted-foreground">
-                Selecione equipes para incluir todos os participantes.
+              <p className="text-xs text-center text-muted-foreground">
+                Todos os membros das equipes serão adicionados
               </p>
               <TeamMultiSelect
                 value={teams}

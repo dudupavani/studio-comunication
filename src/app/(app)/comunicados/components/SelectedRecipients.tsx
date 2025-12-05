@@ -3,9 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import type {
-  UserOption,
-} from "@/components/communication/UserMultiSelect";
+import type { UserOption } from "@/components/communication/UserMultiSelect";
 import type { UserGroupOption } from "@/components/communication/GroupMultiSelect";
 import type { TeamOption } from "@/components/communication/TeamMultiSelect";
 
@@ -30,40 +28,41 @@ export function SelectedRecipients({
 }: SelectedRecipientsProps) {
   if (!users.length && !groups.length && !teams.length) {
     return (
-      <div className="rounded-lg border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
-        Nenhum destinatário selecionado ainda. Utilize as abas à direita para
+      <div className="rounded-lg bg-muted border border-dashed border-gray-200 px-4 py-3 text-xs text-center text-gray-600">
+        Nenhum destinatário selecionado. Utilize as abas da direita para
         adicionar usuários, grupos ou equipes.
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-border px-4 py-3">
-      <div className="flex items-center justify-between text-sm font-semibold">
-        <span>Destinatários selecionados</span>
-        <span className="text-xs text-muted-foreground">{total} no total</span>
+    <div className="mt-6">
+      <div className="flex items-center justify-between mb-2">
+        <h6>Destinatários selecionados ({total})</h6>
       </div>
-      {users.length ? (
-        <RecipientBadgeList
-          label="Usuários"
-          items={users.map((u) => ({ id: u.id, label: u.full_name || u.id }))}
-          onRemove={onRemoveUser}
-        />
-      ) : null}
-      {groups.length ? (
-        <RecipientBadgeList
-          label="Grupos"
-          items={groups.map((g) => ({ id: g.id, label: g.name }))}
-          onRemove={onRemoveGroup}
-        />
-      ) : null}
-      {teams.length ? (
-        <RecipientBadgeList
-          label="Equipes"
-          items={teams.map((t) => ({ id: t.id, label: t.name }))}
-          onRemove={onRemoveTeam}
-        />
-      ) : null}
+      <div className="space-y-3 rounded-lg border border-border px-4 py-3">
+        {users.length ? (
+          <RecipientBadgeList
+            label="Usuários"
+            items={users.map((u) => ({ id: u.id, label: u.full_name || u.id }))}
+            onRemove={onRemoveUser}
+          />
+        ) : null}
+        {groups.length ? (
+          <RecipientBadgeList
+            label="Grupos"
+            items={groups.map((g) => ({ id: g.id, label: g.name }))}
+            onRemove={onRemoveGroup}
+          />
+        ) : null}
+        {teams.length ? (
+          <RecipientBadgeList
+            label="Equipes"
+            items={teams.map((t) => ({ id: t.id, label: t.name }))}
+            onRemove={onRemoveTeam}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }

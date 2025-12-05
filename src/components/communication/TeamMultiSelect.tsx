@@ -34,6 +34,7 @@ export function TeamMultiSelect({
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState<string | undefined>();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const load = useCallback(
     async ({
@@ -45,6 +46,11 @@ export function TeamMultiSelect({
       cursor?: string;
       query: string;
     }) => {
+      if (abortRef.current) {
+        abortRef.current.abort();
+      }
+      const controller = new AbortController();
+      abortRef.current = controller;
       setLoading(true);
       try {
         const params = new URLSearchParams();
@@ -52,9 +58,11 @@ export function TeamMultiSelect({
         if (queryArg) params.set("q", queryArg);
         if (cursorArg) params.set("cursor", cursorArg);
 
-        const res = await fetch(
-          `${apiBase}/teams?${params.toString()}`
-        );
+        const res = await fetch(`${apiBase}/teams?${params.toString()}`, {
+          credentials: "include",
+          cache: "no-store",
+          signal: controller.signal,
+        });
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as any;
           throw new Error(body?.error?.message || `HTTP ${res.status}`);
@@ -68,6 +76,7 @@ export function TeamMultiSelect({
         );
         setCursor(payload.nextCursor);
       } catch (err: any) {
+        if (err?.name === "AbortError") return;
         console.error("TeamMultiSelect load error", err);
         toast({
           title: "Erro ao carregar equipes",
@@ -85,6 +94,7 @@ export function TeamMultiSelect({
     load({ append: false, cursor: undefined, query: "" });
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      abortRef.current?.abort();
     };
   }, [load]);
 
