@@ -132,7 +132,7 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                           Chats
                         </span>
                         {counts.chats > 0 ? (
-                          <span className="absolute top-2.5 right-3 min-w-[20px] min-h-[20px] max-w-[20px] max-h-[20px] rounded-full bg-green-600 text-[11px] font-semibold text-center text-white ">
+                          <span className="absolute top-2.5 right-2 min-w-[20px] min-h-[20px] max-w-[20px] max-h-[20px] rounded-full bg-green-600 text-[11px] font-semibold text-center text-white ">
                             {formatBadgeValue(counts.chats)}
                           </span>
                         ) : null}

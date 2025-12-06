@@ -40,23 +40,26 @@ export default async function MessagesAnnouncements({
       { kind: "announcement" }
     > => item.kind === "announcement"
   );
-  const defaultTab = canViewSentTab ? "sent" : "received";
+  const defaultTab = "received";
 
   return (
     <div className="flex flex-col h-full gap-4">
       <Tabs defaultValue={defaultTab} className="flex h-full flex-col gap-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <TabsList>
+            <TabsTrigger value="received">Recebidos</TabsTrigger>
             {canViewSentTab ? (
               <TabsTrigger value="sent">Enviados</TabsTrigger>
             ) : null}
-            <TabsTrigger value="received">Recebidos</TabsTrigger>
           </TabsList>
           {canCreateAnnouncements ? (
             <Button asChild>
               <Link href="/comunicados/novo">
-                <CirclePlus className="mr-2 h-4 w-4" />
-                Criar comunicado
+                <CirclePlus />
+                <span className="sm:hidden">Criar</span>
+                <span className="hidden sm:inline">
+                  Criar comunicado
+                </span>
               </Link>
             </Button>
           ) : null}

@@ -29,7 +29,7 @@ export function MessagesInbox({
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex w-full justify-between sm:justify-end items-center gap-2">
+        <div className="flex w-full justify-end items-center gap-2">
           <ChatFiltersPanel value={filters} onApply={setFilters} />
           {canCreateConversation ? (
             <NewMessageModal canCreateConversation={canCreateConversation} />

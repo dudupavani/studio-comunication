@@ -10,7 +10,6 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import { SidePanel } from "@/components/ui/side-panel";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -26,6 +25,14 @@ import { Calendar } from "@/components/ui/calendar";
 import UserSummary from "@/components/shared/user-summary";
 import type { ChatFilters } from "@/lib/messages/types";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetClose,
+} from "@/components/ui/sheet";
 
 export type { ChatFilters } from "@/lib/messages/types";
 
@@ -221,7 +228,7 @@ function CreatorMultiSelect({ value, onChange }: CreatorMultiSelectProps) {
 
   return (
     <div className="space-y-2">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen} modal={false}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="w-full justify-between">
             <span className="text-left text-sm">{triggerLabel}</span>
@@ -295,12 +302,9 @@ function CreatorMultiSelect({ value, onChange }: CreatorMultiSelectProps) {
       </Popover>
 
       {allSelectedCreators.length ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           {allSelectedCreators.map((creator) => (
-            <Badge
-              key={creator.id}
-              variant="secondary"
-              className="flex items-center gap-1">
+            <Badge key={creator.id} variant="secondary">
               <span className="max-w-[180px] truncate">
                 {creator.name || creator.id}
               </span>
@@ -309,11 +313,11 @@ function CreatorMultiSelect({ value, onChange }: CreatorMultiSelectProps) {
                 variant="ghost"
                 size="icon-xs"
                 onClick={() => toggleCreator(creator.id)}>
-                <X className="h-3 w-3" />
+                <X />
               </Button>
             </Badge>
           ))}
-          <Button variant="ghost" size="xs" onClick={() => onChange([])}>
+          <Button variant="ghost" size="sm" onClick={() => onChange([])}>
             Limpar
           </Button>
         </div>
@@ -361,7 +365,7 @@ function DateRangeSelector({ value, onChange }: DateRangeSelectorProps) {
   );
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="w-full justify-between">
           <span className="text-left text-sm">{label}</span>
@@ -408,7 +412,13 @@ export function ChatFiltersPanel({ value, onApply }: ChatFiltersPanelProps) {
     }
   }, [normalizedValue, open]);
 
-  const handleApply = (close: () => void) => {
+  const hasFilters =
+    draft.creatorIds.length > 0 ||
+    Boolean(draft.createdFrom) ||
+    Boolean(draft.createdTo);
+
+  const handleApply = () => {
+    if (!hasFilters) return;
     const uniqueCreators = Array.from(new Set(draft.creatorIds));
     const next = normalizeFilters({
       ...draft,
@@ -416,31 +426,27 @@ export function ChatFiltersPanel({ value, onApply }: ChatFiltersPanelProps) {
     });
     setDraft(next);
     onApply(next);
-    close();
+    setOpen(false);
   };
 
   return (
-    <SidePanel
-      width={420}
-      onOpenChange={setOpen}
-      renderTrigger={({ setOpen }) => (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button variant="secondary" onClick={() => setOpen(true)}>
           <ListFilter />
           Filtros
         </Button>
-      )}>
-      {(close) => (
-        <div className="flex h-full flex-col">
-          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
-            <div>
-              <h2 className="text-lg font-semibold">Filtrar conversas</h2>
-              <p className="text-xs text-muted-foreground">
-                Ajuste os filtros para localizar conversas específicas.
-              </p>
-            </div>
-
+      </SheetTrigger>
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col">
+        <SheetHeader>
+          <div className="flex items-center justify-between">
+            <SheetTitle>Filtrar conversas</SheetTitle>
+          </div>
+        </SheetHeader>
+        <div className="flex h-full flex-col flex-1">
+          <div className="flex-1 space-y-6 overflow-y-auto">
             <div className="space-y-6">
-              <div className="space-y-2">
+              <div className="space-y-1 z-50">
                 <Label>Criado por</Label>
                 <CreatorMultiSelect
                   value={draft.creatorIds}
@@ -450,7 +456,7 @@ export function ChatFiltersPanel({ value, onApply }: ChatFiltersPanelProps) {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label>Criado em</Label>
                 <DateRangeSelector
                   value={{
@@ -476,16 +482,21 @@ export function ChatFiltersPanel({ value, onApply }: ChatFiltersPanelProps) {
                 const reset = normalizeFilters(EMPTY_FILTERS);
                 setDraft(reset);
                 onApply(reset);
+                setOpen(false);
               }}
-              className="flex-1">
+              className="flex-1"
+              disabled={!hasFilters}>
               Limpar filtros
             </Button>
-            <Button onClick={() => handleApply(close)} className="flex-1">
+            <Button
+              onClick={handleApply}
+              className="flex-1"
+              disabled={!hasFilters}>
               Aplicar filtros
             </Button>
           </div>
         </div>
-      )}
-    </SidePanel>
+      </SheetContent>
+    </Sheet>
   );
 }

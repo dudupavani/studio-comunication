@@ -122,14 +122,14 @@ export function MessageItem({
           "flex items-start gap-3",
           isOwn ? "flex-row-reverse" : "flex-row"
         )}>
-        <Avatar className="h-10 w-10 shrink-0 shadow-md border-1 border-white">
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 shadow-md border-1 border-white">
           <AvatarImage src={sender?.avatar_url ?? undefined} alt={senderName} />
           <AvatarFallback>{getInitials(senderName)}</AvatarFallback>
         </Avatar>
 
         <div
           className={cn(
-            "flex max-w-[75%] flex-col gap-1",
+            "flex max-w-[85%] sm:max-w-[75%] flex-col gap-1",
             isOwn ? "items-end text-left" : "items-start"
           )}>
           <div className="flex items-center gap-2 text-sm">

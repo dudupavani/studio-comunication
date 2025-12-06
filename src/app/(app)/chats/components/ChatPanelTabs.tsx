@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 
 export type ChatPanelTab = "details" | "attachments" | "notes";
 
-type TabDef = {
+export type TabDef = {
   key: ChatPanelTab;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
 };
 
-const TABS: TabDef[] = [
+export const CHAT_PANEL_TABS: TabDef[] = [
   { key: "details", icon: Users, label: "Participantes" },
   { key: "attachments", icon: Paperclip, label: "Anexos" },
   { key: "notes", icon: StickyNote, label: "Notas" },
@@ -39,7 +39,7 @@ export function ChatPanelTabs({ active, onChange, onClose }: Props) {
         </Button>
       ) : null}
       <div className="flex flex-col py-4 gap-3">
-        {TABS.map((tab) => {
+        {CHAT_PANEL_TABS.map((tab) => {
           const Icon = tab.icon;
           const selected = active === tab.key;
           return (

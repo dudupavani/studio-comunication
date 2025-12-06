@@ -47,12 +47,6 @@ export async function POST(
       );
     }
 
-    await svc
-      .from("announcement_comments")
-      .delete()
-      .eq("announcement_id", announcementId)
-      .eq("author_id", auth.userId);
-
     const { error } = await svc.from("announcement_comments").insert({
       announcement_id: announcementId,
       author_id: auth.userId,

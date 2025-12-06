@@ -11,6 +11,7 @@ import type { ChatMessageWithSender } from "@/hooks/use-messages";
 import { useSendMessage } from "@/hooks/use-send-message";
 import { useRealtimeMessages } from "@/hooks/use-realtime-messages";
 import type { SendMessageMentionInput } from "@/lib/messages/validations";
+import type { ChatPanelTab } from "./ChatPanelTabs";
 
 interface ChatWindowProps {
   chat: Chat;
@@ -18,6 +19,8 @@ interface ChatWindowProps {
   currentUserId: string;
   members: ChatMemberWithUser[];
   onAttachmentsAdded?: () => void;
+  onOpenPanel?: (tab: ChatPanelTab) => void;
+  onCloseChat?: () => void;
 }
 
 export function ChatWindow({
@@ -26,6 +29,8 @@ export function ChatWindow({
   currentUserId,
   members,
   onAttachmentsAdded,
+  onOpenPanel,
+  onCloseChat,
 }: ChatWindowProps) {
   const { messages, loading, loadingMore, hasMore, loadMore, appendMessage } =
     useMessages(chatId, { limit: 50 });
@@ -86,7 +91,12 @@ export function ChatWindow({
 
   return (
     <section className="flex h-full flex-1 flex-col">
-      <ChatHeader chat={chat} members={members} />
+      <ChatHeader
+        chat={chat}
+        members={members}
+        onOpenPanel={onOpenPanel}
+        onCloseChat={onCloseChat}
+      />
       <MessageList
         messages={messages}
         currentUserId={currentUserId}

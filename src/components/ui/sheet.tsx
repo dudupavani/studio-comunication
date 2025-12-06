@@ -7,7 +7,12 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const Sheet = SheetPrimitive.Root;
+type SheetProps = React.ComponentProps<typeof SheetPrimitive.Root>;
+
+const Sheet = ({ modal = false, ...props }: SheetProps) => (
+  <SheetPrimitive.Root modal={modal} {...props} />
+);
+Sheet.displayName = SheetPrimitive.Root.displayName;
 
 const SheetTrigger = SheetPrimitive.Trigger;
 
@@ -31,7 +36,7 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  "fixed z-50 gap-6 bg-background px-4 py-6 sm:p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
   {
     variants: {
       side: {
@@ -78,7 +83,7 @@ const SheetHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col space-y-2 text-left sm:text-left", className)}
+    className={cn("flex flex-col space-y-2 text-left pr-10", className)}
     {...props}
   />
 );

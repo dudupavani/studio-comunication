@@ -42,6 +42,7 @@ export interface UserMini {
   full_name: string | null;
   email?: string | null;
   avatar_url?: string | null;
+  title?: string | null;
 }
 
 export interface ChatSummary extends Chat {

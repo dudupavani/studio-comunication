@@ -8,6 +8,7 @@ import { ChatWindow } from "./ChatWindow";
 import { ChatDetails } from "./ChatDetails";
 import { ChatPanelTabs, type ChatPanelTab } from "./ChatPanelTabs";
 import { ChatAttachmentsPanel } from "./ChatAttachmentsPanel";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface ConversationLayoutProps {
   chat: Chat;
@@ -29,6 +30,7 @@ export function ConversationLayout({
   const [members, setMembers] = useState<ChatMemberWithUser[]>(initialMembers);
   const [activePanel, setActivePanel] = useState<ChatPanelTab>("details");
   const [attachmentsVersion, setAttachmentsVersion] = useState(0);
+  const [mobilePanel, setMobilePanel] = useState<ChatPanelTab | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,8 +57,8 @@ export function ConversationLayout({
     };
   }, [chatId]);
 
-  const renderPanel = () => {
-    switch (activePanel) {
+  const renderPanel = (panel: ChatPanelTab) => {
+    switch (panel) {
       case "attachments":
         return (
           <ChatAttachmentsPanel
@@ -87,6 +89,15 @@ export function ConversationLayout({
     }
   };
 
+  const handleOpenPanel = (tab: ChatPanelTab) => {
+    setActivePanel(tab);
+    setMobilePanel(tab);
+  };
+
+  const handleCloseMobilePanel = () => {
+    setMobilePanel(null);
+  };
+
   return (
     <div className="flex flex-col lg:flex-row h-screen">
       <aside className="h-full hidden w-full max-w-xs lg:block border-r">
@@ -100,17 +111,35 @@ export function ConversationLayout({
           currentUserId={currentUserId}
           members={members}
           onAttachmentsAdded={() => setAttachmentsVersion((v) => v + 1)}
+          onOpenPanel={handleOpenPanel}
+          onCloseChat={onClose}
         />
       </div>
 
       <aside className="hidden w-full max-w-sm border-l border-border bg-background xl:flex">
-        <div className="flex-1 min-w-[200px]">{renderPanel()}</div>
+        <div className="flex-1 min-w-[200px]">{renderPanel(activePanel)}</div>
         <ChatPanelTabs
           active={activePanel}
           onChange={setActivePanel}
           onClose={onClose}
         />
       </aside>
+
+      {mobilePanel ? (
+        <Sheet
+          open
+          onOpenChange={(open) => {
+            if (!open) handleCloseMobilePanel();
+          }}>
+          <SheetContent
+            side="right"
+            className="w-full sm:max-w-sm px-0 xl:hidden">
+            <div className="h-full overflow-y-auto">
+              {renderPanel(mobilePanel)}
+            </div>
+          </SheetContent>
+        </Sheet>
+      ) : null}
     </div>
   );
 }

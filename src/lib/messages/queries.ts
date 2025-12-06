@@ -155,6 +155,27 @@ export async function fetchChats(
 
   if (creatorIds.length) {
     const svc = createServiceClient();
+    const cargoMap = new Map<string, string | null>();
+
+    try {
+      const { data: cargoRows, error: cargoError } = await svc
+        .from("employee_profile")
+        .select("user_id, cargo")
+        .in("user_id", creatorIds);
+
+      if (cargoError) {
+        console.warn("MESSAGES fetch chat creator cargo error", cargoError);
+      } else {
+        (cargoRows ?? []).forEach((row: any) => {
+          const userId = row?.user_id as string | undefined;
+          if (!userId) return;
+          cargoMap.set(userId, (row?.cargo as string | null) ?? null);
+        });
+      }
+    } catch (err) {
+      console.warn("MESSAGES fetch chat creator cargo failure", err);
+    }
+
     const { data: identities, error: identityError } = await svc.rpc(
       "get_user_identity_many",
       { p_user_ids: creatorIds }
@@ -167,8 +188,8 @@ export async function fetchChats(
       );
     }
 
+    const map: Record<string, UserMini> = {};
     if (Array.isArray(identities)) {
-      const map: Record<string, UserMini> = {};
       identities.forEach((identity: any) => {
         if (!identity?.user_id) return;
         map[identity.user_id] = {
@@ -176,13 +197,30 @@ export async function fetchChats(
           full_name: identity.full_name ?? null,
           avatar_url: identity.avatar_url ?? null,
           email: identity.email ?? null,
+          title: cargoMap.get(identity.user_id) ?? null,
         };
       });
-
-      baseItems.forEach((chat) => {
-        chat.creator = chat.created_by ? map[chat.created_by] ?? null : null;
-      });
     }
+
+    creatorIds.forEach((id) => {
+      if (map[id]) {
+        map[id].title = map[id].title ?? cargoMap.get(id) ?? null;
+        return;
+      }
+      if (cargoMap.has(id)) {
+        map[id] = {
+          id,
+          full_name: null,
+          avatar_url: null,
+          email: null,
+          title: cargoMap.get(id) ?? null,
+        };
+      }
+    });
+
+    baseItems.forEach((chat) => {
+      chat.creator = chat.created_by ? map[chat.created_by] ?? null : null;
+    });
   }
 
   if (baseItems.length) {

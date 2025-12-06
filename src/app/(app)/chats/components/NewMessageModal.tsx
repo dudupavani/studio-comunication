@@ -183,14 +183,14 @@ export function NewMessageModal({
           disabled={!canCreateConversation}
           title={disabledReason ?? undefined}>
           <CirclePlus />
-          <span className="hidden sm:block">Conversa</span>
+          Iniciar chat
         </Button>
       </DrawerTrigger>
       <DrawerContent className="h-full max-h-[95vh]">
         <div className="mx-auto flex w-full h-full flex-col overflow-y-auto px-4 pb-8 sm:px-12">
           <DrawerHeader className="px-0 pb-4">
             <div className="flex items-center justify-between">
-              <DrawerTitle>Enviar mensagem</DrawerTitle>
+              <DrawerTitle>Iniciar chat</DrawerTitle>
               <DrawerClose asChild>
                 <Button variant="ghost" size="icon" aria-label="Fechar">
                   <X size={22} />

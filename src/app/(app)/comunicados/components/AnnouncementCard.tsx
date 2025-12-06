@@ -23,10 +23,10 @@ export default function AnnouncementCard({
 }) {
   const router = useRouter();
   const { toast } = useToast();
-  const myComment = announcement.comments?.find((c) => c.isMine);
-  const [comment, setComment] = useState(myComment?.content ?? "");
+  const [comment, setComment] = useState("");
   const [isPending, startTransition] = useTransition();
   const [reactionPending, setReactionPending] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const sanitizedPreview = useMemo(
     () =>
@@ -37,8 +37,8 @@ export default function AnnouncementCard({
   );
 
   useEffect(() => {
-    setComment(myComment?.content ?? "");
-  }, [myComment?.content]);
+    setComment("");
+  }, [announcement.announcementId]);
 
   const submitComment = async () => {
     if (!announcement.allowComments) return;
@@ -66,6 +66,7 @@ export default function AnnouncementCard({
           });
           return;
         }
+        setComment("");
         router.refresh();
       })();
     });
@@ -107,15 +108,16 @@ export default function AnnouncementCard({
     }));
 
   const isScheduled = announcement.status === "scheduled";
+  const commentCount = announcement.comments?.length ?? 0;
 
   return (
     <Card className="shadow-md border border-gray-200">
-      <CardContent className="px-4 py-6 md:py-8 md:px-8">
+      <CardContent className="px-4 py-6 sm:py-4 sm:px-6 md:py-6 md:px-8">
         <AnnouncementModal announcement={announcement}>
           <button
             type="button"
-            className="group w-full text-left mb-8 space-y-4 rounded-md border border-transparent p-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-            <div className="flex items-start gap-4">
+            className="group w-full text-left mb-4 space-y-4 rounded-md border border-transparent p-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+            <div className="flex items-center gap-4">
               <Avatar className="h-10 w-10 border border-white shadow-md">
                 <AvatarImage
                   src={announcement.senderAvatar ?? undefined}
@@ -135,7 +137,9 @@ export default function AnnouncementCard({
                   {announcement.senderName || "Remetente desconhecido"}
                 </div>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <span>{new Date(announcement.createdAt).toLocaleString()}</span>
+                  <span>
+                    {new Date(announcement.createdAt).toLocaleString()}
+                  </span>
                   {isScheduled ? (
                     <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
                       Agendado
@@ -146,7 +150,7 @@ export default function AnnouncementCard({
             </div>
 
             <div className="space-y-2 text-left">
-              <h4 className="font-semibold">{announcement.title}</h4>
+              <h5 className="font-semibold">{announcement.title}</h5>
               <div
                 className="text-sm max-w-none text-muted-foreground line-clamp-3"
                 dangerouslySetInnerHTML={{
@@ -157,28 +161,44 @@ export default function AnnouncementCard({
           </button>
         </AnnouncementModal>
 
-        {announcement.allowReactions ? (
-          <div className="flex flex-wrap gap-2 mb-8">
-            {reactions.map((reaction) => (
+        {announcement.allowComments || announcement.allowReactions ? (
+          <div className="flex gap-4 items-center justify-between">
+            {announcement.allowReactions ? (
+              <div className="flex flex-wrap gap-2">
+                {reactions.map((reaction) => (
+                  <Button
+                    key={reaction.emoji}
+                    type="button"
+                    size="sm"
+                    className="px-2 sm:px-auto"
+                    variant={reaction.reacted ? "secondary" : "ghost"}
+                    disabled={reactionPending}
+                    onClick={() => toggleReaction(reaction.emoji)}>
+                    <span className="mr-0 md:mr-1 text-base sm:text-lg">
+                      {reaction.emoji}
+                    </span>
+                    {reaction.count > 0 ? <span>{reaction.count}</span> : null}
+                  </Button>
+                ))}
+              </div>
+            ) : null}
+            {announcement.allowComments ? (
               <Button
-                key={reaction.emoji}
                 type="button"
+                variant="ghost"
                 size="sm"
-                variant={reaction.reacted ? "default" : "outline"}
-                disabled={reactionPending}
-                onClick={() => toggleReaction(reaction.emoji)}>
-                <span className="mr-0 md:mr-1 text-lg">{reaction.emoji}</span>
-                <span>{reaction.count}</span>
+                onClick={() => setShowComments((prev) => !prev)}>
+                <span>Comentários ({commentCount})</span>
               </Button>
-            ))}
+            ) : null}
           </div>
         ) : null}
 
-        {announcement.allowComments ? (
-          <div className="space-y-2">
-            <div className="space-y-2">
-              {announcement.comments && announcement.comments.length > 0 ? (
-                announcement.comments.map((comment) => (
+        {announcement.allowComments && showComments ? (
+          <div className="space-y-4">
+            <div className="space-y-2 mt-4">
+              {commentCount > 0 ? (
+                announcement.comments!.map((comment) => (
                   <div
                     key={comment.id}
                     className="rounded-md border p-4 text-sm space-y-2">
@@ -199,7 +219,7 @@ export default function AnnouncementCard({
                         {new Date(comment.createdAt).toLocaleString()}
                       </span>
                     </div>
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
+                    <p className="mt-1 pl-12 whitespace-pre-wrap text-sm text-primary">
                       {comment.content}
                     </p>
                   </div>
@@ -214,11 +234,7 @@ export default function AnnouncementCard({
               <Textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder={
-                  myComment
-                    ? "Atualize seu comentário..."
-                    : "Escreva um comentário..."
-                }
+                placeholder="Escreva um comentário..."
                 className="min-h-[40px] text-sm"
               />
               <div className="absolute right-2 bottom-2">

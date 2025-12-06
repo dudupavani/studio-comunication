@@ -24,8 +24,7 @@ export default function AnnouncementModal({ announcement, children }: Props) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const myComment = announcement.comments?.find((c) => c.isMine);
-  const [comment, setComment] = useState(myComment?.content ?? "");
+  const [comment, setComment] = useState("");
   const [isPending, startTransition] = useTransition();
   const [reactionPending, setReactionPending] = useState(false);
 
@@ -39,8 +38,8 @@ export default function AnnouncementModal({ announcement, children }: Props) {
   const isScheduled = announcement.status === "scheduled";
 
   useEffect(() => {
-    setComment(myComment?.content ?? "");
-  }, [myComment?.content]);
+    setComment("");
+  }, [announcement.announcementId, open]);
 
   const submitComment = () => {
     if (!announcement.allowComments) return;
@@ -67,6 +66,7 @@ export default function AnnouncementModal({ announcement, children }: Props) {
         });
         return;
       }
+      setComment("");
       router.refresh();
     });
   };
@@ -103,15 +103,17 @@ export default function AnnouncementModal({ announcement, children }: Props) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-[1000px] w-full h-screen p-0">
         <ScrollArea className="h-full">
-          <div className="px-12 pt-12 pb-20 space-y-12">
+          <div className="px-4 sm:px-12 pt-12 pb-20 space-y-12">
             <div>
-              <div className="mb-8 space-y-2">
-                <h3 className="font-semibold">{announcement.title}</h3>
+              <div className="mt-3 sm:mt-0 mb-8 space-y-2">
+                <h4 className="font-semibold">{announcement.title}</h4>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <div className="p-1 rounded-md bg-muted">
                     <CalendarClock size={16} />
                   </div>
-                  <span>{new Date(announcement.createdAt).toLocaleString()}</span>
+                  <span>
+                    {new Date(announcement.createdAt).toLocaleString()}
+                  </span>
                   {isScheduled ? (
                     <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
                       Agendado

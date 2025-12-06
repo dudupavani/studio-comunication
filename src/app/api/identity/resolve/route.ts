@@ -33,6 +33,7 @@ export async function POST(req: Request) {
         email: string | null;
         avatar_url: string | null;
         org_id: string | null;
+        title: string | null;
       }
     > = {};
 
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
         email: null,
         avatar_url: profile.avatar_url ?? null,
         org_id: null,
+        title: null,
       };
     });
 
@@ -70,6 +72,7 @@ export async function POST(req: Request) {
                 email,
                 avatar_url: avatarUrl,
                 org_id: null,
+                title: null,
               };
               return;
             }
@@ -88,6 +91,37 @@ export async function POST(req: Request) {
           }
         })
       );
+    }
+
+    try {
+      const { data: cargoRows, error: cargoError } = await supabase
+        .from("employee_profile")
+        .select("user_id, cargo")
+        .in("user_id", uniqueIds);
+
+      if (cargoError) {
+        console.warn("IDENTITY resolve cargo lookup error", cargoError);
+      } else {
+        (cargoRows ?? []).forEach((row: any) => {
+          const userId = row?.user_id as string | undefined;
+          if (!userId) return;
+          const cargo = (row?.cargo as string | null) ?? null;
+          if (byId[userId]) {
+            byId[userId].title = cargo ?? byId[userId].title ?? null;
+          } else {
+            byId[userId] = {
+              user_id: userId,
+              full_name: null,
+              email: null,
+              avatar_url: null,
+              org_id: null,
+              title: cargo,
+            };
+          }
+        });
+      }
+    } catch (err) {
+      console.warn("IDENTITY resolve cargo failure", err);
     }
 
     // Cache leve (privado) para aliviar refresh rápido de página
