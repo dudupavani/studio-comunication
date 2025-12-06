@@ -162,7 +162,7 @@ export default function AnnouncementCard({
         </AnnouncementModal>
 
         {announcement.allowComments || announcement.allowReactions ? (
-          <div className="flex gap-4 items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center sm:justify-between">
             {announcement.allowReactions ? (
               <div className="flex flex-wrap gap-2">
                 {reactions.map((reaction) => (
@@ -201,8 +201,8 @@ export default function AnnouncementCard({
                 announcement.comments!.map((comment) => (
                   <div
                     key={comment.id}
-                    className="rounded-md border p-4 text-sm space-y-2">
-                    <div className="flex items-start justify-between gap-3">
+                    className="rounded-md border p-4 text-sm space-y-4 sm:space-y-2 bg-muted">
+                    <div className="flex flex-col-reverse sm:flow-row items-start justify-between gap-1 sm:gap-3">
                       <UserSummary
                         avatarUrl={comment.authorAvatar}
                         name={
@@ -215,11 +215,11 @@ export default function AnnouncementCard({
                         subtitle={comment.authorTitle ?? undefined}
                         fallback="Usuário"
                       />
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap pl-12 sm:pl-0">
                         {new Date(comment.createdAt).toLocaleString()}
                       </span>
                     </div>
-                    <p className="mt-1 pl-12 whitespace-pre-wrap text-sm text-primary">
+                    <p className="mt-1 pl-0 sm:pl-12 whitespace-pre-wrap text-sm text-primary">
                       {comment.content}
                     </p>
                   </div>

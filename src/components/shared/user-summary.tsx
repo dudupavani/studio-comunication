@@ -39,8 +39,8 @@ export default function UserSummary({
         </div>
       )}
 
-      <div className="flex flex-col gap-1">
-        <div className="font-semibold text-sm text-foreground leading-5">
+      <div className="flex flex-col gap-0 sm:gap-1">
+        <div className="font-semibold text-xs sm:text-sm text-foreground leading-5">
           {displayName}
         </div>
         {displaySubtitle ? (
