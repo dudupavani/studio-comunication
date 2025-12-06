@@ -10,8 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#ffffff",
-    theme_color: "#000000",
+    background_color: "#004FFF",
+    theme_color: "#ffffff",
     icons: [
       {
         src: "/icons/icon-192.png",
@@ -22,6 +22,14 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icons/icon-512.png",
         sizes: "512x512",
         type: "image/png",
+      },
+      {
+        src: "/icons/icon-maskable.png",
+        sizes: "512x512",
+        type: "image/png",
+        // Next's manifest typings still miss the combined purpose token.
+        // @ts-expect-error required maskable icon uses "any maskable".
+        purpose: "any maskable",
       },
     ],
     shortcuts: [
@@ -40,4 +48,3 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
   };
 }
-
