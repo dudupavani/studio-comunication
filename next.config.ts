@@ -1,11 +1,12 @@
 // next.config.ts
 import type { NextConfig } from "next";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
 
 const nextConfig: NextConfig = {
   typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
+  turbopack: {
+    // Define explicit root to evitar detecção incorreta de workspaces.
+    root: __dirname,
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "placehold.co", pathname: "/**" },
@@ -15,14 +16,6 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
-  },
-  webpack: (config, { isServer }) => {
-    // A biblioteca 'canvas' é uma dependência opcional do Konva para ambientes Node.js.
-    // Como não a usamos no lado do servidor para renderização, podemos ignorá-la com segurança.
-    if (isServer) {
-      config.externals.push('canvas');
-    }
-    return config;
   },
 };
 
