@@ -1,7 +1,7 @@
 // src/app/(app)/groups/[groupId]/MembersTable.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -14,7 +14,19 @@ import {
 import UserSummary from "@/components/shared/user-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, ArrowRight, Loader2, Trash2 } from "lucide-react";
+import { UserGroupList } from "@/components/shared/user-group-list";
 
 type Row = {
   id: string;
@@ -25,27 +37,41 @@ type Row = {
   roleLabel: string | null;
   unitName: string | null;
   addedAt: string;
+  groups?: Array<{ id: string; name: string; color?: string | null }>;
 };
 
 type Props = {
   rows: Row[];
   totalCount: number;
+  groupId: string;
 };
 
-export default function MembersTable({ rows, totalCount }: Props) {
+export default function MembersTable({ rows, totalCount, groupId }: Props) {
   // Busca e ordenação
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "unit" | "addedAt">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const { toast } = useToast();
 
-  // Paginação local (preparo para backend pagination no próximo passo)
+  const [localRows, setLocalRows] = useState(rows);
+  const [localTotal, setLocalTotal] = useState(totalCount);
+
+  useEffect(() => {
+    setLocalRows(rows);
+    setLocalTotal(totalCount);
+    setPage(1);
+  }, [rows, totalCount]);
+
+  // Paginação local
   const [pageSize, setPageSize] = useState(25);
   const [page, setPage] = useState(1);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [confirmRow, setConfirmRow] = useState<Row | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const base = q
-      ? rows.filter((r) => {
+      ? localRows.filter((r) => {
           const name = r.name ?? "";
           const email = r.email ?? "";
           const unit = r.unitName ?? "";
@@ -55,7 +81,7 @@ export default function MembersTable({ rows, totalCount }: Props) {
             unit.toLowerCase().includes(q)
           );
         })
-      : rows;
+      : localRows;
 
     const sorted = [...base].sort((a, b) => {
       let A: string | number = "",
@@ -76,7 +102,7 @@ export default function MembersTable({ rows, totalCount }: Props) {
     });
 
     return sorted;
-  }, [rows, query, sortBy, sortDir]);
+  }, [localRows, query, sortBy, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const start = (page - 1) * pageSize;
@@ -88,6 +114,41 @@ export default function MembersTable({ rows, totalCount }: Props) {
       setSortBy(col);
       setSortDir("asc");
     }
+  }
+
+  async function handleRemove(userId: string) {
+    setRemovingId(userId);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds: [userId] }),
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        throw new Error(payload?.error ?? res.statusText);
+      }
+      setLocalRows((prev) => {
+        const next = prev.filter((row) => row.id !== userId);
+        const nextTotalPages = Math.max(1, Math.ceil(next.length / pageSize));
+        setPage((current) => Math.min(current, nextTotalPages));
+        return next;
+      });
+      setLocalTotal((prev) => Math.max(0, prev - 1));
+      toast({
+        title: "Usuário removido do grupo",
+      });
+    } catch (err) {
+      toast({
+        title: "Erro ao remover",
+        description:
+          err instanceof Error ? err.message : "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingId(null);
+    }
+    setConfirmRow(null);
   }
 
   return (
@@ -133,7 +194,9 @@ export default function MembersTable({ rows, totalCount }: Props) {
                 Adicionado em
                 {sortBy === "addedAt" ? (sortDir === "asc" ? "↑" : "↓") : ""}
               </TableHead>
-              <TableHead className="w-[160px] text-right">Função</TableHead>
+              <TableHead className="w-[160px]">Função</TableHead>
+              <TableHead className="w-44">Grupos</TableHead>
+              <TableHead className="w-24">Ações</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -158,11 +221,33 @@ export default function MembersTable({ rows, totalCount }: Props) {
                   </span>
                 </TableCell>
                 <TableCell className="py-2">
-                  <div className="flex justify-end">
+                  <div>
                     {r.roleLabel ? (
                       <Badge variant="outline">{r.roleLabel}</Badge>
                     ) : null}
                   </div>
+                </TableCell>
+                <TableCell className="py-2">
+                  {r.groups && r.groups.length ? (
+                    <UserGroupList
+                      groups={r.groups}
+                      userName={r.name ?? "Usuário"}
+                      userTitle={r.cargo}
+                    />
+                  ) : null}
+                </TableCell>
+                <TableCell className="py-2">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setConfirmRow(r)}
+                    disabled={removingId !== null}>
+                    {removingId === r.id ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <Trash2 />
+                    )}
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -200,7 +285,7 @@ export default function MembersTable({ rows, totalCount }: Props) {
         </div>
         <span className="text-sm text-muted-foreground">
           Exibindo {paged.length ? start + 1 : 0}–
-          {Math.min(start + pageSize, filtered.length)} de {totalCount}
+          {Math.min(start + pageSize, filtered.length)} de {localTotal}
         </span>
         <div className="flex items-center gap-2">
           <Button
@@ -222,6 +307,34 @@ export default function MembersTable({ rows, totalCount }: Props) {
           </Button>
         </div>
       </div>
+
+      <AlertDialog
+        open={Boolean(confirmRow)}
+        onOpenChange={(open) => !open && setConfirmRow(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover usuário do grupo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação remove o acesso desse usuário a todos os conteúdos do
+              grupo. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removingId !== null}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmRow && handleRemove(confirmRow.id)}
+              disabled={removingId !== null}>
+              {removingId !== null ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Remover"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

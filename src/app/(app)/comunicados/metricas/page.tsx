@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { HourlyOpensChart } from "../components/HourlyOpensChart";
 
 function formatPercent(value: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -46,10 +47,10 @@ export default async function AnnouncementMetricsPage() {
       }
     ) ?? null;
 
-  const maxBucketValue = Math.max(
-    ...metrics.hourlyBuckets.map((bucket) => bucket.count),
-    0
-  );
+  const hourlyChartData = metrics.hourlyBuckets.map((bucket) => ({
+    label: bucket.label,
+    count: bucket.count,
+  }));
 
   return (
     <div className="h-full space-y-6 p-4 pb-12 sm:p-8">
@@ -142,34 +143,7 @@ export default async function AnnouncementMetricsPage() {
               Ainda não registramos leituras de comunicados para este ambiente.
             </p>
           ) : (
-            <div className="border border-border rounded-lg bg-white">
-              {metrics.hourlyBuckets.map((bucket) => {
-                const percent =
-                  maxBucketValue === 0
-                    ? 0
-                    : (bucket.count / maxBucketValue) * 100;
-                return (
-                  <div
-                    key={bucket.label}
-                    className="flex flex-wrap items-center gap-3 border-b border-border last:border-none p-3">
-                    <div className="w-24 text-sm font-medium">
-                      {bucket.label}
-                    </div>
-                    <div className="flex-1">
-                      <div className="h-2 w-full rounded-full bg-muted">
-                        <div
-                          className="h-2 rounded-full bg-primary transition-all"
-                          style={{ width: `${percent}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="w-14 text-right text-sm font-semibold">
-                      {formatNumber(bucket.count)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <HourlyOpensChart data={hourlyChartData} />
           )}
         </CardContent>
       </Card>

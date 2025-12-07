@@ -102,7 +102,7 @@ export default async function GroupsPage() {
   }));
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="py-6 px-4 sm:p-6 space-y-4">
       {/* botão novo grupo de usuários */}
       <div>
         <div className="flex items-center justify-end">
@@ -131,20 +131,20 @@ export default async function GroupsPage() {
           </span>
         </div>
       ) : (
-        <ul className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 items-stretch gap-2 lg:gap-4">
+        <ul className="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 items-stretch gap-2 lg:gap-4">
           {groups.map((g) => (
             <li key={g.id}>
               <Link
                 href={`/groups/${g.id}`}
-                className="grid grid-cols-1 gap-2 p-6 items-stretch flex-col h-full content-between border rounded-lg hover:shadow-md hover:border-gray-600 cursor-pointer transition-all duration-300 ease-in-out">
+                className="grid grid-cols-1 gap-2 p-4 md:p-6 items-stretch flex-col h-full content-between border rounded-lg hover:shadow-md hover:border-gray-600 cursor-pointer transition-all duration-300 ease-in-out">
                 <div className="flex flex-col gap-3">
                   <GroupColorSquare color={g.color} width="100%" height="6px" />
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg/6 font-semibold">{g.name}</span>
-                    </div>
+                  <div className="flex flex-col gap-1 sm:gap-2">
+                    <span className="text-base md:text-lg/4 font-semibold">
+                      {g.name}
+                    </span>
                     {g.description ? (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {g.description}
                       </p>
                     ) : null}

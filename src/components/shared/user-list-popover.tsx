@@ -82,3 +82,4 @@ function getInitials(name?: string | null) {
   const initials = `${first}${second}`.toUpperCase();
   return initials || trimmed[0]?.toUpperCase() || "??";
 }
+
