@@ -239,7 +239,10 @@ function CreatorMultiSelect({ value, onChange }: CreatorMultiSelectProps) {
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[380px] p-0" align="start">
+        <PopoverContent
+          className=" p-0"
+          align="start"
+          style={{ width: "var(--radix-popover-trigger-width)" }}>
           <div className="border-b px-3 py-3">
             <Input
               placeholder="Buscar criador"
@@ -248,7 +251,7 @@ function CreatorMultiSelect({ value, onChange }: CreatorMultiSelectProps) {
               autoFocus
             />
           </div>
-          <ScrollArea className="max-h-72">
+          <ScrollArea className="max-h-80">
             <div className="space-y-1 p-2">
               {filteredOptions.map((option) => {
                 const checked = value.includes(option.id);
@@ -292,7 +295,7 @@ function CreatorMultiSelect({ value, onChange }: CreatorMultiSelectProps) {
             <div className="text-xs text-muted-foreground">
               {value.length
                 ? `${value.length} selecionado(s)`
-                : "Todos os criadores"}
+                : "Nenhum selecionado"}
             </div>
             <Button variant="ghost" size="xs" onClick={() => setQuery("")}>
               Limpar busca
@@ -446,16 +449,6 @@ export function ChatFiltersPanel({ value, onApply }: ChatFiltersPanelProps) {
         <div className="flex h-full flex-col flex-1">
           <div className="flex-1 space-y-6 overflow-y-auto">
             <div className="space-y-6">
-              <div className="space-y-1 z-50">
-                <Label>Criado por</Label>
-                <CreatorMultiSelect
-                  value={draft.creatorIds}
-                  onChange={(creatorIds) =>
-                    setDraft((prev) => ({ ...prev, creatorIds }))
-                  }
-                />
-              </div>
-
               <div className="space-y-1">
                 <Label>Criado em</Label>
                 <DateRangeSelector
@@ -472,12 +465,22 @@ export function ChatFiltersPanel({ value, onApply }: ChatFiltersPanelProps) {
                   }
                 />
               </div>
+
+              <div className="space-y-1 z-50">
+                <Label>Criado por</Label>
+                <CreatorMultiSelect
+                  value={draft.creatorIds}
+                  onChange={(creatorIds) =>
+                    setDraft((prev) => ({ ...prev, creatorIds }))
+                  }
+                />
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 border-t border-border px-6 py-4">
+          <div className="flex items-center gap-2 py-4">
             <Button
-              variant="secondary"
+              variant="ghost"
               onClick={() => {
                 const reset = normalizeFilters(EMPTY_FILTERS);
                 setDraft(reset);

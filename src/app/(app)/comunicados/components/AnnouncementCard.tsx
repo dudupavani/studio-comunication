@@ -195,31 +195,31 @@ export default function AnnouncementCard({
                     <div
                       key={comment.id}
                       className="rounded-xl border p-4 text-sm space-y-4 sm:space-y-2 bg-white">
-                    <div className="flex flex-col-reverse sm:flew-row items-start justify-between gap-1 sm:gap-3">
-                      <UserSummary
-                        avatarUrl={comment.authorAvatar}
-                        name={
-                          comment.authorName
-                            ? comment.isMine
-                              ? `${comment.authorName} (você)`
-                              : comment.authorName
-                            : "Usuário"
-                        }
-                        subtitle={comment.authorTitle ?? undefined}
-                        fallback="Usuário"
-                      />
-                      <span className="text-xs text-muted-foreground whitespace-nowrap pl-12 sm:pl-0">
-                        {new Date(comment.createdAt).toLocaleString()}
-                      </span>
+                      <div className="flex flex-col-reverse sm:flew-row items-start justify-between gap-1 sm:gap-3">
+                        <UserSummary
+                          avatarUrl={comment.authorAvatar}
+                          name={
+                            comment.authorName
+                              ? comment.isMine
+                                ? `${comment.authorName} (você)`
+                                : comment.authorName
+                              : "Usuário"
+                          }
+                          subtitle={comment.authorTitle ?? undefined}
+                          fallback="Usuário"
+                        />
+                        <span className="text-xs text-muted-foreground whitespace-nowrap pl-12 sm:pl-0">
+                          {new Date(comment.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="mt-1 pl-0 sm:pl-12 whitespace-pre-wrap text-sm text-primary">
+                        {comment.content}
+                      </p>
                     </div>
-                    <p className="mt-1 pl-0 sm:pl-12 whitespace-pre-wrap text-sm text-primary">
-                      {comment.content}
-                    </p>
-                  </div>
-                ))
+                  ))
                 : null}
             </div>
-            <div className="flex gap-2 relative">
+            <div className="flex relative">
               <Textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}

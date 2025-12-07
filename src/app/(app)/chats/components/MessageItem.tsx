@@ -119,7 +119,7 @@ export function MessageItem({
       )}>
       <div
         className={cn(
-          "flex items-start gap-3",
+          "flex items-start gap-2 sm:gap-3",
           isOwn ? "flex-row-reverse" : "flex-row"
         )}>
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 shadow-md border-1 border-white">
@@ -133,7 +133,7 @@ export function MessageItem({
             isOwn ? "items-end text-left" : "items-start"
           )}>
           <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold text-foreground">{senderName}</span>
+            <span className="font-semibold">{senderName}</span>
           </div>
 
           <div

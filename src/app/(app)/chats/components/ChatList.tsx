@@ -231,6 +231,9 @@ export function ChatList({
         resolvedCreator?.email ?? chat.creator?.email ?? null;
       const unreadCount = unreadMap?.[chat.id]?.count ?? chat.unread_count ?? 0;
       const createdAtValue = new Date(chat.created_at).toLocaleString();
+      const lastMessageSnippet = formatLastMessageSnippet(
+        chat.last_message?.message ?? null
+      );
 
       return (
         <TableRow
@@ -248,12 +251,17 @@ export function ChatList({
                     {formatBadgeValue(unreadCount)}
                   </span>
                 ) : null}
-                <span className="text-base sm:text-sm line-clamp-1 font-medium">
+                <span className="text-sm line-clamp-1 font-medium">
                   {chat.name || "Conversa"}
                 </span>
               </div>
+              {lastMessageSnippet ? (
+                <p className="text-sm text-muted-foreground line-clamp-1">
+                  {lastMessageSnippet}
+                </p>
+              ) : null}
             </div>
-            <div className="mt-3 space-y-2 md:hidden">
+            <div className="flex gap-2 items-end mt-4 space-y-1 md:hidden">
               <div className="mt-2">
                 <UserSummary
                   avatarUrl={creatorAvatar ?? undefined}
@@ -263,7 +271,7 @@ export function ChatList({
                 />
               </div>
 
-              <div className="text-xs text-muted-foreground text-right">
+              <div className="text-[11px] whitespace-nowrap text-muted-foreground text-right">
                 {createdAtValue}
               </div>
             </div>
@@ -384,6 +392,16 @@ function getCreatorName(chat: ChatSummary, identity?: UserMini | null) {
 function getCreatorTitle(chat: ChatSummary, identity?: UserMini | null) {
   const source = identity ?? chat.creator ?? null;
   return source?.title ?? null;
+}
+
+function formatLastMessageSnippet(message: string | null) {
+  if (!message) return null;
+  const normalized = message.replace(/\s+/g, " ").trim();
+  if (!normalized) return null;
+  const maxLength = 90;
+  return normalized.length > maxLength
+    ? `${normalized.slice(0, maxLength - 1).trimEnd()}…`
+    : normalized;
 }
 
 function formatBadgeValue(value: number) {

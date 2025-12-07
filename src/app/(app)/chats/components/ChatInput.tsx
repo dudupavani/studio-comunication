@@ -11,6 +11,7 @@ import {
   Italic,
   List,
   Smile,
+  X,
 } from "lucide-react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
@@ -327,8 +328,9 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
   );
 
   const submit = useCallback(async () => {
+    if (disabled) return;
     const trimmed = value.trim();
-    if (!trimmed || disabled) return;
+    if (!trimmed && files.length === 0) return;
     const mentionsToSend = filterMentionsInText(value, mentions);
     await onSend({ message: trimmed, files, mentions: mentionsToSend });
     setValue("");
@@ -525,8 +527,8 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
           ) : null}
         </div>
 
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between px-0 sm:px-2">
+          <div className="flex items-center gap-4 sm:gap-3">
             <Button
               type="button"
               size="icon-xs"
@@ -583,7 +585,7 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
               </PopoverContent>
             </Popover>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <TooltipProvider delayDuration={100}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -622,28 +624,32 @@ export function ChatInput({ disabled, onSend, members }: ChatInputProps) {
             />
             <Button
               onClick={submit}
-              disabled={disabled || value.trim().length === 0}>
-              <Send size={22} />
-              <span>Enviar</span>
+              disabled={
+                disabled || (value.trim().length === 0 && files.length === 0)
+              }>
+              <Send />
+              <span className="hidden sm:block">Enviar</span>
             </Button>
           </div>
         </div>
       </div>
 
       {files.length > 0 ? (
-        <div className="flex flex-wrap gap-2 px-6 pb-3 text-xs text-muted-foreground">
+        <div className="flex flex-wrap gap-2 px-4 pt-4 pb-8 sm:pb-4 text-xs border border-border sm:border-none text-muted-foreground">
           {files.map((file) => (
             <div
               key={`${file.name}-${file.size}`}
-              className="flex items-center gap-2 rounded-full bg-secondary border px-5 py-1 shadow-md">
+              className="flex items-center gap-2 rounded-lg bg-secondary border pl-2 pr-1 py-1 shadow-sm">
+              <Paperclip size={14} />
               <span className="text-foreground font-medium">{file.name}</span>
-              <button
+              <Button
                 type="button"
+                size="icon-xs"
+                variant="ghost"
                 onClick={() => removeFile(file.name)}
-                className="text-lg text-muted-foreground hover:text-foreground"
                 aria-label={`Remover ${file.name}`}>
-                ×
-              </button>
+                <X />
+              </Button>
             </div>
           ))}
         </div>

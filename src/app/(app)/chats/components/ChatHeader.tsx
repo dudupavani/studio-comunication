@@ -1,16 +1,9 @@
 "use client";
 
-import { MoreHorizontal, X } from "lucide-react";
+import { X } from "lucide-react";
 import type { Chat } from "@/lib/messages/types";
 import type { ChatMemberWithUser } from "./types";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { CHAT_PANEL_TABS, type ChatPanelTab } from "./ChatPanelTabs";
 
 export interface ChatHeaderProps {
@@ -20,78 +13,53 @@ export interface ChatHeaderProps {
   onCloseChat?: () => void;
 }
 
-function resolveSubtitle(members: ChatMemberWithUser[], chat: Chat) {
-  if (chat.type === "direct") {
-    const other = members.find((m) => m.role !== "admin");
-    if (other?.user?.full_name) return other.user.full_name;
-    if (other?.user?.email) return other.user.email;
-  }
-  const names = members
-    .map((m) => m.user?.full_name || m.user?.email)
-    .filter(Boolean)
-    .slice(0, 3)
-    .join(", ");
-  return names || `${members.length} participante(s)`;
-}
-
 export function ChatHeader({
   chat,
-  members,
   onOpenPanel,
   onCloseChat,
 }: ChatHeaderProps) {
-  const subtitle = resolveSubtitle(members, chat);
-
   return (
-    <div className="flex items-center justify-between border-b border-border px-5 py-3">
-      <div>
-        <h6 className="font-semibold">{chat.name ?? "Conversa"}</h6>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
-      </div>
-      {onOpenPanel || onCloseChat ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+    <div className="border-b border-border">
+      <div className="flex items-center justify-between px-3 sm:px-5 py-3">
+        <div className="min-w-0">
+          <p className="truncate text-base font-semibold">
+            {chat.name ?? "Conversa"}
+          </p>
+        </div>
+        {onCloseChat ? (
+          <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Abrir ações do chat"
-              className="xl:hidden">
-              <MoreHorizontal className="h-5 w-5" />
+              variant="outline"
+              size="icon-sm"
+              aria-label="Fechar conversa"
+              className="flex sm:hidden"
+              onClick={() => onCloseChat?.()}>
+              <X />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {onOpenPanel
-              ? CHAT_PANEL_TABS.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <DropdownMenuItem
-                      key={tab.key}
-                      onSelect={(event) => {
-                        event.preventDefault();
-                        onOpenPanel?.(tab.key);
-                      }}>
-                      <Icon className="mr-2 h-4 w-4" />
-                      {tab.label}
-                    </DropdownMenuItem>
-                  );
-                })
-              : null}
-            {onCloseChat ? (
-              <>
-                {onOpenPanel ? <DropdownMenuSeparator /> : null}
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onSelect={(event) => {
-                    event.preventDefault();
-                    onCloseChat?.();
-                  }}>
-                  <X className="mr-2 h-4 w-4" />
-                  Fechar conversa
-                </DropdownMenuItem>
-              </>
-            ) : null}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </div>
+        ) : null}
+      </div>
+      {onOpenPanel ? (
+        <div className="sm:hidden border-t border-border overflow-x-auto">
+          <div className="flex min-w-max gap-2 px-3 py-2" role="tablist">
+            {CHAT_PANEL_TABS.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <Button
+                  key={tab.key}
+                  type="button"
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => onOpenPanel?.(tab.key)}
+                  className="whitespace-nowrap"
+                  aria-label={tab.label}>
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
       ) : null}
     </div>
   );
