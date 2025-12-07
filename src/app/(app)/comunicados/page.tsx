@@ -12,6 +12,7 @@ export default async function ComunicadosPage() {
     auth.isPlatformAdmin || auth.isOrgAdmin || auth.isUnitMaster;
   const canViewSentTab =
     auth.isOrgAdmin || auth.isUnitMaster || auth.role === "org_master";
+  const canViewMetrics = auth.isOrgAdmin || auth.isPlatformAdmin;
 
   const receivedPromise = fetchAnnouncementItems(auth.userId, auth.orgId, {
     withDetails: true,
@@ -41,6 +42,7 @@ export default async function ComunicadosPage() {
       <MessagesAnnouncements
         canCreateAnnouncements={canCreate}
         canViewSentTab={canViewSentTab}
+        canViewMetrics={canViewMetrics}
         receivedAnnouncements={receivedAnnouncements}
         sentItems={sentItems}
       />

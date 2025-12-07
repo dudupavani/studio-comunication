@@ -15,7 +15,6 @@ import {
 } from "@/lib/messages/announcement-entities";
 import AnnouncementModal from "./AnnouncementModal";
 import DOMPurify from "dompurify";
-import UserSummary from "@/components/shared/user-summary";
 
 export default function AnnouncementCard({
   announcement,
@@ -118,14 +117,8 @@ export default function AnnouncementCard({
           <button
             type="button"
             className="w-full space-y-6 px-4 py-6 sm:py-4 sm:px-6 md:py-6 md:px-8">
-            <div className="flex items-start justify-between gap-4">
-              <UserSummary
-                avatarUrl={announcement.senderAvatar}
-                name={announcement.senderName || "Remetente desconhecido"}
-                subtitle={announcement.senderTitle ?? undefined}
-                fallback="Remetente"
-              />
-              <div className="text-xs text-muted-foreground text-right space-y-1">
+            <div className="space-y-1 text-left">
+              <div className="text-xs text-muted-foreground mb-2 sm:mb-0">
                 <div>{new Date(announcement.createdAt).toLocaleString()}</div>
                 {isScheduled ? (
                   <span className="inline-flex items-center justify-end rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
@@ -133,9 +126,6 @@ export default function AnnouncementCard({
                   </span>
                 ) : null}
               </div>
-            </div>
-
-            <div className="space-y-1 text-left">
               <p className="text-base sm:text-lg font-semibold">
                 {announcement.title}
               </p>
@@ -158,7 +148,8 @@ export default function AnnouncementCard({
                   size="sm"
                   variant={reactions?.[0]?.reacted ? "secondary" : "outline"}
                   disabled={reactionPending}
-                  onClick={() => toggleReaction("👍")}>
+                  onClick={() => toggleReaction("👍")}
+                  className="px-2">
                   <span className="mr-0 text-base sm:text-lg">👍</span>
                   {reactions?.[0]?.count ? (
                     <span>{reactions[0].count}</span>
@@ -195,24 +186,37 @@ export default function AnnouncementCard({
                     <div
                       key={comment.id}
                       className="rounded-xl border p-4 text-sm space-y-4 sm:space-y-2 bg-white">
-                      <div className="flex flex-col-reverse sm:flew-row items-start justify-between gap-1 sm:gap-3">
-                        <UserSummary
-                          avatarUrl={comment.authorAvatar}
-                          name={
-                            comment.authorName
-                              ? comment.isMine
-                                ? `${comment.authorName} (você)`
-                                : comment.authorName
-                              : "Usuário"
-                          }
-                          subtitle={comment.authorTitle ?? undefined}
-                          fallback="Usuário"
-                        />
-                        <span className="text-xs text-muted-foreground whitespace-nowrap pl-12 sm:pl-0">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9 border border-white shadow-sm">
+                            <AvatarImage
+                              src={comment.authorAvatar ?? undefined}
+                              alt={comment.authorName ?? "Usuário"}
+                            />
+                            <AvatarFallback>
+                              {initialsFromName(comment.authorName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-primary">
+                              {comment.authorName
+                                ? comment.isMine
+                                  ? `${comment.authorName} (você)`
+                                  : comment.authorName
+                                : "Usuário"}
+                            </span>
+                            {comment.authorTitle ? (
+                              <span className="text-xs text-muted-foreground">
+                                {comment.authorTitle}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap sm:pl-0">
                           {new Date(comment.createdAt).toLocaleString()}
                         </span>
                       </div>
-                      <p className="mt-1 pl-0 sm:pl-12 whitespace-pre-wrap text-sm text-primary">
+                      <p className="mt-1 sm:pl-12 whitespace-pre-wrap text-sm text-primary">
                         {comment.content}
                       </p>
                     </div>
@@ -242,4 +246,15 @@ export default function AnnouncementCard({
       </CardContent>
     </Card>
   );
+}
+
+function initialsFromName(name?: string | null) {
+  if (!name) return "??";
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }

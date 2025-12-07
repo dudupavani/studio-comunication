@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CirclePlus } from "lucide-react";
+import { CirclePlus, ChartColumn } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnnouncementCard from "./AnnouncementCard";
@@ -10,6 +10,7 @@ import type { AnnouncementItem } from "@/lib/messages/announcement-entities";
 type MessagesAnnouncementsProps = {
   canCreateAnnouncements: boolean;
   canViewSentTab: boolean;
+  canViewMetrics: boolean;
   receivedAnnouncements: AnnouncementItem[];
   sentItems: AnnouncementItem[];
 };
@@ -17,6 +18,7 @@ type MessagesAnnouncementsProps = {
 export default function MessagesAnnouncements({
   canCreateAnnouncements,
   canViewSentTab,
+  canViewMetrics,
   receivedAnnouncements,
   sentItems,
 }: MessagesAnnouncementsProps) {
@@ -32,15 +34,24 @@ export default function MessagesAnnouncements({
               <TabsTrigger value="sent">Enviados</TabsTrigger>
             ) : null}
           </TabsList>
-          {canCreateAnnouncements ? (
-            <Button asChild>
-              <Link href="/comunicados/novo">
-                <CirclePlus />
-                <span className="sm:hidden">Criar</span>
-                <span className="hidden sm:inline">Criar comunicado</span>
-              </Link>
-            </Button>
-          ) : null}
+          <div className="flex items-center gap-2">
+            {canViewMetrics ? (
+              <Button asChild variant="outline">
+                <Link href="/comunicados/metricas">
+                  <ChartColumn />
+                  <span className="hidden sm:flex">Ver métricas</span>
+                </Link>
+              </Button>
+            ) : null}
+            {canCreateAnnouncements ? (
+              <Button asChild>
+                <Link href="/comunicados/novo">
+                  <CirclePlus />
+                  <span className="hidden sm:inline">Criar comunicado</span>
+                </Link>
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         {canViewSentTab ? (

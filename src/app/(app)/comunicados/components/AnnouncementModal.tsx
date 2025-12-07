@@ -5,9 +5,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Send, CalendarClock, ChevronDown } from "lucide-react";
+import { Loader2, Send, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AnnouncementItem } from "@/lib/messages/announcement-entities";
 import DOMPurify from "dompurify";
@@ -27,6 +34,24 @@ export default function AnnouncementModal({ announcement, children }: Props) {
   const [isPending, startTransition] = useTransition();
   const [reactionPending, setReactionPending] = useState(false);
   const [showComments, setShowComments] = useState(true);
+  const prevOpenRef = useRef(false);
+
+  const registerView = useCallback(async () => {
+    try {
+      await fetch(`/api/comunicados/${announcement.announcementId}/views`, {
+        method: "POST",
+      });
+    } catch (err) {
+      console.warn("ANNOUNCEMENT view track error", err);
+    }
+  }, [announcement.announcementId]);
+
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      registerView();
+    }
+    prevOpenRef.current = open;
+  }, [open, registerView]);
 
   const sanitizedContent = useMemo(
     () =>
@@ -106,26 +131,22 @@ export default function AnnouncementModal({ announcement, children }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-none w-full h-screen p-0 rounded-none flex justify-center">
-        <ScrollArea className="h-full">
-          <div className="max-w-4xl px-4 sm:px-12 pt-12 pb-20 space-y-12">
-            <div>
+        <ScrollArea className="h-full w-full">
+          <div className="flex flex-col items-center px-4 sm:px-12 pt-12 pb-20">
+            <div className="w-full max-w-4xl">
               <div className="mt-3 sm:mt-0 mb-8 space-y-2">
-                <h4 className="text-lg sm:text-xl md:text-2xl font-semibold">
+                <h4 className="text-xl md:text-2xl font-semibold">
                   {announcement.title}
                 </h4>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <div className="p-1 rounded-md bg-muted">
-                    <CalendarClock size={16} />
-                  </div>
-                  <span>
-                    {new Date(announcement.createdAt).toLocaleString()}
+
+                <span className="text-sm text-muted-foreground">
+                  {new Date(announcement.createdAt).toLocaleString()}
+                </span>
+                {isScheduled ? (
+                  <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                    Agendado
                   </span>
-                  {isScheduled ? (
-                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                      Agendado
-                    </span>
-                  ) : null}
-                </div>
+                ) : null}
               </div>
               <div
                 className="prose prose-sm max-w-none"
@@ -135,7 +156,7 @@ export default function AnnouncementModal({ announcement, children }: Props) {
               />
             </div>
 
-            <div className="space-y-8">
+            <div className="w-full max-w-4xl space-y-4 pb-4 pt-12">
               <div className="flex items-start justify-between border-b border-border pb-8">
                 <UserSummary
                   avatarUrl={announcement.senderAvatar}
@@ -164,7 +185,8 @@ export default function AnnouncementModal({ announcement, children }: Props) {
                             : "outline"
                         }
                         disabled={reactionPending}
-                        onClick={() => toggleReaction("👍")}>
+                        onClick={() => toggleReaction("👍")}
+                        className="px-2">
                         <span className="mr-0 text-base sm:text-lg">👍</span>
                         {announcement.reactions?.[0]?.count ? (
                           <span>{announcement.reactions[0].count}</span>
@@ -195,38 +217,38 @@ export default function AnnouncementModal({ announcement, children }: Props) {
             </div>
 
             {announcement.allowComments && showComments ? (
-              <div className="space-y-4 border-t border-border pt-6">
-                <div className="space-y-2">
+              <div className="w-full max-w-4xl bg-muted rounded-xl flex flex-col items-center space-y-4 p-2 sm:p-4 md:p-6 border border-gray-200">
+                <div className="space-y-2 w-full ">
                   {commentCount > 0
                     ? announcement.comments!.map((comment) => (
                         <div
                           key={comment.id}
-                          className="rounded-xl border p-4 text-sm space-y-4 sm:space-y-2 bg-background">
-                        <div className="flex flex-col-reverse sm:flew-row items-start justify-between gap-1 sm:gap-3">
-                          <UserSummary
-                            avatarUrl={comment.authorAvatar}
-                            name={
-                              comment.authorName
-                                ? comment.isMine
-                                  ? `${comment.authorName} (você)`
-                                  : comment.authorName
-                                : "Usuário"
-                            }
-                            subtitle={comment.authorTitle ?? undefined}
-                            fallback="Usuário"
-                          />
-                          <span className="text-xs text-muted-foreground whitespace-nowrap pl-12 sm:pl-0">
-                            {new Date(comment.createdAt).toLocaleString()}
-                          </span>
+                          className="rounded-xl border p-4 text-sm space-y-4 sm:space-y-2 bg-white">
+                          <div className="flex flex-col-reverse sm:flew-row items-start justify-between gap-1 sm:gap-3">
+                            <UserSummary
+                              avatarUrl={comment.authorAvatar}
+                              name={
+                                comment.authorName
+                                  ? comment.isMine
+                                    ? `${comment.authorName} (você)`
+                                    : comment.authorName
+                                  : "Usuário"
+                              }
+                              subtitle={comment.authorTitle ?? undefined}
+                              fallback="Usuário"
+                            />
+                            <span className="text-xs text-muted-foreground whitespace-nowrap pl-12 sm:pl-0">
+                              {new Date(comment.createdAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="mt-1 pl-0 sm:pl-12 whitespace-pre-wrap text-sm text-primary">
+                            {comment.content}
+                          </p>
                         </div>
-                        <p className="mt-1 pl-0 sm:pl-12 whitespace-pre-wrap text-sm text-primary">
-                          {comment.content}
-                        </p>
-                      </div>
-                    ))
+                      ))
                     : null}
                 </div>
-                <div className="flex gap-2 relative">
+                <div className="relative flex w-full">
                   <Textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
@@ -234,7 +256,7 @@ export default function AnnouncementModal({ announcement, children }: Props) {
                     autoResize
                     minHeight={32}
                     maxHeight={240}
-                    className="min-h-[40px] text-sm pr-16"
+                    className="min-h-[40px] text-sm pr-16 bg-white"
                   />
                   <div className="absolute right-2 bottom-2">
                     <Button
