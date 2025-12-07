@@ -42,7 +42,7 @@ export function CourseDetailsForm({ courseId, initial }: Props) {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    startTransition(async () => {
+    const submit = async () => {
       try {
         const payload = {
           title: title.trim(),
@@ -70,6 +70,9 @@ export function CourseDetailsForm({ courseId, initial }: Props) {
           variant: "destructive",
         });
       }
+    };
+    startTransition(() => {
+      void submit();
     });
   };
 

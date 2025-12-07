@@ -9,6 +9,7 @@ import {
 } from "@/lib/supabase/server";
 import { toLoggableError } from "@/lib/log";
 import { enrichOrgUsersWithAuthMetadata } from "@/lib/teams/enrich-org-users";
+import type { OrgUserOption } from "@/components/teams/types";
 
 const TEAM_MANAGER_ROLES = new Set([
   "org_admin",
@@ -116,7 +117,7 @@ export async function GET() {
       );
     }
 
-    let users =
+    let users: OrgUserOption[] =
       usersRes.data
         ?.map((row: any) => ({
           id: row.user_id as string,

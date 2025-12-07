@@ -21,24 +21,15 @@ function norm(v: unknown) {
   return v;
 }
 
-async function resolveParams<T>(params: unknown): Promise<T> {
-  // Next 15 às vezes passa params como Promise
-  return (await Promise.resolve(params as any)) as T;
-}
-
 const ParamsSchema = z.object({ groupId: z.string().uuid() });
 
 // ============ GET /api/groups/:groupId ============
 export async function GET(
   _req: Request,
-  ctx:
-    | { params: { groupId: string } }
-    | Promise<{ params: { groupId: string } }>
+  context: RouteContext<"/api/groups/[groupId]">
 ) {
   try {
-    const { params } = await Promise.resolve(ctx as any);
-    const p = await resolveParams<{ groupId: string }>(params);
-    const parsed = ParamsSchema.safeParse(p);
+    const parsed = ParamsSchema.safeParse(await context.params);
     if (!parsed.success) {
       return jsonError(400, "Parâmetros inválidos", parsed.error.flatten());
     }
@@ -76,14 +67,10 @@ export async function GET(
 // ============ PATCH /api/groups/:groupId ============
 export async function PATCH(
   req: Request,
-  ctx:
-    | { params: { groupId: string } }
-    | Promise<{ params: { groupId: string } }>
+  context: RouteContext<"/api/groups/[groupId]">
 ) {
   try {
-    const { params } = await Promise.resolve(ctx as any);
-    const p = await resolveParams<{ groupId: string }>(params);
-    const parsed = ParamsSchema.safeParse(p);
+    const parsed = ParamsSchema.safeParse(await context.params);
     if (!parsed.success) {
       return jsonError(400, "Parâmetros inválidos", parsed.error.flatten());
     }
@@ -173,14 +160,10 @@ export async function PATCH(
 // ============ DELETE /api/groups/:groupId ============
 export async function DELETE(
   _req: Request,
-  ctx:
-    | { params: { groupId: string } }
-    | Promise<{ params: { groupId: string } }>
+  context: RouteContext<"/api/groups/[groupId]">
 ) {
   try {
-    const { params } = await Promise.resolve(ctx as any);
-    const p = await resolveParams<{ groupId: string }>(params);
-    const parsed = ParamsSchema.safeParse(p);
+    const parsed = ParamsSchema.safeParse(await context.params);
     if (!parsed.success) {
       return jsonError(400, "Parâmetros inválidos", parsed.error.flatten());
     }

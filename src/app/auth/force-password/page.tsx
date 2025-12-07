@@ -48,6 +48,7 @@ export default async function ForcePasswordPage() {
   return (
     <div className="bg-muted h-screen flex items-center justify-center">
       <form
+        // @ts-expect-error Server Action
         action={setPassword}
         className="mx-auto w-full max-w-md text-center bg-white rounded-2xl border border-gray-200 p-12">
         <div className="w-full flex flex-col items-center justify-center gap-4">

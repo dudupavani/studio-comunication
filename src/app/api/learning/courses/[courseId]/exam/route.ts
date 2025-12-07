@@ -8,10 +8,13 @@ import { ExamUpsertSchema } from "@/lib/learning/validations";
 
 const paramsSchema = z.object({ courseId: z.string().uuid() });
 
-export async function GET(_: Request, { params }: { params: { courseId: string } }) {
+export async function GET(
+  _: Request,
+  context: RouteContext<"/api/learning/courses/[courseId]/exam">
+) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const parsed = paramsSchema.safeParse(params);
+  const parsed = paramsSchema.safeParse(await context.params);
   if (!parsed.success) return NextResponse.json({ error: "Curso inválido" }, { status: 400 });
 
   const supabase = createClient();
@@ -47,10 +50,13 @@ export async function GET(_: Request, { params }: { params: { courseId: string }
   return NextResponse.json({ data: { ...exam, questions } });
 }
 
-export async function PUT(request: Request, { params }: { params: { courseId: string } }) {
+export async function PUT(
+  request: Request,
+  context: RouteContext<"/api/learning/courses/[courseId]/exam">
+) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const parsedParams = paramsSchema.safeParse(params);
+  const parsedParams = paramsSchema.safeParse(await context.params);
   if (!parsedParams.success) return NextResponse.json({ error: "Curso inválido" }, { status: 400 });
 
   const supabase = createClient();
@@ -101,14 +107,20 @@ export async function PUT(request: Request, { params }: { params: { courseId: st
     const { error: delErr } = await supabase.from("exam_questions").delete().eq("exam_id", examId);
     if (delErr) throw delErr;
 
+    if (!examId) {
+      throw new Error("Não foi possível determinar o ID da prova.");
+    }
+    const ensuredExamId = examId;
     const toInsert = parsed.data.questions.map((q, idx) => ({
-      exam_id: examId,
+      exam_id: ensuredExamId,
       question: q.question,
       alternatives: q.alternatives,
       correct_index: q.correct_index,
       ordem: q.ordem || idx + 1,
     }));
-    const { error: insErr } = await supabase.from("exam_questions").insert(toInsert);
+    const { error: insErr } = await supabase
+      .from("exam_questions")
+      .insert(toInsert);
     if (insErr) throw insErr;
 
     return NextResponse.json({ data: { id: examId } });

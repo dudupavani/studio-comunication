@@ -25,7 +25,7 @@ export function LessonCreateForm({ courseId, moduleId, redirectToEdit }: Props) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    startTransition(async () => {
+    const submit = async () => {
       try {
         const payload = {
           title: title.trim(),
@@ -57,8 +57,15 @@ export function LessonCreateForm({ courseId, moduleId, redirectToEdit }: Props) 
           router.refresh();
         }
       } catch (err: any) {
-        toast({ title: "Erro", description: String(err?.message || err), variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: String(err?.message || err),
+          variant: "destructive",
+        });
       }
+    };
+    startTransition(() => {
+      void submit();
     });
   };
 

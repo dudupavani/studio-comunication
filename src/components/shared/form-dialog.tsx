@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useServerActionState } from "@/hooks/use-server-action-state";
 import Modal from "./modal";
 import { Button } from "@/components/ui/button";
 
@@ -23,7 +23,7 @@ export default function FormDialog({
   children,
   submitText = "Salvar",
 }: Props) {
-  const [state, formAction] = useActionState(action, {});
+  const [state, formAction] = useServerActionState(action, {});
 
   return (
     <Modal
@@ -41,7 +41,11 @@ export default function FormDialog({
           </Button>
         </>
       }>
-      <form id="__modal_form" action={formAction} className="grid gap-3">
+      <form
+        id="__modal_form"
+        // @ts-expect-error Server Action
+        action={formAction}
+        className="grid gap-3">
         {children}
         {state?.error ? (
           <p className="text-sm text-red-600">{state.error}</p>

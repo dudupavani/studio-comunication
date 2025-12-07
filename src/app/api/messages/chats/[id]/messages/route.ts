@@ -103,7 +103,7 @@ function normalizeMentions(
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: RouteContext<"/api/messages/chats/[id]/messages">
 ) {
   const { id: chatId } = await context.params;
   if (!chatId) {
@@ -176,7 +176,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: RouteContext<"/api/messages/chats/[id]/messages">
 ) {
   const { id: chatId } = await context.params;
   if (!chatId) {

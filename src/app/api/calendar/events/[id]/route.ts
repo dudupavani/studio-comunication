@@ -23,8 +23,9 @@ function isRlsForbidden(error: any): boolean {
 // ---- PATCH /api/calendar/events/:id
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: RouteContext<"/api/calendar/events/[id]">
 ) {
+  const params = await context.params;
   const parsedId = EventIdParamSchema.safeParse(params);
   if (!parsedId.success) {
     return problem(400, "CAL-VAL-003", "Invalid event id", undefined, {
@@ -41,10 +42,11 @@ export async function PATCH(
     }
 
     // 1) Buscar o evento para autorização (defesa em profundidade)
+    const { id } = params;
     const { data: current, error: fetchErr } = await supabase
       .from("calendar_events")
       .select("id, org_id, created_by")
-      .eq("id", params.id)
+      .eq("id", id)
       .maybeSingle();
 
     if (fetchErr) {
@@ -98,7 +100,7 @@ export async function PATCH(
     const { data, error } = await supabase
       .from("calendar_events")
       .update(updatePayload)
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -129,8 +131,9 @@ export async function PATCH(
 // ---- DELETE /api/calendar/events/:id
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } }
+  context: RouteContext<"/api/calendar/events/[id]">
 ) {
+  const params = await context.params;
   const parsedId = EventIdParamSchema.safeParse(params);
   if (!parsedId.success) {
     return problem(400, "CAL-VAL-005", "Invalid event id", undefined, {

@@ -1,19 +1,15 @@
 // src/app/api/groups/[groupId]/members/route.ts
 import { NextResponse } from "next/server";
 import { z } from "zod";
-
-// SSR client (cookies) do seu projeto
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { toLoggableError } from "@/lib/log";
-
-// Client direto do supabase-js (quando vier Authorization: Bearer ...)
 import { createServiceClient } from "@/lib/supabase/service";
-
-// Utilitários já existentes no projeto
 import {
   parseMaybeBase64JSON,
   type SerializableSession,
 } from "@/lib/auth/token-utils";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 /* ========================= Schemas ========================= */
 
@@ -33,12 +29,6 @@ const DeleteBody = z.object({
 });
 
 /* ============== Helpers genéricos (resolução/headers) ============== */
-
-// Em alguns contextos o ctx pode vir como Promise. Resolve antes de parsear.
-async function resolveParams<T = any>(ctx: unknown): Promise<T> {
-  const resolved = await Promise.resolve(ctx as any);
-  return (resolved?.params ?? resolved) as T;
-}
 
 /**
  * Extrai o Bearer token do header Authorization.
@@ -71,6 +61,21 @@ function extractBearerToken(req: Request): string | null {
  * Cria Supabase client que carrega o Authorization da requisição (para respeitar RLS)
  * Obs.: usa as variáveis públicas; não usa service_role aqui!
  */
+function createClientFromAuth(req: Request) {
+  const token = extractBearerToken(req);
+  if (!token) {
+    throw new Error("Authorization header inválido");
+  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    throw new Error("Supabase URL ou chave pública ausente");
+  }
+  return createClient<Database>(url, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+}
+
 /**
  * Garante que o grupo existe e retorna { id, org_id } ou null
  * Aceita qualquer client com .from() (SSR ou supabase-js)
@@ -91,9 +96,12 @@ async function getGroupWithOrgId(supabase: any, groupId: string) {
  * GET /api/groups/[groupId]/members
  * Retorna membros do grupo com dados básicos do profile (sem email)
  */
-export async function GET(req: Request, ctx: { params: { groupId: string } }) {
+export async function GET(
+  req: Request,
+  context: RouteContext<"/api/groups/[groupId]/members">
+) {
   try {
-    const raw = await resolveParams<{ groupId: string }>(ctx);
+    const raw = await context.params;
     const { groupId } = Params.parse(raw);
 
     // Se veio Authorization → usa Bearer; senão → SSR (cookies)
@@ -153,9 +161,12 @@ export async function GET(req: Request, ctx: { params: { groupId: string } }) {
  * Adiciona (upsert) usuários ao grupo — idempotente
  * Requer Authorization: Bearer <JWT> (para obedecer RLS)
  */
-export async function POST(req: Request, ctx: { params: { groupId: string } }) {
+export async function POST(
+  req: Request,
+  context: RouteContext<"/api/groups/[groupId]/members">
+) {
   try {
-    const raw = await resolveParams<{ groupId: string }>(ctx);
+    const raw = await context.params;
     const { groupId } = Params.parse(raw);
 
     const supabase = createServiceClient();
@@ -206,10 +217,10 @@ export async function POST(req: Request, ctx: { params: { groupId: string } }) {
  */
 export async function DELETE(
   req: Request,
-  ctx: { params: { groupId: string } }
+  context: RouteContext<"/api/groups/[groupId]/members">
 ) {
   try {
-    const raw = await resolveParams<{ groupId: string }>(ctx);
+    const raw = await context.params;
     const { groupId } = Params.parse(raw);
 
     const supabase = createServiceClient();

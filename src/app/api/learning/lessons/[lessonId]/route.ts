@@ -7,25 +7,20 @@ import { LessonUpdateSchema } from "@/lib/learning/validations";
 
 const paramsSchema = z.object({ lessonId: z.string().uuid() });
 
-async function resolveParams(
-  params: { lessonId: string } | Promise<{ lessonId: string }>
-) {
-  const resolved = await Promise.resolve(params);
-  const parsed = paramsSchema.safeParse(resolved);
-  if (!parsed.success) throw new Error("Aula inválida");
-  return parsed.data.lessonId;
-}
-
 export async function PATCH(
   request: Request,
-  { params }: { params: { lessonId: string } | Promise<{ lessonId: string }> }
+  context: RouteContext<"/api/learning/lessons/[lessonId]">
 ) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   let lessonId: string;
   try {
-    lessonId = await resolveParams(params);
+    const parsed = paramsSchema.safeParse(await context.params);
+    if (!parsed.success) {
+      throw new Error("Aula inválida");
+    }
+    lessonId = parsed.data.lessonId;
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Aula inválida" }, { status: 400 });
   }

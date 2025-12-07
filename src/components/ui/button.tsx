@@ -19,7 +19,7 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-gray-300 hover:text-gray-900",
         ghost: "text-primary hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-primary underline-offset-3 hover:underline px-1 py-1",
         success: "bg-green-600 text-white hover:bg-green-600/90",
         warning: "bg-orange-500 text-white hover:bg-orange-500/90",
       },

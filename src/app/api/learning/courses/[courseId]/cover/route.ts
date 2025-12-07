@@ -17,10 +17,13 @@ async function ensureCourse(courseId: string) {
   return data;
 }
 
-export async function POST(request: Request, { params }: { params: { courseId: string } }) {
+export async function POST(
+  request: Request,
+  context: RouteContext<"/api/learning/courses/[courseId]/cover">
+) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const parsed = paramsSchema.safeParse(params);
+  const parsed = paramsSchema.safeParse(await context.params);
   if (!parsed.success) return NextResponse.json({ error: "Curso inválido" }, { status: 400 });
 
   const course = await ensureCourse(parsed.data.courseId);
@@ -60,10 +63,13 @@ export async function POST(request: Request, { params }: { params: { courseId: s
   return NextResponse.json({ data: { coverUrl } }, { status: 201 });
 }
 
-export async function DELETE(_: Request, { params }: { params: { courseId: string } }) {
+export async function DELETE(
+  _: Request,
+  context: RouteContext<"/api/learning/courses/[courseId]/cover">
+) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const parsed = paramsSchema.safeParse(params);
+  const parsed = paramsSchema.safeParse(await context.params);
   if (!parsed.success) return NextResponse.json({ error: "Curso inválido" }, { status: 400 });
 
   const course = await ensureCourse(parsed.data.courseId);

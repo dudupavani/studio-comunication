@@ -50,7 +50,8 @@ export default function ConfirmDialog({
         </DialogHeader>
 
         <form
-          action={async (fd) => {
+          // @ts-expect-error Server Action
+          action={async (fd: FormData) => {
             await action(fd);
             setOpen(false);
           }}

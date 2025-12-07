@@ -2,44 +2,24 @@ import Link from "next/link";
 import { CirclePlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAuthContext } from "@/lib/messages/auth-context";
-import {
-  fetchAnnouncementItems,
-  fetchAuthoredAnnouncements,
-} from "@/lib/messages/inbox";
 import AnnouncementCard from "./AnnouncementCard";
 import { SentAnnouncementsTable } from "./SentAnnouncementsTable";
 import { Button } from "@/components/ui/button";
+import type { AnnouncementItem } from "@/lib/messages/announcement-entities";
 
-export default async function MessagesAnnouncements({
-  canCreateAnnouncements,
-}: {
+type MessagesAnnouncementsProps = {
   canCreateAnnouncements: boolean;
-}) {
-  const auth = await getAuthContext();
-  const canViewSentTab =
-    auth.isOrgAdmin || auth.isUnitMaster || auth.role === "org_master";
-  const receivedPromise = fetchAnnouncementItems(auth.userId, auth.orgId, {
-    withDetails: true,
-  });
-  const sentPromise = canViewSentTab
-    ? fetchAuthoredAnnouncements(auth.userId, auth.orgId, {
-        withDetails: true,
-      })
-    : Promise.resolve([]);
-  const [receivedItems, sentItems] = await Promise.all([
-    receivedPromise,
-    sentPromise,
-  ]);
+  canViewSentTab: boolean;
+  receivedAnnouncements: AnnouncementItem[];
+  sentItems: AnnouncementItem[];
+};
 
-  const receivedAnnouncements = receivedItems.filter(
-    (
-      item
-    ): item is Extract<
-      (typeof receivedItems)[number],
-      { kind: "announcement" }
-    > => item.kind === "announcement"
-  );
+export default function MessagesAnnouncements({
+  canCreateAnnouncements,
+  canViewSentTab,
+  receivedAnnouncements,
+  sentItems,
+}: MessagesAnnouncementsProps) {
   const defaultTab = "received";
 
   return (
@@ -57,9 +37,7 @@ export default async function MessagesAnnouncements({
               <Link href="/comunicados/novo">
                 <CirclePlus />
                 <span className="sm:hidden">Criar</span>
-                <span className="hidden sm:inline">
-                  Criar comunicado
-                </span>
+                <span className="hidden sm:inline">Criar comunicado</span>
               </Link>
             </Button>
           ) : null}
@@ -93,7 +71,7 @@ export default async function MessagesAnnouncements({
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-6 ">
+            <div className="space-y-3">
               {receivedAnnouncements.map((item) => (
                 <AnnouncementCard
                   key={item.announcementId}

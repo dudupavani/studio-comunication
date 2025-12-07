@@ -5,8 +5,8 @@ import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { updateUnitDetailsAction } from "@/app/(app)/units/unit-actions";
-import { useFormState } from "react-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useServerActionState } from "@/hooks/use-server-action-state";
 
 type Unit = {
   id: string;
@@ -19,12 +19,7 @@ type Unit = {
 
 export default function UnitDetailsForm({ unit }: { unit: Unit }) {
   const { toast } = useToast();
-  const useActionState =
-    (React as any).useActionState ??
-    ((...args: Parameters<typeof useFormState>) =>
-      (useFormState as any)(...args));
-
-  const [state, action] = useActionState(updateUnitDetailsAction, {
+  const [state, action] = useServerActionState(updateUnitDetailsAction, {
     ok: false,
     error: "",
   });
@@ -49,7 +44,11 @@ export default function UnitDetailsForm({ unit }: { unit: Unit }) {
   }, [state, toast]);
 
   return (
-    <form action={action} className="space-y-4 max-w-2xl">
+    <>
+      <form
+        // @ts-expect-error Server Action
+        action={action}
+        className="space-y-4 max-w-2xl">
       <input type="hidden" name="orgId" value={unit.org_id} />
       <input type="hidden" name="unitId" value={unit.id} />
       
@@ -100,5 +99,6 @@ export default function UnitDetailsForm({ unit }: { unit: Unit }) {
         <Button type="submit">Salvar</Button>
       </div>
     </form>
+    </>
   );
 }

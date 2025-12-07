@@ -8,10 +8,10 @@ import {
 
 export async function DELETE(
   _req: Request,
-  context: { params: { id: string } }
+  context: RouteContext<"/api/notifications/push-subscriptions/[id]">
 ) {
   try {
-    const { id } = await Promise.resolve(context.params);
+    const { id } = await context.params;
     if (!id) {
       return errorResponse(400, "validation_error", "ID obrigatório");
     }

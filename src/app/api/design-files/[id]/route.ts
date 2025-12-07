@@ -14,9 +14,9 @@ function getUserClient() {
 // GET /api/design-files/[id]
 export async function GET(
   _req: Request,
-  ctx: { params: { id: string } }
+  context: RouteContext<"/api/design-files/[id]">
 ) {
-  const { id } = await Promise.resolve(ctx.params);
+  const { id } = await context.params;
   const userClient = getUserClient();
   const adminClient = createServiceClient();
 
@@ -59,9 +59,9 @@ export async function GET(
 // PUT /api/design-files/[id]
 export async function PUT(
   req: Request,
-  ctx: { params: { id: string } }
+  context: RouteContext<"/api/design-files/[id]">
 ) {
-  const { id } = await Promise.resolve(ctx.params);
+  const { id } = await context.params;
   const userClient = getUserClient();
   const adminClient = createServiceClient();
   const body = await req.json();
@@ -122,9 +122,9 @@ export async function PUT(
 // DELETE /api/design-files/[id]
 export async function DELETE(
   _req: Request,
-  ctx: { params: { id: string } }
+  context: RouteContext<"/api/design-files/[id]">
 ) {
-  const { id } = await Promise.resolve(ctx.params);
+  const { id } = await context.params;
   const userClient = getUserClient();
   const adminClient = createServiceClient();
 

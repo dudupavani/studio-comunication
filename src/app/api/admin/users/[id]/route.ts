@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getAuthContext } from "@/lib/auth-context";
+import type { Database } from "@/lib/supabase/types";
 
 const ParamsSchema = z.object({ id: z.string().uuid() });
 
@@ -13,12 +14,13 @@ function json(status: number, payload: Record<string, unknown>) {
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext<"/api/admin/users/[id]">
 ) {
   // Em algumas configurações o params pode vir vazio; extraímos do pathname como fallback.
   const fallbackId = req.nextUrl.pathname.split("/").filter(Boolean).pop();
+  const resolved = await context.params;
   const parsed = ParamsSchema.safeParse(
-    params?.id ? { id: params.id } : { id: fallbackId }
+    resolved?.id ? { id: resolved.id } : { id: fallbackId }
   );
   if (!parsed.success) {
     return json(400, { ok: false, error: "Parâmetros inválidos." });
@@ -61,7 +63,18 @@ export async function DELETE(
   }
 
   // Limpa vínculos antes de apagar do auth.users para evitar FKs sem cascade.
-  const cleanupTables: Array<{ table: string; column: string }> = [
+  const cleanupTables: Array<{
+    table: keyof Pick<
+      Database["public"]["Tables"],
+      | "user_group_members"
+      | "unit_members"
+      | "equipe_members"
+      | "employee_profile"
+      | "org_members"
+      | "notifications"
+    >;
+    column: string;
+  }> = [
     { table: "user_group_members", column: "user_id" },
     { table: "unit_members", column: "user_id" },
     { table: "equipe_members", column: "user_id" },

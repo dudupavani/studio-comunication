@@ -25,7 +25,7 @@ export default function UserSummary({
   const displaySubtitle = subtitle?.trim() || null;
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
       {avatarUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -39,12 +39,14 @@ export default function UserSummary({
         </div>
       )}
 
-      <div className="flex flex-col gap-0 sm:gap-1">
-        <div className="font-semibold text-xs sm:text-sm text-foreground leading-5">
+      <div className="flex flex-col gap-0 ">
+        <div className="font-semibold text-left text-xs sm:text-sm text-primary leading-4">
           {displayName}
         </div>
         {displaySubtitle ? (
-          <div className="text-xs text-muted-foreground">{displaySubtitle}</div>
+          <div className="text-xs text-left text-muted-foreground">
+            {displaySubtitle}
+          </div>
         ) : null}
       </div>
     </div>

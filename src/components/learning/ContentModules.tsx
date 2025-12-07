@@ -42,7 +42,7 @@ export function ContentModules({ courseId, modules, lessons }: Props) {
       toast({ title: "Informe um título" });
       return;
     }
-    startTransition(async () => {
+    const submit = async () => {
       try {
         const res = await fetch(`/api/learning/courses/${courseId}/modules`, {
           method: "POST",
@@ -54,8 +54,15 @@ export function ContentModules({ courseId, modules, lessons }: Props) {
         setCurrentModules((prev) => [...prev, json.data]);
         setTitle("");
       } catch (err: any) {
-        toast({ title: "Erro", description: String(err?.message || err), variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: String(err?.message || err),
+          variant: "destructive",
+        });
       }
+    };
+    startTransition(() => {
+      void submit();
     });
   };
 

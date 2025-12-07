@@ -10,7 +10,10 @@ function isUUID(v: unknown): v is string {
   return typeof v === "string" && /^[0-9a-fA-F-]{36}$/.test(v);
 }
 
-export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
+export async function GET(
+  req: Request,
+  context: RouteContext<"/api/units/[unitId]/available-members">
+) {
   try {
     const supabase = createServiceClient();
 
@@ -24,7 +27,7 @@ export async function GET(req: Request, ctx: { params: { unitId?: string } }) {
     }
 
     // 2) Params
-    const unitId = ctx?.params?.unitId;
+    const { unitId } = await context.params;
     if (!isUUID(unitId)) {
       return NextResponse.json(
         { ok: false, error: "unitId inválido" },

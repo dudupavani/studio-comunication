@@ -16,14 +16,13 @@ function isUUID(v: unknown): v is string {
  */
 export async function DELETE(
   req: Request,
-  ctx: { params: { unitId?: string; userId?: string } }
+  context: RouteContext<"/api/units/[unitId]/members/[userId]">
 ) {
   try {
     const supabase = createServiceClient();
 
     // Params
-    const unitId = ctx?.params?.unitId;
-    const userId = ctx?.params?.userId;
+    const { unitId, userId } = await context.params;
     if (!isUUID(unitId) || !isUUID(userId)) {
       return NextResponse.json(
         { ok: false, error: "unitId ou userId inválido" },

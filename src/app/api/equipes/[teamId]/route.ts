@@ -47,11 +47,6 @@ async function getTeamContext() {
   return { auth, orgId: auth.orgId };
 }
 
-async function resolveParams<T = any>(ctx: unknown): Promise<T> {
-  const resolved = await Promise.resolve(ctx as any);
-  return (resolved?.params ?? resolved) as T;
-}
-
 const ParamsSchema = z.object({ teamId: z.string().uuid() });
 
 const UpdateSchema = z.object({
@@ -64,15 +59,14 @@ const UpdateSchema = z.object({
 
 export async function GET(
   _req: Request,
-  ctx: { params: { teamId: string } } | Promise<{ params: { teamId: string } }>
+  context: RouteContext<"/api/equipes/[teamId]">
 ) {
   try {
     const scope = await getTeamContext();
     if ("error" in scope) return scope.error;
     const { orgId } = scope;
 
-    const rawParams = await resolveParams<{ teamId: string }>(ctx);
-    const parsed = ParamsSchema.safeParse(rawParams);
+    const parsed = ParamsSchema.safeParse(await context.params);
     if (!parsed.success) {
       return jsonError(400, "Parâmetros inválidos.", parsed.error.flatten());
     }
@@ -144,15 +138,14 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  ctx: { params: { teamId: string } } | Promise<{ params: { teamId: string } }>
+  context: RouteContext<"/api/equipes/[teamId]">
 ) {
   try {
     const scope = await getTeamContext();
     if ("error" in scope) return scope.error;
     const { auth, orgId } = scope;
 
-    const rawParams = await resolveParams<{ teamId: string }>(ctx);
-    const parsedParams = ParamsSchema.safeParse(rawParams);
+    const parsedParams = ParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(
         400,
@@ -328,15 +321,14 @@ export async function PUT(
 
 export async function DELETE(
   _req: Request,
-  ctx: { params: { teamId: string } } | Promise<{ params: { teamId: string } }>
+  context: RouteContext<"/api/equipes/[teamId]">
 ) {
   try {
     const scope = await getTeamContext();
     if ("error" in scope) return scope.error;
     const { orgId } = scope;
 
-    const rawParams = await resolveParams<{ teamId: string }>(ctx);
-    const parsedParams = ParamsSchema.safeParse(rawParams);
+    const parsedParams = ParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(
         400,

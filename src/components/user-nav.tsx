@@ -59,7 +59,9 @@ export function UserNav({ user }: { user: Profile }) {
           )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <form action={signOut}>
+        <form
+          // @ts-expect-error Server Action
+          action={signOut}>
           <button type="submit" className="w-full">
             <DropdownMenuItem>
               <LogOut className="mr-2 h-4 w-4" />

@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   ANNOUNCEMENT_REACTIONS,
   type AnnouncementItem,
@@ -111,46 +112,33 @@ export default function AnnouncementCard({
   const commentCount = announcement.comments?.length ?? 0;
 
   return (
-    <Card className="shadow-md border border-gray-200">
-      <CardContent className="px-4 py-6 sm:py-4 sm:px-6 md:py-6 md:px-8">
+    <Card className="border border-gray-200">
+      <CardContent className="p-0">
         <AnnouncementModal announcement={announcement}>
           <button
             type="button"
-            className="group w-full text-left mb-4 space-y-4 rounded-md border border-transparent p-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-10 w-10 border border-white shadow-md">
-                <AvatarImage
-                  src={announcement.senderAvatar ?? undefined}
-                  alt={announcement.senderName ?? "Remetente"}
-                />
-                <AvatarFallback>
-                  {(announcement.senderName ?? "??")
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="space-y-1 text-left">
-                <div className="font-semibold">
-                  {announcement.senderName || "Remetente desconhecido"}
-                </div>
-                <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <span>
-                    {new Date(announcement.createdAt).toLocaleString()}
+            className="w-full space-y-6 px-4 py-6 sm:py-4 sm:px-6 md:py-6 md:px-8">
+            <div className="flex items-start justify-between gap-4">
+              <UserSummary
+                avatarUrl={announcement.senderAvatar}
+                name={announcement.senderName || "Remetente desconhecido"}
+                subtitle={announcement.senderTitle ?? undefined}
+                fallback="Remetente"
+              />
+              <div className="text-xs text-muted-foreground text-right space-y-1">
+                <div>{new Date(announcement.createdAt).toLocaleString()}</div>
+                {isScheduled ? (
+                  <span className="inline-flex items-center justify-end rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                    Agendado
                   </span>
-                  {isScheduled ? (
-                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                      Agendado
-                    </span>
-                  ) : null}
-                </div>
+                ) : null}
               </div>
             </div>
 
-            <div className="space-y-2 text-left">
-              <h5 className="font-semibold">{announcement.title}</h5>
+            <div className="space-y-1 text-left">
+              <p className="text-base sm:text-lg font-semibold">
+                {announcement.title}
+              </p>
               <div
                 className="text-sm max-w-none text-muted-foreground line-clamp-3"
                 dangerouslySetInnerHTML={{
@@ -162,47 +150,52 @@ export default function AnnouncementCard({
         </AnnouncementModal>
 
         {announcement.allowComments || announcement.allowReactions ? (
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between pb-6 px-4 sm:px-6 md:px-8">
             {announcement.allowReactions ? (
               <div className="flex flex-wrap gap-2">
-                {reactions.map((reaction) => (
-                  <Button
-                    key={reaction.emoji}
-                    type="button"
-                    size="sm"
-                    className="px-2 sm:px-auto"
-                    variant={reaction.reacted ? "secondary" : "ghost"}
-                    disabled={reactionPending}
-                    onClick={() => toggleReaction(reaction.emoji)}>
-                    <span className="mr-0 md:mr-1 text-base sm:text-lg">
-                      {reaction.emoji}
-                    </span>
-                    {reaction.count > 0 ? <span>{reaction.count}</span> : null}
-                  </Button>
-                ))}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={reactions?.[0]?.reacted ? "secondary" : "outline"}
+                  disabled={reactionPending}
+                  onClick={() => toggleReaction("👍")}>
+                  <span className="mr-0 text-base sm:text-lg">👍</span>
+                  {reactions?.[0]?.count ? (
+                    <span>{reactions[0].count}</span>
+                  ) : null}
+                </Button>
               </div>
             ) : null}
             {announcement.allowComments ? (
               <Button
                 type="button"
-                variant="ghost"
+                variant="link"
                 size="sm"
                 onClick={() => setShowComments((prev) => !prev)}>
-                <span>Comentários ({commentCount})</span>
+                <span className="text-xs sm:text-sm flex items-center gap-1">
+                  Comentários ({commentCount})
+                  <ChevronDown
+                    className={cn(
+                      "transition-transform",
+                      showComments ? "rotate-180" : "rotate-0"
+                    )}
+                    size={14}
+                  />
+                </span>
               </Button>
             ) : null}
           </div>
         ) : null}
 
         {announcement.allowComments && showComments ? (
-          <div className="space-y-4">
-            <div className="space-y-2 mt-4">
-              {commentCount > 0 ? (
-                announcement.comments!.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="rounded-md border p-4 text-sm space-y-4 sm:space-y-2 bg-muted">
-                    <div className="flex flex-col-reverse sm:flow-row items-start justify-between gap-1 sm:gap-3">
+          <div className="space-y-4 border-t border-gray-200 px-2 sm:px-4 md:px-6 py-2 sm:py-4 md:py-6 bg-muted">
+            <div className="space-y-2">
+              {commentCount > 0
+                ? announcement.comments!.map((comment) => (
+                    <div
+                      key={comment.id}
+                      className="rounded-xl border p-4 text-sm space-y-4 sm:space-y-2 bg-white">
+                    <div className="flex flex-col-reverse sm:flew-row items-start justify-between gap-1 sm:gap-3">
                       <UserSummary
                         avatarUrl={comment.authorAvatar}
                         name={
@@ -224,31 +217,23 @@ export default function AnnouncementCard({
                     </p>
                   </div>
                 ))
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Nenhum comentário ainda.
-                </p>
-              )}
+                : null}
             </div>
             <div className="flex gap-2 relative">
               <Textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Escreva um comentário..."
-                className="min-h-[40px] text-sm"
+                className="min-h-[40px] text-sm bg-white"
               />
               <div className="absolute right-2 bottom-2">
                 <Button
                   type="button"
-                  size="icon"
+                  size="icon-md"
                   variant="secondary"
                   disabled={isPending}
                   onClick={submitComment}>
-                  {isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
+                  {isPending ? <Loader2 className="animate-spin" /> : <Send />}
                 </Button>
               </div>
             </div>

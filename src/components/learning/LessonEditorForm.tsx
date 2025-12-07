@@ -32,7 +32,7 @@ export function LessonEditorForm({ lessonId, initial }: Props) {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    startTransition(async () => {
+    const submit = async () => {
       try {
         const payload = {
           title: title.trim(),
@@ -51,8 +51,15 @@ export function LessonEditorForm({ lessonId, initial }: Props) {
         toast({ title: "Aula atualizada" });
         router.refresh();
       } catch (err: any) {
-        toast({ title: "Erro", description: String(err?.message || err), variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: String(err?.message || err),
+          variant: "destructive",
+        });
       }
+    };
+    startTransition(() => {
+      void submit();
     });
   };
 

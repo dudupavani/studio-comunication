@@ -21,9 +21,12 @@ async function resolveUnitByParam(
 }
 
 // GET → lista membros da unidade
-export async function GET(req: Request, ctx: { params: { unitId: string } }) {
+export async function GET(
+  req: Request,
+  context: RouteContext<"/api/units/[unitId]/members">
+) {
   try {
-    const { unitId: unitParam } = ctx.params;
+    const { unitId: unitParam } = await context.params;
     const auth = await getAuthContext();
     if (!auth?.userId)
       return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
@@ -57,9 +60,12 @@ export async function GET(req: Request, ctx: { params: { unitId: string } }) {
 }
 
 // POST → vincular usuário à unidade
-export async function POST(req: Request, ctx: { params: { unitId: string } }) {
+export async function POST(
+  req: Request,
+  context: RouteContext<"/api/units/[unitId]/members">
+) {
   try {
-    const { unitId: unitParam } = ctx.params;
+    const { unitId: unitParam } = await context.params;
     const auth = await getAuthContext();
     if (!auth?.userId)
       return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
@@ -126,10 +132,10 @@ export async function POST(req: Request, ctx: { params: { unitId: string } }) {
 // DELETE → remover usuário da unidade
 export async function DELETE(
   req: Request,
-  ctx: { params: { unitId: string } }
+  context: RouteContext<"/api/units/[unitId]/members">
 ) {
   try {
-    const { unitId: unitParam } = ctx.params;
+    const { unitId: unitParam } = await context.params;
     const auth = await getAuthContext();
     if (!auth?.userId)
       return NextResponse.json({ error: "unauthenticated" }, { status: 401 });

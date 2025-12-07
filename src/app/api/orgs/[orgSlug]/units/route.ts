@@ -6,7 +6,7 @@ import { canManageUsers } from "@/lib/permissions-users";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { orgSlug: string } }
+  context: RouteContext<"/api/orgs/[orgSlug]/units">
 ) {
   const auth = await getAuthContext();
   if (!auth || !canManageUsers(auth)) {
@@ -17,7 +17,7 @@ export async function GET(
   }
 
   const supabase = await createClient();
-  const orgId = params.orgSlug; // alias para manter legibilidade
+  const { orgSlug: orgId } = await context.params;
 
   // 1) Sessão
   const {

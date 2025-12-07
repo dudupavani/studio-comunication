@@ -13,7 +13,7 @@ const bodySchema = z.object({
 
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ announcementId: string }> }
+  context: RouteContext<"/api/messages/announcements/[announcementId]/reactions">
 ) {
   try {
     const { announcementId } = await context.params;

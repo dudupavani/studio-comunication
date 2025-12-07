@@ -44,7 +44,10 @@ export function AddUnitModal({
           <DialogTitle>Nova unidade</DialogTitle>
         </DialogHeader>
 
-        <form action={handleAction} className="grid gap-4">
+        <form
+          // @ts-expect-error Server Action
+          action={handleAction}
+          className="grid gap-4">
           <Input name="name" placeholder="Nome da unidade" required autoFocus />
           <input type="hidden" name="orgId" value={orgId} />
           <input type="hidden" name="slug" value={slug} />

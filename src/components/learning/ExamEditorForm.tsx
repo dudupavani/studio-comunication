@@ -75,7 +75,7 @@ export function ExamEditorForm({ courseId }: Props) {
   };
 
   const save = () => {
-    startTransition(async () => {
+    const submit = async () => {
       try {
         const payload = {
           courseId,
@@ -96,8 +96,15 @@ export function ExamEditorForm({ courseId }: Props) {
         if (!res.ok) throw new Error(json?.error || "Erro ao salvar prova");
         toast({ title: "Prova salva" });
       } catch (err: any) {
-        toast({ title: "Erro", description: String(err?.message || err), variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: String(err?.message || err),
+          variant: "destructive",
+        });
       }
+    };
+    startTransition(() => {
+      void submit();
     });
   };
 

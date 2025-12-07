@@ -8,6 +8,7 @@ import type { Profile } from "../types";
 import type { PlatformRole, OrgRole, UnitRole } from "@/lib/types/roles";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import { safeDeleteUser } from "@/lib/auth/safe-delete";
+import type { TablesInsert } from "@/lib/supabase/types";
 
 /** Admin client (service_role) – usar só em Server Actions / Route Handlers */
 async function getAdminClient() {
@@ -139,7 +140,7 @@ export async function updateUserProfile(formData: FormData) {
   }
 
   // 3) Atualizar PROFILE diretamente (somente campos permitidos)
-  const profilePayload: Record<string, unknown> = { id: user.id };
+  const profilePayload: TablesInsert<"profiles"> = { id: user.id };
   let hasProfileUpdates = false;
   if (typeof name === "string" && name.length > 0) {
     profilePayload.full_name = name;

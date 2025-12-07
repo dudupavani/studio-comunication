@@ -30,6 +30,11 @@ export default async function UnitPage({
   const unitRes = await getUnitBySlug(org.id, unitSlug);
   if (!unitRes.ok) redirect(`/orgs/${orgSlug}`);
   const unit = unitRes.data!;
+  const membersTab = await MembersTabServer({
+    orgId: org.id,
+    unitId: unit.id,
+    unitSlug,
+  });
 
   // Server Action para salvar as configurações básicas
   async function saveSettingsAction(formData: FormData) {
@@ -75,7 +80,10 @@ export default async function UnitPage({
 
           {/* === Aba: Detalhes === */}
           <TabsContent value="settings" className="mt-6">
-            <form action={saveSettingsAction} className="space-y-6 max-w-2xl">
+            <form
+              // @ts-expect-error Server Action
+              action={saveSettingsAction}
+              className="space-y-6 max-w-2xl">
               {/* Nome */}
               <div className="grid gap-2">
                 <Label htmlFor="name">Nome</Label>
@@ -134,11 +142,7 @@ export default async function UnitPage({
 
           {/* === Aba: Membros === */}
           <TabsContent value="members" className="mt-6">
-            <MembersTabServer
-              orgId={org.id}
-              unitId={unit.id}
-              unitSlug={unitSlug}
-            />
+            {membersTab}
           </TabsContent>
         </Tabs>
       </div>

@@ -37,7 +37,7 @@ async function removeCalendarEvent(
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ announcementId: string }> }
+  context: RouteContext<"/api/messages/announcements/[announcementId]">
 ) {
   try {
     const { announcementId } = await context.params;
@@ -323,7 +323,7 @@ export async function PATCH(
 
 export async function DELETE(
   _req: NextRequest,
-  context: { params: Promise<{ announcementId: string }> }
+  context: RouteContext<"/api/messages/announcements/[announcementId]">
 ) {
   try {
     const { announcementId } = await context.params;

@@ -8,10 +8,13 @@ import { LessonCreateSchema } from "@/lib/learning/validations";
 
 const paramsSchema = z.object({ courseId: z.string().uuid() });
 
-export async function GET(_: Request, { params }: { params: { courseId: string } }) {
+export async function GET(
+  _: Request,
+  context: RouteContext<"/api/learning/courses/[courseId]/lessons">
+) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const parsed = paramsSchema.safeParse(params);
+  const parsed = paramsSchema.safeParse(await context.params);
   if (!parsed.success) return NextResponse.json({ error: "Curso inválido" }, { status: 400 });
 
   const supabase = createClient();
@@ -39,10 +42,13 @@ export async function GET(_: Request, { params }: { params: { courseId: string }
   return NextResponse.json({ data });
 }
 
-export async function POST(request: Request, { params }: { params: { courseId: string } }) {
+export async function POST(
+  request: Request,
+  context: RouteContext<"/api/learning/courses/[courseId]/lessons">
+) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const parsedParams = paramsSchema.safeParse(params);
+  const parsedParams = paramsSchema.safeParse(await context.params);
   if (!parsedParams.success) return NextResponse.json({ error: "Curso inválido" }, { status: 400 });
 
   const supabase = createClient();

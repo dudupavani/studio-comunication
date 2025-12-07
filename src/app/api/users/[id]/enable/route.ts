@@ -1,23 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/service";
-import { isPlatformAdmin } from "@/lib/auth/guards";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import { getAuthContext } from "@/lib/auth-context";
 import { canManageUsers } from "@/lib/permissions-users";
 
 export const dynamic = "force-dynamic";
 
-type Params =
-  | { params: { id: string } }
-  | Promise<{ params: { id: string } }>;
-
-async function resolveParams(ctx: Params) {
-  const resolved = await Promise.resolve(ctx);
-  return resolved.params;
-}
-
-export async function POST(_req: Request, ctx: Params) {
+export async function POST(
+  _req: Request,
+  context: RouteContext<"/api/users/[id]/enable">
+) {
   const auth = await getAuthContext();
   if (!auth || !canManageUsers(auth)) {
     return NextResponse.json(
@@ -26,7 +19,7 @@ export async function POST(_req: Request, ctx: Params) {
     );
   }
 
-  const { id: userId } = await resolveParams(ctx);
+  const { id: userId } = await context.params;
   if (!userId) {
     return NextResponse.json(
       { ok: false, error: "missing user id" },

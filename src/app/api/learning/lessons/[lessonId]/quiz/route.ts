@@ -18,10 +18,13 @@ async function resolveLessonWithCourse(supabase: ReturnType<typeof createClient>
   return data as any;
 }
 
-export async function GET(_: Request, { params }: { params: { lessonId: string } }) {
+export async function GET(
+  _: Request,
+  context: RouteContext<"/api/learning/lessons/[lessonId]/quiz">
+) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const parsed = paramsSchema.safeParse(params);
+  const parsed = paramsSchema.safeParse(await context.params);
   if (!parsed.success) return NextResponse.json({ error: "Aula inválida" }, { status: 400 });
 
   const supabase = createClient();
@@ -50,10 +53,13 @@ export async function GET(_: Request, { params }: { params: { lessonId: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { lessonId: string } }) {
+export async function PUT(
+  request: Request,
+  context: RouteContext<"/api/learning/lessons/[lessonId]/quiz">
+) {
   const auth = await getAuthContext();
   if (!auth?.orgId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const parsedParams = paramsSchema.safeParse(params);
+  const parsedParams = paramsSchema.safeParse(await context.params);
   if (!parsedParams.success) return NextResponse.json({ error: "Aula inválida" }, { status: 400 });
 
   const supabase = createClient();

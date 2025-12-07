@@ -14,13 +14,13 @@ type InsertRow = {
 
 export async function POST(
   req: Request,
-  { params }: { params: { unitId: string } }
+  context: RouteContext<"/api/units/[unitId]/add-members">
 ) {
   try {
     const supabase = createServiceClient();
 
     // params
-    const unitIdParam = params.unitId;
+    const unitIdParam = (await context.params).unitId;
     if (!isUUID(unitIdParam)) {
       return NextResponse.json(
         { ok: false, error: "unitId inválido" },

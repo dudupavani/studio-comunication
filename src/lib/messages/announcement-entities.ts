@@ -1,4 +1,4 @@
-export const ANNOUNCEMENT_REACTIONS = ["👍", "❤️", "🤩", "👏"] as const;
+export const ANNOUNCEMENT_REACTIONS = ["👍"] as const;
 
 export type AnnouncementComment = {
   id: string;
@@ -23,6 +23,7 @@ export type AnnouncementItem = {
   senderName: string | null;
   senderId: string | null;
   senderAvatar?: string | null;
+  senderTitle?: string | null;
   createdAt: string;
   sendAt?: string | null;
   sentAt?: string | null;

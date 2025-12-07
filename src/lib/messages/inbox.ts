@@ -230,6 +230,7 @@ async function fetchAnnouncementItems(
       authorMap[row.author_id]?.email ||
       null,
     senderAvatar: authorMap[row.author_id]?.avatar_url ?? null,
+    senderTitle: authorMap[row.author_id]?.title ?? null,
     createdAt: row.created_at as string,
     sendAt: (row.send_at as string | null) ?? null,
     sentAt: (row.sent_at as string | null) ?? null,

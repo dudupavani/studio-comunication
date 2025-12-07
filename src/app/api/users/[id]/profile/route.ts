@@ -12,14 +12,9 @@ function jsonError(status: number, message: string, details?: unknown) {
   return NextResponse.json({ ok: false, error: message, details }, { status });
 }
 
-async function resolveParams<T = any>(ctx: unknown): Promise<T> {
-  const resolved = await Promise.resolve(ctx as any);
-  return (resolved?.params ?? resolved) as T;
-}
-
 export async function PUT(
   req: Request,
-  ctx: { params: { id: string } } | Promise<{ params: { id: string } }>
+  context: RouteContext<"/api/users/[id]/profile">
 ) {
   try {
     const auth = await getAuthContext();
@@ -33,8 +28,7 @@ export async function PUT(
       return jsonError(400, "Organização ativa não encontrada para o usuário.");
     }
 
-    const rawParams = await resolveParams<{ id: string }>(ctx);
-    const parsedParams = ParamsSchema.safeParse(rawParams);
+    const parsedParams = ParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());
     }

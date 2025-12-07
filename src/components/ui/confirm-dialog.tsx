@@ -54,7 +54,8 @@ export default function ConfirmDialog({
               </button>
 
               <form
-                action={async (fd) => {
+                // @ts-expect-error Server Action
+                action={async (fd: FormData) => {
                   await action(fd);
                   // se a action fizer redirect, não chega aqui; caso não, fecha
                   setOpen(false);

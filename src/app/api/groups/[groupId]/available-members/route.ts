@@ -5,17 +5,12 @@ import { toLoggableError } from "@/lib/log";
 
 const ParamsSchema = z.object({ groupId: z.string().uuid() });
 
-async function resolveParams<T = any>(ctx: unknown): Promise<T> {
-  const resolved = await Promise.resolve(ctx as any);
-  return (resolved?.params ?? resolved) as T;
-}
-
 export async function GET(
   _req: Request,
-  ctx: { params: { groupId: string } } | Promise<{ params: { groupId: string } }>
+  context: RouteContext<"/api/groups/[groupId]/available-members">
 ) {
   try {
-    const rawParams = await resolveParams<{ groupId: string }>(ctx);
+    const rawParams = await context.params;
     const parsed = ParamsSchema.safeParse(rawParams);
     if (!parsed.success) {
       return NextResponse.json(
