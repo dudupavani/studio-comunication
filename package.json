@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
-    "@ckeditor/ckeditor5-react": "^11.0.0",
+    "@ckeditor/ckeditor5-build-classic": "^43.3.1",
+    "@ckeditor/ckeditor5-react": "^9.3.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
@@ -59,6 +59,7 @@
     "firebase": "^11.9.1",
     "genkit": "^1.14.1",
     "imask": "^7.6.1",
+    "isomorphic-dompurify": "^2.20.0",
     "jspdf": "^3.0.2",
     "konva": "9.3.22",
     "lucide-react": "^0.475.0",

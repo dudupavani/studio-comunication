@@ -14,7 +14,7 @@ import {
   type AnnouncementItem,
 } from "@/lib/messages/announcement-entities";
 import AnnouncementModal from "./AnnouncementModal";
-import DOMPurify from "dompurify";
+import { sanitizeHtml } from "@/lib/utils/sanitize";
 
 export default function AnnouncementCard({
   announcement,
@@ -30,7 +30,7 @@ export default function AnnouncementCard({
 
   const sanitizedPreview = useMemo(
     () =>
-      DOMPurify.sanitize(
+      sanitizeHtml(
         announcement.contentPreview ?? announcement.fullContent ?? ""
       ),
     [announcement.contentPreview, announcement.fullContent]

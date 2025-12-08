@@ -6,6 +6,7 @@ import GroupColorSquare from "@/components/groups/GroupColorSquare";
 import HeaderEditButton from "@/components/groups/HeaderEditButton";
 import AddMembersDrawer from "./AddMembersDrawer";
 import { Pencil } from "lucide-react";
+import { getAuthContext } from "@/lib/auth-context";
 
 export const dynamic = "force-dynamic";
 
@@ -37,9 +38,15 @@ export default async function GroupPage(props: Props) {
   const supabase = createClient();
   const serviceSupabase = createServiceClient();
 
-  // Sessão
-  const { data: u } = await supabase.auth.getUser();
-  const userId = u?.user?.id ?? null;
+  // Verificar autenticação e obter contexto de organização
+  const auth = await getAuthContext();
+  if (!auth) {
+    return (
+      <main className="p-4 sm:p-6 flex flex-col">
+        <p className="text-red-600">Acesso negado: usuário não autenticado.</p>
+      </main>
+    );
+  }
 
   // Grupo
   const { data: group } = await serviceSupabase
@@ -47,6 +54,15 @@ export default async function GroupPage(props: Props) {
     .select("id, org_id, name, description, color, created_at")
     .eq("id", groupId)
     .single();
+
+  // Verificar se o grupo pertence à mesma organização do usuário autenticado
+  if (auth.platformRole !== "platform_admin" && group && group.org_id !== auth.orgId) {
+    return (
+      <main className="p-4 sm:p-6 flex flex-col">
+        <p className="text-red-600">Acesso negado: grupo não pertence à sua organização.</p>
+      </main>
+    );
+  }
 
   // Membership do usuário
   let membership: {
@@ -57,12 +73,12 @@ export default async function GroupPage(props: Props) {
     added_at: string;
   } | null = null;
 
-  if (userId) {
+  if (auth?.userId) {
     const { data: m } = await supabase
       .from("user_group_members")
       .select("group_id, user_id, org_id, unit_id, added_at")
       .eq("group_id", groupId)
-      .eq("user_id", userId)
+      .eq("user_id", auth.userId)
       .maybeSingle();
     membership = m ?? null;
   }

@@ -1,5 +1,5 @@
 // src/lib/auth-context.ts
-import { createClient } from "@/lib/supabase/server";
+import { createServerClientWithCookies } from "@/lib/supabase/server";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import type { PlatformRole, OrgRole, UnitRole } from "@/lib/types/roles";
@@ -38,7 +38,7 @@ async function _getAuthContext(
     `${prefix}:${Date.now().toString(36)}:${Math.random()
       .toString(36)
       .slice(2, 6)}`;
-  const supabase = supabaseClient ?? createClient();
+  const supabase = supabaseClient ?? createServerClientWithCookies();
 
   // 1) Autenticação validada pelo Auth server (evita aviso de getSession)
   const labelUser = isDev ? makeLabel("auth:getUser") : null;

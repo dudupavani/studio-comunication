@@ -18,10 +18,10 @@ import { useRouter } from "next/navigation";
 import { Loader2, Send, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AnnouncementItem } from "@/lib/messages/announcement-entities";
-import DOMPurify from "dompurify";
 import UserSummary from "@/components/shared/user-summary";
 import { cn } from "@/lib/utils";
 import { AnnouncementMetricsPanel } from "./AnnouncementMetricsPanel";
+import { sanitizeHtml } from "@/lib/utils/sanitize";
 
 type Props = {
   announcement: AnnouncementItem;
@@ -60,7 +60,7 @@ export default function AnnouncementModal({ announcement, children }: Props) {
 
   const sanitizedContent = useMemo(
     () =>
-      DOMPurify.sanitize(
+      sanitizeHtml(
         announcement.fullContent ?? announcement.contentPreview ?? ""
       ),
     [announcement.contentPreview, announcement.fullContent]

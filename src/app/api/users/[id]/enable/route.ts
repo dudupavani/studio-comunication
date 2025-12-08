@@ -12,10 +12,10 @@ export async function POST(
   context: RouteContext<"/api/users/[id]/enable">
 ) {
   const auth = await getAuthContext();
-  if (!auth || !canManageUsers(auth)) {
+  if (!auth) {
     return NextResponse.json(
-      { ok: false, error: "Acesso negado: apenas platform_admin ou org_admin." },
-      { status: 403 }
+      { ok: false, error: "Acesso negado: usuário não autenticado." },
+      { status: 401 }
     );
   }
 
@@ -25,6 +25,33 @@ export async function POST(
       { ok: false, error: "missing user id" },
       { status: 400 }
     );
+  }
+
+  // Verificar se o usuário autenticado é platform_admin ou org_admin da mesma organização
+  if (auth.platformRole !== PLATFORM_ADMIN) {
+    // Se não for platform_admin, verificar se é org_admin da mesma organização
+    if (!auth.orgId || auth.orgRole !== "org_admin") {
+      return NextResponse.json(
+        { ok: false, error: "Acesso negado: apenas platform_admin ou org_admin pode ativar usuários." },
+        { status: 403 }
+      );
+    }
+
+    // Validar que o userId pertence à mesma organização
+    const svc = createServiceClient();
+    const { data: membership, error: memberErr } = await svc
+      .from("org_members")
+      .select("org_id")
+      .eq("user_id", userId)
+      .eq("org_id", auth.orgId)
+      .single();
+
+    if (memberErr || !membership) {
+      return NextResponse.json(
+        { ok: false, error: "Acesso negado - usuário não pertence à organização." },
+        { status: 403 }
+      );
+    }
   }
 
   const svc = createServiceClient();

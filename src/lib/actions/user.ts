@@ -9,6 +9,7 @@ import type { PlatformRole, OrgRole, UnitRole } from "@/lib/types/roles";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import { safeDeleteUser } from "@/lib/auth/safe-delete";
 import type { TablesInsert } from "@/lib/supabase/types";
+import { adminAddMember } from "@/lib/admin/org-members";
 
 /** Admin client (service_role) – usar só em Server Actions / Route Handlers */
 async function getAdminClient() {
@@ -705,20 +706,10 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
   if (omErr) return { ok: false, error: omErr.message };
 
   if (!membership) {
-    const { error: insertOmErr } = await supabaseAdmin
-      .from("org_members")
-      .insert({
-        org_id: orgId,
-        user_id: userId,
-        role: targetRole,
-      });
+    const { error: insertOmErr } = await adminAddMember(orgId, userId, targetRole);
     if (insertOmErr) return { ok: false, error: insertOmErr.message };
   } else {
-    const { error: upOmErr } = await supabaseAdmin
-      .from("org_members")
-      .update({ role: targetRole })
-      .eq("org_id", orgId)
-      .eq("user_id", userId);
+    const { error: upOmErr } = await adminUpdateMemberRole(orgId, userId, targetRole);
     if (upOmErr) return { ok: false, error: upOmErr.message };
   }
 

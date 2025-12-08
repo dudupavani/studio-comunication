@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth/token-utils";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
+import { getAuthContext } from "@/lib/auth-context";
 
 /* ========================= Schemas ========================= */
 
@@ -104,6 +105,12 @@ export async function GET(
     const raw = await context.params;
     const { groupId } = Params.parse(raw);
 
+    // Verificar autenticação e obter contexto de organização
+    const auth = await getAuthContext();
+    if (!auth) {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 401 });
+    }
+
     // Se veio Authorization → usa Bearer; senão → SSR (cookies)
     const supabase =
       req.headers.get("authorization") != null
@@ -115,6 +122,14 @@ export async function GET(
       return NextResponse.json(
         { error: "Grupo não encontrado" },
         { status: 404 }
+      );
+    }
+
+    // Verificar se o grupo pertence à mesma organização do usuário autenticado
+    if (auth.platformRole !== "platform_admin" && group.org_id !== auth.orgId) {
+      return NextResponse.json(
+        { error: "Acesso negado - grupo não pertence à sua organização" },
+        { status: 403 }
       );
     }
 
@@ -169,6 +184,12 @@ export async function POST(
     const raw = await context.params;
     const { groupId } = Params.parse(raw);
 
+    // Verificar autenticação e obter contexto de organização
+    const auth = await getAuthContext();
+    if (!auth) {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 401 });
+    }
+
     const supabase = createServiceClient();
 
     const body = await req.json();
@@ -179,6 +200,14 @@ export async function POST(
       return NextResponse.json(
         { error: "Grupo não encontrado" },
         { status: 404 }
+      );
+    }
+
+    // Verificar se o grupo pertence à mesma organização do usuário autenticado
+    if (auth.platformRole !== "platform_admin" && group.org_id !== auth.orgId) {
+      return NextResponse.json(
+        { error: "Acesso negado - grupo não pertence à sua organização" },
+        { status: 403 }
       );
     }
 
@@ -223,6 +252,12 @@ export async function DELETE(
     const raw = await context.params;
     const { groupId } = Params.parse(raw);
 
+    // Verificar autenticação e obter contexto de organização
+    const auth = await getAuthContext();
+    if (!auth) {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 401 });
+    }
+
     const supabase = createServiceClient();
 
     const body = await req.json();
@@ -233,6 +268,14 @@ export async function DELETE(
       return NextResponse.json(
         { error: "Grupo não encontrado" },
         { status: 404 }
+      );
+    }
+
+    // Verificar se o grupo pertence à mesma organização do usuário autenticado
+    if (auth.platformRole !== "platform_admin" && group.org_id !== auth.orgId) {
+      return NextResponse.json(
+        { error: "Acesso negado - grupo não pertence à sua organização" },
+        { status: 403 }
       );
     }
 

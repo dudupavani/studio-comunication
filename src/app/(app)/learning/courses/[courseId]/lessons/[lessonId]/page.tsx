@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getAuthContext } from "@/lib/auth-context";
 import { getCourseWithLessons } from "@/lib/learning/queries";
+import { sanitizeHtml } from "@/lib/utils/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ export default async function LessonPage({
 
   const attachments = course.attachmentsByLesson[lesson.id] || [];
   const quizzes = course.quizzesByLesson[lesson.id] || [];
+  const sanitizedContent = lesson.content_html ? sanitizeHtml(lesson.content_html) : null;
 
   return (
     <div className="p-6 space-y-6">
@@ -54,9 +56,9 @@ export default async function LessonPage({
 
       {renderVideoEmbed(lesson.video_url)}
 
-      {lesson.content_html ? (
+      {sanitizedContent ? (
         <Card>
-          <CardContent className="prose max-w-none p-4" dangerouslySetInnerHTML={{ __html: lesson.content_html }} />
+          <CardContent className="prose max-w-none p-4" dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
         </Card>
       ) : null}
 
