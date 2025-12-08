@@ -9,6 +9,7 @@ import { EditAnnouncementForm } from "../../components/EditAnnouncementForm";
 import type { UserOption } from "@/components/communication/UserMultiSelect";
 import type { UserGroupOption } from "@/components/communication/GroupMultiSelect";
 import type { TeamOption } from "@/components/communication/TeamMultiSelect";
+import { resolveIdentityMap } from "@/lib/identity";
 
 function toUniqueList(values: (string | null)[]) {
   return Array.from(new Set(values.filter((v): v is string => !!v)));
@@ -56,39 +57,18 @@ export default async function EditAnnouncementPage({
 
   const users: UserOption[] = [];
   if (userIds.length) {
-    const { data: profiles } = await svc
-      .from("profiles")
-      .select("id, full_name, avatar_url")
-      .in("id", userIds);
-
-    const { data: cargos } = await svc
-      .from("employee_profile")
-      .select("user_id, cargo")
-      .in("user_id", userIds);
-
-    const cargoMap = new Map<string, string | null>();
-    (cargos ?? []).forEach((row: any) =>
-      cargoMap.set(row.user_id as string, (row.cargo as string | null) ?? null)
-    );
-
-    const profileMap = new Map<
-      string,
-      { full_name: string | null; avatar_url: string | null }
-    >();
-    (profiles ?? []).forEach((row: any) =>
-      profileMap.set(row.id as string, {
-        full_name: (row.full_name as string | null) ?? null,
-        avatar_url: (row.avatar_url as string | null) ?? null,
-      })
-    );
+    const identityMap = await resolveIdentityMap(userIds, {
+      svc,
+      orgId: auth.orgId,
+    });
 
     userIds.forEach((id) => {
-      const profile = profileMap.get(id);
+      const identity = identityMap.get(id);
       users.push({
         id,
-        full_name: profile?.full_name ?? null,
-        avatar_url: profile?.avatar_url ?? null,
-        cargo: cargoMap.get(id) ?? null,
+        full_name: identity?.full_name ?? identity?.email ?? null,
+        avatar_url: identity?.avatar_url ?? null,
+        cargo: identity?.title ?? null,
       });
     });
   }

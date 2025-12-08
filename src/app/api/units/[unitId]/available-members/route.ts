@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getAuthContext } from "@/lib/auth-context";
 import { isOrgAdminFor, isUnitMasterFor } from "@/lib/permissions-org";
-import { fetchEmailsByUserIds } from "@/lib/email-admin";
+import { resolveIdentityMap } from "@/lib/identity";
 
 // type guard simples
 function isUUID(v: unknown): v is string {
@@ -110,7 +110,7 @@ export async function GET(
     // 7) Membros da organização (com nome em profiles)
     const { data: orgUsers, error: orgErr } = await supabase
       .from("org_members")
-      .select("user_id, profiles!inner(full_name, avatar_url)")
+      .select("user_id")
       .eq("org_id", orgIdFromUnit);
 
     if (orgErr) {
@@ -121,32 +121,31 @@ export async function GET(
     }
 
     // 8) Candidatos: pertencem à org e NÃO estão na unidade
-    const baseUsers =
+    const candidateIds =
       (orgUsers ?? [])
-        .map((r: any) => ({
-          id: r.user_id as string,
-          name: (r.profiles?.full_name as string | null) ?? null,
-          email: null as string | null, // preenchido abaixo
-          avatarUrl:
-            (r.profiles?.avatar_url as string | null | undefined) ?? null,
-        }))
-        .filter((u) => !alreadyIds.has(u.id)) ?? [];
+        .map((r: any) => r.user_id as string)
+        .filter((id) => id && !alreadyIds.has(id)) ?? [];
 
-    if (baseUsers.length === 0) {
+    if (candidateIds.length === 0) {
       return NextResponse.json({ ok: true, users: [] });
     }
 
-    // 9) Enriquecer com e-mails (auth.users via Admin API)
-    const emailMap = await fetchEmailsByUserIds(
-      supabase,
-      baseUsers.map((u) => u.id)
-    );
+    const identityMap = await resolveIdentityMap(candidateIds, {
+      svc: supabase,
+      orgId: orgIdFromUnit,
+    });
 
-    const users = baseUsers
-      .map((u) => ({
-        ...u,
-        email: emailMap.get(u.id) ?? null,
-      }))
+    const users = candidateIds
+      .map((id) => {
+        const identity = identityMap.get(id);
+        const name = identity?.full_name ?? identity?.email ?? null;
+        return {
+          id,
+          name,
+          email: identity?.email ?? null,
+          avatarUrl: identity?.avatar_url ?? null,
+        };
+      })
       .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "pt-BR"));
 
     return NextResponse.json({ ok: true, users });

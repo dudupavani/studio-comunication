@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { toLoggableError } from "@/lib/log";
+import { resolveIdentityMap } from "@/lib/identity";
 
 const ParamsSchema = z.object({ groupId: z.string().uuid() });
 
@@ -86,46 +87,10 @@ export async function GET(
       return NextResponse.json({ users: [] });
     }
 
-    // Perfis (nome)
-    const nameMap = new Map<string, string | null>();
-    const { data: profiles, error: profileErr } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", userIds);
-
-    if (profileErr) {
-      return NextResponse.json(
-        {
-          error: "Erro ao carregar perfis.",
-          details: toLoggableError(profileErr),
-        },
-        { status: 500 }
-      );
-    }
-    (profiles ?? []).forEach((row: any) =>
-      nameMap.set(row.id as string, row.full_name ?? null)
-    );
-
-    // employee_profile (cargo)
-    const cargoMap = new Map<string, string | null>();
-    const { data: employeeProfiles, error: employeeErr } = await supabase
-      .from("employee_profile")
-      .select("user_id, cargo")
-      .eq("org_id", group.org_id)
-      .in("user_id", userIds);
-
-    if (employeeErr) {
-      return NextResponse.json(
-        {
-          error: "Erro ao carregar dados corporativos.",
-          details: toLoggableError(employeeErr),
-        },
-        { status: 500 }
-      );
-    }
-    (employeeProfiles ?? []).forEach((row: any) =>
-      cargoMap.set(row.user_id as string, row.cargo ?? null)
-    );
+    const identityMap = await resolveIdentityMap(userIds, {
+      svc: supabase,
+      orgId: group.org_id,
+    });
 
     // unit_members + units
     const unitMap = new Map<string, string | null>();
@@ -240,13 +205,16 @@ export async function GET(
       }
     });
 
-    const users = userIds.map((id) => ({
-      id,
-      name: nameMap.get(id) ?? null,
-      cargo: cargoMap.get(id) ?? null,
-      unitName: unitMap.get(id) ?? null,
-      teamName: teamMap.get(id) ?? null,
-    }));
+    const users = userIds.map((id) => {
+      const identity = identityMap.get(id);
+      return {
+        id,
+        name: identity?.full_name ?? identity?.email ?? null,
+        cargo: identity?.title ?? null,
+        unitName: unitMap.get(id) ?? null,
+        teamName: teamMap.get(id) ?? null,
+      };
+    });
 
     return NextResponse.json({ users });
   } catch (error) {

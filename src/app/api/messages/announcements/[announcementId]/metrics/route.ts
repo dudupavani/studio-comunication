@@ -6,6 +6,7 @@ import {
   errorResponse,
   handleRouteError,
 } from "@/lib/messages/api-helpers";
+import { resolveIdentityMap } from "@/lib/identity";
 
 type ViewerRow = {
   user_id: string | null;
@@ -55,36 +56,22 @@ function buildDailySeries(rows: { created_at: string }[]) {
 
 async function buildIdentityMap(
   svc: ReturnType<typeof createServiceClient>,
-  userIds: string[]
+  userIds: string[],
+  orgId: string
 ): Promise<IdentityMap> {
-  const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
-  const map: IdentityMap = {};
-  if (!uniqueIds.length) return map;
-  const { data: profiles } = await svc
-    .from("profiles")
-    .select("id, full_name, avatar_url")
-    .in("id", uniqueIds);
-  (profiles ?? []).forEach((profile: any) => {
-    map[profile.id as string] = {
-      name: (profile.full_name as string | null) ?? null,
-      avatar: (profile.avatar_url as string | null) ?? null,
-      title: null,
+  const identityMap = await resolveIdentityMap(userIds, {
+    svc,
+    orgId,
+  });
+  const result: IdentityMap = {};
+  identityMap.forEach((identity, id) => {
+    result[id] = {
+      name: identity.full_name ?? identity.email ?? null,
+      avatar: identity.avatar_url ?? null,
+      title: identity.title ?? null,
     };
   });
-  const { data: cargos } = await svc
-    .from("employee_profile")
-    .select("user_id, cargo")
-    .in("user_id", uniqueIds);
-  (cargos ?? []).forEach((row: any) => {
-    const id = row.user_id as string;
-    const title = (row.cargo as string | null) ?? null;
-    if (!map[id]) {
-      map[id] = { name: null, avatar: null, title };
-    } else {
-      map[id].title = title ?? map[id].title;
-    }
-  });
-  return map;
+  return result;
 }
 
 export async function GET(
@@ -189,7 +176,11 @@ export async function GET(
 
     const uniqueViewers = Array.from(viewerAggregation.keys());
 
-    const identities = await buildIdentityMap(svc, uniqueViewers);
+    const identities = await buildIdentityMap(
+      svc,
+      uniqueViewers,
+      announcement.org_id
+    );
 
     const viewers = uniqueViewers
       .map((userId) => {

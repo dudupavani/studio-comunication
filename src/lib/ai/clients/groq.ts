@@ -1,5 +1,5 @@
-const DEFAULT_TIMEOUT_MS = 8000;
-const DEFAULT_MODEL = "llama-3.1-8b-instant";
+export const DEFAULT_TIMEOUT_MS = 8000;
+export const DEFAULT_MODEL = "llama-3.1-8b-instant";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 type GroqMessage = {
@@ -34,10 +34,11 @@ export function getGroqClient() {
   const chatCompletion = async (
     payload: GroqChatCompletionRequest
   ): Promise<GroqChatCompletionResponse> => {
-    const { model, ...rest } = payload;
+    const { model, temperature, ...rest } = payload;
     const body = {
       ...rest,
       model: model ?? DEFAULT_MODEL,
+      ...(typeof temperature === "number" ? { temperature } : {}),
     };
 
     const controller = new AbortController();

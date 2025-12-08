@@ -26,18 +26,15 @@ export function RegisterSW() {
             ) {
               // Nova versão disponível; manter apenas log silencioso.
               // Caso queira, é possível integrar aqui um toast pedindo recarregamento.
-              // eslint-disable-next-line no-console
               console.log("Nova versão do aplicativo PWA disponível.");
             }
           };
         };
       })
       .catch((err) => {
-        // eslint-disable-next-line no-console
         console.error("SW registration failed", err);
       });
   }, []);
 
   return null;
 }
-

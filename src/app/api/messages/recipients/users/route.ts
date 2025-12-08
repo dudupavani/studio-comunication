@@ -3,6 +3,7 @@ import { createServerClientWithCookies } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getAuthContext } from "@/lib/messages/auth-context";
 import { errorResponse, handleRouteError } from "@/lib/messages/api-helpers";
+import { resolveIdentityMap } from "@/lib/identity";
 
 export async function GET(req: NextRequest) {
   try {
@@ -56,44 +57,19 @@ export async function GET(req: NextRequest) {
     const hasNext = requestedIds.length ? false : rows.length > limit;
     const slice = requestedIds.length ? rows : hasNext ? rows.slice(0, limit) : rows;
 
-    const missingIds = slice
-      .filter((row: any) => !row.full_name)
-      .map((row: any) => row.id as string)
-      .filter(Boolean);
-
-    let fallbackNames: Record<string, { full_name?: string | null; email?: string | null }> =
-      {};
-
-    if (missingIds.length) {
-      try {
-        const svc = createServiceClient();
-        const { data: identities, error: identityError } = await svc.rpc(
-          "get_user_identity_many",
-          { p_user_ids: missingIds }
-        );
-        if (identityError) {
-          console.warn("MESSAGES recipients resolve identity error:", identityError);
-        } else if (Array.isArray(identities)) {
-          identities.forEach((identity: any) => {
-            if (!identity?.user_id) return;
-            fallbackNames[identity.user_id] = {
-              full_name: identity.full_name ?? null,
-              email: identity.email ?? null,
-            };
-          });
-        }
-      } catch (err) {
-        console.warn("MESSAGES recipients resolve identity failure:", err);
-      }
-    }
+    const ids = slice.map((row: any) => row.id as string).filter(Boolean);
+    const identityMap =
+      ids.length > 0
+        ? await resolveIdentityMap(ids, { svc, orgId: auth.orgId })
+        : new Map();
 
     const items = slice.map((row: any) => {
       const id = row.id as string;
-      const fallback = fallbackNames[id] ?? {};
+      const identity = identityMap.get(id);
       const fullName =
         row.full_name ??
-        fallback.full_name ??
-        fallback.email ??
+        identity?.full_name ??
+        identity?.email ??
         null;
       const profile = Array.isArray(row.employee_profile)
         ? row.employee_profile[0]
@@ -102,8 +78,8 @@ export async function GET(req: NextRequest) {
       return {
         id,
         full_name: fullName,
-        avatar_url: row.avatar_url as string | null,
-        cargo: profile?.cargo ?? null,
+        avatar_url: row.avatar_url ?? identity?.avatar_url ?? null,
+        cargo: profile?.cargo ?? identity?.title ?? null,
       };
     });
 

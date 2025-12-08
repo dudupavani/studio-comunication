@@ -3,8 +3,12 @@ import { getGroqClient } from "@/lib/ai/clients/groq";
 const MAX_INPUT_LENGTH = 800;
 const PROMPT_PREFIX =
   "Corrija apenas a ortografia. Não altere sentido, estilo, frases, palavras, nem peça contexto. Retorne só o texto corrigido:\n\n";
+const CORRECT_TEXT_TEMPERATURE = 0.2;
 
-export async function correctText(input: string): Promise<string> {
+export async function correctText(
+  input: string,
+  opts?: { temperature?: number }
+): Promise<string> {
   const trimmed = typeof input === "string" ? input.trim() : "";
   if (!trimmed) {
     throw new Error("EMPTY_INPUT");
@@ -21,7 +25,10 @@ export async function correctText(input: string): Promise<string> {
     const groq = getGroqClient();
     const response = await groq.chatCompletion({
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.2,
+      temperature:
+        typeof opts?.temperature === "number"
+          ? opts.temperature
+          : CORRECT_TEXT_TEMPERATURE,
     });
 
     const corrected = response.choices?.[0]?.message?.content;

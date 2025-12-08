@@ -21,7 +21,7 @@ import {
   TeamMultiSelect,
   type TeamOption,
 } from "@/components/communication/TeamMultiSelect";
-import { Loader2, Send, CalendarClock } from "lucide-react";
+import { Loader2, Send, CalendarClock, Sparkles } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { SelectedRecipients } from "./SelectedRecipients";
@@ -30,6 +30,26 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  ANNOUNCEMENT_TONES,
+  type AnnouncementTone,
+} from "@/lib/ai/announcement-tones";
 
 export function NewAnnouncementForm() {
   const { toast } = useToast();
@@ -46,6 +66,12 @@ export function NewAnnouncementForm() {
   const [scheduleDate, setScheduleDate] = useState<string>("");
   const [scheduleTime, setScheduleTime] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiBriefing, setAiBriefing] = useState("");
+  const [aiTone, setAiTone] = useState<AnnouncementTone>(
+    "formal_institucional"
+  );
+  const [aiLoading, setAiLoading] = useState(false);
 
   const isScheduling = Boolean(scheduleDate || scheduleTime);
 
@@ -172,6 +198,94 @@ export function NewAnnouncementForm() {
     users,
   ]);
 
+  const formatAiBodyToHtml = useCallback((body: string) => {
+    const paragraphs = body
+      .split(/\n\s*\n/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (paragraphs.length === 0) return "";
+    return paragraphs.map((p) => `<p>${p}</p>`).join("");
+  }, []);
+
+  const handleApplyAiResult = useCallback(
+    (result: { title: string; body: string }) => {
+      // Título
+      if (!title.trim()) {
+        setTitle(result.title);
+      } else if (
+        typeof window !== "undefined" &&
+        window.confirm("Deseja substituir o título atual pelo gerado?")
+      ) {
+        setTitle(result.title);
+      }
+
+      // Conteúdo
+      const plainContent = content
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/gi, " ")
+        .trim();
+
+      const htmlBody = formatAiBodyToHtml(result.body);
+
+      if (!plainContent) {
+        setContent(htmlBody);
+      } else if (
+        typeof window !== "undefined" &&
+        window.confirm("Deseja substituir o texto atual pelo gerado?")
+      ) {
+        setContent(htmlBody);
+      }
+
+      toast({
+        title: "Comunicado gerado. Revise antes de publicar.",
+      });
+    },
+    [content, formatAiBodyToHtml, title, toast]
+  );
+
+  const handleGenerateWithAI = useCallback(async () => {
+    const briefing = aiBriefing.trim();
+    if (briefing.length < 10) {
+      toast({
+        title: "Briefing muito curto",
+        description: "Descreva o comunicado em 1–3 frases.",
+      });
+      return;
+    }
+
+    setAiDialogOpen(false);
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/comunicados/ai/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ briefing, tone: aiTone }),
+      });
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.title || !payload?.body) {
+        throw new Error(
+          payload?.error ||
+            payload?.error?.message ||
+            `Falha ao gerar comunicado (HTTP ${res.status})`
+        );
+      }
+
+      handleApplyAiResult({
+        title: payload.title as string,
+        body: payload.body as string,
+      });
+    } catch (err: any) {
+      console.error("AI generate announcement error", err);
+      toast({
+        title: "Erro ao gerar comunicado",
+        description: err?.message ?? "Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  }, [aiBriefing, aiTone, handleApplyAiResult, toast]);
+
   return (
     <div className="flex flex-col gap-8">
       <div className="grid grid-cols-6 gap-12">
@@ -187,6 +301,21 @@ export function NewAnnouncementForm() {
               />
             </div>
             <div className="space-y-2">
+              <div className="flex items-center justify-end">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setAiDialogOpen(true)}
+                  disabled={aiLoading}>
+                  {aiLoading ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Sparkles />
+                  )}
+                  Gerar com IA
+                </Button>
+              </div>
               <CKEditorComponent
                 value={content}
                 onChange={setContent}
@@ -360,6 +489,62 @@ export function NewAnnouncementForm() {
           </ButtonGroup>
         </div>
       </div>
+
+      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Gerar comunicado com IA</DialogTitle>
+            <DialogDescription>
+              Escreva um briefing curto e escolha o tom desejado. Nada será
+              salvo automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="ai-briefing">Briefing</Label>
+              <Textarea
+                id="ai-briefing"
+                value={aiBriefing}
+                onChange={(event) => setAiBriefing(event.target.value)}
+                placeholder="Descreva o comunicado em 1–3 frases..."
+                rows={4}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="ai-tone">Tom de voz</Label>
+              <Select
+                value={aiTone}
+                onValueChange={(value) => setAiTone(value as AnnouncementTone)}>
+                <SelectTrigger id="ai-tone">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(ANNOUNCEMENT_TONES).map(([key, preset]) => (
+                    <SelectItem key={key} value={key}>
+                      {key.replace(/_/g, " ")} — {preset.description}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAiDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleGenerateWithAI}
+              disabled={aiLoading}>
+              {aiLoading ? <Loader2 className="animate-spin" /> : <Sparkles />}
+              Gerar comunicado
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

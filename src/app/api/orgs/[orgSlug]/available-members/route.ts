@@ -1,6 +1,7 @@
 // src/app/api/orgs/[orgSlug]/available-members/route.ts
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { resolveIdentityMap } from "@/lib/identity";
 
 export async function GET(
   req: Request,
@@ -59,7 +60,7 @@ export async function GET(
     // Busca todos os membros da organização
     const { data: orgMembers, error: orgMembersError } = await supabase2
       .from("org_members")
-      .select("user_id, profiles:profiles!inner(id, full_name)")
+      .select("user_id")
       .eq("org_id", orgId);
 
     if (orgMembersError) {
@@ -74,13 +75,27 @@ export async function GET(
     }
 
     // Filtra os membros da org que não estão na unidade
-    const users = (orgMembers || [])
-      .filter((item: any) => !unitUserIds.includes(item.user_id))
-      .map((item: any) => ({
-        id: item.user_id,
-        name: item.profiles?.full_name ?? null,
-        email: null, // Removido temporariamente
-      }));
+    const candidateIds = (orgMembers || [])
+      .map((item: any) => item.user_id as string)
+      .filter((id) => !unitUserIds.includes(id));
+
+    if (candidateIds.length === 0) {
+      return NextResponse.json({ ok: true, users: [] });
+    }
+
+    const identityMap = await resolveIdentityMap(candidateIds, {
+      svc: supabase2,
+      orgId,
+    });
+
+    const users = candidateIds.map((id) => {
+      const identity = identityMap.get(id);
+      return {
+        id,
+        name: identity?.full_name ?? identity?.email ?? null,
+        email: identity?.email ?? null,
+      };
+    });
 
     return NextResponse.json({ ok: true, users });
   } catch (e: any) {
