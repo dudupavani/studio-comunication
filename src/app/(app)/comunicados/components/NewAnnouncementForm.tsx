@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -21,7 +21,17 @@ import {
   TeamMultiSelect,
   type TeamOption,
 } from "@/components/communication/TeamMultiSelect";
-import { Loader2, Send, CalendarClock, Sparkles } from "lucide-react";
+import {
+  Building2,
+  CalendarClock,
+  Loader2,
+  Send,
+  Smile,
+  Sparkles,
+  SunMedium,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { SelectedRecipients } from "./SelectedRecipients";
@@ -38,18 +48,55 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Toggle } from "@/components/ui/toggle";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   ANNOUNCEMENT_TONES,
   type AnnouncementTone,
 } from "@/lib/ai/announcement-tones";
+import { cn } from "@/lib/utils";
+
+const TONE_OPTIONS: Array<{
+  value: AnnouncementTone;
+  label: string;
+  icon: LucideIcon;
+}> = [
+  {
+    value: "formal_institucional",
+    label: "Formal institucional",
+    icon: Building2,
+  },
+  {
+    value: "amigavel",
+    label: "Amigável",
+    icon: Smile,
+  },
+  {
+    value: "motivacional",
+    label: "Motivacional",
+    icon: SunMedium,
+  },
+  {
+    value: "direto_objetivo",
+    label: "Direto e objetivo",
+    icon: Target,
+  },
+];
+
+type AiOverwriteRequest = {
+  field: "title" | "content";
+  value: string;
+};
 
 export function NewAnnouncementForm() {
   const { toast } = useToast();
@@ -72,8 +119,12 @@ export function NewAnnouncementForm() {
     "formal_institucional"
   );
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiOverwriteQueue, setAiOverwriteQueue] = useState<
+    AiOverwriteRequest[]
+  >([]);
 
   const isScheduling = Boolean(scheduleDate || scheduleTime);
+  const currentAiOverwrite = aiOverwriteQueue[0] ?? null;
 
   const handleScheduleDateChange = useCallback((value: string | null) => {
     setScheduleDate(value ?? "");
@@ -209,17 +260,14 @@ export function NewAnnouncementForm() {
 
   const handleApplyAiResult = useCallback(
     (result: { title: string; body: string }) => {
-      // Título
+      const nextOverwriteRequests: AiOverwriteRequest[] = [];
+
       if (!title.trim()) {
         setTitle(result.title);
-      } else if (
-        typeof window !== "undefined" &&
-        window.confirm("Deseja substituir o título atual pelo gerado?")
-      ) {
-        setTitle(result.title);
+      } else {
+        nextOverwriteRequests.push({ field: "title", value: result.title });
       }
 
-      // Conteúdo
       const plainContent = content
         .replace(/<[^>]+>/g, "")
         .replace(/&nbsp;/gi, " ")
@@ -229,11 +277,12 @@ export function NewAnnouncementForm() {
 
       if (!plainContent) {
         setContent(htmlBody);
-      } else if (
-        typeof window !== "undefined" &&
-        window.confirm("Deseja substituir o texto atual pelo gerado?")
-      ) {
-        setContent(htmlBody);
+      } else {
+        nextOverwriteRequests.push({ field: "content", value: htmlBody });
+      }
+
+      if (nextOverwriteRequests.length > 0) {
+        setAiOverwriteQueue((prev) => [...prev, ...nextOverwriteRequests]);
       }
 
       toast({
@@ -242,6 +291,41 @@ export function NewAnnouncementForm() {
     },
     [content, formatAiBodyToHtml, title, toast]
   );
+
+  const handleResolveAiOverwrite = useCallback(
+    (accept: boolean) => {
+      if (!currentAiOverwrite) return;
+      if (accept) {
+        if (currentAiOverwrite.field === "title") {
+          setTitle(currentAiOverwrite.value);
+        } else {
+          setContent(currentAiOverwrite.value);
+        }
+      }
+      setAiOverwriteQueue((prev) => prev.slice(1));
+    },
+    [currentAiOverwrite]
+  );
+  const handleOverwriteDialogOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        handleResolveAiOverwrite(false);
+      }
+    },
+    [handleResolveAiOverwrite]
+  );
+  const overwriteDialogCopy = currentAiOverwrite
+    ? currentAiOverwrite.field === "title"
+      ? {
+          title: "Substituir conteúdo atual?",
+          description: "Isso irá substituir o conteúdo atual pelo novo.",
+        }
+      : {
+          title: "Substituir conteúdo atual?",
+          description:
+            "Isso irá substituir o texto do comunicado pelo conteúdo gerado pela IA.",
+        }
+    : null;
 
   const handleGenerateWithAI = useCallback(async () => {
     const briefing = aiBriefing.trim();
@@ -290,7 +374,7 @@ export function NewAnnouncementForm() {
     <div className="flex flex-col gap-8">
       <div className="grid grid-cols-6 gap-12">
         <div className="col-span-6 lg:col-span-4 space-y-6">
-          <div className="space-y-6">
+          <div className="space-y-3">
             <div className="space-y-2">
               <Input
                 id="announcement-title"
@@ -305,7 +389,7 @@ export function NewAnnouncementForm() {
                 <Button
                   type="button"
                   size="sm"
-                  variant="secondary"
+                  variant="outline"
                   onClick={() => setAiDialogOpen(true)}
                   disabled={aiLoading}>
                   {aiLoading ? (
@@ -368,13 +452,13 @@ export function NewAnnouncementForm() {
         </div>
 
         <div className="col-span-6 lg:col-span-2 flex flex-col gap-6">
-          <Tabs defaultValue="users" className="flex h-full flex-col gap-4">
+          <Tabs defaultValue="users" className="space-y-2">
             <TabsList className="grid grid-cols-3">
               <TabsTrigger value="users">Usuários</TabsTrigger>
               <TabsTrigger value="groups">Grupos</TabsTrigger>
               <TabsTrigger value="teams">Equipes</TabsTrigger>
             </TabsList>
-            <TabsContent value="users" className="flex h-full flex-col gap-2">
+            <TabsContent value="users" className="space-y-2">
               <p className="text-xs text-muted-foreground">
                 Pesquise e selecione usuários específicos.
               </p>
@@ -412,96 +496,90 @@ export function NewAnnouncementForm() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-sm text-muted-foreground">
-          Selecionados: {totalRecipients} (usuários, grupos e equipes)
-        </span>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <Button variant="outline" onClick={() => router.push("/comunicados")}>
-            Cancelar
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center justify-end sm:gap-4">
+        <Button variant="outline" onClick={() => router.push("/comunicados")}>
+          Cancelar
+        </Button>
+        <ButtonGroup>
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="rounded-none">
+            {submitting ? <Loader2 className="animate-spin" /> : <Send />}
+            Enviar
           </Button>
-          <ButtonGroup>
-            <Button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="rounded-none">
-              {submitting ? <Loader2 className="animate-spin" /> : <Send />}
-              Enviar
-            </Button>
-            <Popover
-              modal={false}
-              open={schedulePopoverOpen}
-              onOpenChange={setSchedulePopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="default"
-                  size="icon"
-                  aria-expanded={schedulePopoverOpen}
-                  className="rounded-none border-0 border-l border-border">
-                  <CalendarClock className="h-4 w-4" />
-                  <span className="sr-only">Agendar envio</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                side="top"
-                align="end"
-                className="w-[320px] space-y-3 p-4 pb-6"
-                sideOffset={12}>
-                <div className="flex flex-col items-start justify-between gap-1">
-                  <h6>Agendar envio</h6>
-                  <p className="text-xs text-muted-foreground">
-                    Defina quando o comunicado será disparado e exibido no
-                    calendário.
-                  </p>
+          <Popover
+            modal={false}
+            open={schedulePopoverOpen}
+            onOpenChange={setSchedulePopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="default"
+                size="icon"
+                aria-expanded={schedulePopoverOpen}
+                className="rounded-none border-0 border-l border-border">
+                <CalendarClock className="h-4 w-4" />
+                <span className="sr-only">Agendar envio</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="top"
+              align="end"
+              className="w-[320px] space-y-3 p-4 pb-6"
+              sideOffset={12}>
+              <div className="flex flex-col items-start justify-between gap-1">
+                <h6>Agendar envio</h6>
+                <p className="text-xs text-muted-foreground">
+                  Defina quando o comunicado será disparado e exibido no
+                  calendário.
+                </p>
+              </div>
+              <div className="flex flex-col gap-4">
+                <div className="space-y-1">
+                  <Label>Data</Label>
+                  <DatePicker
+                    value={scheduleDate || null}
+                    onChange={handleScheduleDateChange}
+                    placeholder="Selecione a data"
+                  />
                 </div>
-                <div className="flex flex-col gap-4">
-                  <div className="space-y-1">
-                    <Label>Data</Label>
-                    <DatePicker
-                      value={scheduleDate || null}
-                      onChange={handleScheduleDateChange}
-                      placeholder="Selecione a data"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="announcement-send-at-time">Horário</Label>
-                    <Input
-                      id="announcement-send-at-time"
-                      type="time"
-                      value={scheduleTime}
-                      onChange={(event) =>
-                        handleScheduleTimeChange(event.target.value)
-                      }
-                    />
-                  </div>
-                  {isScheduling ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleClearSchedule}>
-                      Limpar
-                    </Button>
-                  ) : null}
+                <div className="space-y-1">
+                  <Label htmlFor="announcement-send-at-time">Horário</Label>
+                  <Input
+                    id="announcement-send-at-time"
+                    type="time"
+                    value={scheduleTime}
+                    onChange={(event) =>
+                      handleScheduleTimeChange(event.target.value)
+                    }
+                  />
                 </div>
-              </PopoverContent>
-            </Popover>
-          </ButtonGroup>
-        </div>
+                {isScheduling ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearSchedule}>
+                    Limpar
+                  </Button>
+                ) : null}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </ButtonGroup>
       </div>
 
       <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Gerar comunicado com IA</DialogTitle>
-            <DialogDescription>
-              Escreva um briefing curto e escolha o tom desejado. Nada será
-              salvo automaticamente.
+            <DialogDescription className="text-muted-foreground mb-2">
+              Escreva um briefing curto e escolha o tom desejado para gerar o
+              conteúdo do seu comunicado.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="ai-briefing">Briefing</Label>
               <Textarea
                 id="ai-briefing"
                 value={aiBriefing}
@@ -510,28 +588,46 @@ export function NewAnnouncementForm() {
                 rows={4}
               />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="ai-tone">Tom de voz</Label>
-              <Select
-                value={aiTone}
-                onValueChange={(value) => setAiTone(value as AnnouncementTone)}>
-                <SelectTrigger id="ai-tone">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(ANNOUNCEMENT_TONES).map(([key, preset]) => (
-                    <SelectItem key={key} value={key}>
-                      {key.replace(/_/g, " ")} — {preset.description}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-2">
+              <h6>Tom de voz</h6>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {TONE_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  const description =
+                    ANNOUNCEMENT_TONES[option.value].description;
+                  return (
+                    <Toggle
+                      key={option.value}
+                      type="button"
+                      pressed={aiTone === option.value}
+                      onPressedChange={(pressed) => {
+                        if (!pressed) return;
+                        setAiTone(option.value);
+                      }}
+                      aria-label={`Selecionar tom ${option.label}`}
+                      className={cn(
+                        "flex h-auto w-full justify-start items-start gap-3 rounded-lg border bg-card px-4 py-3 text-left",
+                        "data-[state=on]:border-primary data-[state=on]:bg-primary/5"
+                      )}>
+                      <Icon className="mt-0.5 h-8 w-8 p-2 bg-muted text-primary rounded-md flex-shrink-0" />
+                      <div className="flex flex-col text-left gap-1">
+                        <span className="text-sm font-medium">
+                          {option.label}
+                        </span>
+                        <span className="text-xs font-normal text-muted-foreground">
+                          {description}
+                        </span>
+                      </div>
+                    </Toggle>
+                  );
+                })}
+              </div>
             </div>
           </div>
           <DialogFooter className="gap-2">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => setAiDialogOpen(false)}>
               Cancelar
             </Button>
@@ -545,6 +641,38 @@ export function NewAnnouncementForm() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AlertDialog
+        open={Boolean(currentAiOverwrite)}
+        onOpenChange={handleOverwriteDialogOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {overwriteDialogCopy?.title ?? "Substituir conteúdo?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {overwriteDialogCopy?.description ??
+                "Isso substituirá o conteúdo atual pelo texto gerado."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={(event) => {
+                event.preventDefault();
+                handleResolveAiOverwrite(false);
+              }}>
+              Manter texto atual
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className={buttonVariants({ variant: "default" })}
+              onClick={(event) => {
+                event.preventDefault();
+                handleResolveAiOverwrite(true);
+              }}>
+              Substituir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -25,7 +25,6 @@ export default async function NewAnnouncementPage() {
         </Button>
         <h3>Novo comunicado</h3>
       </div>
-
       <NewAnnouncementForm />
     </div>
   );

@@ -122,11 +122,7 @@ export function UserMultiSelect({
   );
 
   return (
-    <div
-      className={cn(
-        "space-y-3",
-        stretchList && "flex h-full min-h-0 flex-col"
-      )}>
+    <div className={cn("space-y-3", stretchList && "flex flex-col")}>
       {showSelectedSummary ? (
         <div className="flex flex-wrap gap-2">
           {value.map((user) => (
@@ -162,7 +158,9 @@ export function UserMultiSelect({
         <ScrollArea
           className={cn(
             "rounded-md",
-            stretchList ? "flex-1 min-h-0" : "max-h-64"
+            stretchList
+              ? "flex-1 min-h-0 max-h-[500px] overflow-y-auto"
+              : "max-h-full"
           )}>
           <div className="space-y-1">
             {items.map((user) => {
@@ -170,7 +168,7 @@ export function UserMultiSelect({
               return (
                 <label
                   key={user.id}
-                  className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1 hover:bg-muted">
+                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1 hover:bg-muted">
                   <Checkbox
                     checked={checked}
                     onCheckedChange={() => toggleUser(user)}
