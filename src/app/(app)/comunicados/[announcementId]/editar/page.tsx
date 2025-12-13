@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarClock, ArrowLeft, SendHorizontal } from "lucide-react";
-import { getAuthContext } from "@/lib/messages/auth-context";
+import { getAuthContext } from "@/lib/auth-context";
 import { createServiceClient } from "@/lib/supabase/service";
 import { EditAnnouncementForm } from "../../components/EditAnnouncementForm";
 import type { UserOption } from "@/components/communication/UserMultiSelect";
@@ -18,9 +18,9 @@ function toUniqueList(values: (string | null)[]) {
 export default async function EditAnnouncementPage({
   params,
 }: {
-  params: { announcementId: string };
+  params: Promise<{ announcementId: string }>;
 }) {
-  const { announcementId } = params;
+  const { announcementId } = await params;
   const auth = await getAuthContext();
   const svc = createServiceClient();
 
@@ -37,7 +37,7 @@ export default async function EditAnnouncementPage({
   }
 
   const isAuthor =
-    announcement.author_id === auth.userId || auth.isPlatformAdmin;
+    announcement.author_id === auth.userId || auth.platformRole === "platform_admin";
   if (!isAuthor) {
     return notFound();
   }

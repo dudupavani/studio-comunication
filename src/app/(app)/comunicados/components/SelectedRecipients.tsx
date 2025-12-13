@@ -36,7 +36,7 @@ export function SelectedRecipients({
   }
 
   return (
-    <div className="mt-6">
+    <div className="mt-12">
       <div className="flex items-center justify-between mb-2">
         <h6>Destinatários selecionados ({total})</h6>
       </div>
