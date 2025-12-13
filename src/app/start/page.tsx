@@ -14,8 +14,8 @@ export default function StartPage() {
   }, [auth, loading, router]);
 
   return (
-    <section className="flex min-h-screen items-center justify-center px-6">
-      <div className="w-full max-w-md text-center">
+    <section className="flex min-h-screen items-center justify-center px-6 bg-blue-600">
+      <div className="w-full max-w-md text-center text-white">
         <h1>Abrindo…</h1>
         <p>
           {error
@@ -26,4 +26,3 @@ export default function StartPage() {
     </section>
   );
 }
-
