@@ -6,7 +6,10 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/",
     name: "My Saas",
     short_name: "My Saas",
-    start_url: "/?source=pwa",
+    // Evita `start_url` que depende de redirect server-side (ex.: auth), pois em alguns
+    // navegadores/PWA a navegação pode ser respondida pelo service worker com o HTML final
+    // e manter a URL original, causando mismatch/hidratação e tela preta.
+    start_url: "/start?source=pwa",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
@@ -36,7 +39,7 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: "Abrir aplicativo",
         short_name: "Início",
-        url: "/?source=pwa-shortcut",
+        url: "/start?source=pwa-shortcut",
         icons: [
           {
             src: "/icons/icon-192.png",
