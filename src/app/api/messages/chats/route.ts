@@ -21,6 +21,9 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
     const { limit, cursor } = parsePagination(req.nextUrl.searchParams, {
       defaultLimit: 30,
       maxLimit: 100,
@@ -59,6 +62,9 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
     const canCreateChat =
       auth.isPlatformAdmin || auth.isOrgAdmin || auth.isUnitMaster;
     if (!canCreateChat) {

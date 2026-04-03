@@ -8,6 +8,12 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return NextResponse.json(
+        { error: { message: "Sessão inválida." } },
+        { status: 401 }
+      );
+    }
 
     const payload = (await req.json().catch(() => null)) as
       | { scope?: Scope; chatId?: string }

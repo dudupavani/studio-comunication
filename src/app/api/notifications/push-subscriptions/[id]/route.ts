@@ -18,6 +18,9 @@ export async function DELETE(
 
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
 
     const { error } = await supabase
       .from("push_subscriptions")

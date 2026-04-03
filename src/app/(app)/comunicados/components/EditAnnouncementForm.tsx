@@ -31,6 +31,7 @@ type Props = {
   announcementId: string;
   initialTitle: string;
   initialContent: string;
+  initialMediaUrl?: string | null;
   initialAllowComments: boolean;
   initialAllowReactions: boolean;
   initialSendAt?: string | null;
@@ -56,6 +57,7 @@ export function EditAnnouncementForm({
   announcementId,
   initialTitle,
   initialContent,
+  initialMediaUrl,
   initialAllowComments,
   initialAllowReactions,
   initialSendAt,
@@ -67,6 +69,7 @@ export function EditAnnouncementForm({
 
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
+  const [mediaUrl, setMediaUrl] = useState(initialMediaUrl ?? "");
   const [allowComments, setAllowComments] = useState(initialAllowComments);
   const [allowReactions, setAllowReactions] = useState(initialAllowReactions);
   const [users, setUsers] = useState<UserOption[]>(recipients.users);
@@ -183,6 +186,8 @@ export function EditAnnouncementForm({
           content,
           allowComments,
           allowReactions,
+          mediaKind: mediaUrl.trim() ? "image" : undefined,
+          mediaUrl: mediaUrl.trim() || undefined,
           sendAt: sendAtIso,
           userIds: users.map((u) => u.id),
           groupIds: groups.map((g) => g.id),
@@ -214,6 +219,7 @@ export function EditAnnouncementForm({
     announcementId,
     content,
     groups,
+    mediaUrl,
     router,
     scheduleEnabled,
     scheduleLocked,
@@ -254,6 +260,21 @@ export function EditAnnouncementForm({
                 placeholder="Escreva o comunicado..."
                 chatId={`comunicados-${announcementId}`}
               />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="announcement-media-url-edit">
+                URL da imagem (opcional)
+              </Label>
+              <Input
+                id="announcement-media-url-edit"
+                type="url"
+                value={mediaUrl}
+                onChange={(event) => setMediaUrl(event.target.value)}
+                placeholder="https://exemplo.com/imagem.jpg"
+              />
+              <p className="text-xs text-muted-foreground">
+                Define a imagem exibida no card do feed.
+              </p>
             </div>
 
             <SelectedRecipients

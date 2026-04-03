@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarClock, ArrowLeft, SendHorizontal } from "lucide-react";
-import { getAuthContext } from "@/lib/auth-context";
+import { getAuthContext } from "@/lib/messages/auth-context";
+import { canManageAnnouncement } from "@/lib/messages/announcement-access";
 import { createServiceClient } from "@/lib/supabase/service";
 import { EditAnnouncementForm } from "../../components/EditAnnouncementForm";
 import type { UserOption } from "@/components/communication/UserMultiSelect";
@@ -22,31 +23,38 @@ export default async function EditAnnouncementPage({
 }) {
   const { announcementId } = await params;
   const auth = await getAuthContext();
+  if (!auth) {
+    return notFound();
+  }
   const svc = createServiceClient();
 
   const { data: announcement, error } = await svc
     .from("announcements")
     .select(
-      "id, org_id, author_id, title, content, allow_comments, allow_reactions, send_at, sent_at, status"
+      "id, org_id, author_id, title, content, allow_comments, allow_reactions, media_url, send_at, sent_at, status"
     )
     .eq("id", announcementId)
     .maybeSingle();
 
-  if (error || !announcement || announcement.org_id !== auth.orgId) {
+  if (
+    error ||
+    !announcement ||
+    (!auth.isPlatformAdmin && announcement.org_id !== auth.orgId)
+  ) {
     return notFound();
   }
 
-  const isAuthor =
-    announcement.author_id === auth.userId || auth.platformRole === "platform_admin";
-  if (!isAuthor) {
+  if (!canManageAnnouncement(auth, announcement)) {
     return notFound();
   }
+
+  const workingOrgId = announcement.org_id as string;
 
   const { data: recipientRows } = await svc
     .from("announcement_recipients")
     .select("user_id, group_id")
     .eq("announcement_id", announcementId)
-    .eq("org_id", auth.orgId);
+    .eq("org_id", workingOrgId);
 
   const userIds = toUniqueList(
     (recipientRows ?? []).map((row: any) => row.user_id as string | null)
@@ -59,7 +67,7 @@ export default async function EditAnnouncementPage({
   if (userIds.length) {
     const identityMap = await resolveIdentityMap(userIds, {
       svc,
-      orgId: auth.orgId,
+      orgId: workingOrgId,
     });
 
     userIds.forEach((id) => {
@@ -79,13 +87,13 @@ export default async function EditAnnouncementPage({
       .from("user_groups")
       .select("id, name, color")
       .in("id", groupIds)
-      .eq("org_id", auth.orgId);
+      .eq("org_id", workingOrgId);
 
     const { data: members } = await svc
       .from("user_group_members")
       .select("group_id")
       .in("group_id", groupIds)
-      .eq("org_id", auth.orgId);
+      .eq("org_id", workingOrgId);
 
     const countMap = new Map<string, number>();
     (members ?? []).forEach((row: any) => {
@@ -142,6 +150,7 @@ export default async function EditAnnouncementPage({
         announcementId={announcementId}
         initialTitle={announcement.title}
         initialContent={announcement.content}
+        initialMediaUrl={(announcement.media_url as string | null) ?? null}
         initialAllowComments={announcement.allow_comments}
         initialAllowReactions={announcement.allow_reactions}
         initialSendAt={(announcement.send_at as string | null) ?? null}

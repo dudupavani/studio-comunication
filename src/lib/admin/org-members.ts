@@ -1,13 +1,9 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import type { AuthContext } from "@/lib/auth-context";
+import type { Database } from "@/lib/supabase/types";
 
-export type OrgMember = {
-  id: string;
-  org_id: string;
-  user_id: string;
-  role: string;
-  created_at: string;
-};
+type AppRole = Database["public"]["Enums"]["app_role"];
+export type OrgMember = Database["public"]["Tables"]["org_members"]["Row"];
 
 /**
  * Verifica se o usuário autenticado tem permissão para operações administrativas
@@ -55,7 +51,7 @@ export async function adminListMembers(orgId: string): Promise<{ data: OrgMember
 export async function adminUpdateMemberRole(
   orgId: string,
   userId: string,
-  role: string
+  role: AppRole
 ): Promise<{ error: any }> {
   const supabaseAdmin = createServiceClient();
   
@@ -99,7 +95,7 @@ export async function adminRemoveMember(
 export async function adminAddMember(
   orgId: string,
   userId: string,
-  role: string
+  role: AppRole
 ): Promise<{ error: any }> {
   const supabaseAdmin = createServiceClient();
   

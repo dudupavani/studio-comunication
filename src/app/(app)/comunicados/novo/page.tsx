@@ -7,6 +7,9 @@ import { NewAnnouncementForm } from "../components/NewAnnouncementForm";
 
 export default async function NewAnnouncementPage() {
   const auth = await getAuthContext();
+  if (!auth) {
+    return notFound();
+  }
   const canCreate =
     auth.isPlatformAdmin || auth.isOrgAdmin || auth.isUnitMaster;
 

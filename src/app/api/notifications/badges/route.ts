@@ -6,6 +6,12 @@ export async function GET() {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return NextResponse.json(
+        { error: { message: "Sessão inválida." } },
+        { status: 401 }
+      );
+    }
 
     const inboxQuery = supabase
       .from("notifications")

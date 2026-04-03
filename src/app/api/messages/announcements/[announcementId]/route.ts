@@ -7,6 +7,8 @@ import {
   handleRouteError,
 } from "@/lib/messages/api-helpers";
 import { updateAnnouncementSchema } from "@/lib/messages/validations";
+import { canManageAnnouncement } from "@/lib/messages/announcement-access";
+import { resolveAnnouncementMediaFields } from "@/lib/messages/announcement-media";
 import { logError } from "@/lib/log";
 import type { Database } from "@/lib/supabase/types";
 
@@ -44,6 +46,9 @@ export async function PATCH(
     const supabaseUser = createServerClientWithCookies();
     const svc = createServiceClient();
     const auth = await getAuthContext(supabaseUser);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
     const raw = await req.json().catch(() => null);
     const parsed = updateAnnouncementSchema.safeParse(raw ?? {});
 
@@ -58,25 +63,48 @@ export async function PATCH(
     const { data: existing, error: loadErr } = await svc
       .from("announcements")
       .select(
-        "id, org_id, author_id, title, content, allow_comments, allow_reactions, send_at, sent_at, status, calendar_event_id"
+        "id, org_id, author_id, title, content, allow_comments, allow_reactions, media_kind, media_url, media_thumbnail_url, send_at, sent_at, status, calendar_event_id"
       )
       .eq("id", announcementId)
       .maybeSingle();
 
-    if (loadErr || !existing || existing.org_id !== auth.orgId) {
+    if (
+      loadErr ||
+      !existing ||
+      (!auth.isPlatformAdmin && existing.org_id !== auth.orgId)
+    ) {
       return errorResponse(404, "not_found", "Comunicado não encontrado.");
     }
 
-    const isAuthor = existing.author_id === auth.userId || auth.isPlatformAdmin;
-    if (!isAuthor) {
+    if (!canManageAnnouncement(auth, existing)) {
       return errorResponse(
         403,
         "forbidden",
-        "Apenas o criador do comunicado pode editá-lo."
+        "Apenas o autor, o master da matriz ou o admin global podem editá-lo."
       );
     }
 
+    const workingOrgId = existing.org_id;
+
     const payload = parsed.data;
+    const hasMediaOverride =
+      payload.mediaKind !== undefined ||
+      payload.mediaUrl !== undefined ||
+      payload.mediaThumbnailUrl !== undefined;
+    const resolvedMedia = resolveAnnouncementMediaFields({
+      content: payload.content,
+      mediaKind: payload.mediaKind,
+      mediaUrl: payload.mediaUrl,
+      mediaThumbnailUrl: payload.mediaThumbnailUrl,
+    });
+    const mediaPatch = hasMediaOverride
+      ? resolvedMedia
+      : {
+          media_kind: (existing.media_kind as "image" | "video" | null) ?? null,
+          media_url: (existing.media_url as string | null) ?? null,
+          media_thumbnail_url:
+            (existing.media_thumbnail_url as string | null) ?? null,
+        };
 
     const userIdSet = new Set<string>(
       (payload.userIds ?? []).filter((id): id is string => !!id)
@@ -89,7 +117,7 @@ export async function PATCH(
         .from("equipe_members")
         .select("user_id")
         .in("equipe_id", teamIds)
-        .eq("org_id", auth.orgId);
+        .eq("org_id", workingOrgId);
 
       if (teamMembersError) {
         logError("ANNOUNCEMENTS update load team members", teamMembersError);
@@ -106,7 +134,7 @@ export async function PATCH(
         .from("user_group_members")
         .select("user_id")
         .in("group_id", groupIds)
-        .eq("org_id", auth.orgId);
+        .eq("org_id", workingOrgId);
 
       if (groupMembersError) {
         logError("ANNOUNCEMENTS update load group members", groupMembersError);
@@ -159,12 +187,15 @@ export async function PATCH(
         content: payload.content,
         allow_comments: payload.allowComments,
         allow_reactions: payload.allowReactions,
+        media_kind: mediaPatch.media_kind,
+        media_url: mediaPatch.media_url,
+        media_thumbnail_url: mediaPatch.media_thumbnail_url,
         send_at: nextStatus === "scheduled" ? sendAtIso : null,
         status: nextStatus,
         sent_at: nextStatus === "sent" ? sentAtIso : null,
       })
       .eq("id", announcementId)
-      .eq("org_id", auth.orgId);
+      .eq("org_id", workingOrgId);
 
     if (updateErr) {
       logError("ANNOUNCEMENTS update error", updateErr);
@@ -179,13 +210,13 @@ export async function PATCH(
     const recipientRows = [
       ...userIds.map((id) => ({
         announcement_id: announcementId,
-        org_id: auth.orgId,
+        org_id: workingOrgId,
         user_id: id,
         group_id: null,
       })),
       ...groupIds.map((id) => ({
         announcement_id: announcementId,
-        org_id: auth.orgId,
+        org_id: workingOrgId,
         user_id: null,
         group_id: id,
       })),
@@ -229,7 +260,7 @@ export async function PATCH(
             } satisfies Database["public"]["Tables"]["calendar_events"]["Row"]["metadata"],
           })
           .eq("id", existing.calendar_event_id)
-          .eq("org_id", auth.orgId);
+          .eq("org_id", workingOrgId);
 
         if (calendarUpdateErr) {
           logError("ANNOUNCEMENTS update calendar error", calendarUpdateErr);
@@ -238,7 +269,7 @@ export async function PATCH(
         const { data: calendarEvent, error: calendarErr } = await svc
           .from("calendar_events")
           .insert({
-            org_id: auth.orgId,
+            org_id: workingOrgId,
             unit_id: null,
             title: `Comunicado: ${eventTitle}`,
             description: snippet,
@@ -266,7 +297,7 @@ export async function PATCH(
         }
       }
     } else if (existing.calendar_event_id) {
-      await removeCalendarEvent(svc, existing.calendar_event_id, auth.orgId);
+      await removeCalendarEvent(svc, existing.calendar_event_id, workingOrgId);
       await svc
         .from("announcements")
         .update({ calendar_event_id: null })
@@ -278,7 +309,7 @@ export async function PATCH(
       finalRecipients.delete(auth.userId);
       const snippet = buildAnnouncementSnippet(payload.content);
       const notificationRows = Array.from(finalRecipients).map((userId) => ({
-        org_id: auth.orgId,
+        org_id: workingOrgId,
         user_id: userId,
         type: "announcement.sent" as const,
         title: payload.title,
@@ -286,7 +317,7 @@ export async function PATCH(
         action_url: "/comunicados",
         metadata: {
           announcement_id: announcementId,
-          org_id: auth.orgId,
+          org_id: workingOrgId,
           title: payload.title,
         },
       }));
@@ -330,6 +361,9 @@ export async function DELETE(
     const supabaseUser = createServerClientWithCookies();
     const svc = createServiceClient();
     const auth = await getAuthContext(supabaseUser);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
 
     const { data: existing, error: loadErr } = await svc
       .from("announcements")
@@ -337,18 +371,23 @@ export async function DELETE(
       .eq("id", announcementId)
       .maybeSingle();
 
-    if (loadErr || !existing || existing.org_id !== auth.orgId) {
+    if (
+      loadErr ||
+      !existing ||
+      (!auth.isPlatformAdmin && existing.org_id !== auth.orgId)
+    ) {
       return errorResponse(404, "not_found", "Comunicado não encontrado.");
     }
 
-    const isAuthor = existing.author_id === auth.userId || auth.isPlatformAdmin;
-    if (!isAuthor) {
+    if (!canManageAnnouncement(auth, existing)) {
       return errorResponse(
         403,
         "forbidden",
-        "Apenas o criador do comunicado pode removê-lo."
+        "Apenas o autor, o master da matriz ou o admin global podem removê-lo."
       );
     }
+
+    const workingOrgId = existing.org_id;
 
     await svc
       .from("announcement_comments")
@@ -363,13 +402,13 @@ export async function DELETE(
       .delete()
       .eq("announcement_id", announcementId);
 
-    await removeCalendarEvent(svc, existing.calendar_event_id, auth.orgId);
+    await removeCalendarEvent(svc, existing.calendar_event_id, workingOrgId);
 
     const { error: deleteErr } = await svc
       .from("announcements")
       .delete()
       .eq("id", announcementId)
-      .eq("org_id", auth.orgId);
+      .eq("org_id", workingOrgId);
 
     if (deleteErr) {
       logError("ANNOUNCEMENTS delete error", deleteErr);

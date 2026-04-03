@@ -14,6 +14,9 @@ export async function POST(
     const supabaseUser = createServerClientWithCookies();
     const auth = await getAuthContext(supabaseUser);
     const svc = createServiceClient();
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
 
     const announcement = await getAnnouncementIfRecipient(
       svc,
@@ -27,7 +30,7 @@ export async function POST(
     const { error } = await svc.from("announcement_views").insert({
       announcement_id: announcementId,
       user_id: auth.userId,
-      org_id: auth.orgId,
+      org_id: announcement.org_id,
     });
 
     if (error) {
@@ -44,4 +47,3 @@ export async function POST(
     return handleRouteError(err);
   }
 }
-

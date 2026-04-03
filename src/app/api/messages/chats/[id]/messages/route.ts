@@ -113,6 +113,9 @@ export async function GET(
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
 
     const member = await isChatMember(supabase, chatId, auth.userId);
     if (!member) {
@@ -186,6 +189,9 @@ export async function POST(
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
 
     const member = await isChatMember(supabase, chatId, auth.userId);
     if (!member) {

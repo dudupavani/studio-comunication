@@ -1,32 +1,35 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CalendarClock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Loader2, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  ANNOUNCEMENT_REACTIONS,
-  type AnnouncementItem,
-} from "@/lib/messages/announcement-entities";
-import AnnouncementModal from "./AnnouncementModal";
+import type { AnnouncementItem } from "@/lib/messages/announcement-entities";
+import UserSummary from "@/components/shared/user-summary";
 import { sanitizeHtml } from "@/lib/utils/sanitize";
 
-export default function AnnouncementCard({
-  announcement,
-}: {
+type Props = {
   announcement: AnnouncementItem;
-}) {
+};
+
+export default function AnnouncementCard({ announcement }: Props) {
   const router = useRouter();
   const { toast } = useToast();
-  const [comment, setComment] = useState("");
-  const [isPending, startTransition] = useTransition();
   const [reactionPending, setReactionPending] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+
+  const isScheduled = announcement.status === "scheduled";
+  const displayDate =
+    announcement.publishedAt ??
+    (isScheduled ? announcement.sendAt : announcement.sentAt) ??
+    announcement.createdAt;
+  const commentCount = announcement.comments?.length ?? 0;
+  const reactionSummary = announcement.reactions?.find(
+    (reaction) => reaction.emoji === "👍"
+  );
 
   const sanitizedPreview = useMemo(
     () =>
@@ -36,43 +39,7 @@ export default function AnnouncementCard({
     [announcement.contentPreview, announcement.fullContent]
   );
 
-  useEffect(() => {
-    setComment("");
-  }, [announcement.announcementId]);
-
-  const submitComment = async () => {
-    if (!announcement.allowComments) return;
-    const trimmed = comment.trim();
-    if (!trimmed.length) {
-      toast({ title: "Comentário vazio", variant: "destructive" });
-      return;
-    }
-    startTransition(() => {
-      (async () => {
-        const res = await fetch(
-          `/api/comunicados/${announcement.announcementId}/comments`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content: trimmed }),
-          }
-        );
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          toast({
-            title: "Erro ao comentar",
-            description: body?.error ?? res.statusText,
-            variant: "destructive",
-          });
-          return;
-        }
-        setComment("");
-        router.refresh();
-      })();
-    });
-  };
-
-  const toggleReaction = async (emoji: string) => {
+  const toggleReaction = async () => {
     if (!announcement.allowReactions || reactionPending) return;
     setReactionPending(true);
     try {
@@ -81,9 +48,10 @@ export default function AnnouncementCard({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ emoji }),
+          body: JSON.stringify({ emoji: "👍" }),
         }
       );
+
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         toast({
@@ -93,168 +61,90 @@ export default function AnnouncementCard({
         });
         return;
       }
+
       router.refresh();
     } finally {
       setReactionPending(false);
     }
   };
 
-  const reactions =
-    announcement.reactions ??
-    ANNOUNCEMENT_REACTIONS.map((emoji) => ({
-      emoji,
-      count: 0,
-      reacted: false,
-    }));
-
-  const isScheduled = announcement.status === "scheduled";
-  const commentCount = announcement.comments?.length ?? 0;
-
   return (
-    <Card className="border border-gray-200">
-      <CardContent className="p-0">
-        <AnnouncementModal announcement={announcement}>
-          <button
-            type="button"
-            className="w-full space-y-6 px-4 py-6 sm:py-4 sm:px-6 md:py-6 md:px-8">
-            <div className="space-y-1 text-left">
-              <div className="text-xs text-muted-foreground mb-2 sm:mb-0">
-                <div>{new Date(announcement.createdAt).toLocaleString()}</div>
-                {isScheduled ? (
-                  <span className="inline-flex items-center justify-end rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                    Agendado
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-base sm:text-lg font-semibold">
-                {announcement.title}
-              </p>
-              <div
-                className="text-sm max-w-none text-muted-foreground line-clamp-3"
-                dangerouslySetInnerHTML={{
-                  __html: sanitizedPreview,
-                }}
+    <Card className="border border-border">
+      <CardContent className="space-y-4 p-4 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <UserSummary
+            avatarUrl={announcement.senderAvatar}
+            name={announcement.senderName || "Remetente desconhecido"}
+            subtitle={announcement.senderTitle ?? undefined}
+            fallback="Remetente"
+          />
+
+          <div className="space-y-1 text-right text-xs text-muted-foreground">
+            <div>{new Date(displayDate).toLocaleString()}</div>
+            {isScheduled ? (
+              <Badge variant="violet">
+                <CalendarClock />
+                Agendado
+              </Badge>
+            ) : (
+              <Badge variant="outline">Publicado</Badge>
+            )}
+          </div>
+        </div>
+
+        <Link
+          href={`/comunicados/${announcement.announcementId}`}
+          className="block space-y-3">
+          {announcement.media?.kind === "image" ? (
+            <div className="overflow-hidden rounded-xl border border-border bg-muted">
+              <img
+                src={announcement.media.url}
+                alt={announcement.title}
+                className="h-56 w-full object-cover"
               />
             </div>
-          </button>
-        </AnnouncementModal>
+          ) : null}
 
-        {announcement.allowComments || announcement.allowReactions ? (
-          <div className="flex items-center justify-between pb-6 px-4 sm:px-6 md:px-8">
-            {announcement.allowReactions ? (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={reactions?.[0]?.reacted ? "secondary" : "outline"}
-                  disabled={reactionPending}
-                  onClick={() => toggleReaction("👍")}
-                  className="px-2">
-                  <span className="mr-0 text-base sm:text-lg">👍</span>
-                  {reactions?.[0]?.count ? (
-                    <span>{reactions[0].count}</span>
-                  ) : null}
-                </Button>
-              </div>
-            ) : null}
-            {announcement.allowComments ? (
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                onClick={() => setShowComments((prev) => !prev)}>
-                <span className="text-xs sm:text-sm flex items-center gap-1">
-                  Comentários ({commentCount})
-                  <ChevronDown
-                    className={cn(
-                      "transition-transform",
-                      showComments ? "rotate-180" : "rotate-0"
-                    )}
-                    size={14}
-                  />
-                </span>
-              </Button>
-            ) : null}
+          <div className="space-y-1">
+            <p className="line-clamp-2 font-semibold">{announcement.title}</p>
+            <div
+              className="line-clamp-3 text-sm text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: sanitizedPreview }}
+            />
           </div>
-        ) : null}
+        </Link>
 
-        {announcement.allowComments && showComments ? (
-          <div className="space-y-4 border-t border-gray-200 px-2 sm:px-4 md:px-6 py-2 sm:py-4 md:py-6 bg-muted">
-            <div className="space-y-2">
-              {commentCount > 0
-                ? announcement.comments!.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="rounded-xl border p-4 text-sm space-y-4 sm:space-y-2 bg-white">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9 border border-white shadow-sm">
-                            <AvatarImage
-                              src={comment.authorAvatar ?? undefined}
-                              alt={comment.authorName ?? "Usuário"}
-                            />
-                            <AvatarFallback>
-                              {initialsFromName(comment.authorName)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-primary">
-                              {comment.authorName
-                                ? comment.isMine
-                                  ? `${comment.authorName} (você)`
-                                  : comment.authorName
-                                : "Usuário"}
-                            </span>
-                            {comment.authorTitle ? (
-                              <span className="text-xs text-muted-foreground">
-                                {comment.authorTitle}
-                              </span>
-                            ) : null}
-                          </div>
-                        </div>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap sm:pl-0">
-                          {new Date(comment.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                      <p className="mt-1 sm:pl-12 whitespace-pre-wrap text-sm text-primary">
-                        {comment.content}
-                      </p>
-                    </div>
-                  ))
-                : null}
-            </div>
-            <div className="flex relative">
-              <Textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Escreva um comentário..."
-                className="min-h-[40px] text-sm bg-white"
-              />
-              <div className="absolute right-2 bottom-2">
-                <Button
-                  type="button"
-                  size="icon-md"
-                  variant="secondary"
-                  disabled={isPending}
-                  onClick={submitComment}>
-                  {isPending ? <Loader2 className="animate-spin" /> : <Send />}
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : null}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+          {announcement.allowReactions ? (
+            <Button
+              type="button"
+              size="sm"
+              variant={reactionSummary?.reacted ? "secondary" : "outline"}
+              disabled={reactionPending}
+              onClick={toggleReaction}
+              className="px-2">
+              <span className="mr-0 text-base sm:text-lg">👍</span>
+              {reactionSummary?.count ? <span>{reactionSummary.count}</span> : null}
+            </Button>
+          ) : (
+            <div />
+          )}
+
+          {announcement.allowComments ? (
+            <Button asChild variant="link" size="sm" className="px-0">
+              <Link href={`/comunicados/${announcement.announcementId}`}>
+                Comentários ({commentCount})
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="link" size="sm" className="px-0">
+              <Link href={`/comunicados/${announcement.announcementId}`}>
+                Abrir post
+              </Link>
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
-}
-
-function initialsFromName(name?: string | null) {
-  if (!name) return "??";
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 }

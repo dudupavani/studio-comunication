@@ -17,6 +17,14 @@ export type AnnouncementReactionSummary = {
   reacted: boolean;
 };
 
+export type AnnouncementMediaKind = "image" | "video";
+
+export type AnnouncementMedia = {
+  kind: AnnouncementMediaKind;
+  url: string;
+  thumbnailUrl?: string | null;
+};
+
 export type AnnouncementItem = {
   announcementId: string;
   title: string;
@@ -25,11 +33,13 @@ export type AnnouncementItem = {
   senderAvatar?: string | null;
   senderTitle?: string | null;
   createdAt: string;
+  publishedAt?: string | null;
   sendAt?: string | null;
   sentAt?: string | null;
   status?: "sent" | "scheduled";
   allowComments: boolean;
   allowReactions: boolean;
+  media?: AnnouncementMedia | null;
   contentPreview: string;
   fullContent?: string;
   comments?: AnnouncementComment[];

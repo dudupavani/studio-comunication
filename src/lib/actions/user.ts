@@ -9,7 +9,7 @@ import type { PlatformRole, OrgRole, UnitRole } from "@/lib/types/roles";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import { safeDeleteUser } from "@/lib/auth/safe-delete";
 import type { TablesInsert } from "@/lib/supabase/types";
-import { adminAddMember } from "@/lib/admin/org-members";
+import { adminAddMember, adminUpdateMemberRole } from "@/lib/admin/org-members";
 
 /** Admin client (service_role) – usar só em Server Actions / Route Handlers */
 async function getAdminClient() {

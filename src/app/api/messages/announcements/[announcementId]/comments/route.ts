@@ -19,6 +19,9 @@ export async function POST(
     const supabaseUser = createServerClientWithCookies();
     const auth = await getAuthContext(supabaseUser);
     const svc = createServiceClient();
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
 
     const raw = await req.json().catch(() => null);
     const parsed = bodySchema.safeParse(raw ?? {});
@@ -26,7 +29,7 @@ export async function POST(
       return errorResponse(
         400,
         "validation_error",
-        parsed.error.issues.map((i) => i.message).join("; ") ||
+        parsed.error.issues.map((issue) => issue.message).join("; ") ||
           "Comentário inválido"
       );
     }

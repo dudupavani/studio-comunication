@@ -28,6 +28,9 @@ export async function POST(req: NextRequest) {
   try {
     const supabaseUser = createServerClientWithCookies();
     const auth = await getAuthContext(supabaseUser);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
     const canManageMessages =
       auth.isPlatformAdmin || auth.isOrgAdmin || auth.isUnitMaster;
     if (!canManageMessages) {

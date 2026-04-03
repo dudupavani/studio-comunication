@@ -20,6 +20,9 @@ export default async function ChatsChatPage({
   const { id: chatId } = await params;
   const supabase = createServerClientReadOnly();
   const auth = await getAuthContext(supabase);
+  if (!auth) {
+    return notFound();
+  }
 
   const member = await isChatMember(supabase, chatId, auth.userId);
   if (!member) {

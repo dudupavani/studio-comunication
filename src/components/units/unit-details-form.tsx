@@ -46,7 +46,6 @@ export default function UnitDetailsForm({ unit }: { unit: Unit }) {
   return (
     <>
       <form
-        // @ts-expect-error Server Action
         action={action}
         className="space-y-4 max-w-2xl">
       <input type="hidden" name="orgId" value={unit.org_id} />

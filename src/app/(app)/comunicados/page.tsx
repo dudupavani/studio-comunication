@@ -1,4 +1,5 @@
 import { getAuthContext } from "@/lib/messages/auth-context";
+import { notFound } from "next/navigation";
 import MessagesAnnouncements from "./components/MessagesAnnouncements";
 import {
   fetchAnnouncementItems,
@@ -8,14 +9,21 @@ import type { AnnouncementItem } from "@/lib/messages/announcement-entities";
 
 export default async function ComunicadosPage() {
   const auth = await getAuthContext();
+  if (!auth) {
+    return notFound();
+  }
   const canCreate =
     auth.isPlatformAdmin || auth.isOrgAdmin || auth.isUnitMaster;
   const canViewSentTab =
-    auth.isOrgAdmin || auth.isUnitMaster || auth.role === "org_master";
+    auth.isPlatformAdmin ||
+    auth.isOrgAdmin ||
+    auth.isUnitMaster ||
+    auth.role === "org_master";
   const canViewMetrics = auth.isOrgAdmin || auth.isPlatformAdmin;
 
   const receivedPromise = fetchAnnouncementItems(auth.userId, auth.orgId, {
     withDetails: true,
+    includeAllForPlatform: auth.isPlatformAdmin,
   });
   const sentPromise: Promise<AnnouncementItem[]> = canViewSentTab
     ? fetchAuthoredAnnouncements(auth.userId, auth.orgId, {
@@ -43,7 +51,7 @@ export default async function ComunicadosPage() {
         canCreateAnnouncements={canCreate}
         canViewSentTab={canViewSentTab}
         canViewMetrics={canViewMetrics}
-        receivedAnnouncements={receivedAnnouncements}
+        feedAnnouncements={receivedAnnouncements}
         sentItems={sentItems}
       />
     </div>

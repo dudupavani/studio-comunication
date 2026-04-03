@@ -11,6 +11,9 @@ export async function GET() {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
 
     const { data, error } = await supabase
       .from("push_subscriptions")
@@ -34,6 +37,9 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
     const rawBody = await req.json().catch(() => null);
     const parsed = createPushSubscriptionSchema.safeParse(rawBody ?? {});
 

@@ -43,7 +43,6 @@ export default function FormDialog({
       }>
       <form
         id="__modal_form"
-        // @ts-expect-error Server Action
         action={formAction}
         className="grid gap-3">
         {children}

@@ -3,7 +3,7 @@ import { CirclePlus, ChartColumn } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnnouncementCard from "./AnnouncementCard";
-import { SentAnnouncementsTable } from "./SentAnnouncementsTable";
+import { SentAnnouncementCard } from "./SentAnnouncementCard";
 import { Button } from "@/components/ui/button";
 import type { AnnouncementItem } from "@/lib/messages/announcement-entities";
 
@@ -11,7 +11,7 @@ type MessagesAnnouncementsProps = {
   canCreateAnnouncements: boolean;
   canViewSentTab: boolean;
   canViewMetrics: boolean;
-  receivedAnnouncements: AnnouncementItem[];
+  feedAnnouncements: AnnouncementItem[];
   sentItems: AnnouncementItem[];
 };
 
@@ -19,19 +19,19 @@ export default function MessagesAnnouncements({
   canCreateAnnouncements,
   canViewSentTab,
   canViewMetrics,
-  receivedAnnouncements,
+  feedAnnouncements,
   sentItems,
 }: MessagesAnnouncementsProps) {
-  const defaultTab = "received";
+  const defaultTab = "feed";
 
   return (
     <div className="flex flex-col h-full gap-4">
       <Tabs defaultValue={defaultTab} className="flex h-full flex-col gap-4">
         <div className="flex items-center justify-between gap-2">
           <TabsList>
-            <TabsTrigger value="received">Recebidos</TabsTrigger>
+            <TabsTrigger value="feed">Feed</TabsTrigger>
             {canViewSentTab ? (
-              <TabsTrigger value="sent">Enviados</TabsTrigger>
+              <TabsTrigger value="sent">Meus enviados</TabsTrigger>
             ) : null}
           </TabsList>
           <div className="flex items-center gap-2">
@@ -63,27 +63,32 @@ export default function MessagesAnnouncements({
                 </CardContent>
               </Card>
             ) : (
-              <div className="sm:border sm:border-border sm:rounded-lg">
-                <SentAnnouncementsTable items={sentItems} />
+              <div className="space-y-3">
+                {sentItems.map((item) => (
+                  <SentAnnouncementCard
+                    key={item.announcementId}
+                    announcement={item}
+                  />
+                ))}
               </div>
             )}
           </TabsContent>
         ) : null}
 
-        <TabsContent value="received" className="flex-1">
-          {receivedAnnouncements.length === 0 ? (
+        <TabsContent value="feed" className="flex-1">
+          {feedAnnouncements.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-8 text-center text-sm text-muted-foreground space-y-2">
-                <div>Nenhum comunicado recebido ainda.</div>
+                <div>Nenhum post disponível no feed.</div>
                 <div className="text-xs">
-                  Assim que algum gestor publicar um comunicado para você, ele
-                  aparecerá aqui.
+                  Quando um novo informe for publicado para você, ele aparecerá
+                  aqui.
                 </div>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-3">
-              {receivedAnnouncements.map((item) => (
+              {feedAnnouncements.map((item) => (
                 <AnnouncementCard
                   key={item.announcementId}
                   announcement={item}

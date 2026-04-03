@@ -104,6 +104,7 @@ export function NewAnnouncementForm() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [mediaUrl, setMediaUrl] = useState("");
   const [allowComments, setAllowComments] = useState(true);
   const [allowReactions, setAllowReactions] = useState(true);
   const [users, setUsers] = useState<UserOption[]>([]);
@@ -210,6 +211,8 @@ export function NewAnnouncementForm() {
           content,
           allowComments,
           allowReactions,
+          mediaKind: mediaUrl.trim() ? "image" : undefined,
+          mediaUrl: mediaUrl.trim() || undefined,
           ...(sendAtIso ? { sendAt: sendAtIso } : {}),
           userIds: users.map((u) => u.id),
           groupIds: groups.map((g) => g.id),
@@ -240,6 +243,7 @@ export function NewAnnouncementForm() {
     allowReactions,
     content,
     groups,
+    mediaUrl,
     router,
     scheduleDate,
     scheduleTime,
@@ -407,6 +411,19 @@ export function NewAnnouncementForm() {
                 chatId="comunicados"
                 minHeight="240px"
               />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="announcement-media-url">URL da imagem (opcional)</Label>
+              <Input
+                id="announcement-media-url"
+                type="url"
+                value={mediaUrl}
+                onChange={(event) => setMediaUrl(event.target.value)}
+                placeholder="https://exemplo.com/imagem.jpg"
+              />
+              <p className="text-xs text-muted-foreground">
+                A imagem aparece no card do feed. Vídeo ficará para V2.
+              </p>
             </div>
             <SelectedRecipients
               users={users}

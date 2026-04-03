@@ -45,7 +45,6 @@ export function AddUnitModal({
         </DialogHeader>
 
         <form
-          // @ts-expect-error Server Action
           action={handleAction}
           className="grid gap-4">
           <Input name="name" placeholder="Nome da unidade" required autoFocus />

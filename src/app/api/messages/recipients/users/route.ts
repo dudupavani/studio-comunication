@@ -9,6 +9,9 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
     const svc = createServiceClient();
 
     const searchParams = req.nextUrl.searchParams;

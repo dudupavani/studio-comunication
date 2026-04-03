@@ -81,7 +81,6 @@ export default async function UnitPage({
           {/* === Aba: Detalhes === */}
           <TabsContent value="settings" className="mt-6">
             <form
-              // @ts-expect-error Server Action
               action={saveSettingsAction}
               className="space-y-6 max-w-2xl">
               {/* Nome */}

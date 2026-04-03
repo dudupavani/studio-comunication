@@ -20,6 +20,9 @@ export async function POST(
     const supabaseUser = createServerClientWithCookies();
     const auth = await getAuthContext(supabaseUser);
     const svc = createServiceClient();
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
 
     const raw = await req.json().catch(() => null);
     const parsed = bodySchema.safeParse(raw ?? {});

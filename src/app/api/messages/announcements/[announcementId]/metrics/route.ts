@@ -7,6 +7,7 @@ import {
   handleRouteError,
 } from "@/lib/messages/api-helpers";
 import { resolveIdentityMap } from "@/lib/identity";
+import { canManageAnnouncement } from "@/lib/messages/announcement-access";
 
 type ViewerRow = {
   user_id: string | null;
@@ -83,6 +84,9 @@ export async function GET(
     const supabaseUser = createServerClientWithCookies();
     const auth = await getAuthContext(supabaseUser);
     const svc = createServiceClient();
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
 
     const { data: announcement, error: announcementErr } = await svc
       .from("announcements")
@@ -93,18 +97,15 @@ export async function GET(
     if (announcementErr || !announcement) {
       return errorResponse(404, "not_found", "Comunicado não encontrado.");
     }
-    if (announcement.org_id !== auth.orgId) {
+    if (!auth.isPlatformAdmin && announcement.org_id !== auth.orgId) {
       return errorResponse(403, "forbidden", "Acesso negado.");
     }
 
-    const canViewMetrics =
-      auth.isPlatformAdmin ||
-      auth.isOrgAdmin ||
-      announcement.author_id === auth.userId;
-
-    if (!canViewMetrics) {
+    if (!canManageAnnouncement(auth, announcement)) {
       return errorResponse(403, "forbidden", "Acesso negado.");
     }
+
+    const workingOrgId = announcement.org_id;
 
     const [{ data: viewRows, error: viewsError }, { data: likeRows, error: likeError }] =
       await Promise.all([
@@ -133,7 +134,7 @@ export async function GET(
     const { data: recipientRows, error: recipientError } = await svc
       .from("notifications")
       .select("user_id")
-      .eq("org_id", auth.orgId)
+      .eq("org_id", workingOrgId)
       .eq("type", "announcement.sent")
       .contains("metadata", { announcement_id: announcementId });
 
@@ -179,7 +180,7 @@ export async function GET(
     const identities = await buildIdentityMap(
       svc,
       uniqueViewers,
-      announcement.org_id
+      workingOrgId
     );
 
     const viewers = uniqueViewers

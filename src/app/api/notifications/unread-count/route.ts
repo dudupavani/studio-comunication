@@ -11,6 +11,9 @@ export async function GET(_req: NextRequest) {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
     const count = await countUnreadNotifications(supabase, auth.userId, auth.orgId);
     return NextResponse.json({ count });
   } catch (err) {

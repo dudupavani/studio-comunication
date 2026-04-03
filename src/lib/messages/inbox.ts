@@ -1,7 +1,13 @@
 import { createServerClientReadOnly } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import type { Database } from "@/lib/supabase/types";
+import type { AuthContext } from "@/lib/messages/auth-context";
 import { fetchChats } from "./queries";
 import type { ChatSummary } from "./types";
+import {
+  canManageAnnouncement,
+  getAnnouncementViewAccess,
+} from "./announcement-access";
 import {
   ANNOUNCEMENT_REACTIONS,
   type AnnouncementComment,
@@ -37,6 +43,26 @@ export type InboxItem =
       createdAt: string;
     };
 
+type AnnouncementRow = Pick<
+  Database["public"]["Tables"]["announcements"]["Row"],
+  | "id"
+  | "author_id"
+  | "title"
+  | "content"
+  | "allow_comments"
+  | "allow_reactions"
+  | "created_at"
+  | "status"
+  | "send_at"
+  | "sent_at"
+  | "media_kind"
+  | "media_url"
+  | "media_thumbnail_url"
+>;
+
+const ANNOUNCEMENT_SELECT_FIELDS =
+  "id,author_id,title,content,allow_comments,allow_reactions,created_at,status,send_at,sent_at,media_kind,media_url,media_thumbnail_url" as const;
+
 function toPlain(text: string | null | undefined) {
   if (!text) return null;
   const plain = text
@@ -44,6 +70,67 @@ function toPlain(text: string | null | undefined) {
     .replace(/\s+/g, " ")
     .trim();
   return plain.length ? plain : null;
+}
+
+function toAnnouncementMedia(row: AnnouncementRow): AnnouncementItem["media"] {
+  if (!row.media_url) {
+    return null;
+  }
+
+  return {
+    kind: row.media_kind === "video" ? "video" : "image",
+    url: row.media_url,
+    thumbnailUrl: row.media_thumbnail_url ?? null,
+  };
+}
+
+function getAnnouncementPublishedAt(row: AnnouncementRow) {
+  return row.status === "sent" ? row.sent_at ?? row.created_at : null;
+}
+
+function getAnnouncementTimelineTimestamp(item: AnnouncementItem) {
+  const reference =
+    item.publishedAt ??
+    (item.status === "scheduled" ? item.sendAt : item.sentAt) ??
+    item.createdAt;
+  const timestamp = reference ? new Date(reference).getTime() : NaN;
+  return Number.isNaN(timestamp) ? new Date(item.createdAt).getTime() : timestamp;
+}
+
+function sortAnnouncementItems(items: AnnouncementItem[]) {
+  return [...items].sort(
+    (a, b) =>
+      getAnnouncementTimelineTimestamp(b) -
+      getAnnouncementTimelineTimestamp(a)
+  );
+}
+
+function mapAnnouncementRows(
+  rows: AnnouncementRow[],
+  authorMap: Awaited<ReturnType<typeof resolveSenderNames>>,
+  includeDetails: boolean
+): AnnouncementItem[] {
+  return rows.map((row) => ({
+    announcementId: row.id,
+    title: row.title,
+    senderId: row.author_id,
+    senderName:
+      authorMap[row.author_id]?.full_name ||
+      authorMap[row.author_id]?.email ||
+      null,
+    senderAvatar: authorMap[row.author_id]?.avatar_url ?? null,
+    senderTitle: authorMap[row.author_id]?.title ?? null,
+    createdAt: row.created_at,
+    publishedAt: getAnnouncementPublishedAt(row),
+    sendAt: row.send_at ?? null,
+    sentAt: row.sent_at ?? null,
+    status: (row.status as "sent" | "scheduled" | null) ?? "sent",
+    allowComments: row.allow_comments,
+    allowReactions: row.allow_reactions,
+    media: toAnnouncementMedia(row),
+    contentPreview: toPlain(row.content) ?? "",
+    fullContent: includeDetails ? row.content : undefined,
+  }));
 }
 
 async function resolveSenderNames(
@@ -157,10 +244,47 @@ async function resolveSenderNames(
 async function fetchAnnouncementItems(
   userId: string,
   orgId: string,
-  opts?: { withDetails?: boolean }
+  opts?: { withDetails?: boolean; includeAllForPlatform?: boolean }
 ): Promise<InboxItem[]> {
   const includeDetails = opts?.withDetails ?? false;
+  const includeAllForPlatform = opts?.includeAllForPlatform ?? false;
   const svc = createServiceClient();
+
+  if (includeAllForPlatform) {
+    const { data: announcements, error: annErr } = await svc
+      .from("announcements")
+      .select(ANNOUNCEMENT_SELECT_FIELDS)
+      .in("status", ["sent", "scheduled"]);
+
+    if (annErr || !announcements) {
+      console.warn("ANNOUNCEMENTS fetch (platform) error:", annErr);
+      return [];
+    }
+
+    const announcementRows = announcements as unknown as AnnouncementRow[];
+    const authorIds = Array.from(
+      new Set(announcementRows.map((row) => row.author_id).filter(Boolean))
+    );
+    const authorMap = await resolveSenderNames(authorIds);
+
+    const announcementItems = sortAnnouncementItems(
+      mapAnnouncementRows(announcementRows, authorMap, includeDetails)
+    );
+
+    if (!includeDetails) {
+      return announcementItems.map((item) => ({
+        kind: "announcement" as const,
+        ...item,
+      }));
+    }
+
+    await hydrateAnnouncementDetails(svc, announcementItems, userId);
+
+    return announcementItems.map((item) => ({
+      kind: "announcement" as const,
+      ...item,
+    }));
+  }
 
   const { data: myGroups } = await svc
     .from("user_group_members")
@@ -204,42 +328,28 @@ async function fetchAnnouncementItems(
 
   const { data: announcements, error: annErr } = await svc
     .from("announcements")
-    .select(
-      "id, org_id, author_id, title, content, allow_comments, allow_reactions, created_at, status, send_at, sent_at"
-    )
+    .select(ANNOUNCEMENT_SELECT_FIELDS)
     .in("id", announcementIds)
-    .eq("status", "sent")
-    .order("created_at", { ascending: false });
+    .eq("status", "sent");
 
   if (annErr || !announcements) {
     console.warn("ANNOUNCEMENTS fetch error:", annErr);
     return [];
   }
+  const announcementRows = announcements as unknown as AnnouncementRow[];
 
   const authorIds = Array.from(
-    new Set(announcements.map((a: any) => a.author_id as string))
+    new Set(
+      announcementRows
+        .map((announcement) => announcement.author_id)
+        .filter(Boolean)
+    )
   );
   const authorMap = await resolveSenderNames(authorIds);
 
-  const announcementItems: AnnouncementItem[] = announcements.map((row: any) => ({
-    announcementId: row.id as string,
-    title: row.title as string,
-    senderId: row.author_id as string,
-    senderName:
-      authorMap[row.author_id]?.full_name ||
-      authorMap[row.author_id]?.email ||
-      null,
-    senderAvatar: authorMap[row.author_id]?.avatar_url ?? null,
-    senderTitle: authorMap[row.author_id]?.title ?? null,
-    createdAt: row.created_at as string,
-    sendAt: (row.send_at as string | null) ?? null,
-    sentAt: (row.sent_at as string | null) ?? null,
-    status: (row.status as "sent" | "scheduled" | null) ?? "sent",
-    allowComments: row.allow_comments as boolean,
-    allowReactions: row.allow_reactions as boolean,
-    contentPreview: toPlain(row.content) ?? "",
-    fullContent: includeDetails ? (row.content as string) : undefined,
-  }));
+  const announcementItems = sortAnnouncementItems(
+    mapAnnouncementRows(announcementRows, authorMap, includeDetails)
+  );
 
   if (!includeDetails) {
     return announcementItems.map((item) => ({
@@ -353,47 +463,75 @@ async function fetchAuthoredAnnouncements(
 
   const { data: announcements, error } = await svc
     .from("announcements")
-    .select(
-      "id, org_id, author_id, title, content, allow_comments, allow_reactions, created_at, status, send_at, sent_at, calendar_event_id"
-    )
+    .select(ANNOUNCEMENT_SELECT_FIELDS)
     .eq("org_id", orgId)
-    .eq("author_id", userId)
-    .order("created_at", { ascending: false });
+    .eq("author_id", userId);
 
   if (error || !announcements) {
     console.warn("ANNOUNCEMENTS fetch authored error:", error);
     return [];
   }
+  const announcementRows = announcements as unknown as AnnouncementRow[];
 
   const authorIds = Array.from(
-    new Set(announcements.map((row: any) => row.author_id as string).filter(Boolean))
+    new Set(announcementRows.map((row) => row.author_id).filter(Boolean))
   );
   const authorMap = await resolveSenderNames(authorIds);
 
-  const items: AnnouncementItem[] = announcements.map((row: any) => ({
-    announcementId: row.id as string,
-    title: row.title as string,
-    senderId: row.author_id as string,
-    senderName:
-      authorMap[row.author_id]?.full_name ||
-      authorMap[row.author_id]?.email ||
-      null,
-    senderAvatar: authorMap[row.author_id]?.avatar_url ?? null,
-    createdAt: row.created_at as string,
-    sendAt: (row.send_at as string | null) ?? null,
-    sentAt: (row.sent_at as string | null) ?? null,
-    status: (row.status as "sent" | "scheduled" | null) ?? undefined,
-    allowComments: row.allow_comments as boolean,
-    allowReactions: row.allow_reactions as boolean,
-    contentPreview: toPlain(row.content) ?? "",
-    fullContent: includeDetails ? (row.content as string) : undefined,
-  }));
+  const items = sortAnnouncementItems(
+    mapAnnouncementRows(announcementRows, authorMap, includeDetails)
+  );
 
   if (includeDetails) {
     await hydrateAnnouncementDetails(svc, items, userId);
   }
 
   return items;
+}
+
+export async function fetchAnnouncementDetail(
+  auth: AuthContext,
+  announcementId: string
+): Promise<{
+  announcement: AnnouncementItem;
+  canInteract: boolean;
+  canManage: boolean;
+} | null> {
+  const svc = createServiceClient();
+  const access = await getAnnouncementViewAccess(svc, auth, announcementId);
+  if (!access) {
+    return null;
+  }
+
+  const { data: announcementRow, error } = await svc
+    .from("announcements")
+    .select(ANNOUNCEMENT_SELECT_FIELDS)
+    .eq("id", announcementId)
+    .maybeSingle();
+
+  if (error || !announcementRow) {
+    console.warn("ANNOUNCEMENTS fetch detail error:", error);
+    return null;
+  }
+  const typedAnnouncementRow = announcementRow as unknown as AnnouncementRow;
+
+  const authorIds = typedAnnouncementRow.author_id
+    ? [typedAnnouncementRow.author_id]
+    : [];
+  const authorMap = await resolveSenderNames(authorIds);
+  const [announcement] = mapAnnouncementRows(
+    [typedAnnouncementRow],
+    authorMap,
+    true
+  );
+
+  await hydrateAnnouncementDetails(svc, [announcement], auth.userId);
+
+  return {
+    announcement,
+    canInteract: access.canInteract,
+    canManage: canManageAnnouncement(auth, access.announcement),
+  };
 }
 
 async function fetchCalendarEventItems(
@@ -507,7 +645,13 @@ export async function fetchInboxItems(
   const calendarItems = await fetchCalendarEventItems(userId, orgId, unitIds);
 
   const items = [...conversationItems, ...announcementItems, ...calendarItems].sort(
-    (a, b) => b.createdAt.localeCompare(a.createdAt)
+    (a, b) => {
+      const aReference =
+        a.kind === "announcement" ? a.publishedAt ?? a.createdAt : a.createdAt;
+      const bReference =
+        b.kind === "announcement" ? b.publishedAt ?? b.createdAt : b.createdAt;
+      return bReference.localeCompare(aReference);
+    }
   );
 
   return items;

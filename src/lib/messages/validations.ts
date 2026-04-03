@@ -88,15 +88,45 @@ export type CreateMessagesPayloadInput = z.infer<
   typeof createMessagesPayloadSchema
 >;
 
+const announcementMediaKindSchema = z
+  .enum(["image", "video"])
+  .optional();
+
+const announcementMediaUrlSchema = z.preprocess((value) => {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : undefined;
+}, z.string().url("URL de mídia inválida").max(2048).optional());
+
 export const createAnnouncementSchema = z.object({
   title: z.string().trim().min(1, "Título obrigatório").max(255),
   content: z.string().trim().min(1, "Conteúdo obrigatório"),
   allowComments: z.boolean().default(true),
   allowReactions: z.boolean().default(true),
+  mediaKind: announcementMediaKindSchema,
+  mediaUrl: announcementMediaUrlSchema,
+  mediaThumbnailUrl: announcementMediaUrlSchema,
   sendAt: z.coerce.date().optional(),
   userIds: z.array(z.string().uuid()).default([]),
   groupIds: z.array(z.string().uuid()).default([]),
   teamIds: z.array(z.string().uuid()).default([]),
+}).superRefine((value, ctx) => {
+  if (value.mediaKind && !value.mediaUrl) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["mediaUrl"],
+      message: "Informe a URL da mídia quando definir o tipo.",
+    });
+  }
+
+  if (value.mediaThumbnailUrl && !value.mediaUrl) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["mediaThumbnailUrl"],
+      message: "Thumbnail exige URL da mídia principal.",
+    });
+  }
 });
 
 export type CreateAnnouncementInput = z.infer<typeof createAnnouncementSchema>;
@@ -114,10 +144,29 @@ export const updateAnnouncementSchema = z.object({
   content: z.string().trim().min(1, "Conteúdo obrigatório"),
   allowComments: z.boolean().default(true),
   allowReactions: z.boolean().default(true),
+  mediaKind: announcementMediaKindSchema,
+  mediaUrl: announcementMediaUrlSchema,
+  mediaThumbnailUrl: announcementMediaUrlSchema,
   sendAt: sendAtInput,
   userIds: z.array(z.string().uuid()).default([]),
   groupIds: z.array(z.string().uuid()).default([]),
   teamIds: z.array(z.string().uuid()).default([]),
+}).superRefine((value, ctx) => {
+  if (value.mediaKind && !value.mediaUrl) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["mediaUrl"],
+      message: "Informe a URL da mídia quando definir o tipo.",
+    });
+  }
+
+  if (value.mediaThumbnailUrl && !value.mediaUrl) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["mediaThumbnailUrl"],
+      message: "Thumbnail exige URL da mídia principal.",
+    });
+  }
 });
 
 export type UpdateAnnouncementInput = z.infer<typeof updateAnnouncementSchema>;

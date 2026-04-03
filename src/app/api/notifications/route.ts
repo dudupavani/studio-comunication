@@ -39,6 +39,9 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = createServerClientWithCookies();
     const auth = await getAuthContext(supabase);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
 
     const search = req.nextUrl.searchParams;
     const limitParam = search.get("limit");

@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { getAuthContext } from "@/lib/messages/auth-context";
 import { createAnnouncementSchema } from "@/lib/messages/validations";
 import { errorResponse, handleRouteError } from "@/lib/messages/api-helpers";
+import { resolveAnnouncementMediaFields } from "@/lib/messages/announcement-media";
 import { publishNotificationEvent } from "@/lib/notifications";
 import { logError } from "@/lib/log";
 import type { Database } from "@/lib/supabase/types";
@@ -25,6 +26,9 @@ export async function POST(req: NextRequest) {
     const supabaseUser = createServerClientWithCookies();
     const supabaseSvc = createServiceClient();
     const auth = await getAuthContext(supabaseUser);
+    if (!auth) {
+      return errorResponse(401, "unauthorized", "Sessão inválida.");
+    }
     const canManage =
       auth.isPlatformAdmin || auth.isOrgAdmin || auth.isUnitMaster;
     if (!canManage) {
@@ -42,6 +46,12 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = parsed.data;
+    const media = resolveAnnouncementMediaFields({
+      content: payload.content,
+      mediaKind: payload.mediaKind,
+      mediaUrl: payload.mediaUrl,
+      mediaThumbnailUrl: payload.mediaThumbnailUrl,
+    });
     const now = Date.now();
     const sendAtDate = payload.sendAt ? new Date(payload.sendAt) : null;
     const sendAtIso =
@@ -124,6 +134,9 @@ export async function POST(req: NextRequest) {
         content: payload.content,
         allow_comments: payload.allowComments,
         allow_reactions: payload.allowReactions,
+        media_kind: media.media_kind,
+        media_url: media.media_url,
+        media_thumbnail_url: media.media_thumbnail_url,
         send_at: sendAtIso,
         status: isScheduled ? "scheduled" : "sent",
         sent_at: isScheduled ? null : new Date(now).toISOString(),

@@ -29,6 +29,9 @@ function formatNumber(value: number) {
 
 export default async function AnnouncementMetricsPage() {
   const auth = await getAuthContext();
+  if (!auth) {
+    redirect("/comunicados");
+  }
   const canViewMetrics = auth.isPlatformAdmin || auth.isOrgAdmin;
 
   if (!canViewMetrics) {
