@@ -23,7 +23,6 @@ npm run build
 
 - `npm run dev`: sobe o app com `next dev --turbopack -p 9002`
 - `npm run test`: fluxo principal atual com Jest
-- `npm run test:legacy`: harness legado em TypeScript compilado via `tsconfig.tests.json`
 - `npm run test:e2e`: testes E2E com Playwright
 - `npm run typecheck`: verificação TypeScript sem emitir build
 

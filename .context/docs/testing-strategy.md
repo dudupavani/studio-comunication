@@ -3,7 +3,6 @@
 ## Stack atual de verificação
 
 - `npm run test`: suite principal com Jest
-- `npm run test:legacy`: harness legado ainda disponível
 - `npm run test:e2e`: Playwright para fluxos end-to-end
 - `npm run typecheck`: gate base para mudanças significativas
 
@@ -40,7 +39,6 @@ npm run build
 
 - `tests/permissions.test.ts`
 - `tests/api/calendar.events.route.test.ts`
-- `tests/run-tests.ts`
 - `e2e/auth-login.spec.ts`
 
 ## Critério de revisão

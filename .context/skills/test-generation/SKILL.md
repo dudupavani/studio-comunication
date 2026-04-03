@@ -13,7 +13,6 @@ Generate tests for behavioral changes in `studio`, prioritizing permissions and 
 
 ## Test Stack
 - TypeScript test files under `tests/`.
-- Harness entry via `tests/run-tests.ts`.
 - Command: `npm run test`.
 
 ## Strategy

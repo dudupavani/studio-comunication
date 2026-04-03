@@ -26,7 +26,6 @@ npm run start
 Comandos específicos:
 
 ```bash
-npm run test:legacy
 npm run test:e2e
 npm run genkit:dev
 npm run genkit:watch
