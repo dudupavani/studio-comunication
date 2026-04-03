@@ -1,12 +1,24 @@
 ## Codex agent rules
 
+## Base compartilhada de contexto
+
+- `AGENTS.md` é a fonte canônica de regras do projeto.
+- `.context/` é uma base compartilhada de apoio para agentes; ela não substitui `AGENTS.md`.
+- Antes de mudanças relevantes, consulte `.context/docs/README.md` e siga o doc específico por tarefa:
+  - UI/UX: `.context/docs/design.md`
+  - fluxo de domínio, API ou schema: `.context/docs/architecture.md`
+  - validação e checks: `.context/docs/development-workflow.md` e `.context/docs/testing-strategy.md`
+  - revisão de segurança/permissão: `.context/docs/security.md`
+- Em caso de conflito, `AGENTS.md` prevalece sobre qualquer outro documento.
+
 - **Supabase schema**
   - `src/types/supabase.ts` é a única fonte do tipo `Database`.
   - `src/lib/supabase/types.ts` apenas reexporta `Database/Json/Tables/Enums` a partir desse arquivo.
   - Sempre que novas tabelas/funções forem adicionadas ao banco, atualize `src/types/supabase.ts` e reexporte delas por `src/lib/supabase/types.ts`.
 
 - **Migrations**
-  - Adicione migrations no diretório `database/migrations` (nomes com data ISO).
+  - Adicione migrations no diretório `database/migrations`.
+  - Siga o padrão já usado no repositório: `YYYYMMDD_descricao_snake_case.sql`.
   - Regras de schema que impactem o app (ex.: tabelas de chats, funções RPC, policies RLS) devem ser versionadas ali.
 
 - **Chats / menções**
@@ -69,3 +81,6 @@
 
 - **Componentes de UI**
   - Não customizar componentes da pasta `components/ui` (ex.: `sheet.tsx`, `button.tsx`) a menos que isso seja explicitamente solicitado.
+## AI Context References
+- Documentation index: `.context/docs/README.md`
+- Agent playbooks: `.context/agents/README.md`
