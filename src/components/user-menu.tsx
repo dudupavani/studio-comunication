@@ -25,7 +25,7 @@ export function UserMenu({ user }: { user: Profile }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="cursor-pointer">
+        <Avatar id="user-menu-trigger" className="cursor-pointer">
           <AvatarImage
             src={user.avatar_url || undefined}
             alt={user.full_name}

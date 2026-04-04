@@ -1,5 +1,6 @@
 // src/lib/auth-context.ts
 import { createServerClientWithCookies } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import type { PlatformRole, OrgRole, UnitRole } from "@/lib/types/roles";
@@ -70,16 +71,52 @@ async function _getAuthContext(
   const profileAny = (profileRes.data ?? {}) as any;
   if (profileAny?.global_role === PLATFORM_ADMIN) {
     platformRole = PLATFORM_ADMIN;
+  } else if (user.user_metadata?.global_role === PLATFORM_ADMIN) {
+    platformRole = PLATFORM_ADMIN;
+  } else {
+    const svc = createServiceClient();
+    const { data: svcProfile } = await svc
+      .from("profiles")
+      .select("global_role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (svcProfile?.global_role === PLATFORM_ADMIN) {
+      platformRole = PLATFORM_ADMIN;
+    }
   }
 
   // 4) Escolher melhor papel/org (com precedência)
   let orgRole: MembershipRole | null = null;
   let orgId: string | undefined = undefined;
 
-  const orgRows = (Array.isArray(orgRes.data) ? orgRes.data : []) as Array<{
+  let orgRows = (Array.isArray(orgRes.data) ? orgRes.data : []) as Array<{
     org_id: string;
     role: string; // mapeamos via ROLE_PRIORITY
   }>;
+
+  if (platformRole === PLATFORM_ADMIN && orgRows.length === 0) {
+    const svc = createServiceClient();
+    const { data: svcOrgRows, error: svcOrgErr } = await svc
+      .from("org_members")
+      .select("org_id, role")
+      .eq("user_id", user.id);
+
+    if (!svcOrgErr && Array.isArray(svcOrgRows) && svcOrgRows.length > 0) {
+      orgRows = svcOrgRows as Array<{ org_id: string; role: string }>;
+    } else {
+      const { data: firstOrg, error: firstOrgErr } = await svc
+        .from("orgs")
+        .select("id")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (!firstOrgErr && firstOrg?.id) {
+        orgId = firstOrg.id as string;
+      }
+    }
+  }
 
   if (orgRows.length > 0) {
     const best = orgRows.reduce((acc, cur) => {

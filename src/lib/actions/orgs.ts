@@ -93,9 +93,16 @@ async function selectOrgDetailsSafe(
     return { data: dataFull[0] as OrgDetails, error: null as any };
   }
 
-  // Se erro for "column ... does not exist" (42703), tenta fallback
+  // Se erro indicar coluna ausente / schema cache incompleto, tenta fallback
   const message = String(errFull?.message || "");
-  if (message.includes("column") && message.includes("does not exist")) {
+  const code = String((errFull as any)?.code || "");
+  const isMissingColumnError =
+    code === "42703" ||
+    code === "PGRST204" ||
+    (message.includes("column") && message.includes("does not exist")) ||
+    message.includes("schema cache") ||
+    message.includes("não existe");
+  if (isMissingColumnError) {
     const q2 = client.from("orgs").select("id, name, slug, city").limit(1);
     const { data: dataLite, error: errLite } = isUuid
       ? await q2.eq("id", slugOrId)
@@ -141,7 +148,7 @@ export async function listMyOrgs(): Promise<Result<Org[]>> {
     if (membershipsError) return { ok: false, error: membershipsError.message };
 
     // Extract org IDs
-    const orgIds = memberships.map(m => m.org_id);
+    const orgIds = (memberships ?? []).map(m => m.org_id);
 
     // If no orgs, return empty array
     if (orgIds.length === 0) {
@@ -155,7 +162,18 @@ export async function listMyOrgs(): Promise<Result<Org[]>> {
       .in("id", orgIds)
       .order("name");
 
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      const svc = createServiceClient();
+      const { data: svcData, error: svcError } = await svc
+        .from("orgs")
+        .select("id, name, slug, city")
+        .in("id", orgIds)
+        .order("name");
+
+      if (svcError) return { ok: false, error: svcError.message };
+      return { ok: true, data: (svcData ?? []) as Org[] };
+    }
+
     return { ok: true, data: (data ?? []) as Org[] };
   } catch (e: any) {
     return { ok: false, error: e.message ?? "Falha ao listar organizações." };
@@ -211,6 +229,46 @@ export async function getOrgWithDetails(
       slugOrId
     );
 
+    if (!error && data) {
+      return { ok: true, data };
+    }
+
+    // Fallback para ambientes em que o usuário não consegue SELECT em orgs via RLS.
+    // Mantemos segurança validando membership em org_members antes de usar service client.
+    if (!admin) {
+      const userClient = createClient();
+      let targetOrgId: string | null = null;
+
+      if (isUuid) {
+        targetOrgId = slugOrId;
+      } else {
+        const svc = createServiceClient();
+        const { data: bySlug } = await svc
+          .from("orgs")
+          .select("id")
+          .eq("slug", slugOrId)
+          .limit(1);
+        targetOrgId = bySlug?.[0]?.id ?? null;
+      }
+
+      if (targetOrgId) {
+        const { data: member, error: memberErr } = await userClient
+          .from("org_members")
+          .select("org_id")
+          .eq("user_id", user.id)
+          .eq("org_id", targetOrgId)
+          .limit(1);
+
+        if (!memberErr && member?.[0]?.org_id) {
+          const svc = createServiceClient();
+          const svcRead = await selectOrgDetailsSafe(svc, true, targetOrgId);
+          if (!svcRead.error && svcRead.data) {
+            return { ok: true, data: svcRead.data };
+          }
+        }
+      }
+    }
+
     if (error || !data) {
       console.error("getOrgWithDetails query failed:", {
         slugOrId,
@@ -250,6 +308,51 @@ export async function getOrg(slugOrId: string): Promise<Result<Org>> {
       ? await q.eq("id", slugOrId)
       : await q.eq("slug", slugOrId);
 
+    if (!error && data?.[0]) {
+      return { ok: true, data: data[0] as Org };
+    }
+
+    // Fallback seguro para ambientes com RLS de orgs restritiva:
+    // valida vínculo em org_members e só então lê via service role.
+    if (!admin) {
+      const userClient = createClient();
+      let targetOrgId: string | null = null;
+
+      if (isUuid) {
+        targetOrgId = slugOrId;
+      } else {
+        const svc = createServiceClient();
+        const { data: bySlug } = await svc
+          .from("orgs")
+          .select("id")
+          .eq("slug", slugOrId)
+          .limit(1);
+        targetOrgId = bySlug?.[0]?.id ?? null;
+      }
+
+      if (targetOrgId) {
+        const { data: member, error: memberErr } = await userClient
+          .from("org_members")
+          .select("org_id")
+          .eq("user_id", user.id)
+          .eq("org_id", targetOrgId)
+          .limit(1);
+
+        if (!memberErr && member?.[0]?.org_id) {
+          const svc = createServiceClient();
+          const { data: svcData, error: svcErr } = await svc
+            .from("orgs")
+            .select("id, name, slug, city")
+            .eq("id", targetOrgId)
+            .limit(1);
+
+          if (!svcErr && svcData?.[0]) {
+            return { ok: true, data: svcData[0] as Org };
+          }
+        }
+      }
+    }
+
     if (error || !data?.[0]) {
       console.error("getOrg query failed:", { slugOrId, admin, error, data });
       return {
@@ -257,7 +360,6 @@ export async function getOrg(slugOrId: string): Promise<Result<Org>> {
         error: error?.message || "Organização não encontrada ou sem acesso.",
       };
     }
-
     return { ok: true, data: data[0] as Org };
   } catch (e: any) {
     console.error("getOrg exception:", e);

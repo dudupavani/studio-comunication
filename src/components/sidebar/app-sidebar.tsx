@@ -17,6 +17,7 @@ import {
   Megaphone,
   Inbox,
   BookOpen,
+  Users,
 } from "lucide-react";
 
 import {
@@ -148,6 +149,19 @@ export default function AppSidebar({ activeOrgSlug = null }: SidebarProps) {
                         <Megaphone size={20} />
                         <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
                           Comunicados
+                        </span>
+                      </Link>
+                    </Button>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
+                      asChild>
+                      <Link href="/comunidades">
+                        <Users size={20} />
+                        <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
+                          Comunidades
                         </span>
                       </Link>
                     </Button>

@@ -70,10 +70,22 @@ export async function updateSession(request: NextRequest) {
     "/auth/callback",
     "/auth/force-password",
     "/auth/magic",
+    "/auth/recovery",
   ];
   const isPublicPath = publicPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
+  const allowPublicPathWhenAuthenticated = [
+    "/reset-password",
+    "/auth/callback",
+    "/auth/confirm",
+    "/auth/force-password",
+    "/auth/recovery",
+  ];
+  const isAllowedPublicPathWhenAuthenticated =
+    allowPublicPathWhenAuthenticated.some((path) =>
+      request.nextUrl.pathname.startsWith(path)
+    );
 
   // Se tiver access_token no hash, considera como autenticado para este request
   const isAuthenticated = user || hasAccessToken;
@@ -87,7 +99,7 @@ export async function updateSession(request: NextRequest) {
   if (
     isAuthenticated &&
     isPublicPath &&
-    !request.nextUrl.pathname.startsWith("/auth/force-password")
+    !isAllowedPublicPathWhenAuthenticated
   ) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }

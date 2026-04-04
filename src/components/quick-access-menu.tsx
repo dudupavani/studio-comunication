@@ -31,7 +31,11 @@ export function QuickAccessMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm" title="Atalhos rápidos">
+        <Button
+          id="quick-access-menu-trigger"
+          variant="ghost"
+          size="icon-sm"
+          title="Atalhos rápidos">
           <Settings />
         </Button>
       </DropdownMenuTrigger>

@@ -98,7 +98,11 @@ type AiOverwriteRequest = {
   value: string;
 };
 
-export function NewAnnouncementForm() {
+type Props = {
+  orgId: string;
+};
+
+export function NewAnnouncementForm({ orgId }: Props) {
   const { toast } = useToast();
   const router = useRouter();
 
@@ -409,6 +413,7 @@ export function NewAnnouncementForm() {
                 onChange={setContent}
                 placeholder="Escreva o comunicado..."
                 chatId="comunicados"
+                orgId={orgId}
                 minHeight="240px"
               />
             </div>

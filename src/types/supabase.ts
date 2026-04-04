@@ -79,42 +79,58 @@ export type Database = {
       }
       notifications: {
         Row: {
-          action_url: string
-          body: string
+          action_url: string | null
+          body: string | null
           created_at: string
+          event_id: string | null
           id: string
+          message: string
           metadata: Json
-          org_id: string
+          org_id: string | null
+          read: boolean
           read_at: string | null
           title: string
-          type: Database["public"]["Enums"]["notification_type"]
+          type: Database["public"]["Enums"]["notification_type"] | null
           user_id: string
         }
         Insert: {
-          action_url: string
-          body: string
+          action_url?: string | null
+          body?: string | null
           created_at?: string
+          event_id?: string | null
           id?: string
+          message: string
           metadata?: Json
-          org_id: string
+          org_id?: string | null
+          read?: boolean
           read_at?: string | null
           title: string
-          type: Database["public"]["Enums"]["notification_type"]
+          type?: Database["public"]["Enums"]["notification_type"] | null
           user_id: string
         }
         Update: {
-          action_url?: string
-          body?: string
+          action_url?: string | null
+          body?: string | null
           created_at?: string
+          event_id?: string | null
           id?: string
+          message?: string
           metadata?: Json
-          org_id?: string
+          org_id?: string | null
+          read?: boolean
           read_at?: string | null
           title?: string
-          type?: Database["public"]["Enums"]["notification_type"]
+          type?: Database["public"]["Enums"]["notification_type"] | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_org_id_fkey"
             columns: ["org_id"]
@@ -563,21 +579,18 @@ export type Database = {
           author_id: string
           created_at: string
           emoji: string
-          id: string
         }
         Insert: {
           announcement_id: string
           author_id: string
           created_at?: string
           emoji: string
-          id?: string
         }
         Update: {
           announcement_id?: string
           author_id?: string
           created_at?: string
           emoji?: string
-          id?: string
         }
         Relationships: [
           {
@@ -647,28 +660,28 @@ export type Database = {
           created_at: string
           data: Json | null
           id: string
-          org_id: string | null
+          org_id: string
           thumbnail_path: string | null
-          title: string | null
-          user_id: string | null
+          title: string
+          user_id: string
         }
         Insert: {
           created_at?: string
           data?: Json | null
           id?: string
-          org_id?: string | null
+          org_id: string
           thumbnail_path?: string | null
-          title?: string | null
-          user_id?: string | null
+          title: string
+          user_id: string
         }
         Update: {
           created_at?: string
           data?: Json | null
           id?: string
-          org_id?: string | null
+          org_id?: string
           thumbnail_path?: string | null
-          title?: string | null
-          user_id?: string | null
+          title?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1143,6 +1156,154 @@ export type Database = {
           },
         ]
       }
+      communities: {
+        Row: {
+          allow_unit_master_post: boolean
+          allow_unit_user_post: boolean
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          org_id: string
+          segment_type: Database["public"]["Enums"]["community_segment_type"] | null
+          updated_at: string
+          visibility: Database["public"]["Enums"]["community_visibility"]
+        }
+        Insert: {
+          allow_unit_master_post?: boolean
+          allow_unit_user_post?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          org_id: string
+          segment_type?: Database["public"]["Enums"]["community_segment_type"] | null
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["community_visibility"]
+        }
+        Update: {
+          allow_unit_master_post?: boolean
+          allow_unit_user_post?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          org_id?: string
+          segment_type?: Database["public"]["Enums"]["community_segment_type"] | null
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["community_visibility"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communities_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_segments: {
+        Row: {
+          community_id: string
+          created_at: string
+          org_id: string
+          target_id: string
+          target_type: Database["public"]["Enums"]["community_segment_type"]
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          org_id: string
+          target_id: string
+          target_type: Database["public"]["Enums"]["community_segment_type"]
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          org_id?: string
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["community_segment_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_segments_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_segments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_spaces: {
+        Row: {
+          community_id: string
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          org_id: string
+          space_type: Database["public"]["Enums"]["community_space_type"]
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          org_id: string
+          space_type: Database["public"]["Enums"]["community_space_type"]
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          org_id?: string
+          space_type?: Database["public"]["Enums"]["community_space_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_spaces_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_spaces_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_spaces_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           avaliacao_media: number
@@ -1212,6 +1373,38 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_modules: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          ordem: number
+          title: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          title: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
             referencedColumns: ["id"]
           },
         ]
@@ -1474,38 +1667,6 @@ export type Database = {
           },
         ]
       }
-      course_modules: {
-        Row: {
-          course_id: string
-          created_at: string
-          id: string
-          ordem: number
-          title: string
-        }
-        Insert: {
-          course_id: string
-          created_at?: string
-          id?: string
-          ordem?: number
-          title: string
-        }
-        Update: {
-          course_id?: string
-          created_at?: string
-          id?: string
-          ordem?: number
-          title?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "course_modules_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       course_reviews: {
         Row: {
           comment: string | null
@@ -1550,6 +1711,32 @@ export type Database = {
       }
     }
     Views: {
+      org_users_view: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          org_id: string | null
+          org_role: Database["public"]["Enums"]["app_role"] | null
+          phone: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           created_at: string | null
@@ -1718,6 +1905,9 @@ export type Database = {
       app_role: "org_admin" | "org_master" | "unit_master" | "unit_user"
       chat_member_role: "admin" | "member"
       chat_type: "direct" | "group" | "broadcast"
+      community_segment_type: "group" | "team"
+      community_space_type: "publicacoes" | "eventos"
+      community_visibility: "global" | "segmented"
       notification_type:
         | "chat.message"
         | "chat.mention"
@@ -1852,6 +2042,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["org_admin", "org_master", "unit_master", "unit_user"],
+      community_segment_type: ["group", "team"],
+      community_space_type: ["publicacoes", "eventos"],
+      community_visibility: ["global", "segmented"],
       notification_type: [
         "chat.message",
         "chat.mention",

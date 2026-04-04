@@ -148,6 +148,7 @@ export default async function EditAnnouncementPage({
 
       <EditAnnouncementForm
         announcementId={announcementId}
+        orgId={workingOrgId}
         initialTitle={announcement.title}
         initialContent={announcement.content}
         initialMediaUrl={(announcement.media_url as string | null) ?? null}

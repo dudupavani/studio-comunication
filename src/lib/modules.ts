@@ -8,6 +8,7 @@ export const MODULE_TITLES: Record<string, string> = {
   "/groups": "Grupos de usuários",
   "/chats": "Chats",
   "/comunicados": "Comunicados",
+  "/comunidades": "Comunidades",
   "/inbox": "Inbox",
   "/learning": "Cursos",
   "/teams": "Equipes",

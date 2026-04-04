@@ -28,7 +28,7 @@ export default async function NewAnnouncementPage() {
         </Button>
         <h3>Novo comunicado</h3>
       </div>
-      <NewAnnouncementForm />
+      <NewAnnouncementForm orgId={auth.orgId} />
     </div>
   );
 }

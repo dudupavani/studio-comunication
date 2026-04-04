@@ -17,6 +17,7 @@ type Props = {
   placeholder?: string;
   className?: string;
   chatId?: string;
+  orgId?: string | null;
   minHeight?: string;
   maxHeight?: string;
 };
@@ -26,13 +27,16 @@ export function CKEditorComponent({
   onChange,
   placeholder,
   className,
+  orgId,
   minHeight,
   maxHeight,
 }: Props) {
-  const { auth, loading } = useAuthContext();
-  const orgIdRef = useRef<string | null>(auth?.orgId ?? null);
+  const { auth, loading, error } = useAuthContext();
+  const resolvedOrgId = orgId ?? auth?.orgId ?? null;
+  const orgIdRef = useRef<string | null>(resolvedOrgId);
   const [editorBundle, setEditorBundle] = useState<EditorBundle | null>(null);
   const editorRef = useRef<any>(null);
+  const canUploadImages = Boolean(resolvedOrgId);
 
   const applyEditorSize = useCallback(() => {
     const editableElement =
@@ -53,8 +57,8 @@ export function CKEditorComponent({
   }, [maxHeight, minHeight]);
 
   useEffect(() => {
-    orgIdRef.current = auth?.orgId ?? null;
-  }, [auth?.orgId]);
+    orgIdRef.current = resolvedOrgId;
+  }, [resolvedOrgId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -92,37 +96,37 @@ export function CKEditorComponent({
       ) => new UploadAdapter(loader, supabase, orgIdRef.current);
     }
 
+    const toolbar = [
+      "heading",
+      "|",
+      "bold",
+      "italic",
+      "underline",
+      "link",
+      "bulletedList",
+      "numberedList",
+      "blockQuote",
+      "|",
+      "undo",
+      "redo",
+    ];
+
+    if (canUploadImages) {
+      toolbar.splice(9, 0, "imageUpload");
+    }
+
     return {
-      toolbar: [
-        "heading",
-        "|",
-        "bold",
-        "italic",
-        "underline",
-        "link",
-        "bulletedList",
-        "numberedList",
-        "blockQuote",
-        "imageUpload",
-        "|",
-        "undo",
-        "redo",
-      ],
+      toolbar,
       placeholder,
-      extraPlugins: [CustomUploadAdapterPlugin],
+      ...(canUploadImages ? { extraPlugins: [CustomUploadAdapterPlugin] } : {}),
     };
-  }, [placeholder]);
+  }, [canUploadImages, placeholder]);
 
   useEffect(() => {
     applyEditorSize();
   }, [applyEditorSize]);
 
-  if (
-    loading ||
-    !auth?.orgId ||
-    !editorBundle?.CKEditor ||
-    !editorBundle.ClassicEditor
-  ) {
+  if (!editorBundle?.CKEditor || !editorBundle.ClassicEditor || (!orgId && loading)) {
     const loaderStyles: CSSProperties = {
       minHeight: minHeight ?? "160px",
       ...(maxHeight ? { maxHeight } : {}),
@@ -142,6 +146,12 @@ export function CKEditorComponent({
 
   return (
     <div className={className}>
+      {!orgId && error ? (
+        <p className="mb-2 text-xs text-muted-foreground">
+          Não foi possível validar a organização para upload de imagens. O
+          editor de texto continua disponível.
+        </p>
+      ) : null}
       <CKEditor
         editor={ClassicEditor}
         data={value}

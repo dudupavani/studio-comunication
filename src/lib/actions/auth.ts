@@ -39,7 +39,7 @@ export async function sendPasswordResetEmail(formData: FormData) {
   const email = formData.get("email") as string;
   const supabase = createServerClientWithCookies(); // Use write-enabled client
 
-  const redirectTo = `${siteUrl.replace(/\/$/, "")}/auth/callback?type=password`;
+  const redirectTo = `${siteUrl.replace(/\/$/, "")}/auth/recovery`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,
@@ -62,5 +62,5 @@ export async function updatePassword(formData: FormData) {
     return { error: error.message };
   }
 
-  redirect("/dashboard");
+  redirect("/login");
 }

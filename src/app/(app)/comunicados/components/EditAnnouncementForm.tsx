@@ -29,6 +29,7 @@ import { SelectedRecipients } from "./SelectedRecipients";
 
 type Props = {
   announcementId: string;
+  orgId: string;
   initialTitle: string;
   initialContent: string;
   initialMediaUrl?: string | null;
@@ -55,6 +56,7 @@ function toDatetimeLocal(iso?: string | null) {
 
 export function EditAnnouncementForm({
   announcementId,
+  orgId,
   initialTitle,
   initialContent,
   initialMediaUrl,
@@ -259,6 +261,7 @@ export function EditAnnouncementForm({
                 onChange={setContent}
                 placeholder="Escreva o comunicado..."
                 chatId={`comunicados-${announcementId}`}
+                orgId={orgId}
               />
             </div>
             <div className="space-y-1">

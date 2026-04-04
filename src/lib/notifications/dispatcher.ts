@@ -81,13 +81,15 @@ function buildChatMessageDraft(
     preview: event.payload.preview ?? null,
   };
 
+  const body = truncate(event.payload.preview, 240) || "Abra o chat para ler a mensagem";
   return {
     ...baseDraft(event, recipient),
     type: "chat.message",
     title: event.payload.chatName
       ? `Nova mensagem em ${event.payload.chatName}`
       : "Nova mensagem",
-    body: truncate(event.payload.preview, 240) || "Abra o chat para ler a mensagem",
+    message: body,
+    body,
     action_url: chatActionUrl(event.payload.chatId),
     metadata,
   };
@@ -112,13 +114,15 @@ function buildChatMentionDraft(
     preview: event.payload.preview ?? null,
   };
 
+  const body = truncate(event.payload.preview, 240) || "Uma mensagem mencionou você";
   return {
     ...baseDraft(event, recipient),
     type: "chat.mention",
     title: event.payload.chatName
       ? `Você foi mencionado em ${event.payload.chatName}`
       : "Você foi mencionado no chat",
-    body: truncate(event.payload.preview, 240) || "Uma mensagem mencionou você",
+    message: body,
+    body,
     action_url: chatActionUrl(event.payload.chatId),
     metadata,
   };
@@ -133,11 +137,13 @@ function buildAnnouncementDraft(
     actor_id: event.actorId,
   };
 
+  const body = truncate(event.payload.excerpt, 280) ?? "Você recebeu um comunicado";
   return {
     ...baseDraft(event, recipient),
     type: "announcement.sent",
     title: `Novo comunicado: ${event.payload.title}`,
-    body: truncate(event.payload.excerpt, 280) ?? "Você recebeu um comunicado",
+    message: body,
+    body,
     action_url: announcementActionUrl(event.payload.announcementId),
     metadata,
   };
@@ -156,6 +162,7 @@ function buildDesignerDraft(
     ...baseDraft(event, recipient),
     type: "designer.asset_ready",
     title: `Arte pronta: ${event.payload.title}`,
+    message: "Seu arquivo está disponível para edição",
     body: "Seu arquivo está disponível para edição",
     action_url: designerAssetActionUrl(event.payload.assetId),
     metadata,
@@ -172,13 +179,15 @@ function buildCalendarDraft(
     starts_at: event.payload.startsAt ?? null,
   };
 
+  const body = event.payload.startsAt
+    ? `Agendado para ${event.payload.startsAt}`
+    : "Agendado no calendário";
   return {
     ...baseDraft(event, recipient),
     type: "calendar.event_created",
     title: `Novo evento: ${event.payload.title}`,
-    body: event.payload.startsAt
-      ? `Agendado para ${event.payload.startsAt}`
-      : "Agendado no calendário",
+    message: body,
+    body,
     action_url: calendarEventActionUrl(event.payload.eventId),
     metadata,
   };

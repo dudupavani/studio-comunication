@@ -226,6 +226,7 @@ export async function POST(req: NextRequest) {
         user_id: userId,
         type: "announcement.sent" as const,
         title: payload.title,
+        message: snippet,
         body: snippet,
         action_url: "/comunicados",
         metadata: {
