@@ -111,17 +111,18 @@ export async function GET(
     const members = Array.isArray(data.equipe_members)
       ? data.equipe_members.map((member: any) => member.user_id as string)
       : [];
+    const leader = Array.isArray(data.leader) ? data.leader[0] : data.leader;
 
     return NextResponse.json({
       item: {
         id: data.id,
         name: data.name,
         leader: data.leader_user_id,
-        leaderProfile: data.leader
+        leaderProfile: leader
           ? {
-              id: data.leader.id,
-              fullName: data.leader.full_name,
-              avatarUrl: data.leader.avatar_url,
+              id: leader.id,
+              fullName: leader.full_name,
+              avatarUrl: leader.avatar_url,
             }
           : null,
         members,

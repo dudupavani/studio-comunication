@@ -34,7 +34,7 @@ export async function GET() {
       throw chatError;
     }
 
-    const chatMap = Array.isArray(chatRows)
+    const chatMap: Record<string, { count: number; lastNotificationAt: string | null }> = Array.isArray(chatRows)
       ? chatRows.reduce(
           (acc, row: any) => {
             if (!row?.chat_id) return acc;

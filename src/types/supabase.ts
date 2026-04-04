@@ -10,10 +10,351 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
+    PostgrestVersion: "14.4"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
+      announcement_comments: {
+        Row: {
+          announcement_id: string
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          announcement_id: string
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          announcement_id?: string
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_comments_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "announcement_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      announcement_reactions: {
+        Row: {
+          announcement_id: string
+          author_id: string
+          created_at: string
+          emoji: string
+        }
+        Insert: {
+          announcement_id: string
+          author_id: string
+          created_at?: string
+          emoji: string
+        }
+        Update: {
+          announcement_id?: string
+          author_id?: string
+          created_at?: string
+          emoji?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_reactions_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_reactions_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "announcement_reactions_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_reactions_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      announcement_recipients: {
+        Row: {
+          announcement_id: string
+          created_at: string
+          group_id: string | null
+          id: number
+          org_id: string
+          user_id: string | null
+        }
+        Insert: {
+          announcement_id: string
+          created_at?: string
+          group_id?: string | null
+          id?: number
+          org_id: string
+          user_id?: string | null
+        }
+        Update: {
+          announcement_id?: string
+          created_at?: string
+          group_id?: string | null
+          id?: number
+          org_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_recipients_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_recipients_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_recipients_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "announcement_recipients_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_recipients_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      announcement_views: {
+        Row: {
+          announcement_id: string
+          id: string
+          opened_at: string
+          org_id: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          id?: string
+          opened_at?: string
+          org_id: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          id?: string
+          opened_at?: string
+          org_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_views_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_views_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "announcement_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      announcements: {
+        Row: {
+          allow_comments: boolean
+          allow_reactions: boolean
+          author_id: string
+          calendar_event_id: string | null
+          content: string
+          created_at: string
+          id: string
+          media_kind: string | null
+          media_thumbnail_url: string | null
+          media_url: string | null
+          org_id: string
+          send_at: string | null
+          sent_at: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          allow_comments?: boolean
+          allow_reactions?: boolean
+          author_id: string
+          calendar_event_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          media_kind?: string | null
+          media_thumbnail_url?: string | null
+          media_url?: string | null
+          org_id: string
+          send_at?: string | null
+          sent_at?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          allow_comments?: boolean
+          allow_reactions?: boolean
+          author_id?: string
+          calendar_event_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          media_kind?: string | null
+          media_thumbnail_url?: string | null
+          media_url?: string | null
+          org_id?: string
+          send_at?: string | null
+          sent_at?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "announcements_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "announcements_calendar_event_id_fkey"
+            columns: ["calendar_event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           all_day: boolean
@@ -73,6 +414,1088 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_members: {
+        Row: {
+          chat_id: string
+          created_at: string
+          id: number
+          joined_at: string
+          role: Database["public"]["Enums"]["chat_member_role"]
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          id?: number
+          joined_at?: string
+          role?: Database["public"]["Enums"]["chat_member_role"]
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          id?: number
+          joined_at?: string
+          role?: Database["public"]["Enums"]["chat_member_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_members_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "chat_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      chat_message_mentions: {
+        Row: {
+          created_at: string
+          id: number
+          mentioned_user_id: string | null
+          message_id: number
+          raw_label: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          mentioned_user_id?: string | null
+          message_id: number
+          raw_label?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          mentioned_user_id?: string | null
+          message_id?: number
+          raw_label?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_mentions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          attachments: Json | null
+          chat_id: string
+          created_at: string
+          id: number
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          chat_id: string
+          created_at?: string
+          id?: number
+          message?: string
+          sender_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          chat_id?: string
+          created_at?: string
+          id?: number
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      chats: {
+        Row: {
+          allow_replies: boolean
+          created_at: string
+          created_by: string
+          id: string
+          name: string | null
+          org_id: string
+          type: Database["public"]["Enums"]["chat_type"]
+        }
+        Insert: {
+          allow_replies?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          name?: string | null
+          org_id: string
+          type: Database["public"]["Enums"]["chat_type"]
+        }
+        Update: {
+          allow_replies?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string | null
+          org_id?: string
+          type?: Database["public"]["Enums"]["chat_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chats_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "chats_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "chats_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communities: {
+        Row: {
+          allow_unit_master_post: boolean
+          allow_unit_user_post: boolean
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          org_id: string
+          segment_type:
+            | Database["public"]["Enums"]["community_segment_type"]
+            | null
+          updated_at: string
+          visibility: Database["public"]["Enums"]["community_visibility"]
+        }
+        Insert: {
+          allow_unit_master_post?: boolean
+          allow_unit_user_post?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          org_id: string
+          segment_type?:
+            | Database["public"]["Enums"]["community_segment_type"]
+            | null
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["community_visibility"]
+        }
+        Update: {
+          allow_unit_master_post?: boolean
+          allow_unit_user_post?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          org_id?: string
+          segment_type?:
+            | Database["public"]["Enums"]["community_segment_type"]
+            | null
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["community_visibility"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "communities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "communities_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_segments: {
+        Row: {
+          community_id: string
+          created_at: string
+          org_id: string
+          target_id: string
+          target_type: Database["public"]["Enums"]["community_segment_type"]
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          org_id: string
+          target_id: string
+          target_type: Database["public"]["Enums"]["community_segment_type"]
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          org_id?: string
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["community_segment_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_segments_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_segments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_spaces: {
+        Row: {
+          community_id: string
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          org_id: string
+          space_type: Database["public"]["Enums"]["community_space_type"]
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          org_id: string
+          space_type: Database["public"]["Enums"]["community_space_type"]
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          org_id?: string
+          space_type?: Database["public"]["Enums"]["community_space_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_spaces_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_spaces_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "community_spaces_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_spaces_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "community_spaces_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_modules: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          ordem: number
+          title: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          title: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_progress: {
+        Row: {
+          course_id: string
+          created_at: string
+          data_conclusao: string | null
+          lesson_id: string
+          nota_prova_final: number | null
+          nota_quiz: number | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          data_conclusao?: string | null
+          lesson_id: string
+          nota_prova_final?: number | null
+          nota_quiz?: number | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          data_conclusao?: string | null
+          lesson_id?: string
+          nota_prova_final?: number | null
+          nota_quiz?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_progress_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "course_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      course_reviews: {
+        Row: {
+          comment: string | null
+          course_id: string
+          created_at: string
+          id: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          rating: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_reviews_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "course_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          avaliacao_media: number
+          carga_horaria: number | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          org_id: string
+          quantidade_avaliacoes: number
+          status: string
+          tags: string[]
+          title: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          avaliacao_media?: number
+          carga_horaria?: number | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          org_id: string
+          quantidade_avaliacoes?: number
+          status?: string
+          tags?: string[]
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avaliacao_media?: number
+          carga_horaria?: number | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          org_id?: string
+          quantidade_avaliacoes?: number
+          status?: string
+          tags?: string[]
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "courses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "courses_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courses_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      design_files: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          org_id: string
+          thumbnail_path: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          org_id: string
+          thumbnail_path?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          org_id?: string
+          thumbnail_path?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_files_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_profile: {
+        Row: {
+          cargo: string | null
+          created_at: string
+          data_entrada: string | null
+          id: string
+          org_id: string
+          time_principal_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cargo?: string | null
+          created_at?: string
+          data_entrada?: string | null
+          id?: string
+          org_id: string
+          time_principal_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cargo?: string | null
+          created_at?: string
+          data_entrada?: string | null
+          id?: string
+          org_id?: string
+          time_principal_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_profile_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_profile_time_principal_id_fkey"
+            columns: ["time_principal_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "employee_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      equipe_members: {
+        Row: {
+          created_at: string
+          equipe_id: string
+          org_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          equipe_id: string
+          org_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          equipe_id?: string
+          org_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipe_members_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipe_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      equipes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          leader_user_id: string
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          leader_user_id: string
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          leader_user_id?: string
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipes_leader_user_id_fkey"
+            columns: ["leader_user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipes_leader_user_id_fkey"
+            columns: ["leader_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipes_leader_user_id_fkey"
+            columns: ["leader_user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_questions: {
+        Row: {
+          alternatives: string[]
+          correct_index: number
+          created_at: string
+          exam_id: string
+          id: string
+          ordem: number
+          question: string
+        }
+        Insert: {
+          alternatives: string[]
+          correct_index: number
+          created_at?: string
+          exam_id: string
+          id?: string
+          ordem?: number
+          question: string
+        }
+        Update: {
+          alternatives?: string[]
+          correct_index?: number
+          created_at?: string
+          exam_id?: string
+          id?: string
+          ordem?: number
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          nota_minima_aprovacao: number
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          nota_minima_aprovacao?: number
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          nota_minima_aprovacao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_url: string
+          id: string
+          lesson_id: string
+          mime_type: string | null
+          size: number | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_url: string
+          id?: string
+          lesson_id: string
+          mime_type?: string | null
+          size?: number | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          lesson_id?: string
+          mime_type?: string | null
+          size?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_attachments_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_quizzes: {
+        Row: {
+          alternatives: string[]
+          correct_index: number
+          created_at: string
+          id: string
+          lesson_id: string
+          ordem: number
+          question: string
+        }
+        Insert: {
+          alternatives: string[]
+          correct_index: number
+          created_at?: string
+          id?: string
+          lesson_id: string
+          ordem?: number
+          question: string
+        }
+        Update: {
+          alternatives?: string[]
+          correct_index?: number
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          ordem?: number
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_quizzes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          content_html: string | null
+          course_id: string
+          created_at: string
+          description: string | null
+          id: string
+          liberada: boolean
+          module_id: string | null
+          ordem: number
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          content_html?: string | null
+          course_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          liberada?: boolean
+          module_id?: string | null
+          ordem?: number
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          content_html?: string | null
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          liberada?: boolean
+          module_id?: string | null
+          ordem?: number
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
             referencedColumns: ["id"]
           },
         ]
@@ -142,6 +1565,13 @@ export type Database = {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -151,607 +1581,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "unit_users_view"
             referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      push_subscriptions: {
-        Row: {
-          created_at: string
-          endpoint: string
-          id: string
-          keys: Json
-          org_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          endpoint: string
-          id?: string
-          keys: Json
-          org_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          endpoint?: string
-          id?: string
-          keys?: Json
-          org_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_subscriptions_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "unit_users_view"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      chat_message_mentions: {
-        Row: {
-          created_at: string
-          id: number
-          mentioned_user_id: string | null
-          message_id: number
-          raw_label: string | null
-          type: "user" | "all"
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          mentioned_user_id?: string | null
-          message_id: number
-          raw_label?: string | null
-          type: "user" | "all"
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          mentioned_user_id?: string | null
-          message_id?: number
-          raw_label?: string | null
-          type?: "user" | "all"
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_message_mentions_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "chat_messages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_message_mentions_mentioned_user_id_fkey"
-            columns: ["mentioned_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_message_mentions_mentioned_user_id_fkey"
-            columns: ["mentioned_user_id"]
-            isOneToOne: false
-            referencedRelation: "unit_users_view"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      chat_members: {
-        Row: {
-          chat_id: string
-          created_at: string
-          id: number
-          joined_at: string
-          role: Database["public"]["Enums"]["chat_member_role"]
-          user_id: string
-        }
-        Insert: {
-          chat_id: string
-          created_at?: string
-          id?: number
-          joined_at?: string
-          role?: Database["public"]["Enums"]["chat_member_role"]
-          user_id: string
-        }
-        Update: {
-          chat_id?: string
-          created_at?: string
-          id?: number
-          joined_at?: string
-          role?: Database["public"]["Enums"]["chat_member_role"]
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_members_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "unit_users_view"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      chat_messages: {
-        Row: {
-          attachments: Json | null
-          chat_id: string
-          created_at: string
-          id: number
-          message: string
-          sender_id: string
-        }
-        Insert: {
-          attachments?: Json | null
-          chat_id: string
-          created_at?: string
-          id?: number
-          message: string
-          sender_id: string
-        }
-        Update: {
-          attachments?: Json | null
-          chat_id?: string
-          created_at?: string
-          id?: number
-          message?: string
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "unit_users_view"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      chats: {
-        Row: {
-          allow_replies: boolean
-          created_at: string
-          created_by: string
-          id: string
-          name: string | null
-          org_id: string
-          type: Database["public"]["Enums"]["chat_type"]
-        }
-        Insert: {
-          allow_replies?: boolean
-          created_at?: string
-          created_by: string
-          id?: string
-          name?: string | null
-          org_id: string
-          type: Database["public"]["Enums"]["chat_type"]
-        }
-        Update: {
-          allow_replies?: boolean
-          created_at?: string
-          created_by?: string
-          id?: string
-          name?: string | null
-          org_id?: string
-          type?: Database["public"]["Enums"]["chat_type"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chats_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chats_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "unit_users_view"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "chats_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      announcements: {
-        Row: {
-          allow_comments: boolean
-          allow_reactions: boolean
-          author_id: string
-          calendar_event_id: string | null
-          content: string
-          created_at: string
-          id: string
-          media_kind: string | null
-          media_thumbnail_url: string | null
-          media_url: string | null
-          org_id: string
-          send_at: string | null
-          sent_at: string | null
-          status: string
-          title: string
-        }
-        Insert: {
-          allow_comments?: boolean
-          allow_reactions?: boolean
-          author_id: string
-          calendar_event_id?: string | null
-          content: string
-          created_at?: string
-          id?: string
-          media_kind?: string | null
-          media_thumbnail_url?: string | null
-          media_url?: string | null
-          org_id: string
-          send_at?: string | null
-          sent_at?: string | null
-          status?: string
-          title: string
-        }
-        Update: {
-          allow_comments?: boolean
-          allow_reactions?: boolean
-          author_id?: string
-          calendar_event_id?: string | null
-          content?: string
-          created_at?: string
-          id?: string
-          media_kind?: string | null
-          media_thumbnail_url?: string | null
-          media_url?: string | null
-          org_id?: string
-          send_at?: string | null
-          sent_at?: string | null
-          status?: string
-          title?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "announcements_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "announcements_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "announcements_calendar_event_id_fkey"
-            columns: ["calendar_event_id"]
-            isOneToOne: false
-            referencedRelation: "calendar_events"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      announcement_recipients: {
-        Row: {
-          announcement_id: string
-          created_at: string
-          group_id: string | null
-          id: string
-          org_id: string
-          user_id: string | null
-        }
-        Insert: {
-          announcement_id: string
-          created_at?: string
-          group_id?: string | null
-          id?: string
-          org_id: string
-          user_id?: string | null
-        }
-        Update: {
-          announcement_id?: string
-          created_at?: string
-          group_id?: string | null
-          id?: string
-          org_id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "announcement_recipients_announcement_id_fkey"
-            columns: ["announcement_id"]
-            isOneToOne: false
-            referencedRelation: "announcements"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "announcement_recipients_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "user_groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "announcement_recipients_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "announcement_recipients_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      announcement_comments: {
-        Row: {
-          announcement_id: string
-          author_id: string
-          content: string
-          created_at: string
-          id: string
-        }
-        Insert: {
-          announcement_id: string
-          author_id: string
-          content: string
-          created_at?: string
-          id?: string
-        }
-        Update: {
-          announcement_id?: string
-          author_id?: string
-          content?: string
-          created_at?: string
-          id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "announcement_comments_announcement_id_fkey"
-            columns: ["announcement_id"]
-            isOneToOne: false
-            referencedRelation: "announcements"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "announcement_comments_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      announcement_reactions: {
-        Row: {
-          announcement_id: string
-          author_id: string
-          created_at: string
-          emoji: string
-        }
-        Insert: {
-          announcement_id: string
-          author_id: string
-          created_at?: string
-          emoji: string
-        }
-        Update: {
-          announcement_id?: string
-          author_id?: string
-          created_at?: string
-          emoji?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "announcement_reactions_announcement_id_fkey"
-            columns: ["announcement_id"]
-            isOneToOne: false
-            referencedRelation: "announcements"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "announcement_reactions_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      announcement_views: {
-        Row: {
-          announcement_id: string
-          id: string
-          opened_at: string
-          org_id: string
-          user_id: string
-        }
-        Insert: {
-          announcement_id: string
-          id?: string
-          opened_at?: string
-          org_id: string
-          user_id: string
-        }
-        Update: {
-          announcement_id?: string
-          id?: string
-          opened_at?: string
-          org_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "announcement_views_announcement_id_fkey"
-            columns: ["announcement_id"]
-            isOneToOne: false
-            referencedRelation: "announcements"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "announcement_views_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "announcement_views_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      design_files: {
-        Row: {
-          created_at: string
-          data: Json | null
-          id: string
-          org_id: string
-          thumbnail_path: string | null
-          title: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          data?: Json | null
-          id?: string
-          org_id: string
-          thumbnail_path?: string | null
-          title: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          data?: Json | null
-          id?: string
-          org_id?: string
-          thumbnail_path?: string | null
-          title?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "design_files_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "design_files_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      employee_profile: {
-        Row: {
-          cargo: string | null
-          created_at: string
-          data_entrada: string | null
-          id: string
-          org_id: string
-          time_principal_id: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          cargo?: string | null
-          created_at?: string
-          data_entrada?: string | null
-          id?: string
-          org_id: string
-          time_principal_id?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          cargo?: string | null
-          created_at?: string
-          data_entrada?: string | null
-          id?: string
-          org_id?: string
-          time_principal_id?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "employee_profile_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_profile_time_principal_id_fkey"
-            columns: ["time_principal_id"]
-            isOneToOne: false
-            referencedRelation: "equipes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_profile_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -781,6 +1610,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orgs"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "org_members_user_id_fkey"
@@ -876,6 +1712,62 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          keys: Json
+          org_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          keys: Json
+          org_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          keys?: Json
+          org_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       unit_members: {
         Row: {
           org_id: string | null
@@ -913,6 +1805,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unit_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "unit_members_user_id_fkey"
@@ -1061,654 +1960,6 @@ export type Database = {
           },
         ]
       }
-      equipes: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          leader_user_id: string
-          name: string
-          org_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          leader_user_id: string
-          name: string
-          org_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          leader_user_id?: string
-          name?: string
-          org_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "equipes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "equipes_leader_user_id_fkey"
-            columns: ["leader_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "equipes_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      equipe_members: {
-        Row: {
-          created_at: string
-          equipe_id: string
-          org_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          equipe_id: string
-          org_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          equipe_id?: string
-          org_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "equipe_members_equipe_id_fkey"
-            columns: ["equipe_id"]
-            isOneToOne: false
-            referencedRelation: "equipes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "equipe_members_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "equipe_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      communities: {
-        Row: {
-          allow_unit_master_post: boolean
-          allow_unit_user_post: boolean
-          created_at: string
-          created_by: string
-          id: string
-          name: string
-          org_id: string
-          segment_type: Database["public"]["Enums"]["community_segment_type"] | null
-          updated_at: string
-          visibility: Database["public"]["Enums"]["community_visibility"]
-        }
-        Insert: {
-          allow_unit_master_post?: boolean
-          allow_unit_user_post?: boolean
-          created_at?: string
-          created_by: string
-          id?: string
-          name: string
-          org_id: string
-          segment_type?: Database["public"]["Enums"]["community_segment_type"] | null
-          updated_at?: string
-          visibility?: Database["public"]["Enums"]["community_visibility"]
-        }
-        Update: {
-          allow_unit_master_post?: boolean
-          allow_unit_user_post?: boolean
-          created_at?: string
-          created_by?: string
-          id?: string
-          name?: string
-          org_id?: string
-          segment_type?: Database["public"]["Enums"]["community_segment_type"] | null
-          updated_at?: string
-          visibility?: Database["public"]["Enums"]["community_visibility"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "communities_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "communities_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      community_segments: {
-        Row: {
-          community_id: string
-          created_at: string
-          org_id: string
-          target_id: string
-          target_type: Database["public"]["Enums"]["community_segment_type"]
-        }
-        Insert: {
-          community_id: string
-          created_at?: string
-          org_id: string
-          target_id: string
-          target_type: Database["public"]["Enums"]["community_segment_type"]
-        }
-        Update: {
-          community_id?: string
-          created_at?: string
-          org_id?: string
-          target_id?: string
-          target_type?: Database["public"]["Enums"]["community_segment_type"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_segments_community_id_fkey"
-            columns: ["community_id"]
-            isOneToOne: false
-            referencedRelation: "communities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_segments_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      community_spaces: {
-        Row: {
-          community_id: string
-          created_at: string
-          created_by: string
-          id: string
-          name: string
-          org_id: string
-          space_type: Database["public"]["Enums"]["community_space_type"]
-          updated_at: string
-        }
-        Insert: {
-          community_id: string
-          created_at?: string
-          created_by: string
-          id?: string
-          name: string
-          org_id: string
-          space_type: Database["public"]["Enums"]["community_space_type"]
-          updated_at?: string
-        }
-        Update: {
-          community_id?: string
-          created_at?: string
-          created_by?: string
-          id?: string
-          name?: string
-          org_id?: string
-          space_type?: Database["public"]["Enums"]["community_space_type"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_spaces_community_id_fkey"
-            columns: ["community_id"]
-            isOneToOne: false
-            referencedRelation: "communities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_spaces_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_spaces_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      courses: {
-        Row: {
-          avaliacao_media: number
-          carga_horaria: number | null
-          cover_url: string | null
-          created_at: string
-          created_by: string | null
-          description: string | null
-          id: string
-          org_id: string
-          quantidade_avaliacoes: number
-          status: string
-          tags: string[]
-          title: string
-          unit_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          avaliacao_media?: number
-          carga_horaria?: number | null
-          cover_url?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          org_id: string
-          quantidade_avaliacoes?: number
-          status?: string
-          tags?: string[]
-          title: string
-          unit_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          avaliacao_media?: number
-          carga_horaria?: number | null
-          cover_url?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          org_id?: string
-          quantidade_avaliacoes?: number
-          status?: string
-          tags?: string[]
-          title?: string
-          unit_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "courses_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "courses_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "courses_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      course_modules: {
-        Row: {
-          course_id: string
-          created_at: string
-          id: string
-          ordem: number
-          title: string
-        }
-        Insert: {
-          course_id: string
-          created_at?: string
-          id?: string
-          ordem?: number
-          title: string
-        }
-        Update: {
-          course_id?: string
-          created_at?: string
-          id?: string
-          ordem?: number
-          title?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "course_modules_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      lessons: {
-        Row: {
-          content_html: string | null
-          course_id: string
-          created_at: string
-          description: string | null
-          id: string
-          liberada: boolean
-          module_id: string | null
-          ordem: number
-          title: string
-          updated_at: string
-          video_url: string | null
-        }
-        Insert: {
-          content_html?: string | null
-          course_id: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          liberada?: boolean
-          module_id?: string | null
-          ordem?: number
-          title: string
-          updated_at?: string
-          video_url?: string | null
-        }
-        Update: {
-          content_html?: string | null
-          course_id?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          liberada?: boolean
-          module_id?: string | null
-          ordem?: number
-          title?: string
-          updated_at?: string
-          video_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lessons_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lessons_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "course_modules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      lesson_attachments: {
-        Row: {
-          created_at: string
-          file_name: string
-          file_url: string
-          id: string
-          lesson_id: string
-          mime_type: string | null
-          size: number | null
-        }
-        Insert: {
-          created_at?: string
-          file_name: string
-          file_url: string
-          id?: string
-          lesson_id: string
-          mime_type?: string | null
-          size?: number | null
-        }
-        Update: {
-          created_at?: string
-          file_name?: string
-          file_url?: string
-          id?: string
-          lesson_id?: string
-          mime_type?: string | null
-          size?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lesson_attachments_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "lessons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      lesson_quizzes: {
-        Row: {
-          alternatives: string[]
-          correct_index: number
-          created_at: string
-          id: string
-          lesson_id: string
-          ordem: number
-          question: string
-        }
-        Insert: {
-          alternatives: string[]
-          correct_index: number
-          created_at?: string
-          id?: string
-          lesson_id: string
-          ordem?: number
-          question: string
-        }
-        Update: {
-          alternatives?: string[]
-          correct_index?: number
-          created_at?: string
-          id?: string
-          lesson_id?: string
-          ordem?: number
-          question?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lesson_quizzes_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "lessons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      exams: {
-        Row: {
-          course_id: string
-          created_at: string
-          id: string
-          nota_minima_aprovacao: number
-        }
-        Insert: {
-          course_id: string
-          created_at?: string
-          id?: string
-          nota_minima_aprovacao?: number
-        }
-        Update: {
-          course_id?: string
-          created_at?: string
-          id?: string
-          nota_minima_aprovacao?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "exams_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      exam_questions: {
-        Row: {
-          alternatives: string[]
-          correct_index: number
-          created_at: string
-          exam_id: string
-          id: string
-          ordem: number
-          question: string
-        }
-        Insert: {
-          alternatives: string[]
-          correct_index: number
-          created_at?: string
-          exam_id: string
-          id?: string
-          ordem?: number
-          question: string
-        }
-        Update: {
-          alternatives?: string[]
-          correct_index?: number
-          created_at?: string
-          exam_id?: string
-          id?: string
-          ordem?: number
-          question?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "exam_questions_exam_id_fkey"
-            columns: ["exam_id"]
-            isOneToOne: false
-            referencedRelation: "exams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      course_progress: {
-        Row: {
-          course_id: string
-          created_at: string
-          data_conclusao: string | null
-          lesson_id: string
-          nota_prova_final: number | null
-          nota_quiz: number | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          course_id: string
-          created_at?: string
-          data_conclusao?: string | null
-          lesson_id: string
-          nota_prova_final?: number | null
-          nota_quiz?: number | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          course_id?: string
-          created_at?: string
-          data_conclusao?: string | null
-          lesson_id?: string
-          nota_prova_final?: number | null
-          nota_quiz?: number | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "course_progress_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "course_progress_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "lessons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "course_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      course_reviews: {
-        Row: {
-          comment: string | null
-          course_id: string
-          created_at: string
-          id: string
-          rating: number
-          user_id: string
-        }
-        Insert: {
-          comment?: string | null
-          course_id: string
-          created_at?: string
-          id?: string
-          rating: number
-          user_id: string
-        }
-        Update: {
-          comment?: string | null
-          course_id?: string
-          created_at?: string
-          id?: string
-          rating?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "course_reviews_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "course_reviews_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       org_users_view: {
@@ -1728,13 +1979,6 @@ export type Database = {
             referencedRelation: "orgs"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "org_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       team_members: {
@@ -1744,14 +1988,19 @@ export type Database = {
           team_id: string | null
           user_id: string | null
         }
+        Insert: {
+          created_at?: string | null
+          org_id?: string | null
+          team_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          org_id?: string | null
+          team_id?: string | null
+          user_id?: string | null
+        }
         Relationships: [
-          {
-            foreignKeyName: "equipe_members_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "equipe_members_equipe_id_fkey"
             columns: ["team_id"]
@@ -1760,11 +2009,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "equipe_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "equipe_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipe_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1786,21 +2056,58 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-  }
+      }
     }
     Functions: {
+      can_interact_announcement: {
+        Args: { p_announcement_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      can_manage_announcement: {
+        Args: { p_announcement_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      can_manage_community: {
+        Args: { p_community_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      can_view_announcement: {
+        Args: { p_announcement_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      can_view_community: {
+        Args: { p_community_id: string; p_user_id: string }
+        Returns: boolean
+      }
       create_chat_message_with_mentions: {
         Args: {
-          p_attachments?: Json | null
+          p_attachments?: Json
           p_chat_id: string
           p_mentions?: Json
           p_message: string
         }
-        Returns: Database["public"]["Tables"]["chat_messages"]["Row"]
+        Returns: {
+          attachments: Json | null
+          chat_id: string
+          created_at: string
+          id: number
+          message: string
+          sender_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "chat_messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      is_platform_admin_by_id: {
-        Args: { target: string }
-        Returns: boolean
+      get_unread_chat_notifications: {
+        Args: { p_user_id: string }
+        Returns: {
+          chat_id: string
+          last_notification_at: string
+          unread_count: number
+        }[]
       }
       get_user_identity_many: {
         Args: { p_user_ids: string[] }
@@ -1812,94 +2119,52 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_unread_chat_notifications: {
-        Args: { p_user_id: string }
-        Returns: {
-          chat_id: string | null
-          unread_count: number | null
-          last_notification_at: string | null
-        }[]
-      }
-      group_unit: {
-        Args: { gid: string }
-        Returns: string
-      }
-      is_group_member: {
-        Args: { gid: string }
+      group_unit: { Args: { gid: string }; Returns: string }
+      has_org_admin_role: {
+        Args: { p_org_id: string; p_user_id: string }
         Returns: boolean
       }
-      is_group_owner: {
-        Args: { gid: string }
+      has_org_management_role: {
+        Args: { p_org_id: string; p_user_id: string }
         Returns: boolean
       }
-      is_member_of_org: {
-        Args: { target_org: string }
+      has_org_membership: {
+        Args: { p_org_id: string; p_user_id: string }
         Returns: boolean
       }
-      is_member_of_unit: {
-        Args: { target_unit: string }
+      is_chat_admin: {
+        Args: { p_chat_id: string; p_user_id: string }
         Returns: boolean
       }
-      is_org_admin: {
-        Args: { target_org: string }
+      is_chat_member: {
+        Args: { p_chat_id: string; p_user_id: string }
         Returns: boolean
       }
-      is_org_admin_of: {
-        Args: { target_org: string }
-        Returns: boolean
-      }
-      is_org_master: {
-        Args: { oid: string }
-        Returns: boolean
-      }
-      is_org_member: {
-        Args: { oid: string }
-        Returns: boolean
-      }
-      is_platform_admin: {
-        Args: Record<PropertyKey, never> | { uid: string }
-        Returns: boolean
-      }
-      is_unit_admin: {
-        Args: { p_unit_id: string }
-        Returns: boolean
-      }
-      is_unit_master: {
-        Args: { target_unit: string }
-        Returns: boolean
-      }
-      is_unit_master_of: {
-        Args: { target_org: string }
-        Returns: boolean
-      }
-      is_unit_member: {
-        Args: { uid_: string }
-        Returns: boolean
-      }
-      org_admin_count: {
-        Args: { p_org: string }
-        Returns: number
-      }
-      slugify: {
-        Args: { txt: string }
-        Returns: string
-      }
-      unit_org: {
-        Args: { uid_: string }
-        Returns: string
-      }
+      is_group_member: { Args: { gid: string }; Returns: boolean }
+      is_group_owner: { Args: { gid: string }; Returns: boolean }
+      is_member_of_org: { Args: { target_org: string }; Returns: boolean }
+      is_member_of_unit: { Args: { target_unit: string }; Returns: boolean }
+      is_org_admin: { Args: { target_org: string }; Returns: boolean }
+      is_org_admin_of: { Args: { target_org: string }; Returns: boolean }
+      is_org_master: { Args: { oid: string }; Returns: boolean }
+      is_org_member: { Args: { oid: string }; Returns: boolean }
+      is_platform_admin:
+        | { Args: never; Returns: boolean }
+        | { Args: { uid: string }; Returns: boolean }
+      is_platform_admin_by_id: { Args: { target: string }; Returns: boolean }
+      is_platform_admin_uid: { Args: { p_user_id: string }; Returns: boolean }
+      is_unit_admin: { Args: { p_unit_id: string }; Returns: boolean }
+      is_unit_master: { Args: { target_unit: string }; Returns: boolean }
+      is_unit_master_of: { Args: { target_org: string }; Returns: boolean }
+      is_unit_member: { Args: { uid_: string }; Returns: boolean }
+      org_admin_count: { Args: { p_org: string }; Returns: number }
+      slugify: { Args: { txt: string }; Returns: string }
+      unit_org: { Args: { uid_: string }; Returns: string }
       update_profile_self: {
-        Args: {
-          p_avatar_url: string | null
-          p_full_name: string | null
-          p_phone: string | null
-        }
+        Args: { p_avatar_url: string; p_full_name: string; p_phone: string }
         Returns: undefined
       }
-      user_id_by_email: {
-        Args: { p_email: string }
-        Returns: string
-      }
+      user_id_by_email: { Args: { p_email: string }; Returns: string }
     }
     Enums: {
       app_role: "org_admin" | "org_master" | "unit_master" | "unit_user"
@@ -2039,9 +2304,14 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["org_admin", "org_master", "unit_master", "unit_user"],
+      chat_member_role: ["admin", "member"],
+      chat_type: ["direct", "group", "broadcast"],
       community_segment_type: ["group", "team"],
       community_space_type: ["publicacoes", "eventos"],
       community_visibility: ["global", "segmented"],

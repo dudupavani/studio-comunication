@@ -45,15 +45,18 @@ export default async function LessonAdminPage({
     console.error("lesson fetch error", error);
     throw error;
   }
-  if (!lesson || lesson.course?.id !== courseId) {
+  const lessonCourse = Array.isArray(lesson?.course) ? lesson?.course[0] : lesson?.course;
+  const lessonModule = Array.isArray(lesson?.module) ? lesson?.module[0] : lesson?.module;
+
+  if (!lesson || !lessonCourse || lessonCourse.id !== courseId) {
     return notFound();
   }
 
-  if (!canManageCourse(auth, lesson.course.org_id as string, lesson.course.unit_id as string | null)) {
+  if (!canManageCourse(auth, lessonCourse.org_id as string, lessonCourse.unit_id as string | null)) {
     redirect(`/learning/courses/${courseId}`);
   }
 
-  const moduleName = lesson.module?.title ?? "Conteúdo";
+  const moduleName = lessonModule?.title ?? "Conteúdo";
   const moduleLink = `/learning/admin/courses/${courseId}?tab=content${searchParams?.module ? `#${searchParams.module}` : ""}`;
 
   return (

@@ -41,12 +41,13 @@ export async function PATCH(
 
     if (error) throw error;
     if (!lesson) return NextResponse.json({ error: "Aula não encontrada" }, { status: 404 });
+    const lessonCourse = Array.isArray(lesson.course) ? lesson.course[0] : lesson.course;
 
     if (
       !canManageCourse(
         auth,
-        lesson.course?.org_id as string,
-        lesson.course?.unit_id as string | null
+        lessonCourse?.org_id as string,
+        lessonCourse?.unit_id as string | null
       )
     ) {
       return NextResponse.json({ error: "Sem permissão" }, { status: 403 });

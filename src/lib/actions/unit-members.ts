@@ -264,11 +264,12 @@ export async function addUnitMember(params: {
   revalidatePath(`/units/${params.unitSlug}/members`);
 
   // 5) Monta o retorno compatível (role/email = null)
+  const profile = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles;
   const payload: UnitMember = {
     user_id: data.user_id as string,
     role: null,
     profiles: {
-      full_name: (data.profiles?.full_name as string | null) ?? null,
+      full_name: (profile?.full_name as string | null) ?? null,
       email: null,
     },
   };
