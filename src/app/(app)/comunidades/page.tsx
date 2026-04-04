@@ -5,7 +5,7 @@ import CommunitiesModule from "./components/communities-module";
 export const dynamic = "force-dynamic";
 
 function resolveManagePermission(
-  auth: NonNullable<Awaited<ReturnType<typeof getAuthContext>>>
+  auth: NonNullable<Awaited<ReturnType<typeof getAuthContext>>>,
 ) {
   return (
     auth.platformRole === "platform_admin" ||
@@ -23,7 +23,7 @@ export default async function ComunidadesPage() {
   const canManage = resolveManagePermission(auth);
 
   return (
-    <div className="h-full p-4 sm:p-6">
+    <div className="h-full">
       <CommunitiesModule canManage={canManage} />
     </div>
   );

@@ -17,7 +17,7 @@ export default function ModuleTitle() {
   const isOnBasePath = basePath === pathname;
 
   return (
-    <h1 className="text-lg sm:text-xl font-bold tracking-tight">
+    <h1 className="!text-lg font-bold tracking-tight">
       {basePath && !isOnBasePath ? (
         <Link
           href={basePath}

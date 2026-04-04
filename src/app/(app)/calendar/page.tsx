@@ -37,7 +37,7 @@ export default async function CalendarPage() {
 
   return (
     <div className="container mx-auto h-full flex flex-col">
-      <div className="flex-grow py-4 px-4 sm:py-4 sm:px-0">
+      <div className="p-4">
         <CalendarClient
           orgId={authContext.orgId}
           unitId={authContext.unitIds?.[0]}

@@ -61,7 +61,7 @@ export function useCalendarEvents({
         orgId,
         unitId,
       }),
-    [from, to, orgId, unitId]
+    [from, to, orgId, unitId],
   );
 
   useEffect(() => {
@@ -69,7 +69,10 @@ export function useCalendarEvents({
     setLoading(true);
     setError(null);
 
-    fetch(`/api/calendar/events?${qs}`, { signal: controller.signal })
+    fetch(`/api/calendar/events?${qs}`, {
+      signal: controller.signal,
+      credentials: "include",
+    })
       .then(async (r) => {
         const json = await r.json().catch(() => ({}));
         if (!r.ok) {

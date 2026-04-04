@@ -9,6 +9,7 @@ Estas skills permanecem porque ajudam diretamente no fluxo atual do projeto.
 - [bug-investigation](./bug-investigation/SKILL.md)
 - [refactoring](./refactoring/SKILL.md)
 - [test-generation](./test-generation/SKILL.md)
+- [shadcn](./shadcn/SKILL.md)
 
 ## Regra de uso
 

@@ -2,6 +2,11 @@
 
 Este documento é um guia operacional para implementação e revisão de UI. Ele complementa `AGENTS.md` e não substitui as regras canônicas.
 
+## Regras na estrutura de montagem das telas
+
+- Não utilizar `src/components/ui/card.tsx` para estruturar páginas.
+- Em telas de estado vazio (quando ainda não existe conteúdo criado), utilizar o componente `src/components/ui/empty.tsx` como padrão de empty state.
+
 ## Tipografia e texto
 
 - Não adicionar classes extras de tamanho, peso ou cor em `h1` até `h6`.
