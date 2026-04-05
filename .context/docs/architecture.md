@@ -28,13 +28,23 @@ Fluxo esperado:
 - Route handlers devem permanecer finos; regras de negócio e acesso a dados ficam em `src/lib/*`.
 - Validação deve ocorrer na borda da aplicação, preferencialmente antes de tocar domínio ou banco.
 
+## Módulos arquivados / fora do escopo padrão
+
+- `src/app/(app)/chats`
+- `src/app/(app)/comunicados`
+- `src/app/(app)/design-editor`
+- `src/app/(app)/learning`
+- Código de suporte dedicado primariamente a esses fluxos
+
+Esses módulos permanecem versionados, mas não fazem parte do produto ativo. Não os use como referência para novas implementações e não proponha mudanças neles sem solicitação explícita de reativação ou manutenção.
+
 ## Módulos de maior atenção
 
 - Auth e permissão: `src/lib/auth-context.ts`, `src/lib/auth/*`, `src/lib/permissions*`
 - Notificações e inbox: `src/lib/notifications/*`
-- Chat e mensagens: `src/lib/messages/*`, `src/app/api/chats/**`, `src/app/api/messages/**`
-- AI: `src/lib/ai/*`, `src/lib/ai/clients/groq.ts`, rotas em `src/app/api/comunicados/ai/generate`
-- Learning, calendar e design-editor possuem fluxo próprio e não devem ser acoplados sem necessidade
+- Inbox e infraestrutura compartilhada de mensagens: `src/lib/messages/*`, `src/app/api/messages/**`
+- AI: `src/lib/ai/*`, `src/lib/ai/clients/groq.ts`
+- Calendar possui fluxo próprio e não deve ser acoplado sem necessidade
 
 ## Como decidir onde mudar
 

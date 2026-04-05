@@ -1,16 +1,22 @@
 # Visão Geral do Projeto
 
-`studio` é um app web multi-tenant de comunicação interna e operação organizacional. A aplicação concentra fluxos de mensagens, notificações, comunicados, calendário, usuários/organizações/unidades, aprendizagem e um editor de design em um único monólito modular com Next.js.
+`studio` é um app web multi-tenant de comunicação interna e operação organizacional. A aplicação concentra fluxos ativos de inbox/notificações, calendário e gestão organizacional em um único monólito modular com Next.js. Há também módulos arquivados mantidos no repositório apenas para possível reativação futura.
 
 ## Módulos principais
 
 - `inbox` e notificações: hub central de notificações e conteúdos recentes.
-- `chat`: conversas com menções e comportamento próprio de notificação.
-- `comunicados`: envios amplos com destinatários, comentários, reações, visualizações e métricas.
 - `calendar`: eventos e agenda.
 - `users`, `orgs`, `units`, `teams` e grupos: gestão de estrutura organizacional e lifecycle do usuário.
-- `learning`: cursos, módulos, lições, avaliações e revisões.
-- `design-editor`: edição visual e arquivos de design.
+
+## Módulos arquivados / ocultos do produto
+
+- `src/app/(app)/chats`
+- `src/app/(app)/comunicados`
+- `src/app/(app)/design-editor`
+- `src/app/(app)/learning`
+- Qualquer código de suporte cujo propósito principal seja atender esses fluxos
+
+Esses módulos permanecem no repositório apenas para reativação futura. Para trabalho normal de produto e implementação, trate-os como fora de escopo.
 
 ## Stack atual
 

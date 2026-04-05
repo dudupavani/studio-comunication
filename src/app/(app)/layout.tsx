@@ -10,13 +10,8 @@ import AppSidebar from "@/components/sidebar/app-sidebar";
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
-
-import { Separator } from "@/components/ui/separator";
-import { UserMenu } from "@/components/user-menu";
-import ModuleTitle from "@/components/modules-title";
-import { QuickAccessMenu } from "@/components/quick-access-menu";
+import { AppShellHeader } from "@/components/app-shell-header";
 
 // ✅ SSR: finaliza convite sem mexer na UI
 // ✅ CSR fallback: garante a finalização mesmo se o SSR não rodar
@@ -102,8 +97,7 @@ export default async function AppLayout({
     created_at: user.created_at,
   };
 
-  // Get active organization for sidebar
-  const { auth } = await getActiveOrgForSidebar();
+  await getActiveOrgForSidebar();
 
   return (
     <SidebarProvider defaultOpen>
@@ -113,22 +107,7 @@ export default async function AppLayout({
         {/* 🔄 Fallback em cliente (CSR) */}
         <FinalizeInviteCSR />
 
-        {/* Topbar */}
-        <header className="flex py-2 shrink-0 items-center gap-2 border-b">
-          <div className="flex items-center gap-2 px-4 w-full">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
-            <ModuleTitle />
-
-            <div className="ml-auto flex items-center gap-4">
-              <QuickAccessMenu />
-              <UserMenu user={userProfile} />
-            </div>
-          </div>
-        </header>
+        <AppShellHeader user={userProfile} />
 
         {/* Conteúdo */}
         <div className={cn("flex flex-col")}>{children}</div>

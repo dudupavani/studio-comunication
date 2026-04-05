@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { CirclePlus } from "lucide-react";
 import {
   Dialog,
   DialogTrigger,
@@ -192,8 +192,8 @@ export default function NewGroupModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="default" className="gap-2">
-          <Plus size={20} />
-          Grupo
+          <CirclePlus />
+          Criar grupo
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">

@@ -4,6 +4,7 @@ import type {
   MutableRefObject,
   SyntheticEvent,
 } from "react";
+import type { Profile } from "@/lib/types";
 
 export type CommunityVisibility = "global" | "segmented";
 export type SegmentType = "group" | "team";
@@ -37,6 +38,25 @@ export type CommunityItem = {
 
 export type CommunityDetail = Omit<CommunityItem, "spacesCount"> & {
   spaces: SpaceItem[];
+};
+
+export type CommunityFeedItem = {
+  id: string;
+  communityId: string;
+  spaceId: string;
+  spaceName?: string | null;
+  title?: string | null;
+  excerpt?: string | null;
+  coverUrl?: string | null;
+  authorName?: string | null;
+  createdAt: string;
+};
+
+export type CommunityFeed = {
+  communityId: string;
+  visibleSpaceIds: string[];
+  items: CommunityFeedItem[];
+  note?: string;
 };
 
 export type SegmentOption = {
@@ -84,6 +104,8 @@ export type PublicationComposerBlock =
 
 export type CommunitiesModuleProps = {
   canManage: boolean;
+  canCreateCommunity: boolean;
+  user: Profile;
   initialCommunityId?: string;
   initialSpaceId?: string;
 };

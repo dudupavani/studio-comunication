@@ -4,8 +4,12 @@ Este documento é um guia operacional para implementação e revisão de UI. Ele
 
 ## Regras na estrutura de montagem das telas
 
-- Não utilizar `src/components/ui/card.tsx` para estruturar páginas.
-- Em telas de estado vazio (quando ainda não existe conteúdo criado), utilizar o componente `src/components/ui/empty.tsx` como padrão de empty state.
+1. Não utilizar `src/components/ui/card.tsx` para estruturar páginas.
+2. Em telas de estado vazio (quando ainda não existe conteúdo criado), utilizar sempre:
+
+- Componente `src/components/ui/empty.tsx` como padrão de empty state.
+- Se a tela de estado vazio necessitar de uma ação de criar algum conteúdo, o componente `src/components/ui/empty.tsx` deve ter um botão (variant="primary" size="sm" ) para realizar esta ação (Exemplo: Criar grupo, Criar equipe, Criar Unidade, etc).
+- Nas telas de estado vazio nnão se aplica nenhum outro elemento na tela que não seja o item mencionado acima.
 
 ## Tipografia e texto
 
@@ -13,6 +17,19 @@ Este documento é um guia operacional para implementação e revisão de UI. Ele
 - Textos em `<p>` que não sejam subtítulo ou descrição auxiliar devem usar a cor padrão.
 - Textos em `TableCell` devem ficar em `text-sm` e cor primária por padrão.
 - Se houver dúvida entre “seguir o padrão atual” e “inventar novo estilo”, siga o padrão atual do domínio.
+
+## Regras de Iconografia
+
+1. Biblioteca de ícones oficial: `https://lucide.dev`.
+2. O ícone que representam entidades da aplicação:
+
+- Grupos de usuários: `Component`.
+- Equipes: `Users`.
+- Usuários: `Users`.
+- Usuário: `User`.
+- Unidades: `House`.
+- Organização: `Building2`.
+- Botão de "Criar", "Novo", "Adicionar": `CirclePlus`.
 
 ## Componentes compartilhados
 

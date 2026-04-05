@@ -1,14 +1,16 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  AppWindowMac,
+  Calendar,
+  Inbox,
+  Plus,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { CommunityItem } from "./types";
 
@@ -16,7 +18,7 @@ type CommunitySwitcherRailProps = {
   communities: CommunityItem[];
   communitiesLoading: boolean;
   selectedCommunityId: string | null;
-  canManage: boolean;
+  canCreateCommunity: boolean;
   onSelectCommunity: (communityId: string) => void;
   onCreateCommunity: () => void;
 };
@@ -27,67 +29,111 @@ function getCommunityInitial(name: string) {
   return normalized[0]?.toUpperCase() ?? "C";
 }
 
+const managementLinks = [
+  { href: "/inbox", label: "Inbox", icon: Inbox },
+  { href: "/calendar", label: "Calendário", icon: Calendar },
+  { href: "/dashboard", label: "Dashboard", icon: AppWindowMac },
+];
+
 export function CommunitySwitcherRail({
   communities,
   communitiesLoading,
   selectedCommunityId,
-  canManage,
+  canCreateCommunity,
   onSelectCommunity,
   onCreateCommunity,
 }: CommunitySwitcherRailProps) {
   return (
-    <aside className="hidden min-h-dvh border-r border-border bg-background lg:flex lg:w-20 lg:flex-col lg:items-center lg:py-4">
-      <TooltipProvider delayDuration={120}>
-        <div className="flex w-full flex-1 flex-col items-center gap-3 px-2">
-          {canManage ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-md"
-                  className="rounded-xl"
-                  onClick={onCreateCommunity}
-                  aria-label="Criar comunidade">
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Criar comunidade</TooltipContent>
-            </Tooltip>
-          ) : null}
+    <aside className="flex w-full flex-col gap-8 border-b border-border bg-background px-4 py-6 lg:min-h-[100dvh] lg:w-[214px] lg:border-b-0 lg:border-r lg:px-[15px] lg:py-[25px]">
+      <Link href="/comunidades" className="flex items-center gap-3">
+        <Image
+          src="/logo.png"
+          alt="Logo"
+          width={27}
+          height={27}
+          className="h-[27px] w-[27px] object-contain"
+        />
+        <span className="text-sm font-medium text-foreground">Logo</span>
+      </Link>
 
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+            Comunidades
+          </span>
+        </div>
+
+        {canCreateCommunity ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-auto justify-start px-0 text-sm font-medium text-muted-foreground"
+            onClick={onCreateCommunity}>
+            <Plus className="h-4 w-4" />
+            Criar comunidade
+          </Button>
+        ) : null}
+
+        <div className="space-y-2">
           {communitiesLoading
-            ? Array.from({ length: 4 }).map((_, index) => (
+            ? Array.from({ length: 3 }).map((_, index) => (
                 <div
-                  key={`community-rail-skeleton-${index}`}
-                  className="h-12 w-12 animate-pulse rounded-xl bg-muted"
-                />
+                  key={`community-switcher-skeleton-${index}`}
+                  className="flex items-center gap-3 px-1 py-1">
+                  <Skeleton className="h-9 w-9 rounded-lg" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
               ))
             : communities.map((community) => {
                 const isActive = selectedCommunityId === community.id;
                 return (
-                  <Tooltip key={community.id}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className={cn(
-                          "h-12 w-12 rounded-xl border border-transparent p-0 text-xl font-semibold",
-                          isActive
-                            ? "border-border bg-neutral-900! text-white! hover:bg-neutral-900! hover:text-white!"
-                            : "bg-muted/40 text-foreground hover:bg-muted",
-                        )}
-                        onClick={() => onSelectCommunity(community.id)}
-                        aria-label={`Abrir comunidade ${community.name}`}>
-                        {getCommunityInitial(community.name)}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">{community.name}</TooltipContent>
-                  </Tooltip>
+                  <Button
+                    key={community.id}
+                    type="button"
+                    variant="ghost"
+                    className={cn(
+                      "h-auto w-full justify-start gap-3 rounded-md px-0 py-1.5",
+                      isActive && "bg-transparent",
+                    )}
+                    onClick={() => onSelectCommunity(community.id)}
+                    aria-label={`Abrir comunidade ${community.name}`}>
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-zinc-700 text-sm font-semibold text-zinc-50",
+                        isActive && "bg-zinc-900",
+                      )}>
+                      {getCommunityInitial(community.name)}
+                    </span>
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {community.name}
+                    </span>
+                  </Button>
                 );
               })}
         </div>
-      </TooltipProvider>
+
+      </section>
+
+      <section className="space-y-4">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+          Gestão
+        </span>
+
+        <div className="space-y-1">
+          {managementLinks.map((item) => (
+            <Button
+              key={item.href}
+              variant="ghost"
+              className="h-auto w-full justify-start rounded-md px-3 py-2 text-sm font-medium"
+              asChild>
+              <Link href={item.href}>
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            </Button>
+          ))}
+        </div>
+      </section>
     </aside>
   );
 }

@@ -24,7 +24,7 @@ const LINKS = [
   { href: "/groups", label: "Grupos", icon: Group },
   { href: "/teams", label: "Equipes", icon: Users2 },
   { href: "/units", label: "Unidades", icon: Building },
-  { href: "/settings", label: "Organização", icon: Building2 },
+  { href: "/orgs", label: "Organização", icon: Building2 },
 ];
 
 export function QuickAccessMenu() {

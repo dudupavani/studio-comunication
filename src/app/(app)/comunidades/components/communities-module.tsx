@@ -1,21 +1,12 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import CommunitiesOnboarding from "./communities-onboarding";
 import { CommunityContentPane } from "./community-content-pane";
 import { CommunityFormDialog } from "./community-form-dialog";
 import { CommunitySelectionDialog } from "./community-selection-dialog";
 import { CommunitySidebar } from "./community-sidebar";
 import { CommunitySwitcherRail } from "./community-switcher-rail";
+import { CommunityWorkspaceHeader } from "./community-workspace-header";
+import { DestructiveConfirmationDialog } from "./destructive-confirmation-dialog";
 import { PublicationComposerModal } from "./publication-composer-modal";
 import { SpaceFormDialog } from "./space-form-dialog";
 import type { CommunitiesModuleProps } from "./types";
@@ -24,6 +15,8 @@ import { usePublicationComposer } from "./use-publication-composer";
 
 export default function CommunitiesModule({
   canManage,
+  canCreateCommunity,
+  user,
   initialCommunityId,
   initialSpaceId,
 }: CommunitiesModuleProps) {
@@ -32,15 +25,25 @@ export default function CommunitiesModule({
     initialSpaceId,
   });
 
+  const visibleFeedItems =
+    communitiesData.selectedSpace &&
+    communitiesData.selectedSpace.spaceType === "publicacoes"
+      ? (communitiesData.communityFeed?.items ?? []).filter(
+          (item) => item.spaceId === communitiesData.selectedSpaceId,
+        )
+      : communitiesData.communityFeed?.items ?? [];
+
   const composer = usePublicationComposer({
     selectedCommunityId: communitiesData.selectedCommunityId,
     selectedSpaceId: communitiesData.selectedSpaceId,
   });
 
   return (
-    <div className="space-y-4">
+    <>
       <CommunitySelectionDialog
-        open={communitiesData.selectorOpen}
+        open={
+          communitiesData.selectorOpen && communitiesData.communities.length > 0
+        }
         onOpenChange={(open) => {
           if (
             !communitiesData.selectedCommunityId &&
@@ -96,74 +99,50 @@ export default function CommunitiesModule({
 
       <PublicationComposerModal composer={composer} />
 
-      <AlertDialog
+      <DestructiveConfirmationDialog
         open={communitiesData.confirmDeleteCommunityOpen}
-        onOpenChange={communitiesData.setConfirmDeleteCommunityOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover comunidade</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação remove a comunidade e todos os espaços vinculados.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={communitiesData.deletingCommunity}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={communitiesData.handleDeleteCommunity}
-              disabled={communitiesData.deletingCommunity}>
-              {communitiesData.deletingCommunity ? "Removendo..." : "Remover"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={communitiesData.setConfirmDeleteCommunityOpen}
+        title="Remover comunidade"
+        description="Esta ação remove a comunidade e todos os espaços vinculados."
+        confirmLabel="Remover"
+        pendingLabel="Removendo..."
+        pending={communitiesData.deletingCommunity}
+        onConfirm={communitiesData.handleDeleteCommunity}
+      />
 
-      <AlertDialog
+      <DestructiveConfirmationDialog
         open={communitiesData.confirmDeleteSpaceOpen}
-        onOpenChange={communitiesData.setConfirmDeleteSpaceOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover espaço</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação remove o espaço selecionado da comunidade.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={communitiesData.deletingSpace}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={communitiesData.handleDeleteSpace}
-              disabled={communitiesData.deletingSpace}>
-              {communitiesData.deletingSpace ? "Removendo..." : "Remover"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={communitiesData.setConfirmDeleteSpaceOpen}
+        title="Remover espaço"
+        description="Esta ação remove o espaço selecionado da comunidade."
+        confirmLabel="Remover"
+        pendingLabel="Removendo..."
+        pending={communitiesData.deletingSpace}
+        onConfirm={communitiesData.handleDeleteSpace}
+      />
 
-      {communitiesData.communities.length === 0 &&
-      !communitiesData.communitiesLoading ? (
-        <CommunitiesOnboarding
-          canManage={canManage}
-          onOpenCreateDialog={() => communitiesData.setCommunityDialogMode("create")}
+      <div className="flex min-h-[100dvh] flex-col bg-background lg:flex-row">
+        <CommunitySwitcherRail
+          communities={communitiesData.communities}
+          communitiesLoading={communitiesData.communitiesLoading}
+          selectedCommunityId={communitiesData.selectedCommunityId}
+          canCreateCommunity={canCreateCommunity}
+          onSelectCommunity={communitiesData.navigateToCommunity}
+          onCreateCommunity={() =>
+            communitiesData.setCommunityDialogMode("create")
+          }
         />
-      ) : (
-        <div className="overflow-hidden">
-          <div className="grid min-h-[calc(100vh-8rem)] grid-cols-1 lg:grid-cols-[80px_330px_minmax(0,1fr)]">
-            <CommunitySwitcherRail
-              communities={communitiesData.communities}
-              communitiesLoading={communitiesData.communitiesLoading}
-              selectedCommunityId={communitiesData.selectedCommunityId}
-              canManage={canManage}
-              onSelectCommunity={communitiesData.navigateToCommunity}
-              onCreateCommunity={() =>
-                communitiesData.setCommunityDialogMode("create")
-              }
-            />
 
+        <div className="flex min-h-[100dvh] min-w-0 flex-1 flex-col">
+          <CommunityWorkspaceHeader
+            activeCommunity={communitiesData.activeCommunity}
+            isFeedView={!communitiesData.selectedSpaceId}
+            onOpenSelector={() => communitiesData.setSelectorOpen(true)}
+            onNavigateToFeed={communitiesData.navigateToFeed}
+            user={user}
+          />
+
+          <div className="flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[216px_minmax(0,1fr)]">
             <CommunitySidebar
               activeCommunity={communitiesData.activeCommunity}
               selectedCommunityId={communitiesData.selectedCommunityId}
@@ -173,29 +152,42 @@ export default function CommunitiesModule({
               canManage={canManage}
               onNavigateToFeed={communitiesData.navigateToFeed}
               onNavigateToSpace={communitiesData.navigateToSpace}
-              onOpenCreateSpace={() => communitiesData.setSpaceDialogMode("create")}
+              onOpenCreateSpace={() =>
+                communitiesData.setSpaceDialogMode("create")
+              }
             />
 
             <CommunityContentPane
               detailLoading={communitiesData.detailLoading}
+              feedLoading={communitiesData.feedLoading}
               communityDetail={communitiesData.communityDetail}
+              feedItems={visibleFeedItems}
               selectedSpace={communitiesData.selectedSpace}
               canManage={canManage}
               selectedCommunityId={communitiesData.selectedCommunityId}
               communitiesCount={communitiesData.communities.length}
               onOpenSelector={() => communitiesData.setSelectorOpen(true)}
-              onEditCommunity={() => communitiesData.setCommunityDialogMode("edit")}
+              onEditCommunity={() =>
+                communitiesData.setCommunityDialogMode("edit")
+              }
               onDeleteCommunity={() =>
                 communitiesData.setConfirmDeleteCommunityOpen(true)
               }
               onEditSpace={() => communitiesData.setSpaceDialogMode("edit")}
-              onDeleteSpace={() => communitiesData.setConfirmDeleteSpaceOpen(true)}
-              onCreateSpace={() => communitiesData.setSpaceDialogMode("create")}
-              onOpenCreatePublication={() => composer.setCreatePublicationOpen(true)}
+              onDeleteSpace={() =>
+                communitiesData.setConfirmDeleteSpaceOpen(true)
+              }
+              onCreateSpace={() =>
+                communitiesData.setSpaceDialogMode("create")
+              }
+              onNavigateToSpace={communitiesData.navigateToSpace}
+              onOpenCreatePublication={() =>
+                composer.setCreatePublicationOpen(true)
+              }
             />
           </div>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }

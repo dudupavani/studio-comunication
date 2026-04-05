@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { parseJson } from "./publication-composer-utils";
 import type {
+  CommunityFeed,
   CommunityDetail,
   CommunityItem,
   CommunityPayload,
@@ -36,6 +37,8 @@ export function useCommunitiesData({
   const [communityDetail, setCommunityDetail] =
     useState<CommunityDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [communityFeed, setCommunityFeed] = useState<CommunityFeed | null>(null);
+  const [feedLoading, setFeedLoading] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(!initialCommunityId);
 
   const [communityDialogMode, setCommunityDialogMode] = useState<
@@ -127,6 +130,33 @@ export function useCommunitiesData({
     [router, selectedSpaceId, toast],
   );
 
+  const reloadCommunityFeed = useCallback(
+    async (communityId: string) => {
+      try {
+        setFeedLoading(true);
+        const payload = await parseJson<{ item: CommunityFeed }>(
+          await fetch(`/api/communities/${communityId}/feed`, {
+            cache: "no-store",
+          }),
+        );
+        setCommunityFeed(payload.item);
+      } catch (error) {
+        setCommunityFeed(null);
+        toast({
+          title: "Falha ao carregar feed da comunidade",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Não foi possível carregar o feed consolidado.",
+          variant: "destructive",
+        });
+      } finally {
+        setFeedLoading(false);
+      }
+    },
+    [toast],
+  );
+
   useEffect(() => {
     reloadCommunities();
   }, [reloadCommunities]);
@@ -134,10 +164,14 @@ export function useCommunitiesData({
   useEffect(() => {
     if (!selectedCommunityId) {
       setCommunityDetail(null);
+      setCommunityFeed(null);
       return;
     }
-    reloadCommunityDetail(selectedCommunityId);
-  }, [reloadCommunityDetail, selectedCommunityId]);
+    void Promise.all([
+      reloadCommunityDetail(selectedCommunityId),
+      reloadCommunityFeed(selectedCommunityId),
+    ]);
+  }, [reloadCommunityDetail, reloadCommunityFeed, selectedCommunityId]);
 
   const navigateToCommunity = useCallback(
     (communityId: string, options?: { replace?: boolean }) => {
@@ -190,6 +224,7 @@ export function useCommunitiesData({
       setSelectedCommunityId(null);
       setSelectedSpaceId(null);
       setCommunityDetail(null);
+      setCommunityFeed(null);
       router.replace("/comunidades");
       setSelectorOpen(true);
     }
@@ -254,6 +289,7 @@ export function useCommunitiesData({
       await Promise.all([
         reloadCommunities(),
         reloadCommunityDetail(selectedCommunityId),
+        reloadCommunityFeed(selectedCommunityId),
       ]);
     } catch (error) {
       toast({
@@ -286,6 +322,7 @@ export function useCommunitiesData({
       setSelectedCommunityId(null);
       setSelectedSpaceId(null);
       setCommunityDetail(null);
+      setCommunityFeed(null);
       await reloadCommunities();
       router.push("/comunidades");
       setSelectorOpen(true);
@@ -322,6 +359,7 @@ export function useCommunitiesData({
       await Promise.all([
         reloadCommunities(),
         reloadCommunityDetail(selectedCommunityId),
+        reloadCommunityFeed(selectedCommunityId),
       ]);
       navigateToSpace(result.item.id);
     } catch (error) {
@@ -361,6 +399,7 @@ export function useCommunitiesData({
       await Promise.all([
         reloadCommunities(),
         reloadCommunityDetail(selectedCommunityId),
+        reloadCommunityFeed(selectedCommunityId),
       ]);
     } catch (error) {
       toast({
@@ -394,6 +433,7 @@ export function useCommunitiesData({
       await Promise.all([
         reloadCommunities(),
         reloadCommunityDetail(selectedCommunityId),
+        reloadCommunityFeed(selectedCommunityId),
       ]);
       router.push(`/comunidades/${selectedCommunityId}`);
       setConfirmDeleteSpaceOpen(false);
@@ -440,6 +480,8 @@ export function useCommunitiesData({
     selectedSpaceId,
     communityDetail,
     detailLoading,
+    communityFeed,
+    feedLoading,
     selectorOpen,
     setSelectorOpen,
     communityDialogMode,

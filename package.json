@@ -8,6 +8,9 @@
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
     "start": "next start",
+    "audit:supabase": "node scripts/supabase-drift-audit.cjs",
+    "audit:supabase:ci": "node scripts/supabase-drift-audit.cjs --mode ci",
+    "audit:supabase:fix-safe": "node scripts/supabase-drift-audit.cjs --mode fix-safe",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -115,7 +118,7 @@
     "jest-environment-jsdom": "^30.2.0",
     "postcss": "8.4.38",
     "tailwindcss": "4.2.2",
-    "typescript": "^5"
+    "typescript": "^5.0.2"
   },
   "pnpm": {
     "overrides": {

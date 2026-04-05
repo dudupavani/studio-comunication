@@ -10,7 +10,7 @@ export default function StartPage() {
 
   useEffect(() => {
     if (loading) return;
-    router.replace(auth ? "/dashboard" : "/login");
+    router.replace(auth ? "/comunidades" : "/login");
   }, [auth, loading, router]);
 
   return (

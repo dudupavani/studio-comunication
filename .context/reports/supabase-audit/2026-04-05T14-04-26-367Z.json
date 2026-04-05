@@ -1,0 +1,146 @@
+{
+  "mode": "default",
+  "status": "DRIFT_DETECTED",
+  "startedAt": "2026-04-05T14:04:09.158Z",
+  "finishedAt": "2026-04-05T14:04:26.367Z",
+  "refs": {
+    "envProjectRef": "pguszziywaeyniluntxw",
+    "linkedProjectRef": "pguszziywaeyniluntxw"
+  },
+  "execution": {
+    "remoteTypes": {
+      "ok": false,
+      "method": null
+    },
+    "remoteSchema": {
+      "ok": false,
+      "method": null
+    },
+    "typecheck": {
+      "ok": false,
+      "status": 2
+    }
+  },
+  "summary": {
+    "critical": 3,
+    "warning": 1,
+    "info": 0
+  },
+  "findings": [
+    {
+      "id": "remote-types-unavailable",
+      "driftCode": "D1",
+      "severity": "critical",
+      "title": "Não foi possível gerar tipos remotos do Supabase",
+      "description": "A auditoria não conseguiu introspectar o projeto Supabase remoto, então a comparação com o banco ativo ficou incompleta.",
+      "recommendation": "Garanta SUPABASE_ACCESS_TOKEN ou SUPABASE_DB_PASSWORD válidos e confirme que o projeto linkado/env está correto.",
+      "evidence": [
+        {
+          "method": "linked",
+          "status": 1,
+          "stderr": "failed to get typescript types: Get \"https://api.supabase.com/v1/projects/pguszziywaeyniluntxw/types/typescript?included_schemas=public\": failed to dial native: dial tcp: lookup api.supabase.com: no such host\nTry rerunning the command with --debug to troubleshoot the error.",
+          "error": null
+        },
+        {
+          "method": "project-id",
+          "status": 1,
+          "stderr": "failed to get typescript types: Get \"https://api.supabase.com/v1/projects/pguszziywaeyniluntxw/types/typescript?included_schemas=public\": failed to dial native: dial tcp: lookup api.supabase.com: no such host\nTry rerunning the command with --debug to troubleshoot the error.",
+          "error": null
+        },
+        {
+          "method": "db-url",
+          "status": 1,
+          "stderr": "Connecting to db.pguszziywaeyniluntxw.supabase.co 5432\nfailed to connect to postgres: failed to connect to `host=db.pguszziywaeyniluntxw.supabase.co user=postgres database=postgres`: hostname resolving error (lookup db.pguszziywaeyniluntxw.supabase.co: no such host)\nTry rerunning the command with --debug to troubleshoot the error.",
+          "error": null
+        }
+      ],
+      "affectedFiles": []
+    },
+    {
+      "id": "remote-schema-dump-unavailable",
+      "driftCode": "D2",
+      "severity": "warning",
+      "title": "Dump remoto do schema indisponível",
+      "description": "A auditoria não conseguiu obter um dump SQL remoto. A verificação de policies e triggers ficou parcial.",
+      "recommendation": "Forneça acesso remoto suficiente para habilitar supabase db dump no modo completo.",
+      "evidence": [
+        {
+          "method": "linked-password",
+          "status": 1,
+          "stderr": "Dumping schemas from remote database...\nfailed to inspect docker image: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?\nDocker Desktop is a prerequisite for local development. Follow the official docs to install: https://docs.docker.com/desktop",
+          "error": null
+        },
+        {
+          "method": "db-url",
+          "status": 1,
+          "stderr": "Dumping schemas from remote database...\nfailed to inspect docker image: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?\nDocker Desktop is a prerequisite for local development. Follow the official docs to install: https://docs.docker.com/desktop",
+          "error": null
+        }
+      ],
+      "affectedFiles": []
+    },
+    {
+      "id": "rpc-usage-missing-local-types",
+      "driftCode": "D5",
+      "severity": "critical",
+      "title": "O código usa RPCs ausentes nos tipos locais",
+      "description": "Há chamadas .rpc(...) no código que não aparecem em src/types/supabase.ts.",
+      "recommendation": "Regere os tipos locais a partir do projeto correto e só depois ajuste o código remanescente.",
+      "evidence": [
+        "get_user_identity_many",
+        "create_chat_message_with_mentions",
+        "get_unread_chat_notifications",
+        "is_platform_admin",
+        "is_platform_admin_by_id",
+        "update_profile_self"
+      ],
+      "affectedFiles": [
+        "src/app/(app)/groups/[groupId]/page.tsx:195",
+        "src/app/api/chats/creators/route.ts:58",
+        "src/app/api/messages/chats/[id]/messages/route.ts:317",
+        "src/app/api/notifications/badges/route.ts:23",
+        "src/app/api/orgs/[orgSlug]/units/route.ts:32",
+        "src/app/api/orgs/route.ts:28",
+        "src/lib/actions/user.ts:676",
+        "src/lib/messages/queries.ts:130",
+        "src/lib/messages/queries.ts:179",
+        "src/lib/messages/queries.ts:323",
+        "src/lib/messages/queries.ts:446",
+        "src/lib/supabase/rpc.ts:11",
+        "src/lib/supabase/rpc.ts:48"
+      ]
+    },
+    {
+      "id": "typecheck-failed",
+      "driftCode": "D5",
+      "severity": "critical",
+      "title": "TypeScript falhou após a auditoria",
+      "description": "O typecheck do repositório não está limpo. Isso pode refletir drift já materializado no código local.",
+      "recommendation": "Use os arquivos apontados pelo typecheck para priorizar a correção do drift confirmado.",
+      "evidence": [
+        {
+          "filePath": "src/lib/supabase/rpc.ts",
+          "line": 49,
+          "column": 5,
+          "message": "Type 'string | null' is not assignable to type 'string'."
+        },
+        {
+          "filePath": "src/lib/supabase/rpc.ts",
+          "line": 50,
+          "column": 5,
+          "message": "Type 'string | null' is not assignable to type 'string'."
+        },
+        {
+          "filePath": "src/lib/supabase/rpc.ts",
+          "line": 51,
+          "column": 5,
+          "message": "Type 'string | null' is not assignable to type 'string'."
+        }
+      ],
+      "affectedFiles": [
+        "src/lib/supabase/rpc.ts"
+      ]
+    }
+  ],
+  "appliedFixes": []
+}

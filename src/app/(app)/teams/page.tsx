@@ -25,7 +25,7 @@ export default async function TeamsPage() {
   if (!auth) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-semibold">Equipes</h1>
+        <h1>Equipes</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Sessão expirada. Faça login novamente.
         </p>
@@ -36,7 +36,7 @@ export default async function TeamsPage() {
   if (!canAccess(auth)) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-semibold">Equipes</h1>
+        <h1>Equipes</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Você não tem permissão para acessar este módulo (somente org_admin,
           org_master ou unit_master).
@@ -48,7 +48,7 @@ export default async function TeamsPage() {
   if (!auth.orgId) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-semibold">Equipes</h1>
+        <h1>Equipes</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Não foi possível determinar a organização ativa para o seu usuário.
         </p>
@@ -98,7 +98,7 @@ export default async function TeamsPage() {
   if (teamsRes.error || usersRes.error) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-semibold">Equipes</h1>
+        <h1>Equipes</h1>
         <p className="mt-2 text-sm text-red-600">
           {teamsRes.error
             ? teamsRes.error.message

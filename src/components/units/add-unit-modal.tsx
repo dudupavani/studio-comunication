@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { CirclePlus } from "lucide-react";
 import {
   Dialog,
   DialogTrigger,
@@ -34,9 +34,9 @@ export function AddUnitModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button">
-          <Plus size={22} />
-          Adicionar
+        <Button type="button" variant="default">
+          <CirclePlus />
+          Adicionar unidade
         </Button>
       </DialogTrigger>
       <DialogContent>

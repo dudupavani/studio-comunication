@@ -10,6 +10,15 @@ import { createUnitAction as createUnit } from "@/app/(app)/units/unit-actions";
 import { AddUnitModal } from "@/components/units/add-unit-modal";
 import UnitsTable from "@/components/units/units-table";
 import { isOrgAdminFor } from "@/lib/permissions-org";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { House } from "lucide-react";
 
 export default async function UnitsPage() {
   if (process.env.NODE_ENV !== "production") {
@@ -71,13 +80,35 @@ export default async function UnitsPage() {
   // Removido o redirecionamento automático para a primeira unidade
   // Agora a página sempre mostra a lista de unidades
 
+  if (units.length === 0) {
+    return (
+      <div className="p-6">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <House />
+            </EmptyMedia>
+            <EmptyTitle>Nenhuma unidade encontrada</EmptyTitle>
+            <EmptyDescription>
+              Crie a primeira unidade para começar a organizar sua operação.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <AddUnitModal
+              orgId={fullOrg.id}
+              slug={fullOrg.slug}
+              action={createUnitFormAction}
+            />
+          </EmptyContent>
+        </Empty>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <section className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold">
-          Unidades{" "}
-          <span className="font-light text-gray-500">({units.length})</span>
-        </h1>
+        <h1>Unidades</h1>
         <AddUnitModal
           orgId={fullOrg.id}
           slug={fullOrg.slug}

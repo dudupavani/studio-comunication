@@ -2,10 +2,13 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getAuthContext } from "@/lib/auth-context";
 import { getOrgWithDetails, updateOrgDetails } from "@/lib/actions/orgs"; // ajuste se o nome for outro
 import OrgConfigForm from "@/components/orgs/org-config-form";
 import { isOrgAdminFor } from "@/lib/permissions-org";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export default async function SettingsPage() {
   if (process.env.NODE_ENV !== "production") {
@@ -54,7 +57,14 @@ export default async function SettingsPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <h1 className="text-2xl font-semibold mb-8">Dados da organização</h1>
+      <div className="mb-8 flex items-center gap-4">
+        <Button variant="outline" size="icon-sm" asChild>
+          <Link href="/orgs" aria-label="Organizações">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
+        <h1>Dados da organização</h1>
+      </div>
       <OrgConfigForm
         org={{
           id: fullOrg.id,

@@ -117,6 +117,7 @@ export function PublicationComposerModal({
           </div>
           {composer.publicationCoverUrl ? (
             <div className="mt-4 overflow-hidden rounded-lg border border-border">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={composer.publicationCoverUrl}
                 alt="Prévia da capa da publicação"
@@ -162,6 +163,7 @@ export function PublicationComposerModal({
                         {block.type === "image" ? (
                           <div className="group relative space-y-3">
                             <div className="overflow-hidden rounded-lg">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={block.imageUrl}
                                 alt={block.alt || "Prévia da imagem"}
@@ -211,6 +213,7 @@ export function PublicationComposerModal({
                               </div>
                             ) : block.mimeType.startsWith("image/") ? (
                               <div className="mt-4 overflow-hidden rounded-lg border border-border bg-background">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={block.fileUrl}
                                   alt={block.fileName}
@@ -330,6 +333,7 @@ export function PublicationComposerModal({
 
             {composer.imageDraftPreviewUrl ? (
               <div className="overflow-hidden rounded-lg border border-border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={composer.imageDraftPreviewUrl}
                   alt={composer.imageDraftAlt || "Prévia da imagem selecionada"}
@@ -425,6 +429,7 @@ export function PublicationComposerModal({
                   </div>
                 ) : composer.attachmentDraft.mimeType.startsWith("image/") ? (
                   <div className="mt-4 overflow-hidden rounded-lg border border-border bg-background">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={composer.attachmentDraft.fileUrl}
                       alt={composer.attachmentDraft.fileName}

@@ -1,6 +1,7 @@
 export const MODULE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/settings": "Configurações",
+  "/orgs": "Organizações",
   "/profile": "Perfil do Usuário",
   "/units": "Unidades",
   "/users": "Usuários",

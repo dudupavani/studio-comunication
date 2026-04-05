@@ -14,7 +14,7 @@ O app é multi-tenant e depende de controles em camadas:
 - operações que atravessam organização, unidade, equipe ou grupo
 - lifecycle de usuários
 - rotas que listam ou mutam registros multi-tenant
-- fan-out de notificações, chat e comunicados
+- fan-out de notificações e outros fluxos multi-tenant com entrega para múltiplos destinatários
 - integrações externas de AI
 
 ## Regras obrigatórias

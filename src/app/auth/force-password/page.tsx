@@ -22,9 +22,9 @@ export default async function ForcePasswordPage() {
   const needsPassword = user.user_metadata?.must_set_password === true;
   if (!needsPassword) {
     console.log(
-      "[force-password] User doesn't need to set password, redirecting to dashboard"
+      "[force-password] User doesn't need to set password, redirecting to communities"
     );
-    redirect("/dashboard");
+    redirect("/comunidades");
   }
 
   async function setPassword(formData: FormData) {

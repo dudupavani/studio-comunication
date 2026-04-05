@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  useCallback,
   type ChangeEvent,
   type SyntheticEvent,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -60,18 +62,44 @@ export function usePublicationComposer({
   } | null>(null);
   const [uploadingAttachmentDraft, setUploadingAttachmentDraft] =
     useState(false);
+  const publicationBlocksRef = useRef<PublicationComposerBlock[]>([]);
+  const publicationCoverPathRef = useRef("");
+  const imageDraftPreviewUrlRef = useRef("");
+  const attachmentDraftRef = useRef<{
+    file: File;
+    fileName: string;
+    sizeBytes: number;
+    mimeType: string;
+    fileUrl: string;
+  } | null>(null);
 
   const publicationCanPublish = useMemo(
     () => publicationTitle.trim().length > 0,
     [publicationTitle],
   );
 
-  function getUploadsEndpoint() {
+  useEffect(() => {
+    publicationBlocksRef.current = publicationBlocks;
+  }, [publicationBlocks]);
+
+  useEffect(() => {
+    publicationCoverPathRef.current = publicationCoverPath;
+  }, [publicationCoverPath]);
+
+  useEffect(() => {
+    imageDraftPreviewUrlRef.current = imageDraftPreviewUrl;
+  }, [imageDraftPreviewUrl]);
+
+  useEffect(() => {
+    attachmentDraftRef.current = attachmentDraft;
+  }, [attachmentDraft]);
+
+  const getUploadsEndpoint = useCallback(() => {
     if (!selectedCommunityId || !selectedSpaceId) {
       throw new Error("Contexto da comunidade indisponível para upload.");
     }
     return `/api/communities/${selectedCommunityId}/spaces/${selectedSpaceId}/uploads`;
-  }
+  }, [selectedCommunityId, selectedSpaceId]);
 
   async function uploadFileToPostsStorage(
     file: File,
@@ -104,7 +132,7 @@ export function usePublicationComposer({
     };
   }
 
-  async function removePostsFile(path: string) {
+  const removePostsFile = useCallback(async (path: string) => {
     if (!path) return;
     try {
       const endpoint = getUploadsEndpoint();
@@ -116,12 +144,12 @@ export function usePublicationComposer({
     } catch {
       // ignore cleanup failures
     }
-  }
+  }, [getUploadsEndpoint]);
 
-  function cleanupPublicationStorageFiles(
+  const cleanupPublicationStorageFiles = useCallback((
     blocks: PublicationComposerBlock[],
     coverPath?: string,
-  ) {
+  ) => {
     const paths = Array.from(
       new Set(
         [
@@ -138,7 +166,20 @@ export function usePublicationComposer({
     paths.forEach((path) => {
       void removePostsFile(path);
     });
-  }
+  }, [removePostsFile]);
+
+  useEffect(() => {
+    return () => {
+      cleanupPublicationStorageFiles(
+        publicationBlocksRef.current,
+        publicationCoverPathRef.current,
+      );
+      revokeBlobUrl(imageDraftPreviewUrlRef.current);
+      if (attachmentDraftRef.current) {
+        revokeBlobUrl(attachmentDraftRef.current.fileUrl);
+      }
+    };
+  }, [cleanupPublicationStorageFiles]);
 
   function clearCoverCropState() {
     setCoverCropSrc("");

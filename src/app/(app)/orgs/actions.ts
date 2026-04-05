@@ -15,6 +15,6 @@ export async function createOrgAndGo(
   const res = await createOrg(name);
   if (!res.ok) return { ok: false, error: res.error };
 
-  // redireciona para a nova organização (usa slug)
-  redirect(`/orgs/${res.data.slug}`);
+  // Fluxo atual usa /settings; evitamos cair em rota inexistente /orgs/:slug.
+  redirect(`/orgs/${res.data.slug}/settings`);
 }

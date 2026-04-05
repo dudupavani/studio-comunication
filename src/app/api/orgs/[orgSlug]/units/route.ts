@@ -17,7 +17,34 @@ export async function GET(
   }
 
   const supabase = await createClient();
-  const { orgSlug: orgId } = await context.params;
+  const { orgSlug } = await context.params;
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      orgSlug
+    );
+
+  let orgId = orgSlug;
+  if (!isUuid) {
+    const { data: org, error: orgErr } = await supabase
+      .from("orgs")
+      .select("id")
+      .eq("slug", orgSlug)
+      .maybeSingle();
+
+    if (orgErr) {
+      console.error("Resolve org slug error:", orgErr);
+      return NextResponse.json({ error: orgErr.message }, { status: 500 });
+    }
+
+    if (!org?.id) {
+      return NextResponse.json(
+        { error: "Organização não encontrada." },
+        { status: 404 }
+      );
+    }
+
+    orgId = org.id;
+  }
 
   // 1) Sessão
   const {

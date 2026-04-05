@@ -28,7 +28,7 @@ export default async function UnitPage({
   const org = orgRes.data!;
 
   const unitRes = await getUnitBySlug(org.id, unitSlug);
-  if (!unitRes.ok) redirect(`/orgs/${orgSlug}`);
+  if (!unitRes.ok) redirect(`/orgs/${orgSlug}/settings`);
   const unit = unitRes.data!;
   const membersTab = await MembersTabServer({
     orgId: org.id,
@@ -56,7 +56,7 @@ export default async function UnitPage({
           Organizações
         </Link>
         <span className="mx-2">/</span>
-        <Link href={`/orgs/${orgSlug}`} className="hover:underline">
+        <Link href={`/orgs/${orgSlug}/settings`} className="hover:underline">
           {org.name}
         </Link>
         <span className="mx-2">/</span>

@@ -33,7 +33,7 @@ export default function OrgsTable({ initialOrgs }: { initialOrgs: Org[] }) {
             <TableRow key={org.id}>
               <TableCell>
                 <Link
-                  href={`/orgs/${org.slug}`}
+                  href={`/orgs/${org.slug}/settings`}
                   className="underline"
                   prefetch={false}>
                   {org.name}

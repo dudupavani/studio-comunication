@@ -11,6 +11,13 @@
   - revisão de segurança/permissão: `.context/docs/security.md`
 - Em caso de conflito, `AGENTS.md` prevalece sobre qualquer outro documento.
 
+- **Módulos ocultos / arquivados**
+  - Os caminhos `src/app/(app)/chats`, `src/app/(app)/comunicados`, `src/app/(app)/design-editor` e `src/app/(app)/learning` estão ocultos do produto e fora do escopo padrão de implementação.
+  - Para agentes de código, trate esses módulos como inexistentes por padrão: não editar, corrigir, refatorar, migrar, importar, reutilizar nem citar esses fluxos como referência arquitetural, a menos que a tarefa peça explicitamente reativação ou manutenção neles.
+  - A mesma regra vale para código de suporte cujo propósito principal seja atender esses módulos, mesmo quando estiver fora desses diretórios.
+  - Quando a tarefa envolver navegação, permissões, busca, dashboards, notificações ou documentação, prefira remover ou ocultar pontos de entrada para esses módulos sem apagar o código arquivado.
+  - Se uma mudança tocar infraestrutura compartilhada ainda usada pelo app ativo, preserve compatibilidade sem expandir acoplamento com módulos arquivados.
+
 - **Supabase schema**
   - `src/types/supabase.ts` é a única fonte do tipo `Database`.
   - `src/lib/supabase/types.ts` apenas reexporta `Database/Json/Tables/Enums` a partir desse arquivo.

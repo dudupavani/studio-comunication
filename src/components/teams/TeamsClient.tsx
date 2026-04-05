@@ -35,6 +35,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { useToast } from "@/hooks/use-toast";
 import { getRoleLabel } from "@/lib/role-labels";
 import UserSummary from "@/components/shared/user-summary";
@@ -132,45 +140,46 @@ export default function TeamsClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-1">
-          <h3>Estrutura organizacional</h3>
-          <p className="text-sm text-muted-foreground">
-            As equipes devem refletir o organograma da empresa
-          </p>
-        </div>
-        {canManage ? (
-          <Button onClick={openCreateDialog} disabled={disableCreate}>
-            <CirclePlus />
-            Criar equipe
-          </Button>
-        ) : null}
-      </div>
-
       {teams.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed bg-white p-10 text-center">
-          <Users className="h-10 w-10 text-muted-foreground" />
-          <div>
-            <p className="text-lg font-medium">
-              Você ainda não tem equipes criadas.
-            </p>
-            {canManage ? (
-              <p className="text-sm text-muted-foreground">
-                Crie uma equipe para começar a organizar seus usuários.
-              </p>
-            ) : null}
-          </div>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Users />
+            </EmptyMedia>
+            <EmptyTitle>Você ainda não tem equipes criadas</EmptyTitle>
+            <EmptyDescription>
+              Crie uma equipe para começar a organizar seus usuários.
+            </EmptyDescription>
+          </EmptyHeader>
           {canManage ? (
-            <Button
-              variant="outline"
-              onClick={openCreateDialog}
-              disabled={disableCreate}>
-              Criar equipe
-            </Button>
+            <EmptyContent>
+              <Button
+                variant="default"
+                onClick={openCreateDialog}
+                disabled={disableCreate}>
+                <CirclePlus />
+                Criar equipe
+              </Button>
+            </EmptyContent>
           ) : null}
-        </div>
+        </Empty>
       ) : (
         <>
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="space-y-1">
+              <h3>Estrutura organizacional</h3>
+              <p className="text-sm text-muted-foreground">
+                As equipes devem refletir o organograma da empresa
+              </p>
+            </div>
+            {canManage ? (
+              <Button onClick={openCreateDialog} disabled={disableCreate}>
+                <CirclePlus />
+                Criar equipe
+              </Button>
+            ) : null}
+          </div>
+
           {/* Mobile list (sm and below) */}
           <div className="space-y-3 sm:hidden">
             {teams.map((team) => {

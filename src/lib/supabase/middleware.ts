@@ -95,13 +95,13 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
-  // If user is authenticated and tries to access a public auth path, redirect to dashboard
+  // If user is authenticated and tries to access a public auth path, redirect to communities
   if (
     isAuthenticated &&
     isPublicPath &&
     !isAllowedPublicPathWhenAuthenticated
   ) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/comunidades", request.url));
   }
 
   // If user is NOT authenticated and tries to access a private path, redirect to login

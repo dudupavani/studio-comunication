@@ -37,7 +37,7 @@ export default function UnitsTable({ orgId, orgSlug, units }: Props) {
         <TableBody>
           {units.map((u) => (
             <TableRow key={u.id}>
-              <TableCell className="font-medium">
+              <TableCell>
                 <Link href={`/units/${u.slug}`} className="hover:underline">
                   {u.name}
                 </Link>
@@ -79,17 +79,6 @@ export default function UnitsTable({ orgId, orgSlug, units }: Props) {
               </TableCell>
             </TableRow>
           ))}
-
-          {units.length === 0 && (
-            <TableRow>
-              {/* ✅ colSpan ajustado para 4 colunas */}
-              <TableCell
-                colSpan={4}
-                className="text-muted-foreground text-center py-6">
-                Nenhuma unidade encontrada.
-              </TableCell>
-            </TableRow>
-          )}
         </TableBody>
       </Table>
     </div>
