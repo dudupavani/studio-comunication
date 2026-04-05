@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  ChevronDown,
-  MoreHorizontal,
-  Rss,
-  SquareMenu,
-} from "lucide-react";
+import { ChevronDown, MoreHorizontal, Rss, SquareMenu } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -34,6 +29,7 @@ type CommunityContentPaneProps = {
   selectedSpace: SpaceItem | null;
   canManage: boolean;
   selectedCommunityId: string | null;
+  currentUserId: string;
   communitiesCount: number;
   onOpenSelector: () => void;
   onEditCommunity: () => void;
@@ -43,6 +39,10 @@ type CommunityContentPaneProps = {
   onCreateSpace: () => void;
   onNavigateToSpace: (spaceId: string) => void;
   onOpenCreatePublication: () => void;
+  onViewPublication: (item: CommunityFeedItem) => Promise<void>;
+  onEditPublication: (item: CommunityFeedItem) => Promise<void>;
+  onDeletePublication: (item: CommunityFeedItem) => Promise<boolean>;
+  deletingPublicationId: string | null;
 };
 
 function getInitials(value: string) {
@@ -74,6 +74,7 @@ export function CommunityContentPane({
   selectedSpace,
   canManage,
   selectedCommunityId,
+  currentUserId,
   communitiesCount,
   onOpenSelector,
   onEditCommunity,
@@ -83,10 +84,15 @@ export function CommunityContentPane({
   onCreateSpace,
   onNavigateToSpace,
   onOpenCreatePublication,
+  onViewPublication,
+  onEditPublication,
+  onDeletePublication,
+  deletingPublicationId,
 }: CommunityContentPaneProps) {
   const publicationSpace =
-    communityDetail?.spaces.find((space) => space.spaceType === "publicacoes") ??
-    null;
+    communityDetail?.spaces.find(
+      (space) => space.spaceType === "publicacoes",
+    ) ?? null;
   const canCreatePublication =
     !!selectedSpace &&
     selectedSpace.spaceType === "publicacoes" &&
@@ -95,6 +101,91 @@ export function CommunityContentPane({
   const showFeedItems =
     feedItems.length > 0 &&
     (!selectedSpace || selectedSpace.spaceType === "publicacoes");
+  const canManagePublication = (item: CommunityFeedItem) =>
+    canManage || item.authorId === currentUserId;
+
+  const renderPublicationItem = (item: CommunityFeedItem) => (
+    // Cards da timeline abrem a visualização completa e precisam indicar clique.
+    <article
+      key={item.id}
+      role="button"
+      tabIndex={0}
+      onClick={() => {
+        void onViewPublication(item);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          void onViewPublication(item);
+        }
+      }}
+      className="relative overflow-hidden rounded-xl border border-border bg-background cursor-pointer transition-shadow hover:shadow-md">
+      {item.coverUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.coverUrl}
+          alt={item.title ?? "Capa da publicação"}
+          className="h-52 w-full object-cover"
+        />
+      ) : null}
+      {canManagePublication(item) ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="absolute right-3 top-3 z-10 cursor-pointer bg-background/90 backdrop-blur"
+              aria-label="Ações da publicação"
+              onClick={(event) => {
+                event.stopPropagation();
+              }}>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onSelect={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                void onEditPublication(item);
+              }}>
+              Editar
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive"
+              disabled={deletingPublicationId === item.id}
+              onSelect={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const confirmed = window.confirm(
+                  "Tem certeza que deseja excluir esta publicação?",
+                );
+                if (!confirmed) return;
+                void onDeletePublication(item);
+              }}>
+              {deletingPublicationId === item.id ? "Excluindo..." : "Excluir"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
+      <div className="space-y-3 p-5">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          {formatFeedDate(item.createdAt) ? (
+            <span>{formatFeedDate(item.createdAt)}</span>
+          ) : null}
+          {item.authorName ? <span>por {item.authorName}</span> : null}
+        </div>
+        {item.title ? (
+          <div className="text-xl font-semibold">{item.title}</div>
+        ) : null}
+        <p className="text-base text-secondary-foreground">
+          {item.excerpt?.trim() ||
+            "Publicação sem pré-visualização disponível."}
+        </p>
+      </div>
+    </article>
+  );
 
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-background">
@@ -179,7 +270,7 @@ export function CommunityContentPane({
       <div
         className={
           showFeedItems
-            ? "flex flex-1 justify-center px-6 py-8"
+            ? "flex flex-1 justify-center px-6 py-8 bg-neutral-50"
             : "flex flex-1 items-center justify-center px-6 py-12"
         }>
         {detailLoading || feedLoading ? (
@@ -200,59 +291,32 @@ export function CommunityContentPane({
             </EmptyHeader>
           </Empty>
         ) : selectedSpace ? (
-          selectedSpace.spaceType === "publicacoes" ? showFeedItems ? (
-            <div className="w-full max-w-3xl space-y-4">
-              {feedItems.map((item) => (
-                <article
-                  key={item.id}
-                  className="overflow-hidden rounded-xl border border-border bg-background">
-                  {item.coverUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.coverUrl}
-                      alt={item.title ?? "Capa da publicação"}
-                      className="h-52 w-full object-cover"
-                    />
-                  ) : null}
-                  <div className="space-y-3 p-5">
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span className="rounded-full bg-muted px-2 py-1 text-foreground">
-                        {item.spaceName ?? selectedSpace.name}
-                      </span>
-                      {formatFeedDate(item.createdAt) ? (
-                        <span>{formatFeedDate(item.createdAt)}</span>
-                      ) : null}
-                      {item.authorName ? <span>por {item.authorName}</span> : null}
-                    </div>
-                    {item.title ? (
-                      <div className="text-base font-semibold">{item.title}</div>
-                    ) : null}
-                    <p className="text-sm text-muted-foreground">
-                      {item.excerpt?.trim() || "Publicação sem pré-visualização disponível."}
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <Empty className="w-full max-w-3xl border-0">
-              <EmptyHeader className="gap-4">
-                <EmptyTitle>
-                  <h2>Nenhuma publicação neste espaço</h2>
-                </EmptyTitle>
-                <EmptyDescription>
-                  O conteúdo publicado neste espaço aparecerá aqui e também no feed
-                  consolidado da comunidade.
-                </EmptyDescription>
-              </EmptyHeader>
-              {communityDetail.canPost ? (
-                <EmptyContent>
-                  <Button onClick={onOpenCreatePublication}>
-                    Criar a primeira publicação
-                  </Button>
-                </EmptyContent>
-              ) : null}
-            </Empty>
+          selectedSpace.spaceType === "publicacoes" ? (
+            showFeedItems ? (
+              <div className="w-full max-w-3xl space-y-4">
+                {/* <--  Item de cada post de publicação --> */}
+                {feedItems.map(renderPublicationItem)}
+              </div>
+            ) : (
+              <Empty className="w-full max-w-3xl border-0">
+                <EmptyHeader className="gap-4">
+                  <EmptyTitle>
+                    <h2>Nenhuma publicação neste espaço</h2>
+                  </EmptyTitle>
+                  <EmptyDescription>
+                    O conteúdo publicado neste espaço aparecerá aqui e também no
+                    feed consolidado da comunidade.
+                  </EmptyDescription>
+                </EmptyHeader>
+                {communityDetail.canPost ? (
+                  <EmptyContent>
+                    <Button onClick={onOpenCreatePublication}>
+                      Criar a primeira publicação
+                    </Button>
+                  </EmptyContent>
+                ) : null}
+              </Empty>
+            )
           ) : (
             <Empty className="w-full max-w-3xl border-0">
               <EmptyHeader>
@@ -268,37 +332,7 @@ export function CommunityContentPane({
           )
         ) : showFeedItems ? (
           <div className="w-full max-w-3xl space-y-4">
-            {feedItems.map((item) => (
-              <article
-                key={item.id}
-                className="overflow-hidden rounded-xl border border-border bg-background">
-                {item.coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={item.coverUrl}
-                    alt={item.title ?? "Capa da publicação"}
-                    className="h-52 w-full object-cover"
-                  />
-                ) : null}
-                <div className="space-y-3 p-5">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span className="rounded-full bg-muted px-2 py-1 text-foreground">
-                      {item.spaceName ?? "Espaço"}
-                    </span>
-                    {formatFeedDate(item.createdAt) ? (
-                      <span>{formatFeedDate(item.createdAt)}</span>
-                    ) : null}
-                    {item.authorName ? <span>por {item.authorName}</span> : null}
-                  </div>
-                  {item.title ? (
-                    <div className="text-base font-semibold">{item.title}</div>
-                  ) : null}
-                  <p className="text-sm text-muted-foreground">
-                    {item.excerpt?.trim() || "Publicação sem pré-visualização disponível."}
-                  </p>
-                </div>
-              </article>
-            ))}
+            {feedItems.map(renderPublicationItem)}
           </div>
         ) : (
           <Empty className="w-full max-w-3xl border-0">
@@ -316,9 +350,7 @@ export function CommunityContentPane({
                   Criar a primeira publicação
                 </Button>
               ) : canManage ? (
-                <Button
-                  onClick={onCreateSpace}
-                  disabled={!selectedCommunityId}>
+                <Button onClick={onCreateSpace} disabled={!selectedCommunityId}>
                   Criar a primeira publicação
                 </Button>
               ) : null}

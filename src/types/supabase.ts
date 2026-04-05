@@ -737,6 +737,77 @@ export type Database = {
           },
         ]
       }
+      community_space_posts: {
+        Row: {
+          blocks: Json
+          community_id: string
+          cover_path: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          space_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          blocks?: Json
+          community_id: string
+          cover_path?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          space_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          blocks?: Json
+          community_id?: string
+          cover_path?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          space_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_space_posts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_space_posts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_space_posts_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "community_spaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_space_posts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_spaces: {
         Row: {
           community_id: string

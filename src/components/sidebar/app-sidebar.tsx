@@ -10,8 +10,6 @@ import { useAuthContext } from "@/hooks/use-auth-context";
 import { useNotificationBadges } from "@/hooks/use-notification-badges";
 
 import {
-  AppWindowMac,
-  Calendar,
   Inbox,
   Users,
 } from "lucide-react";
@@ -37,7 +35,6 @@ const formatBadgeValue = (value: number) =>
 export default function AppSidebar({ activeOrgSlug: _activeOrgSlug = null }: SidebarProps) {
   const pathname = usePathname() ?? "";
   const { auth, loading: authLoading } = useAuthContext();
-  const shouldHideSidebar = pathname.startsWith("/comunidades");
   const canSeeCommunities = !auth
     ? true
     : auth.platformRole === "platform_admin" || !!auth.orgId || !!auth.orgRole;
@@ -47,22 +44,17 @@ export default function AppSidebar({ activeOrgSlug: _activeOrgSlug = null }: Sid
     : auth.platformRole === "platform_admin" || !!auth.orgRole;
 
   const { counts, markScopeAsRead } = useNotificationBadges({
-    enabled: !shouldHideSidebar && !authLoading && !!auth,
+    enabled: !authLoading && !!auth,
     pollMs: 20_000,
     userId: auth?.userId ?? null,
   });
 
   useEffect(() => {
     if (!auth) return;
-    if (shouldHideSidebar) return;
     if (pathname.startsWith("/inbox")) {
       markScopeAsRead("inbox");
     }
-  }, [auth, pathname, markScopeAsRead, shouldHideSidebar]);
-
-  if (shouldHideSidebar) {
-    return null;
-  }
+  }, [auth, pathname, markScopeAsRead]);
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -134,32 +126,6 @@ export default function AppSidebar({ activeOrgSlug: _activeOrgSlug = null }: Sid
                 </>
               )}
 
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
-                  asChild>
-                  <Link href="/calendar">
-                    <Calendar size={20} />
-                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                      Calendário
-                    </span>
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
-                  asChild>
-                  <Link href="/dashboard">
-                    <AppWindowMac size={20} />
-                    <span className="ml-2 transition-opacity duration-200 ease-in-out group-data-[state=collapsed]:opacity-0">
-                      Dashboard
-                    </span>
-                  </Link>
-                </Button>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

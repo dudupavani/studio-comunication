@@ -11,6 +11,7 @@ type ExpandableModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   header?: React.ReactNode;
+  headerActions?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
   defaultExpanded?: boolean;
@@ -21,6 +22,7 @@ type ExpandableModalProps = {
   className?: string;
   headerClassName?: string;
   bodyClassName?: string;
+  expandedBodyClassName?: string;
   footerClassName?: string;
 };
 
@@ -28,6 +30,7 @@ export function ExpandableModal({
   open,
   onOpenChange,
   header,
+  headerActions,
   children,
   footer,
   defaultExpanded = false,
@@ -38,9 +41,11 @@ export function ExpandableModal({
   className,
   headerClassName,
   bodyClassName,
+  expandedBodyClassName,
   footerClassName,
 }: ExpandableModalProps) {
-  const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
+  const [internalExpanded, setInternalExpanded] =
+    React.useState(defaultExpanded);
 
   const isExpanded = expanded ?? internalExpanded;
 
@@ -72,6 +77,12 @@ export function ExpandableModal({
 
         <DialogPrimitive.Content
           aria-describedby={undefined}
+          onInteractOutside={
+            blockOutsideClose ? (event) => event.preventDefault() : undefined
+          }
+          onFocusOutside={
+            blockOutsideClose ? (event) => event.preventDefault() : undefined
+          }
           onPointerDownOutside={
             blockOutsideClose ? (event) => event.preventDefault() : undefined
           }
@@ -81,10 +92,10 @@ export function ExpandableModal({
           className={cn(
             "fixed z-50 grid grid-rows-[auto_minmax(0,1fr)_auto] border bg-background shadow-xl duration-200",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 ",
             isExpanded
               ? "inset-0 h-screen w-screen rounded-none"
-              : "left-1/2 top-1/2 h-[min(90vh,820px)] w-[min(960px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl",
+              : "left-1/2 top-1/2 h-[min(90vh,700px)] w-[min(800px,900px)] -translate-x-1/2 -translate-y-1/2 rounded-xl",
             className,
           )}>
           <div
@@ -94,6 +105,7 @@ export function ExpandableModal({
             )}>
             <div className="min-w-0 flex-1">{header}</div>
             <div className="flex items-center gap-1">
+              {headerActions ? headerActions : null}
               {showExpandToggle ? (
                 <Button
                   type="button"
@@ -121,16 +133,22 @@ export function ExpandableModal({
             </div>
           </div>
 
-          <div className={cn("min-h-0 overflow-auto px-4 py-4", bodyClassName)}>
+          <div
+            className={cn(
+              "min-h-0 overflow-auto px-4 py-4",
+              bodyClassName,
+              isExpanded && expandedBodyClassName,
+            )}>
             {children}
           </div>
 
           {footer ? (
-            <div className={cn("border-t px-4 py-3", footerClassName)}>{footer}</div>
+            <div className={cn("border-t px-4 py-3", footerClassName)}>
+              {footer}
+            </div>
           ) : null}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
   );
 }
-

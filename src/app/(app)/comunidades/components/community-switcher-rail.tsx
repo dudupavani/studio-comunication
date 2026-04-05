@@ -3,8 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  AppWindowMac,
-  Calendar,
   Inbox,
   Plus,
 } from "lucide-react";
@@ -31,8 +29,6 @@ function getCommunityInitial(name: string) {
 
 const managementLinks = [
   { href: "/inbox", label: "Inbox", icon: Inbox },
-  { href: "/calendar", label: "Calendário", icon: Calendar },
-  { href: "/dashboard", label: "Dashboard", icon: AppWindowMac },
 ];
 
 export function CommunitySwitcherRail({

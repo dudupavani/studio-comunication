@@ -1,8 +1,5 @@
-import type { Crop, PixelCrop } from "react-image-crop";
 import type {
   ChangeEvent,
-  MutableRefObject,
-  SyntheticEvent,
 } from "react";
 import type { Profile } from "@/lib/types";
 
@@ -45,6 +42,7 @@ export type CommunityFeedItem = {
   communityId: string;
   spaceId: string;
   spaceName?: string | null;
+  authorId?: string | null;
   title?: string | null;
   excerpt?: string | null;
   coverUrl?: string | null;
@@ -102,6 +100,8 @@ export type PublicationComposerBlock =
       fileUrl: string;
     };
 
+export type PublicationComposerMode = "create" | "view" | "edit";
+
 export type CommunitiesModuleProps = {
   canManage: boolean;
   canCreateCommunity: boolean;
@@ -127,19 +127,26 @@ export const DEFAULT_SPACE_FORM: SpacePayload = {
 export type PublicationComposerController = {
   createPublicationOpen: boolean;
   setCreatePublicationOpen: (open: boolean) => void;
+  openCreatePublication: () => void;
+  openViewPublication: (item: CommunityFeedItem) => Promise<void>;
+  openEditPublication: (item: CommunityFeedItem) => Promise<void>;
+  startEditingCurrentPublication: () => void;
+  composerMode: PublicationComposerMode;
+  isViewingPublication: boolean;
+  isEditingPublication: boolean;
+  activeFeedItem: CommunityFeedItem | null;
+  publishingPost: boolean;
+  handlePublish: () => Promise<void>;
   publicationTitle: string;
   setPublicationTitle: (value: string) => void;
   publicationCoverUrl: string;
   publicationBlocks: PublicationComposerBlock[];
   publicationCanPublish: boolean;
-  coverCropDialogOpen: boolean;
-  setCoverCropDialogOpen: (open: boolean) => void;
-  coverCropSrc: string;
-  coverCrop: Crop | undefined;
-  setCoverCrop: (crop: Crop | undefined) => void;
-  setCoverCompletedCrop: (crop: PixelCrop) => void;
-  coverImageRef: MutableRefObject<HTMLImageElement | null>;
+  coverEditMode: boolean;
+  coverEditSrc: string;
   uploadingCover: boolean;
+  applyPositionedCover: (blob: Blob) => Promise<void>;
+  cancelCoverEdit: () => void;
   imageUploadDialogOpen: boolean;
   setImageUploadDialogOpen: (open: boolean) => void;
   imageDraftFile: File | null;
@@ -162,9 +169,6 @@ export type PublicationComposerController = {
   openAttachmentUploadDialog: () => void;
   removePublicationCover: () => Promise<void>;
   handleCoverFileInput: (event: ChangeEvent<HTMLInputElement>) => void;
-  clearCoverCropState: () => void;
-  handleCoverImageLoad: (event: SyntheticEvent<HTMLImageElement>) => void;
-  saveCoverFromCrop: () => Promise<void>;
   updateTextBlock: (blockId: string, content: string) => void;
   updateImageBlock: (blockId: string, value: string) => void;
   removePublicationBlock: (blockId: string) => void;

@@ -13,13 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { RadioChoiceCard } from "@/components/ui/radio-choice-card";
 import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_SPACE_FORM, type SpacePayload, type SpaceType } from "./types";
 
@@ -93,21 +88,24 @@ export function SpaceFormDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="space-type">Tipo</Label>
-            <Select
+          <div>
+            <RadioGroup
               value={value.spaceType}
               onValueChange={(spaceType: SpaceType) =>
                 setValue((current) => ({ ...current, spaceType }))
-              }>
-              <SelectTrigger id="space-type">
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="publicacoes">Publicações</SelectItem>
-                <SelectItem value="eventos">Eventos</SelectItem>
-              </SelectContent>
-            </Select>
+              }
+              className="flex items-center gap-4">
+              <RadioChoiceCard
+                value="publicacoes"
+                title="Publicações"
+                description="Espaço para comunicados, atualizações e conteúdos."
+              />
+              <RadioChoiceCard
+                value="eventos"
+                title="Eventos"
+                description="Espaço dedicado à agenda e eventos da comunidade."
+              />
+            </RadioGroup>
           </div>
         </div>
 

@@ -3,49 +3,57 @@
 import {
   useCallback,
   type ChangeEvent,
-  type SyntheticEvent,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import { type Crop, type PixelCrop } from "react-image-crop";
 
 import { useToast } from "@/hooks/use-toast";
 import {
-  centerAspectCrop,
   createComposerBlockId,
   isBlockedAttachment,
+  parseJson,
   revokeBlobUrl,
 } from "./publication-composer-utils";
 import type {
+  CommunityFeedItem,
   PublicationComposerBlock,
   PublicationComposerController,
+  PublicationComposerMode,
 } from "./types";
 
 type UsePublicationComposerParams = {
   selectedCommunityId: string | null;
   selectedSpaceId: string | null;
+  onPublished?: () => void;
 };
+
+const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
 
 export function usePublicationComposer({
   selectedCommunityId,
   selectedSpaceId,
+  onPublished,
 }: UsePublicationComposerParams): PublicationComposerController {
   const { toast } = useToast();
   const [createPublicationOpen, setCreatePublicationOpen] = useState(false);
+  const [composerMode, setComposerMode] =
+    useState<PublicationComposerMode>("create");
+  const [activeFeedItem, setActiveFeedItem] = useState<CommunityFeedItem | null>(
+    null,
+  );
+  const [composerSpaceId, setComposerSpaceId] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [publicationTitle, setPublicationTitle] = useState("");
   const [publicationCoverPath, setPublicationCoverPath] = useState("");
   const [publicationCoverUrl, setPublicationCoverUrl] = useState("");
   const [publicationBlocks, setPublicationBlocks] = useState<
     PublicationComposerBlock[]
   >([]);
-  const [coverCropDialogOpen, setCoverCropDialogOpen] = useState(false);
-  const [coverCropSrc, setCoverCropSrc] = useState("");
-  const [coverCrop, setCoverCrop] = useState<Crop>();
-  const [coverCompletedCrop, setCoverCompletedCrop] = useState<PixelCrop>();
+  const [coverEditMode, setCoverEditMode] = useState(false);
+  const [coverEditSrc, setCoverEditSrc] = useState("");
   const [uploadingCover, setUploadingCover] = useState(false);
-  const coverImageRef = useRef<HTMLImageElement>(null);
   const [imageUploadDialogOpen, setImageUploadDialogOpen] = useState(false);
   const [imageDraftFile, setImageDraftFile] = useState<File | null>(null);
   const [imageDraftPreviewUrl, setImageDraftPreviewUrl] = useState("");
@@ -62,8 +70,13 @@ export function usePublicationComposer({
   } | null>(null);
   const [uploadingAttachmentDraft, setUploadingAttachmentDraft] =
     useState(false);
+  const [publishingPost, setPublishingPost] = useState(false);
+  const isEditingPublication = composerMode === "edit";
+  const isViewingPublication = composerMode === "view";
   const publicationBlocksRef = useRef<PublicationComposerBlock[]>([]);
   const publicationCoverPathRef = useRef("");
+  const initialStoragePathsRef = useRef<Set<string>>(new Set());
+  const pendingDeletePathsRef = useRef<Set<string>>(new Set());
   const imageDraftPreviewUrlRef = useRef("");
   const attachmentDraftRef = useRef<{
     file: File;
@@ -94,12 +107,30 @@ export function usePublicationComposer({
     attachmentDraftRef.current = attachmentDraft;
   }, [attachmentDraft]);
 
+  function collectStoragePaths(
+    blocks: PublicationComposerBlock[],
+    coverPath?: string,
+  ) {
+    return Array.from(
+      new Set(
+        [
+          ...blocks.flatMap((block) => {
+            if (block.type === "image") return [block.imagePath];
+            if (block.type === "attachment") return [block.filePath];
+            return [];
+          }),
+          ...(coverPath ? [coverPath] : []),
+        ].filter(Boolean),
+      ),
+    );
+  }
+
   const getUploadsEndpoint = useCallback(() => {
-    if (!selectedCommunityId || !selectedSpaceId) {
+    if (!selectedCommunityId || !composerSpaceId) {
       throw new Error("Contexto da comunidade indisponível para upload.");
     }
-    return `/api/communities/${selectedCommunityId}/spaces/${selectedSpaceId}/uploads`;
-  }, [selectedCommunityId, selectedSpaceId]);
+    return `/api/communities/${selectedCommunityId}/spaces/${composerSpaceId}/uploads`;
+  }, [composerSpaceId, selectedCommunityId]);
 
   async function uploadFileToPostsStorage(
     file: File,
@@ -146,26 +177,29 @@ export function usePublicationComposer({
     }
   }, [getUploadsEndpoint]);
 
+  const queueOrRemovePath = useCallback((path: string) => {
+    if (!path) return;
+    const isInitialPath = initialStoragePathsRef.current.has(path);
+    if (isEditingPublication && isInitialPath) {
+      pendingDeletePathsRef.current.add(path);
+      return;
+    }
+    void removePostsFile(path);
+  }, [isEditingPublication, removePostsFile]);
+
   const cleanupPublicationStorageFiles = useCallback((
     blocks: PublicationComposerBlock[],
     coverPath?: string,
   ) => {
-    const paths = Array.from(
-      new Set(
-        [
-          ...blocks.flatMap((block) => {
-            if (block.type === "image") return [block.imagePath];
-            if (block.type === "attachment") return [block.filePath];
-            return [];
-          }),
-          ...(coverPath ? [coverPath] : []),
-        ].filter(Boolean),
-      ),
+    const initialPaths = initialStoragePathsRef.current;
+    const paths = collectStoragePaths(blocks, coverPath).filter(
+      (path) => !initialPaths.has(path),
     );
     if (!paths.length) return;
     paths.forEach((path) => {
       void removePostsFile(path);
     });
+    pendingDeletePathsRef.current.clear();
   }, [removePostsFile]);
 
   useEffect(() => {
@@ -181,67 +215,19 @@ export function usePublicationComposer({
     };
   }, [cleanupPublicationStorageFiles]);
 
-  function clearCoverCropState() {
-    setCoverCropSrc("");
-    setCoverCrop(undefined);
-    setCoverCompletedCrop(undefined);
-  }
-
-  function handleCoverImageLoad(event: SyntheticEvent<HTMLImageElement>) {
-    const { width, height } = event.currentTarget;
-    setCoverCrop(centerAspectCrop(width, height, 16 / 9));
-  }
-
-  function getCroppedImageBlob(
-    image: HTMLImageElement,
-    crop: PixelCrop,
-  ): Promise<Blob> {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      throw new Error("Não foi possível iniciar o crop da imagem.");
-    }
-
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-    const pixelRatio = window.devicePixelRatio || 1;
-
-    canvas.width = Math.max(1, Math.floor(crop.width * pixelRatio));
-    canvas.height = Math.max(1, Math.floor(crop.height * pixelRatio));
-    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    ctx.imageSmoothingQuality = "high";
-
-    ctx.drawImage(
-      image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      crop.width,
-      crop.height,
-    );
-
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            reject(new Error("Não foi possível gerar a imagem recortada."));
-            return;
-          }
-          resolve(blob);
-        },
-        "image/jpeg",
-        0.92,
-      );
-    });
-  }
-
   function handleCoverFileInput(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+
+    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "A capa deve ter no máximo 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (!file.type.startsWith("image/")) {
       toast({
@@ -256,42 +242,27 @@ export function usePublicationComposer({
     reader.onload = () => {
       const result = reader.result;
       if (typeof result === "string") {
-        setCoverCropSrc(result);
-        setCoverCropDialogOpen(true);
+        setCoverEditSrc(result);
+        setCoverEditMode(true);
       }
     };
     reader.readAsDataURL(file);
   }
 
-  async function saveCoverFromCrop() {
-    if (
-      !coverCompletedCrop?.width ||
-      !coverCompletedCrop?.height ||
-      !coverImageRef.current
-    ) {
-      return;
-    }
-
+  async function applyPositionedCover(blob: Blob) {
     try {
       setUploadingCover(true);
-      const croppedBlob = await getCroppedImageBlob(
-        coverImageRef.current,
-        coverCompletedCrop,
-      );
-      const file = new File([croppedBlob], `cover-${Date.now()}.jpg`, {
-        type: "image/jpeg",
-      });
-
+      const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
       const uploaded = await uploadFileToPostsStorage(file, "cover");
 
       if (publicationCoverPath) {
-        await removePostsFile(publicationCoverPath);
+        queueOrRemovePath(publicationCoverPath);
       }
 
       setPublicationCoverPath(uploaded.path);
       setPublicationCoverUrl(uploaded.url);
-      setCoverCropDialogOpen(false);
-      clearCoverCropState();
+      setCoverEditMode(false);
+      setCoverEditSrc("");
     } catch (error) {
       toast({
         title: "Falha ao enviar capa",
@@ -306,12 +277,19 @@ export function usePublicationComposer({
     }
   }
 
+  function cancelCoverEdit() {
+    setCoverEditSrc("");
+    setCoverEditMode(false);
+  }
+
   async function removePublicationCover() {
     if (publicationCoverPath) {
-      await removePostsFile(publicationCoverPath);
+      queueOrRemovePath(publicationCoverPath);
     }
     setPublicationCoverPath("");
     setPublicationCoverUrl("");
+    setCoverEditSrc("");
+    setCoverEditMode(false);
   }
 
   function addTextBlock() {
@@ -387,10 +365,10 @@ export function usePublicationComposer({
     setPublicationBlocks((current) => {
       const removed = current.find((block) => block.id === blockId);
       if (removed?.type === "image") {
-        void removePostsFile(removed.imagePath);
+        queueOrRemovePath(removed.imagePath);
       }
       if (removed?.type === "attachment") {
-        void removePostsFile(removed.filePath);
+        queueOrRemovePath(removed.filePath);
       }
       return current.filter((block) => block.id !== blockId);
     });
@@ -429,6 +407,15 @@ export function usePublicationComposer({
     event.target.value = "";
     if (!file) return;
 
+    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "A imagem deve ter no máximo 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!file.type.startsWith("image/")) {
       toast({
         title: "Arquivo inválido",
@@ -448,6 +435,15 @@ export function usePublicationComposer({
     event.target.value = "";
 
     if (!file) return;
+
+    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O anexo deve ter no máximo 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (isBlockedAttachment(file)) {
       toast({
@@ -529,36 +525,214 @@ export function usePublicationComposer({
     }
   }
 
-  function resetComposer() {
-    cleanupPublicationStorageFiles(publicationBlocks, publicationCoverPath);
+  function openCreatePublication() {
+    setComposerMode("create");
+    setActiveFeedItem(null);
+    setEditingPostId(null);
+    setComposerSpaceId(selectedSpaceId);
+    initialStoragePathsRef.current = new Set();
+    pendingDeletePathsRef.current.clear();
     setPublicationTitle("");
     setPublicationCoverPath("");
     setPublicationCoverUrl("");
     setPublicationBlocks([]);
+    setCoverEditMode(false);
+    setCoverEditSrc("");
+    setCreatePublicationOpen(true);
+  }
+
+  async function openPublication(
+    item: CommunityFeedItem,
+    mode: Extract<PublicationComposerMode, "view" | "edit">,
+  ) {
+    try {
+      const endpoint = `/api/communities/${item.communityId}/spaces/${item.spaceId}/posts/${item.id}`;
+      const payload = await parseJson<{
+        item: {
+          id: string;
+          title: string;
+          coverPath?: string | null;
+          coverUrl?: string | null;
+          blocks?: PublicationComposerBlock[];
+        };
+      }>(await fetch(endpoint, { cache: "no-store" }));
+
+      const nextBlocks = Array.isArray(payload.item.blocks) ? payload.item.blocks : [];
+      const nextCoverPath = payload.item.coverPath ?? "";
+      initialStoragePathsRef.current = new Set(
+        collectStoragePaths(nextBlocks, nextCoverPath || undefined),
+      );
+      pendingDeletePathsRef.current.clear();
+      setComposerMode(mode);
+      setActiveFeedItem(item);
+      setEditingPostId(item.id);
+      setComposerSpaceId(item.spaceId);
+      setPublicationTitle(payload.item.title ?? "");
+      setPublicationCoverPath(nextCoverPath);
+      setPublicationCoverUrl(payload.item.coverUrl ?? "");
+      setPublicationBlocks(nextBlocks);
+      setCoverEditMode(false);
+      setCoverEditSrc("");
+      setCreatePublicationOpen(true);
+    } catch (error) {
+      toast({
+        title: "Erro ao carregar publicação",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível carregar os dados da publicação.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  async function openViewPublication(item: CommunityFeedItem) {
+    await openPublication(item, "view");
+  }
+
+  async function openEditPublication(item: CommunityFeedItem) {
+    await openPublication(item, "edit");
+  }
+
+  function startEditingCurrentPublication() {
+    if (!editingPostId) return;
+    setComposerMode("edit");
+  }
+
+  async function handlePublish() {
+    if (!selectedCommunityId || !composerSpaceId) {
+      toast({
+        title: "Contexto indisponível",
+        description: "Selecione uma comunidade e um espaço antes de publicar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!publicationTitle.trim()) {
+      toast({
+        title: "Título obrigatório",
+        description: "Informe um título para a publicação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setPublishingPost(true);
+
+      const endpoint = editingPostId
+        ? `/api/communities/${selectedCommunityId}/spaces/${composerSpaceId}/posts/${editingPostId}`
+        : `/api/communities/${selectedCommunityId}/spaces/${composerSpaceId}/posts`;
+      const res = await fetch(endpoint, {
+        method: editingPostId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: publicationTitle.trim(),
+          coverPath: publicationCoverPath || null,
+          coverUrl: publicationCoverUrl || null,
+          blocks: publicationBlocks,
+        }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body?.error ?? "Não foi possível publicar.");
+      }
+
+      if (pendingDeletePathsRef.current.size > 0) {
+        pendingDeletePathsRef.current.forEach((path) => {
+          void removePostsFile(path);
+        });
+      }
+
+      toast(
+        editingPostId
+          ? {
+              title: "Publicação atualizada",
+              description: "A publicação foi atualizada com sucesso.",
+            }
+          : {
+              title: "Publicação criada",
+              description: "A publicação foi publicada com sucesso.",
+            },
+      );
+
+      // Skip cleanup on success — files are now referenced by the publication.
+      initialStoragePathsRef.current = new Set();
+      pendingDeletePathsRef.current.clear();
+      setPublicationTitle("");
+      setPublicationCoverPath("");
+      setPublicationCoverUrl("");
+      setPublicationBlocks([]);
+      setEditingPostId(null);
+      setActiveFeedItem(null);
+      setComposerMode("create");
+      setComposerSpaceId(null);
+      setCoverEditMode(false);
+      setCoverEditSrc("");
+      setCreatePublicationOpen(false);
+
+      onPublished?.();
+    } catch (error) {
+      toast({
+        title: editingPostId ? "Erro ao atualizar publicação" : "Erro ao publicar",
+        description:
+          error instanceof Error
+            ? error.message
+            : editingPostId
+              ? "Não foi possível atualizar a publicação."
+              : "Não foi possível criar a publicação.",
+        variant: "destructive",
+      });
+    } finally {
+      setPublishingPost(false);
+    }
+  }
+
+  function resetComposer() {
+    cleanupPublicationStorageFiles(publicationBlocks, publicationCoverPath);
+    initialStoragePathsRef.current = new Set();
+    pendingDeletePathsRef.current.clear();
+    setPublicationTitle("");
+    setPublicationCoverPath("");
+    setPublicationCoverUrl("");
+    setPublicationBlocks([]);
+    setEditingPostId(null);
+    setActiveFeedItem(null);
+    setComposerMode("create");
+    setComposerSpaceId(null);
     setImageUploadDialogOpen(false);
     clearImageDraft();
     setAttachmentUploadDialogOpen(false);
     clearAttachmentDraft();
-    setCoverCropDialogOpen(false);
-    clearCoverCropState();
+    setCoverEditMode(false);
+    setCoverEditSrc("");
   }
 
   return {
     createPublicationOpen,
     setCreatePublicationOpen,
+    openCreatePublication,
+    openViewPublication,
+    openEditPublication,
+    startEditingCurrentPublication,
+    composerMode,
+    isViewingPublication,
+    isEditingPublication,
+    activeFeedItem,
+    publishingPost,
+    handlePublish,
     publicationTitle,
     setPublicationTitle,
     publicationCoverUrl,
     publicationBlocks,
     publicationCanPublish,
-    coverCropDialogOpen,
-    setCoverCropDialogOpen,
-    coverCropSrc,
-    coverCrop,
-    setCoverCrop,
-    setCoverCompletedCrop,
-    coverImageRef,
+    coverEditMode,
+    coverEditSrc,
     uploadingCover,
+    applyPositionedCover,
+    cancelCoverEdit,
     imageUploadDialogOpen,
     setImageUploadDialogOpen,
     imageDraftFile,
@@ -575,9 +749,6 @@ export function usePublicationComposer({
     openAttachmentUploadDialog,
     removePublicationCover,
     handleCoverFileInput,
-    clearCoverCropState,
-    handleCoverImageLoad,
-    saveCoverFromCrop,
     updateTextBlock,
     updateImageBlock,
     removePublicationBlock,

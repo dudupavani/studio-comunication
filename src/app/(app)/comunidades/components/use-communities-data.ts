@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { parseJson } from "./publication-composer-utils";
 import type {
   CommunityFeed,
+  CommunityFeedItem,
   CommunityDetail,
   CommunityItem,
   CommunityPayload,
@@ -57,6 +58,9 @@ export function useCommunitiesData({
 
   const [deletingCommunity, setDeletingCommunity] = useState(false);
   const [deletingSpace, setDeletingSpace] = useState(false);
+  const [deletingPublicationId, setDeletingPublicationId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     setSelectedCommunityId(initialCommunityId ?? null);
@@ -451,6 +455,37 @@ export function useCommunitiesData({
     }
   }
 
+  async function handleDeletePublication(item: CommunityFeedItem) {
+    try {
+      setDeletingPublicationId(item.id);
+      const res = await fetch(
+        `/api/communities/${item.communityId}/spaces/${item.spaceId}/posts/${item.id}`,
+        { method: "DELETE" },
+      );
+      await parseJson<{ ok: true }>(res);
+
+      toast({
+        title: "Publicação removida",
+        description: "A publicação foi removida com sucesso.",
+      });
+
+      await reloadCommunityFeed(item.communityId);
+      return true;
+    } catch (error) {
+      toast({
+        title: "Erro ao remover publicação",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível remover a publicação.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setDeletingPublicationId(null);
+    }
+  }
+
   const communityDialogInitialValue = useMemo<
     CommunityPayload | undefined
   >(() => {
@@ -476,6 +511,7 @@ export function useCommunitiesData({
   return {
     communities,
     communitiesLoading,
+    reloadCommunityFeed,
     selectedCommunityId,
     selectedSpaceId,
     communityDetail,
@@ -496,6 +532,7 @@ export function useCommunitiesData({
     setConfirmDeleteSpaceOpen,
     deletingCommunity,
     deletingSpace,
+    deletingPublicationId,
     selectedSpace,
     activeCommunity,
     navigateToCommunity,
@@ -507,6 +544,7 @@ export function useCommunitiesData({
     handleCreateSpace,
     handleUpdateSpace,
     handleDeleteSpace,
+    handleDeletePublication,
     communityDialogInitialValue,
     spaceDialogInitialValue,
   };

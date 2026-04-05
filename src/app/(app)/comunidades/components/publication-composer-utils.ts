@@ -1,5 +1,3 @@
-import { centerCrop, makeAspectCrop } from "react-image-crop";
-
 const BLOCKED_ATTACHMENT_EXTENSIONS = new Set([
   "exe",
   "msi",
@@ -56,26 +54,6 @@ export function extractFileExtension(fileName: string) {
   const segments = fileName.split(".");
   if (segments.length < 2) return "";
   return segments.pop()?.toLowerCase() ?? "";
-}
-
-export function centerAspectCrop(
-  mediaWidth: number,
-  mediaHeight: number,
-  aspect: number,
-) {
-  return centerCrop(
-    makeAspectCrop(
-      {
-        unit: "%",
-        width: 90,
-      },
-      aspect,
-      mediaWidth,
-      mediaHeight,
-    ),
-    mediaWidth,
-    mediaHeight,
-  );
 }
 
 export function isBlockedAttachment(file: File) {

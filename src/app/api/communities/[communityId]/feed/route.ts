@@ -11,6 +11,43 @@ import {
 import { communityParamsSchema } from "@/lib/communities/validations";
 import { buildSegmentMap, jsonError, loadMembershipSets } from "@/lib/communities/api";
 
+const POSTS_BUCKET = "posts";
+const SIGNED_URL_TTL_IN_SECONDS = 60 * 60;
+
+async function createSignedUrlMapForPaths(
+  svc: ReturnType<typeof createServiceClient>,
+  paths: string[],
+) {
+  const uniquePaths = Array.from(new Set(paths.filter(Boolean)));
+  if (uniquePaths.length === 0) {
+    return new Map<string, string>();
+  }
+
+  try {
+    const { data, error } = await svc.storage
+      .from(POSTS_BUCKET)
+      .createSignedUrls(uniquePaths, SIGNED_URL_TTL_IN_SECONDS);
+
+    if (error || !data) {
+      if (error) {
+        console.error("COMMUNITY_FEED_SIGNED_URL_ERROR", error);
+      }
+      return new Map<string, string>();
+    }
+
+    const map = new Map<string, string>();
+    for (const item of data) {
+      if (item.path && item.signedUrl) {
+        map.set(item.path, item.signedUrl);
+      }
+    }
+    return map;
+  } catch (error) {
+    console.error("COMMUNITY_FEED_SIGNED_URL_UNEXPECTED_ERROR", error);
+    return new Map<string, string>();
+  }
+}
+
 export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ communityId: string }> }
@@ -103,14 +140,70 @@ export async function GET(
       updatedAt: space.updated_at,
     }));
 
+    const publicationSpaceIds = visibleSpaces
+      .filter((s) => s.spaceType === "publicacoes")
+      .map((s) => s.id);
+
+    const spaceNameById = new Map(visibleSpaces.map((s) => [s.id, s.name]));
+
+    let feedItems: any[] = [];
+
+    if (publicationSpaceIds.length > 0) {
+      const postsRes = await svc
+        .from("community_space_posts")
+        .select(
+          "id, community_id, space_id, title, cover_path, cover_url, created_at, created_by, blocks, profiles(full_name)"
+        )
+        .eq("community_id", communityId)
+        .in("space_id", publicationSpaceIds)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (!postsRes.error && postsRes.data) {
+        const coverUrlMap = await createSignedUrlMapForPaths(
+          svc,
+          postsRes.data
+            .map((post: any) =>
+              typeof post.cover_path === "string" ? post.cover_path : "",
+            )
+            .filter(Boolean),
+        );
+
+        feedItems = postsRes.data.map((post: any) => {
+          const firstTextBlock = (post.blocks ?? []).find(
+            (b: any) => b.type === "text" && typeof b.content === "string"
+          );
+          const excerpt = firstTextBlock
+            ? (firstTextBlock.content as string).slice(0, 200).trim() || null
+            : null;
+
+          return {
+            id: post.id,
+            communityId: post.community_id,
+            spaceId: post.space_id,
+            spaceName: spaceNameById.get(post.space_id) ?? null,
+            authorId: post.created_by ?? null,
+            title: post.title ?? null,
+            excerpt,
+            coverUrl:
+              (post.cover_path
+                ? coverUrlMap.get(post.cover_path) ?? null
+                : null) ??
+              post.cover_url ??
+              null,
+            authorName: post.profiles?.full_name ?? null,
+            createdAt: post.created_at,
+          };
+        });
+      }
+    }
+
     return NextResponse.json({
       item: {
         communityId,
         visibleSpaceIds: visibleSpaces.map((space) => space.id),
         spaces: visibleSpaces,
-        items: [],
-        note:
-          "Feed consolidado V1: estrutura pronta; conteúdo de publicações/eventos será acoplado em expansão futura.",
+        items: feedItems,
       },
     });
   } catch (error) {

@@ -36,14 +36,17 @@ export function CommunitySidebar({
       id: "publicacoes",
       label: "Publicações",
       items:
-        communityDetail?.spaces.filter((space) => space.spaceType === "publicacoes") ??
-        [],
+        communityDetail?.spaces.filter(
+          (space) => space.spaceType === "publicacoes",
+        ) ?? [],
     },
     {
       id: "eventos",
       label: "Eventos",
       items:
-        communityDetail?.spaces.filter((space) => space.spaceType === "eventos") ?? [],
+        communityDetail?.spaces.filter(
+          (space) => space.spaceType === "eventos",
+        ) ?? [],
     },
   ].filter((group) => group.items.length > 0);
 
@@ -55,11 +58,11 @@ export function CommunitySidebar({
             variant="ghost"
             className={cn(
               "h-8 w-full justify-start rounded-md px-4 text-sm font-medium",
-              !selectedSpaceId && "bg-muted hover:bg-muted",
+              !selectedSpaceId && "bg-primary text-white",
             )}
             onClick={onNavigateToFeed}
             disabled={!selectedCommunityId || detailLoading}>
-            <Rss className="h-4 w-4" />
+            <Rss size={16} />
             Feed
           </Button>
 
@@ -108,7 +111,8 @@ export function CommunitySidebar({
                           variant="ghost"
                           className={cn(
                             "h-8 w-full justify-start rounded-md px-3 text-sm font-medium",
-                            selectedSpaceId === space.id && "bg-muted hover:bg-muted",
+                            selectedSpaceId === space.id &&
+                              "bg-muted hover:bg-muted",
                           )}
                           onClick={() => onNavigateToSpace(space.id)}>
                           <SquareMenu className="h-4 w-4" />
@@ -120,16 +124,15 @@ export function CommunitySidebar({
                 ))}
               </div>
             ) : activeCommunity ? (
-              <div className="rounded-lg border border-dashed border-border px-4 py-5">
-                <p className="text-sm text-muted-foreground">
-                  Nenhum espaço criado nesta comunidade.
-                </p>
+              <div className="flex flex-col items-start gap-2">
+                <span className="text-base font-semibold">Espaços</span>
                 {canManage ? (
                   <Button
                     variant="ghost"
-                    className="mt-3 h-auto px-0 text-sm"
+                    size="sm"
+                    className="w-full justify-start"
                     onClick={onOpenCreateSpace}>
-                    <Plus className="h-4 w-4" />
+                    <Plus size={16} />
                     Criar espaço
                   </Button>
                 ) : null}

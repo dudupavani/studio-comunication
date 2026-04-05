@@ -15,7 +15,8 @@ import { buildSegmentMap, jsonError, loadMembershipSets } from "@/lib/communitie
 
 const POSTS_BUCKET = "posts";
 const SIGNED_URL_TTL_IN_SECONDS = 60 * 60;
-const MAX_UPLOAD_SIZE = 20 * 1024 * 1024;
+const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
+const POSTS_BUCKET_FILE_SIZE_LIMIT = "10MB";
 
 const BLOCKED_ATTACHMENT_EXTENSIONS = new Set([
   "exe",
@@ -87,6 +88,67 @@ function validatePathOwnership(args: {
   return (
     segments[0] === orgId && segments[1] === communityId && segments[2] === spaceId
   );
+}
+
+async function ensurePostsBucketExists(svc: ReturnType<typeof createServiceClient>) {
+  const { error: getBucketError } = await svc.storage.getBucket(POSTS_BUCKET);
+
+  if (!getBucketError) {
+    return;
+  }
+
+  const isNotFound =
+    getBucketError.message.toLowerCase().includes("not found") ||
+    getBucketError.message.toLowerCase().includes("does not exist");
+
+  if (!isNotFound) {
+    throw getBucketError;
+  }
+
+  const { error: createBucketError } = await svc.storage.createBucket(POSTS_BUCKET, {
+    public: false,
+    fileSizeLimit: POSTS_BUCKET_FILE_SIZE_LIMIT,
+  });
+
+  if (
+    createBucketError &&
+    !createBucketError.message.toLowerCase().includes("already exists")
+  ) {
+    throw createBucketError;
+  }
+}
+
+function normalizeStorageUploadError(errorMessage: string) {
+  const message = errorMessage.toLowerCase();
+
+  if (
+    message.includes("mime") ||
+    message.includes("content type") ||
+    message.includes("not allowed")
+  ) {
+    return {
+      status: 400,
+      error:
+        "Tipo de arquivo não permitido no bucket de publicações. Verifique os tipos MIME permitidos para o bucket posts.",
+    };
+  }
+
+  if (
+    message.includes("too large") ||
+    message.includes("file size") ||
+    message.includes("payload too large") ||
+    message.includes("exceeded")
+  ) {
+    return {
+      status: 400,
+      error: "Arquivo excede o limite de 10MB.",
+    };
+  }
+
+  return {
+    status: 500,
+    error: "Falha ao enviar arquivo.",
+  };
 }
 
 async function ensureUploadAccess(
@@ -218,7 +280,7 @@ export async function POST(
     }
 
     if (fileEntry.size > MAX_UPLOAD_SIZE) {
-      return jsonError(400, "Arquivo excede o limite de 20MB.");
+      return jsonError(400, "Arquivo excede o limite de 10MB.");
     }
 
     if ((kind === "cover" || kind === "image") && !fileEntry.type.startsWith("image/")) {
@@ -237,6 +299,7 @@ export async function POST(
     const contentType = fileEntry.type || "application/octet-stream";
 
     const svc = createServiceClient();
+    await ensurePostsBucketExists(svc);
     const { error: uploadError } = await svc.storage.from(POSTS_BUCKET).upload(path, fileEntry, {
       upsert: false,
       cacheControl: "3600",
@@ -244,7 +307,9 @@ export async function POST(
     });
 
     if (uploadError) {
-      return jsonError(500, "Falha ao enviar arquivo.", uploadError.message);
+      console.error("COMMUNITY_UPLOAD_POSTS_BUCKET_ERROR", uploadError);
+      const normalizedError = normalizeStorageUploadError(uploadError.message);
+      return jsonError(normalizedError.status, normalizedError.error);
     }
 
     const { data: signedData, error: signedError } = await svc.storage
@@ -253,6 +318,9 @@ export async function POST(
 
     if (signedError || !signedData?.signedUrl) {
       await svc.storage.from(POSTS_BUCKET).remove([path]);
+      if (signedError) {
+        console.error("COMMUNITY_UPLOAD_SIGNED_URL_ERROR", signedError);
+      }
       return jsonError(500, "Falha ao gerar URL assinada.");
     }
 
@@ -267,6 +335,7 @@ export async function POST(
       },
     });
   } catch (error) {
+    console.error("COMMUNITY_UPLOAD_UNEXPECTED_ERROR", error);
     return jsonError(500, "Falha inesperada no upload.", error);
   }
 }
