@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   FileText,
   Heart,
@@ -30,13 +30,47 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { ExpandableModal } from "@/components/ui/web-components/expandable-modal";
 import type { ReactionActor } from "@/lib/reactions/core";
 import { CoverPositioner } from "./cover-positioner";
 import { formatFileSize } from "./publication-composer-utils";
 import { ReactionActorsDialog } from "./reaction-actors-dialog";
 import type { CommunityFeedItem, PublicationComposerController } from "./types";
+
+function AutoResizeTextarea({
+  id,
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
+  id?: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      id={id}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      rows={1}
+      className={className}
+    />
+  );
+}
 
 type PublicationComposerModalProps = {
   composer: PublicationComposerController;
@@ -253,7 +287,7 @@ export function PublicationComposerModal({
                       ? "Salvando..."
                       : "Publicando..."
                     : composer.isEditingPublication
-                      ? "Publicar"
+                      ? "Salvar"
                       : "Publicar"}
                 </Button>
               </div>
@@ -326,7 +360,9 @@ export function PublicationComposerModal({
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{authorName}</p>
+                      <p className="truncate text-sm font-medium">
+                        {authorName}
+                      </p>
                       {createdLabel ? (
                         <p className="text-xs text-muted-foreground">
                           {createdLabel}
@@ -341,15 +377,22 @@ export function PublicationComposerModal({
                         type="button"
                         variant="ghost"
                         size="icon-sm"
-                        disabled={reactingPublicationId === composer.activeFeedItem.id}
+                        disabled={
+                          reactingPublicationId === composer.activeFeedItem.id
+                        }
                         aria-label={
-                          likeSummary?.reacted ? "Remover curtida" : "Curtir publicação"
+                          likeSummary?.reacted
+                            ? "Remover curtida"
+                            : "Curtir publicação"
                         }
                         onClick={() => {
                           void (async () => {
                             const currentItem = composer.activeFeedItem;
                             if (!currentItem) return;
-                            const toggled = await onToggleReaction(currentItem, "👍");
+                            const toggled = await onToggleReaction(
+                              currentItem,
+                              "👍",
+                            );
                             if (toggled) {
                               await composer.openViewPublication(currentItem);
                             }
@@ -380,7 +423,9 @@ export function PublicationComposerModal({
                         {likePreviewUser?.avatarUrl ? (
                           <AvatarImage
                             src={likePreviewUser.avatarUrl}
-                            alt={likePreviewUser.fullName ?? "Usuário que curtiu"}
+                            alt={
+                              likePreviewUser.fullName ?? "Usuário que curtiu"
+                            }
                           />
                         ) : null}
                         <AvatarFallback className="text-[10px] font-semibold">
@@ -468,14 +513,14 @@ export function PublicationComposerModal({
           ) : (
             <>
               <div className="flex items-start justify-between gap-4">
-                <Input
+                <AutoResizeTextarea
                   id="create-publication-title"
                   value={composer.publicationTitle}
                   onChange={(event) =>
                     composer.setPublicationTitle(event.target.value)
                   }
                   placeholder="Título da publicação"
-                  className="h-auto border-0 bg-transparent px-0 text-2xl! font-semibold shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
+                  className="w-full resize-none border-0 bg-transparent p-0 text-2xl font-semibold leading-snug shadow-none outline-none placeholder:text-muted-foreground"
                 />
                 {!composer.publicationCoverUrl && !composer.coverEditSrc ? (
                   <label htmlFor="publication-cover-file">
@@ -503,7 +548,7 @@ export function PublicationComposerModal({
                       <div key={block.id}>
                         {block.type === "text" ? (
                           <div className="group relative">
-                            <Textarea
+                            <AutoResizeTextarea
                               id={`publication-text-${block.id}`}
                               value={block.content}
                               onChange={(event) =>
@@ -517,7 +562,7 @@ export function PublicationComposerModal({
                                   ? "Escreva algo"
                                   : "Continue escrevendo..."
                               }
-                              className="min-h-0 resize-none border-0 bg-transparent p-0 text-base leading-[1.7] shadow-none focus-visible:ring-0"
+                              className="w-full resize-none border-0 bg-transparent p-0 text-base leading-[1.7] shadow-none outline-none placeholder:text-muted-foreground"
                             />
                             {composer.publicationBlocks.length > 1 ? (
                               <Button

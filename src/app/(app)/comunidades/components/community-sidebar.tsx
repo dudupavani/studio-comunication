@@ -53,7 +53,7 @@ export function CommunitySidebar({
   return (
     <aside className="w-full border-b border-border bg-background lg:h-full lg:w-54 lg:border-b-0 lg:border-r">
       <ScrollArea className="h-full">
-        <div className="space-y-6 px-5 py-7">
+        <div className="space-y-6 px-3 py-7">
           <Button
             variant="ghost"
             className={cn(

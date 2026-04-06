@@ -154,7 +154,7 @@ export async function GET(
       const postsRes = await svc
         .from("community_space_posts")
         .select(
-          "id, community_id, space_id, title, cover_path, cover_url, created_at, created_by, blocks, profiles(full_name, avatar_url)"
+          "id, community_id, space_id, title, cover_path, cover_url, created_at, created_by, blocks, profiles!created_by(full_name, avatar_url)"
         )
         .eq("community_id", communityId)
         .in("space_id", publicationSpaceIds)

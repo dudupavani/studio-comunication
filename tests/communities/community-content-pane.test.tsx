@@ -148,4 +148,38 @@ describe("CommunityContentPane", () => {
       expect.objectContaining({ id: "post-1" }),
     );
   });
+
+  it("edits publication from card actions without forcing view mode", async () => {
+    const user = userEvent.setup();
+    const onViewPublication = jest.fn().mockResolvedValue(undefined);
+    const onEditPublication = jest.fn().mockResolvedValue(undefined);
+
+    render(
+      <CommunityContentPane
+        {...makeProps({
+          selectedSpace: null,
+          feedItems: [
+            {
+              id: "post-1",
+              communityId: "community-1",
+              spaceId: "space-1",
+              authorId: "user-1",
+              authorName: "Autor",
+              title: "Postagem importante",
+              excerpt: "Resumo da postagem",
+              createdAt: "2026-01-01T10:00:00.000Z",
+            },
+          ],
+          onViewPublication,
+          onEditPublication,
+        })}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Ações da publicação" }));
+    await user.click(screen.getByRole("menuitem", { name: "Editar" }));
+
+    expect(onEditPublication).toHaveBeenCalledTimes(1);
+    expect(onViewPublication).not.toHaveBeenCalled();
+  });
 });

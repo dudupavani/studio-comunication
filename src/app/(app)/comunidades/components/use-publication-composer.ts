@@ -669,8 +669,12 @@ export function usePublicationComposer({
             },
       );
 
-      // Skip cleanup on success — files are now referenced by the publication.
-      initialStoragePathsRef.current = new Set();
+      // Skip cleanup on success — mark current paths as initial so the effect
+      // cleanup (triggered by composerSpaceId → null changing the dependency)
+      // does not delete files that are now owned by the published post.
+      initialStoragePathsRef.current = new Set(
+        collectStoragePaths(publicationBlocks, publicationCoverPath || undefined),
+      );
       pendingDeletePathsRef.current.clear();
       setPublicationTitle("");
       setPublicationCoverPath("");
@@ -682,6 +686,11 @@ export function usePublicationComposer({
       setComposerSpaceId(null);
       setCoverEditMode(false);
       setCoverEditSrc("");
+      // Close nested dialogs before closing the main modal to avoid their
+      // overlays blocking pointer events when the onOpenChange early-return
+      // guard (hasNestedModalOpen) prevents resetComposer from running.
+      setImageUploadDialogOpen(false);
+      setAttachmentUploadDialogOpen(false);
       setCreatePublicationOpen(false);
 
       onPublished?.();
