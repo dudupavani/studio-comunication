@@ -1,6 +1,13 @@
 "use client";
 
-import { FileText, ImagePlus, MoreHorizontal, Paperclip, Type, X } from "lucide-react";
+import {
+  FileText,
+  ImagePlus,
+  MoreHorizontal,
+  Paperclip,
+  Type,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -82,13 +89,13 @@ export function PublicationComposerModal({
         }}
         blockOutsideClose={hasNestedModalOpen}
         header={
-          <h3>
+          <span className="font-semibold text-muted-foreground">
             {composer.isViewingPublication
               ? "Visualizar publicação"
               : composer.isEditingPublication
-              ? "Editar publicação"
-              : "Criar publicação"}
-          </h3>
+                ? "Editar publicação"
+                : "Criar publicação"}
+          </span>
         }
         headerActions={
           canManageCurrentPublication && composer.activeFeedItem ? (
@@ -134,52 +141,52 @@ export function PublicationComposerModal({
         expandedBodyClassName="max-w-[900px] mx-auto px-10 py-8"
         footer={
           isViewMode ? null : (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-md"
-                onClick={composer.addTextBlock}>
-                <Type size={20} />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-md"
-                onClick={composer.openImageUploadDialog}>
-                <ImagePlus size={20} />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-md"
-                onClick={composer.openAttachmentUploadDialog}>
-                <Paperclip size={20} />
-              </Button>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-md"
+                  onClick={composer.addTextBlock}>
+                  <Type size={20} />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-md"
+                  onClick={composer.openImageUploadDialog}>
+                  <ImagePlus size={20} />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-md"
+                  onClick={composer.openAttachmentUploadDialog}>
+                  <Paperclip size={20} />
+                </Button>
+              </div>
+              <div className="flex items-center gap-3">
+                {!composer.publicationCanPublish ? (
+                  <p className="text-sm text-muted-foreground">
+                    Informe um título para habilitar a publicação.
+                  </p>
+                ) : null}
+                <Button
+                  type="button"
+                  disabled={
+                    !composer.publicationCanPublish || composer.publishingPost
+                  }
+                  onClick={() => void composer.handlePublish()}>
+                  {composer.publishingPost
+                    ? composer.isEditingPublication
+                      ? "Salvando..."
+                      : "Publicando..."
+                    : composer.isEditingPublication
+                      ? "Publicar"
+                      : "Publicar"}
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              {!composer.publicationCanPublish ? (
-                <p className="text-sm text-muted-foreground">
-                  Informe um título para habilitar a publicação.
-                </p>
-              ) : null}
-              <Button
-                type="button"
-                disabled={
-                  !composer.publicationCanPublish || composer.publishingPost
-                }
-                onClick={() => void composer.handlePublish()}>
-                {composer.publishingPost
-                  ? composer.isEditingPublication
-                    ? "Salvando..."
-                    : "Publicando..."
-                  : composer.isEditingPublication
-                    ? "Publicar"
-                    : "Publicar"}
-              </Button>
-            </div>
-          </div>
           )
         }>
         {/* ── Cover image / positioner (full-width, above title) ── */}
@@ -229,7 +236,9 @@ export function PublicationComposerModal({
           {isViewMode ? (
             <>
               {composer.publicationTitle ? (
-                <p className="text-2xl font-semibold">{composer.publicationTitle}</p>
+                <p className="text-2xl font-semibold">
+                  {composer.publicationTitle}
+                </p>
               ) : null}
               <div className="space-y-4">
                 {composer.publicationBlocks.map((block) => (
@@ -436,7 +445,8 @@ export function PublicationComposerModal({
                             ) : (
                               <div className="mt-4 rounded-lg border border-dashed border-border px-4 py-8 text-center">
                                 <p className="text-sm text-muted-foreground">
-                                  Pré-visualização indisponível para este arquivo.
+                                  Pré-visualização indisponível para este
+                                  arquivo.
                                 </p>
                               </div>
                             )}
@@ -470,7 +480,7 @@ export function PublicationComposerModal({
           composer.setImageUploadDialogOpen(open);
           if (!open) composer.clearImageDraft();
         }}>
-        <DialogContent className="z-[80]" overlayClassName="z-[70] bg-black/70">
+        <DialogContent className="z-80" overlayClassName="z-[70] bg-black/70">
           <DialogHeader>
             <DialogTitle>Adicionar imagem</DialogTitle>
             <DialogDescription>
@@ -538,7 +548,7 @@ export function PublicationComposerModal({
           composer.setAttachmentUploadDialogOpen(open);
           if (!open) composer.clearAttachmentDraft();
         }}>
-        <DialogContent className="z-[80]" overlayClassName="z-[70] bg-black/70">
+        <DialogContent className="z-80" overlayClassName="z-70 bg-black/70">
           <DialogHeader>
             <DialogTitle>Adicionar anexo</DialogTitle>
             <DialogDescription>

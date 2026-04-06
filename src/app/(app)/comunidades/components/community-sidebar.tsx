@@ -51,7 +51,7 @@ export function CommunitySidebar({
   ].filter((group) => group.items.length > 0);
 
   return (
-    <aside className="w-full border-b border-border bg-background lg:h-full lg:w-[216px] lg:border-b-0 lg:border-r">
+    <aside className="w-full border-b border-border bg-background lg:h-full lg:w-54 lg:border-b-0 lg:border-r">
       <ScrollArea className="h-full">
         <div className="space-y-6 px-5 py-7">
           <Button

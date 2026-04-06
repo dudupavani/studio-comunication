@@ -16,9 +16,21 @@ CREATE TABLE IF NOT EXISTS community_space_posts (
 ALTER TABLE community_space_posts ENABLE ROW LEVEL SECURITY;
 
 -- All access goes through service role (route handlers enforce permissions)
-CREATE POLICY "service_full_access" ON community_space_posts
-  USING (true)
-  WITH CHECK (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'community_space_posts'
+      AND policyname = 'service_full_access'
+  ) THEN
+    CREATE POLICY "service_full_access" ON community_space_posts
+      USING (true)
+      WITH CHECK (true);
+  END IF;
+END;
+$$;
 
 -- Speed up feed queries (community + space + recency)
 CREATE INDEX IF NOT EXISTS idx_community_space_posts_community_space

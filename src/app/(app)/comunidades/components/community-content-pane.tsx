@@ -119,7 +119,7 @@ export function CommunityContentPane({
           void onViewPublication(item);
         }
       }}
-      className="relative overflow-hidden rounded-xl border border-border bg-background cursor-pointer transition-shadow hover:shadow-md">
+      className="relative overflow-hidden rounded-lg border border-border bg-background cursor-pointer transition-shadow hover:shadow-md">
       {item.coverUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img

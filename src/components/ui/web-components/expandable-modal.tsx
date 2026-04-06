@@ -100,7 +100,7 @@ export function ExpandableModal({
           )}>
           <div
             className={cn(
-              "flex min-h-16 items-center justify-between gap-3 border-b px-4 py-3",
+              "flex min-h-8 items-center justify-between gap-3 border-b px-4 py-2",
               headerClassName,
             )}>
             <div className="min-w-0 flex-1">{header}</div>
