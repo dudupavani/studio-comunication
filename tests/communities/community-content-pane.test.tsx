@@ -8,9 +8,12 @@ import { CommunityContentPane } from "@/app/(app)/comunidades/components/communi
 
 jest.mock("lucide-react", () => ({
   ChevronDown: () => null,
+  Heart: () => null,
+  MessageCircle: () => null,
   MoreHorizontal: () => null,
   Rss: () => null,
   SquareMenu: () => null,
+  X: () => null,
 }));
 
 function makeProps(overrides: Partial<ComponentProps<typeof CommunityContentPane>> = {}) {
@@ -61,6 +64,9 @@ function makeProps(overrides: Partial<ComponentProps<typeof CommunityContentPane
     onViewPublication,
     onEditPublication: jest.fn().mockResolvedValue(undefined),
     onDeletePublication: jest.fn().mockResolvedValue(true),
+    onToggleReaction: jest.fn().mockResolvedValue(true),
+    onLoadReactionActors: jest.fn().mockResolvedValue([]),
+    reactingPublicationId: null,
     deletingPublicationId: null,
   };
 

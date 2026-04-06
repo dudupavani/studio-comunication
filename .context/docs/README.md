@@ -6,6 +6,7 @@ Esta pasta contém apenas contexto durável e curado para agentes e para o time.
 
 - UI/UX e revisão visual: [design.md](./design.md)
 - Fluxo de domínio, API, schema e boundaries: [architecture.md](./architecture.md)
+- Arquitetura compartilhada de reações: [reactions.md](./reactions.md)
 - Execução local, checks e rotina de entrega: [development-workflow.md](./development-workflow.md)
 - Testes e critérios de validação: [testing-strategy.md](./testing-strategy.md)
 - Segurança, auth, permissões e isolamento multi-tenant: [security.md](./security.md)

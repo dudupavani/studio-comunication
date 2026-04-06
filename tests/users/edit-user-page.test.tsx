@@ -8,7 +8,7 @@ import { listUnits } from "@/lib/actions/units";
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 
-const mockEditUserForm = jest.fn(() => null);
+const mockEditUserForm = jest.fn((_props?: unknown) => null);
 
 jest.mock("next/navigation", () => ({
   notFound: jest.fn(),

@@ -553,7 +553,11 @@ export function usePublicationComposer({
           title: string;
           coverPath?: string | null;
           coverUrl?: string | null;
+          authorName?: string | null;
+          authorAvatarUrl?: string | null;
+          createdAt?: string | null;
           blocks?: PublicationComposerBlock[];
+          reactions?: CommunityFeedItem["reactions"];
         };
       }>(await fetch(endpoint, { cache: "no-store" }));
 
@@ -564,7 +568,14 @@ export function usePublicationComposer({
       );
       pendingDeletePathsRef.current.clear();
       setComposerMode(mode);
-      setActiveFeedItem(item);
+      setActiveFeedItem({
+        ...item,
+        reactions: payload.item.reactions ?? item.reactions ?? [],
+        authorName: payload.item.authorName ?? item.authorName ?? null,
+        authorAvatarUrl:
+          payload.item.authorAvatarUrl ?? item.authorAvatarUrl ?? null,
+        createdAt: payload.item.createdAt ?? item.createdAt,
+      });
       setEditingPostId(item.id);
       setComposerSpaceId(item.spaceId);
       setPublicationTitle(payload.item.title ?? "");

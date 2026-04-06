@@ -139,6 +139,9 @@ export default function CommunitiesModule({
         canManage={canManage}
         currentUserId={user.id}
         onDeletePublication={communitiesData.handleDeletePublication}
+        onToggleReaction={communitiesData.handleTogglePublicationReaction}
+        onLoadReactionActors={communitiesData.loadPublicationReactionActors}
+        reactingPublicationId={communitiesData.reactingPublicationId}
         deletingPublicationId={communitiesData.deletingPublicationId}
       />
 
@@ -215,6 +218,9 @@ export default function CommunitiesModule({
             onViewPublication={composer.openViewPublication}
             onEditPublication={composer.openEditPublication}
             onDeletePublication={communitiesData.handleDeletePublication}
+            onToggleReaction={communitiesData.handleTogglePublicationReaction}
+            onLoadReactionActors={communitiesData.loadPublicationReactionActors}
+            reactingPublicationId={communitiesData.reactingPublicationId}
             deletingPublicationId={communitiesData.deletingPublicationId}
           />
         </div>

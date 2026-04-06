@@ -31,6 +31,7 @@ npm run build
 - UI: validar comportamento visual, loading, disabled, erro e aderência a [design.md](./design.md)
 - API/domínio: validar input parsing, auth/permissão, códigos HTTP e shape de resposta
 - Schema/Supabase: migration + atualização de tipos + `npm run typecheck -- --pretty false`
+- Reações: validar toggle idempotente, atualização de contadores e isolamento de tenant por alvo de reação
 - Chat/mensagens: confirmar uso da RPC de menções e rodar `npm run typecheck -- --pretty false`
 - AI: confirmar cliente dedicado, timeout, logging com prefixo e erro genérico para o usuário
 

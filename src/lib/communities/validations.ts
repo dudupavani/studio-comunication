@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEFAULT_REACTION_EMOJIS } from "@/lib/reactions/core";
 
 const visibilitySchema = z.enum(["global", "segmented"]);
 const segmentTypeSchema = z.enum(["group", "team"]);
@@ -120,6 +121,10 @@ export const createCommunitySpacePostSchema = z.object({
   coverPath: z.string().optional().nullable(),
   coverUrl: z.string().optional().nullable(),
   blocks: z.array(postBlockSchema).max(100, "Limite de blocos excedido"),
+});
+
+export const communityPostReactionSchema = z.object({
+  emoji: z.enum(DEFAULT_REACTION_EMOJIS),
 });
 
 export type CreateCommunityInput = z.infer<typeof createCommunitySchema>;

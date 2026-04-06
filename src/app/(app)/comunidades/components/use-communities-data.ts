@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useToast } from "@/hooks/use-toast";
+import type { ReactionActor } from "@/lib/reactions/core";
 import { parseJson } from "./publication-composer-utils";
 import type {
   CommunityFeed,
@@ -59,6 +60,9 @@ export function useCommunitiesData({
   const [deletingCommunity, setDeletingCommunity] = useState(false);
   const [deletingSpace, setDeletingSpace] = useState(false);
   const [deletingPublicationId, setDeletingPublicationId] = useState<string | null>(
+    null,
+  );
+  const [reactingPublicationId, setReactingPublicationId] = useState<string | null>(
     null,
   );
 
@@ -486,6 +490,68 @@ export function useCommunitiesData({
     }
   }
 
+  async function handleTogglePublicationReaction(
+    item: CommunityFeedItem,
+    emoji: "👍" = "👍",
+  ) {
+    try {
+      setReactingPublicationId(item.id);
+      const res = await fetch(
+        `/api/communities/${item.communityId}/spaces/${item.spaceId}/posts/${item.id}/reactions`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emoji }),
+        },
+      );
+      await parseJson<{ ok: true; removed: boolean }>(res);
+      await reloadCommunityFeed(item.communityId);
+      return true;
+    } catch (error) {
+      toast({
+        title: "Erro ao reagir",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível registrar sua reação.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setReactingPublicationId(null);
+    }
+  }
+
+  async function loadPublicationReactionActors(
+    item: CommunityFeedItem,
+    emoji: "👍" = "👍",
+  ) {
+    try {
+      const res = await fetch(
+        `/api/communities/${item.communityId}/spaces/${item.spaceId}/posts/${item.id}/reactions?emoji=${encodeURIComponent(emoji)}`,
+        { cache: "no-store" },
+      );
+      const payload = await parseJson<{
+        item: {
+          emoji: "👍";
+          count: number;
+          actors: ReactionActor[];
+        };
+      }>(res);
+      return payload.item.actors;
+    } catch (error) {
+      toast({
+        title: "Erro ao carregar curtidas",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível carregar a lista de curtidas.",
+        variant: "destructive",
+      });
+      return [];
+    }
+  }
+
   const communityDialogInitialValue = useMemo<
     CommunityPayload | undefined
   >(() => {
@@ -533,6 +599,7 @@ export function useCommunitiesData({
     deletingCommunity,
     deletingSpace,
     deletingPublicationId,
+    reactingPublicationId,
     selectedSpace,
     activeCommunity,
     navigateToCommunity,
@@ -545,6 +612,8 @@ export function useCommunitiesData({
     handleUpdateSpace,
     handleDeleteSpace,
     handleDeletePublication,
+    handleTogglePublicationReaction,
+    loadPublicationReactionActors,
     communityDialogInitialValue,
     spaceDialogInitialValue,
   };

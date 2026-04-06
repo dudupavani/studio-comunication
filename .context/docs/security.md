@@ -14,6 +14,7 @@ O app é multi-tenant e depende de controles em camadas:
 - operações que atravessam organização, unidade, equipe ou grupo
 - lifecycle de usuários
 - rotas que listam ou mutam registros multi-tenant
+- interações de reação em recursos cross-módulo (target + link por módulo)
 - fan-out de notificações e outros fluxos multi-tenant com entrega para múltiplos destinatários
 - integrações externas de AI
 
@@ -25,6 +26,7 @@ O app é multi-tenant e depende de controles em camadas:
 - Não espalhar chamadas brutas de AI; usar cliente dedicado.
 - Nunca burlar a RPC de chat com menções.
 - Toda mudança de schema deve vir com migration e atualização de `src/types/supabase.ts`.
+- Em endpoints de reação, validar que `target_id` pertence ao `org_id` ativo e ao recurso acessível pelo usuário.
 
 ## Revisão de segurança por tipo de tarefa
 

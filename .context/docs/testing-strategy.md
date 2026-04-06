@@ -31,6 +31,8 @@ npm run build
 - Auth e permissões: isolamento multi-tenant, matriz de papéis e negação de acesso
 - Chat e mensagens: fluxo de menções, visibilidade, destinatários e notificações
 - Comunicados: destinatários, comentários, reações, views e métricas
+- Comunidades/publicações: criação/edição/remoção de post, reação toggle e atualização de contador
+- Core de reações: vínculo por módulo (`*_reaction_targets`), toggle idempotente e integridade tenant (`org_id`)
 - Calendar: serialização, permissões e update/delete
 - Schema: migrations presentes, tipos atualizados e compilação limpa
 - UI crítica: loading, disabled, empty/error states e aderência às regras de `design.md`

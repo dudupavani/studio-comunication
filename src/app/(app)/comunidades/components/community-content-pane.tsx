@@ -1,8 +1,16 @@
 "use client";
 
-import { ChevronDown, MoreHorizontal, Rss, SquareMenu } from "lucide-react";
+import { useState } from "react";
+import {
+  ChevronDown,
+  Heart,
+  MessageCircle,
+  MoreHorizontal,
+  Rss,
+  SquareMenu,
+} from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,6 +27,8 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ReactionActor } from "@/lib/reactions/core";
+import { ReactionActorsDialog } from "./reaction-actors-dialog";
 import type { CommunityDetail, CommunityFeedItem, SpaceItem } from "./types";
 
 type CommunityContentPaneProps = {
@@ -42,10 +52,17 @@ type CommunityContentPaneProps = {
   onViewPublication: (item: CommunityFeedItem) => Promise<void>;
   onEditPublication: (item: CommunityFeedItem) => Promise<void>;
   onDeletePublication: (item: CommunityFeedItem) => Promise<boolean>;
+  onToggleReaction: (item: CommunityFeedItem, emoji?: "👍") => Promise<boolean>;
+  onLoadReactionActors: (
+    item: CommunityFeedItem,
+    emoji?: "👍",
+  ) => Promise<ReactionActor[]>;
+  reactingPublicationId: string | null;
   deletingPublicationId: string | null;
 };
 
-function getInitials(value: string) {
+function getInitials(value: string | null) {
+  if (!value) return "--";
   return value
     .split(" ")
     .filter(Boolean)
@@ -64,6 +81,14 @@ function formatFeedDate(value: string) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(date);
+}
+
+function formatLikeCountLabel(count: number) {
+  return `${count} ${count === 1 ? "curtida" : "curtidas"}`;
+}
+
+function formatCommentsCountLabel(count = 0) {
+  return `${count} ${count === 1 ? "Comentário" : "Comentários"}`;
 }
 
 export function CommunityContentPane({
@@ -87,8 +112,16 @@ export function CommunityContentPane({
   onViewPublication,
   onEditPublication,
   onDeletePublication,
+  onToggleReaction,
+  onLoadReactionActors,
+  reactingPublicationId,
   deletingPublicationId,
 }: CommunityContentPaneProps) {
+  const [likersDialogOpen, setLikersDialogOpen] = useState(false);
+  const [likersDialogLoading, setLikersDialogLoading] = useState(false);
+  const [likersDialogActors, setLikersDialogActors] = useState<ReactionActor[]>(
+    [],
+  );
   const publicationSpace =
     communityDetail?.spaces.find(
       (space) => space.spaceType === "publicacoes",
@@ -104,91 +137,172 @@ export function CommunityContentPane({
   const canManagePublication = (item: CommunityFeedItem) =>
     canManage || item.authorId === currentUserId;
 
-  const renderPublicationItem = (item: CommunityFeedItem) => (
-    // Cards da timeline abrem a visualização completa e precisam indicar clique.
-    <article
-      key={item.id}
-      role="button"
-      tabIndex={0}
-      onClick={() => {
-        void onViewPublication(item);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
+  async function openLikersDialog(item: CommunityFeedItem) {
+    setLikersDialogOpen(true);
+    setLikersDialogLoading(true);
+    const actors = await onLoadReactionActors(item, "👍");
+    setLikersDialogActors(actors);
+    setLikersDialogLoading(false);
+  }
+
+  const renderPublicationItem = (item: CommunityFeedItem) => {
+    const likeSummary = item.reactions?.find((reaction) => reaction.emoji === "👍");
+    const likeCount = likeSummary?.count ?? 0;
+    const likePreviewUser = likeSummary?.previewUsers[0];
+    const authorName = item.authorName?.trim() || "Usuário sem nome";
+    const createdLabel = formatFeedDate(item.createdAt);
+
+    return (
+      // Cards da timeline abrem a visualização completa e precisam indicar clique.
+      <article
+        key={item.id}
+        role="button"
+        tabIndex={0}
+        onClick={() => {
           void onViewPublication(item);
-        }
-      }}
-      className="relative overflow-hidden rounded-lg border border-border bg-background cursor-pointer transition-shadow hover:shadow-md">
-      {item.coverUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={item.coverUrl}
-          alt={item.title ?? "Capa da publicação"}
-          className="h-52 w-full object-cover"
-        />
-      ) : null}
-      {canManagePublication(item) ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            void onViewPublication(item);
+          }
+        }}
+        className="relative cursor-pointer overflow-hidden rounded-lg border border-border bg-background transition-shadow hover:shadow-md">
+        {item.coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.coverUrl}
+            alt={item.title ?? "Capa da publicação"}
+            className="h-52 w-full object-cover"
+          />
+        ) : null}
+        {canManagePublication(item) ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="absolute right-3 top-3 z-10 cursor-pointer bg-background/90 backdrop-blur"
+                aria-label="Ações da publicação"
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  void onEditPublication(item);
+                }}>
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive"
+                disabled={deletingPublicationId === item.id}
+                onSelect={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const confirmed = window.confirm(
+                    "Tem certeza que deseja excluir esta publicação?",
+                  );
+                  if (!confirmed) return;
+                  void onDeletePublication(item);
+                }}>
+                {deletingPublicationId === item.id ? "Excluindo..." : "Excluir"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
+        <div className="space-y-4 p-5">
+          {item.title ? <div className="text-xl font-semibold">{item.title}</div> : null}
+
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              {item.authorAvatarUrl ? (
+                <AvatarImage src={item.authorAvatarUrl} alt={authorName} />
+              ) : null}
+              <AvatarFallback className="text-xs font-semibold">
+                {getInitials(authorName)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{authorName}</p>
+              {createdLabel ? (
+                <p className="text-xs text-muted-foreground">{createdLabel}</p>
+              ) : null}
+            </div>
+          </div>
+
+          <p className="text-base">
+            {item.excerpt?.trim() || "Publicação sem pré-visualização disponível."}
+          </p>
+
+          <div className="flex items-center justify-between border-t border-border pt-3">
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                disabled={reactingPublicationId === item.id}
+                aria-label={likeSummary?.reacted ? "Remover curtida" : "Curtir publicação"}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void onToggleReaction(item, "👍");
+                }}>
+                <Heart
+                  className={`h-5 w-5 ${likeSummary?.reacted ? "fill-red-500 text-red-500" : "text-foreground"}`}
+                />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Comentários em breve"
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}>
+                <MessageCircle className="h-5 w-5 text-foreground" />
+              </Button>
+            </div>
+
+            <button
               type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="absolute right-3 top-3 z-10 cursor-pointer bg-background/90 backdrop-blur"
-              aria-label="Ações da publicação"
+              disabled={likeCount === 0}
               onClick={(event) => {
                 event.stopPropagation();
-              }}>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onSelect={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                void onEditPublication(item);
-              }}>
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive"
-              disabled={deletingPublicationId === item.id}
-              onSelect={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                const confirmed = window.confirm(
-                  "Tem certeza que deseja excluir esta publicação?",
-                );
-                if (!confirmed) return;
-                void onDeletePublication(item);
-              }}>
-              {deletingPublicationId === item.id ? "Excluindo..." : "Excluir"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : null}
-      <div className="space-y-3 p-5">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          {formatFeedDate(item.createdAt) ? (
-            <span>{formatFeedDate(item.createdAt)}</span>
-          ) : null}
-          {item.authorName ? <span>por {item.authorName}</span> : null}
+                if (likeCount === 0) return;
+                void openLikersDialog(item);
+              }}
+              className="flex items-center gap-2 text-sm disabled:cursor-default disabled:opacity-70">
+              <Avatar className="h-6 w-6">
+                {likePreviewUser?.avatarUrl ? (
+                  <AvatarImage
+                    src={likePreviewUser.avatarUrl}
+                    alt={likePreviewUser.fullName ?? "Usuário que curtiu"}
+                  />
+                ) : null}
+                <AvatarFallback className="text-[10px] font-semibold">
+                  {getInitials(likePreviewUser?.fullName ?? null)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="font-semibold">{formatLikeCountLabel(likeCount)}</span>
+              <span className="text-muted-foreground">
+                {formatCommentsCountLabel(0)}
+              </span>
+            </button>
+          </div>
         </div>
-        {item.title ? (
-          <div className="text-xl font-semibold">{item.title}</div>
-        ) : null}
-        <p className="text-base text-secondary-foreground">
-          {item.excerpt?.trim() ||
-            "Publicação sem pré-visualização disponível."}
-        </p>
-      </div>
-    </article>
-  );
+      </article>
+    );
+  };
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col bg-background">
+    <>
+      <section className="flex min-h-0 flex-1 flex-col bg-background">
       <div className="flex flex-col gap-3 border-b border-border px-4 py-3 lg:flex-row lg:items-center lg:justify-between lg:px-5">
         <div className="flex min-w-0 items-center gap-3">
           {selectedSpace ? (
@@ -358,6 +472,14 @@ export function CommunityContentPane({
           </Empty>
         )}
       </div>
-    </section>
+      </section>
+      <ReactionActorsDialog
+        open={likersDialogOpen}
+        onOpenChange={setLikersDialogOpen}
+        loading={likersDialogLoading}
+        actors={likersDialogActors}
+        title="Curtidas da publicação"
+      />
+    </>
   );
 }

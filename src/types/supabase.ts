@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   graphql_public: {
     Tables: {
@@ -737,6 +737,69 @@ export type Database = {
           },
         ]
       }
+      community_space_post_reaction_targets: {
+        Row: {
+          community_id: string
+          created_at: string
+          org_id: string
+          post_id: string
+          space_id: string
+          target_id: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          org_id: string
+          post_id: string
+          space_id: string
+          target_id: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          org_id?: string
+          post_id?: string
+          space_id?: string
+          target_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_space_post_reaction_targets_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_space_post_reaction_targets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_space_post_reaction_targets_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "community_space_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_space_post_reaction_targets_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "community_spaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_space_post_reaction_targets_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: true
+            referencedRelation: "reaction_targets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_space_posts: {
         Row: {
           blocks: Json
@@ -786,6 +849,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "community_space_posts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "community_space_posts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_space_posts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "community_space_posts_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
@@ -797,13 +881,6 @@ export type Database = {
             columns: ["space_id"]
             isOneToOne: false
             referencedRelation: "community_spaces"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "community_space_posts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1832,6 +1909,157 @@ export type Database = {
           },
           {
             foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      reaction_counters: {
+        Row: {
+          count: number
+          emoji: string
+          target_id: string
+          updated_at: string
+        }
+        Insert: {
+          count?: number
+          emoji: string
+          target_id: string
+          updated_at?: string
+        }
+        Update: {
+          count?: number
+          emoji?: string
+          target_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reaction_counters_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "reaction_targets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reaction_targets: {
+        Row: {
+          allow_reactions: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          target_kind: string
+          updated_at: string
+        }
+        Insert: {
+          allow_reactions?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          target_kind: string
+          updated_at?: string
+        }
+        Update: {
+          allow_reactions?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          target_kind?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reaction_targets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "reaction_targets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reaction_targets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "unit_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "reaction_targets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          org_id: string
+          target_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          org_id: string
+          target_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          org_id?: string
+          target_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reactions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "reaction_targets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "org_users_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "unit_users_view"

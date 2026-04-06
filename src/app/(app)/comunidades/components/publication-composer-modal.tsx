@@ -1,14 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import {
   FileText,
+  Heart,
   ImagePlus,
+  MessageCircle,
   MoreHorizontal,
   Paperclip,
   Type,
   X,
 } from "lucide-react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,8 +32,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ExpandableModal } from "@/components/ui/web-components/expandable-modal";
+import type { ReactionActor } from "@/lib/reactions/core";
 import { CoverPositioner } from "./cover-positioner";
 import { formatFileSize } from "./publication-composer-utils";
+import { ReactionActorsDialog } from "./reaction-actors-dialog";
 import type { CommunityFeedItem, PublicationComposerController } from "./types";
 
 type PublicationComposerModalProps = {
@@ -37,22 +43,87 @@ type PublicationComposerModalProps = {
   canManage: boolean;
   currentUserId: string;
   onDeletePublication: (item: CommunityFeedItem) => Promise<boolean>;
+  onToggleReaction: (item: CommunityFeedItem, emoji?: "👍") => Promise<boolean>;
+  onLoadReactionActors: (
+    item: CommunityFeedItem,
+    emoji?: "👍",
+  ) => Promise<ReactionActor[]>;
+  reactingPublicationId: string | null;
   deletingPublicationId: string | null;
 };
+
+function getInitials(value: string | null) {
+  if (!value) return "--";
+  const initials = value
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+
+  return initials || "--";
+}
+
+function formatFeedDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function formatLikeCountLabel(count: number) {
+  return `${count} ${count === 1 ? "curtida" : "curtidas"}`;
+}
+
+function formatCommentsCountLabel(count = 0) {
+  return `${count} ${count === 1 ? "Comentário" : "Comentários"}`;
+}
 
 export function PublicationComposerModal({
   composer,
   canManage,
   currentUserId,
   onDeletePublication,
+  onToggleReaction,
+  onLoadReactionActors,
+  reactingPublicationId,
   deletingPublicationId,
 }: PublicationComposerModalProps) {
+  const [likersDialogOpen, setLikersDialogOpen] = useState(false);
+  const [likersDialogLoading, setLikersDialogLoading] = useState(false);
+  const [likersDialogActors, setLikersDialogActors] = useState<ReactionActor[]>(
+    [],
+  );
   const hasNestedModalOpen =
     composer.imageUploadDialogOpen || composer.attachmentUploadDialogOpen;
   const isViewMode = composer.isViewingPublication;
   const canManageCurrentPublication = composer.activeFeedItem
     ? canManage || composer.activeFeedItem.authorId === currentUserId
     : false;
+  const likeSummary = composer.activeFeedItem?.reactions?.find(
+    (reaction) => reaction.emoji === "👍",
+  );
+  const likeCount = likeSummary?.count ?? 0;
+  const likePreviewUser = likeSummary?.previewUsers[0];
+  const authorName =
+    composer.activeFeedItem?.authorName?.trim() || "Usuário sem nome";
+  const createdLabel = composer.activeFeedItem?.createdAt
+    ? formatFeedDate(composer.activeFeedItem.createdAt)
+    : "";
+
+  async function handleOpenLikersDialog() {
+    if (!composer.activeFeedItem) return;
+    setLikersDialogOpen(true);
+    setLikersDialogLoading(true);
+    const actors = await onLoadReactionActors(composer.activeFeedItem, "👍");
+    setLikersDialogActors(actors);
+    setLikersDialogLoading(false);
+  }
 
   async function handleDeleteCurrentPublication() {
     if (!composer.activeFeedItem) return;
@@ -239,6 +310,92 @@ export function PublicationComposerModal({
                 <p className="text-2xl font-semibold">
                   {composer.publicationTitle}
                 </p>
+              ) : null}
+              {composer.activeFeedItem ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      {composer.activeFeedItem.authorAvatarUrl ? (
+                        <AvatarImage
+                          src={composer.activeFeedItem.authorAvatarUrl}
+                          alt={authorName}
+                        />
+                      ) : null}
+                      <AvatarFallback className="text-xs font-semibold">
+                        {getInitials(authorName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{authorName}</p>
+                      {createdLabel ? (
+                        <p className="text-xs text-muted-foreground">
+                          {createdLabel}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between border-y border-border py-2">
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={reactingPublicationId === composer.activeFeedItem.id}
+                        aria-label={
+                          likeSummary?.reacted ? "Remover curtida" : "Curtir publicação"
+                        }
+                        onClick={() => {
+                          void (async () => {
+                            const currentItem = composer.activeFeedItem;
+                            if (!currentItem) return;
+                            const toggled = await onToggleReaction(currentItem, "👍");
+                            if (toggled) {
+                              await composer.openViewPublication(currentItem);
+                            }
+                          })();
+                        }}>
+                        <Heart
+                          className={`h-5 w-5 ${likeSummary?.reacted ? "fill-red-500 text-red-500" : "text-foreground"}`}
+                        />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Comentários em breve">
+                        <MessageCircle className="h-5 w-5 text-foreground" />
+                      </Button>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={likeCount === 0}
+                      onClick={() => {
+                        if (likeCount === 0) return;
+                        void handleOpenLikersDialog();
+                      }}
+                      className="flex items-center gap-2 text-sm disabled:cursor-default disabled:opacity-70">
+                      <Avatar className="h-6 w-6">
+                        {likePreviewUser?.avatarUrl ? (
+                          <AvatarImage
+                            src={likePreviewUser.avatarUrl}
+                            alt={likePreviewUser.fullName ?? "Usuário que curtiu"}
+                          />
+                        ) : null}
+                        <AvatarFallback className="text-[10px] font-semibold">
+                          {getInitials(likePreviewUser?.fullName ?? null)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-semibold">
+                        {formatLikeCountLabel(likeCount)}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {formatCommentsCountLabel(0)}
+                      </span>
+                    </button>
+                  </div>
+                </div>
               ) : null}
               <div className="space-y-4">
                 {composer.publicationBlocks.map((block) => (
@@ -472,6 +629,13 @@ export function PublicationComposerModal({
           )}
         </div>
       </ExpandableModal>
+      <ReactionActorsDialog
+        open={likersDialogOpen}
+        onOpenChange={setLikersDialogOpen}
+        loading={likersDialogLoading}
+        actors={likersDialogActors}
+        title="Curtidas da publicação"
+      />
 
       {/* Image block upload dialog */}
       <Dialog

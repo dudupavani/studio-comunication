@@ -7,7 +7,8 @@
 - Team/Group: estruturas de destinatários e colaboração
 - Inbox: central de notificações e conteúdos recentes
 - Chat: conversas com menções e notificações próprias
-- Comunicado: envio amplo com destinatários, comentários, reações, views e métricas
+- Comunicado: envio amplo com destinatários, comentários, reações, views e métricas (módulo arquivado)
+- Publicação de comunidade: conteúdo em `community_space_posts` exibido no feed de comunidades
 
 ## Lifecycle de usuário
 
@@ -23,6 +24,8 @@
 - `Database`: contrato tipado em `src/types/supabase.ts`
 - service client: client elevado para operações privilegiadas
 - auth context: contexto resolvido de usuário, tenant e papéis
+- `reaction_target`: registro canônico do recurso que pode receber reação
+- `reaction_counter`: contador agregado por emoji/alvo para leitura performática
 
 ## Convenções recorrentes
 

@@ -10,6 +10,8 @@ import {
 } from "@/lib/communities/permissions";
 import { communityParamsSchema } from "@/lib/communities/validations";
 import { buildSegmentMap, jsonError, loadMembershipSets } from "@/lib/communities/api";
+import { buildCommunityPostReactionSummaryByPost } from "@/lib/communities/post-reactions";
+import { getEmptyReactionSummary } from "@/lib/reactions/core";
 
 const POSTS_BUCKET = "posts";
 const SIGNED_URL_TTL_IN_SECONDS = 60 * 60;
@@ -152,7 +154,7 @@ export async function GET(
       const postsRes = await svc
         .from("community_space_posts")
         .select(
-          "id, community_id, space_id, title, cover_path, cover_url, created_at, created_by, blocks, profiles(full_name)"
+          "id, community_id, space_id, title, cover_path, cover_url, created_at, created_by, blocks, profiles(full_name, avatar_url)"
         )
         .eq("community_id", communityId)
         .in("space_id", publicationSpaceIds)
@@ -168,6 +170,18 @@ export async function GET(
             )
             .filter(Boolean),
         );
+
+        let reactionsByPost = new Map<string, ReturnType<typeof getEmptyReactionSummary>>();
+        try {
+          reactionsByPost = await buildCommunityPostReactionSummaryByPost({
+            svc,
+            postIds: postsRes.data.map((post: any) => post.id),
+            orgId: auth.orgId,
+            userId: auth.userId,
+          });
+        } catch (error) {
+          console.error("COMMUNITY_FEED_REACTIONS_ERROR", error);
+        }
 
         feedItems = postsRes.data.map((post: any) => {
           const firstTextBlock = (post.blocks ?? []).find(
@@ -192,7 +206,9 @@ export async function GET(
               post.cover_url ??
               null,
             authorName: post.profiles?.full_name ?? null,
+            authorAvatarUrl: post.profiles?.avatar_url ?? null,
             createdAt: post.created_at,
+            reactions: reactionsByPost.get(post.id) ?? getEmptyReactionSummary(),
           };
         });
       }

@@ -3,106 +3,16 @@ import { getAuthContext } from "@/lib/auth-context";
 import { createServerClientWithCookies } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import {
-  canManageCommunities,
-  canViewCommunityRecord,
-  type CommunityRow,
-  type CommunitySegmentRow,
-} from "@/lib/communities/permissions";
-import {
   communitySpacePostParamsSchema,
   createCommunitySpacePostSchema,
 } from "@/lib/communities/validations";
-import {
-  buildSegmentMap,
-  jsonError,
-  loadMembershipSets,
-} from "@/lib/communities/api";
+import { jsonError } from "@/lib/communities/api";
+import { ensureCommunityPostScopeAccess } from "@/lib/communities/post-access";
+import { buildCommunityPostReactionSummaryByPost } from "@/lib/communities/post-reactions";
+import { getEmptyReactionSummary } from "@/lib/reactions/core";
 
 const POSTS_BUCKET = "posts";
 const SIGNED_URL_TTL_IN_SECONDS = 60 * 60;
-
-async function ensurePostScopeAccess(
-  params: { communityId: string; spaceId: string },
-  auth: NonNullable<Awaited<ReturnType<typeof getAuthContext>>>,
-) {
-  const svc = createServiceClient();
-  const canManage = canManageCommunities(auth);
-
-  const [communityRes, segmentsRes, spaceRes, memberships] = await Promise.all([
-    svc
-      .from("communities")
-      .select(
-        "id, org_id, visibility, segment_type, allow_unit_master_post, allow_unit_user_post",
-      )
-      .eq("id", params.communityId)
-      .maybeSingle(),
-    svc
-      .from("community_segments")
-      .select("community_id, org_id, target_type, target_id, created_at")
-      .eq("community_id", params.communityId),
-    svc
-      .from("community_spaces")
-      .select("id, community_id, org_id, space_type")
-      .eq("id", params.spaceId)
-      .eq("community_id", params.communityId)
-      .maybeSingle(),
-    canManage
-      ? Promise.resolve({ groupIds: new Set<string>(), teamIds: new Set<string>() })
-      : loadMembershipSets(svc, auth.orgId!, auth.userId),
-  ]);
-
-  if (communityRes.error) {
-    throw new Error("Falha ao validar comunidade.");
-  }
-  if (segmentsRes.error) {
-    throw new Error("Falha ao validar segmentação da comunidade.");
-  }
-  if (spaceRes.error) {
-    throw new Error("Falha ao validar espaço.");
-  }
-
-  const community = (communityRes.data ?? null) as CommunityRow | null;
-  const space = spaceRes.data ?? null;
-
-  if (!community || community.org_id !== auth.orgId) {
-    return { ok: false as const, status: 404, error: "Comunidade não encontrada." };
-  }
-
-  if (!space || space.org_id !== auth.orgId) {
-    return { ok: false as const, status: 404, error: "Espaço não encontrado." };
-  }
-
-  if (space.space_type !== "publicacoes") {
-    return {
-      ok: false as const,
-      status: 400,
-      error: "Publicações só são permitidas em espaços do tipo 'publicacoes'.",
-    };
-  }
-
-  const segments = (segmentsRes.data ?? []) as CommunitySegmentRow[];
-  const segmentMap = buildSegmentMap(segments);
-  const segmentTargetIds = (segmentMap.get(params.communityId) ?? []).map(
-    (segment) => segment.target_id,
-  );
-
-  const canView = canViewCommunityRecord({
-    auth,
-    community,
-    segmentTargetIds,
-    memberships,
-  });
-
-  if (!canView) {
-    return {
-      ok: false as const,
-      status: 403,
-      error: "Você não tem acesso a esta comunidade.",
-    };
-  }
-
-  return { ok: true as const, svc, canManage };
-}
 
 function canMutatePost(args: {
   canManage: boolean;
@@ -193,7 +103,7 @@ export async function GET(
       return jsonError(400, "Não foi possível determinar a organização ativa.");
     }
 
-    const access = await ensurePostScopeAccess(parsedParams.data, auth);
+    const access = await ensureCommunityPostScopeAccess(parsedParams.data, auth);
     if (!access.ok) {
       return jsonError(access.status, access.error);
     }
@@ -201,7 +111,9 @@ export async function GET(
     const { postId, communityId, spaceId } = parsedParams.data;
     const { data: post, error: postError } = await access.svc
       .from("community_space_posts")
-      .select("id, community_id, space_id, org_id, title, cover_path, cover_url, blocks, created_by")
+      .select(
+        "id, community_id, space_id, org_id, title, cover_path, cover_url, blocks, created_by, created_at, profiles(full_name, avatar_url)",
+      )
       .eq("id", postId)
       .eq("community_id", communityId)
       .eq("space_id", spaceId)
@@ -244,6 +156,19 @@ export async function GET(
         })
       : [];
 
+    let reactions = getEmptyReactionSummary();
+    try {
+      const summaryByPost = await buildCommunityPostReactionSummaryByPost({
+        svc: access.svc,
+        postIds: [post.id],
+        orgId: auth.orgId,
+        userId: auth.userId,
+      });
+      reactions = summaryByPost.get(post.id) ?? getEmptyReactionSummary();
+    } catch (error) {
+      console.error("COMMUNITY_POST_REACTIONS_LOAD_ERROR", error);
+    }
+
     return NextResponse.json({
       item: {
         id: post.id,
@@ -251,6 +176,9 @@ export async function GET(
         spaceId: post.space_id,
         orgId: post.org_id ?? auth.orgId,
         createdBy: post.created_by,
+        authorName: post.profiles?.full_name ?? null,
+        authorAvatarUrl: post.profiles?.avatar_url ?? null,
+        createdAt: post.created_at,
         title: post.title,
         coverPath: post.cover_path ?? null,
         coverUrl:
@@ -258,6 +186,7 @@ export async function GET(
           post.cover_url ??
           null,
         blocks: normalizedBlocks,
+        reactions,
       },
     });
   } catch (error) {
@@ -286,7 +215,7 @@ export async function PATCH(
       return jsonError(400, "Não foi possível determinar a organização ativa.");
     }
 
-    const access = await ensurePostScopeAccess(parsedParams.data, auth);
+    const access = await ensureCommunityPostScopeAccess(parsedParams.data, auth);
     if (!access.ok) {
       return jsonError(access.status, access.error);
     }
@@ -381,7 +310,7 @@ export async function DELETE(
       return jsonError(400, "Não foi possível determinar a organização ativa.");
     }
 
-    const access = await ensurePostScopeAccess(parsedParams.data, auth);
+    const access = await ensureCommunityPostScopeAccess(parsedParams.data, auth);
     if (!access.ok) {
       return jsonError(access.status, access.error);
     }

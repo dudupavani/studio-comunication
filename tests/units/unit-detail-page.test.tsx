@@ -8,7 +8,7 @@ import { getUnitBySlug } from "@/lib/actions/units";
 import { isOrgAdminFor, isUnitMasterFor } from "@/lib/permissions-org";
 import MembersTabServer from "@/components/units/members/members-tab.server";
 
-const mockUnitDetailsForm = jest.fn(() => null);
+const mockUnitDetailsForm = jest.fn((_props?: unknown) => null);
 
 jest.mock("next/navigation", () => ({
   redirect: jest.fn(),

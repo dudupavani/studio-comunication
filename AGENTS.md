@@ -28,6 +28,12 @@
   - Siga o padrão já usado no repositório: `YYYYMMDD_descricao_snake_case.sql`.
   - Regras de schema que impactem o app (ex.: tabelas de chats, funções RPC, policies RLS) devem ser versionadas ali.
 
+- **Reações (arquitetura compartilhada)**
+  - O núcleo oficial de reações é composto por `reaction_targets`, `reactions` e `reaction_counters`.
+  - Para publicações de comunidades, o vínculo com o alvo de reação é feito por `community_space_post_reaction_targets`.
+  - Novos módulos com reação devem integrar nesse núcleo compartilhado; não criar tabela de reação por módulo sem necessidade excepcional e explícita.
+  - Fluxos de API devem validar tenant scope e acesso ao recurso antes de inserir/remover reação.
+
 - **Chats / menções**
   - A tabela `chat_message_mentions` e a RPC `create_chat_message_with_mentions` já existem no banco; use-as para qualquer ajuste de chats.
   - As rotas de chat sempre salvam mensagens via RPC para garantir consistência das menções; não insira direto em `chat_messages`.

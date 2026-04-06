@@ -28,6 +28,26 @@ Fluxo esperado:
 - Route handlers devem permanecer finos; regras de negócio e acesso a dados ficam em `src/lib/*`.
 - Validação deve ocorrer na borda da aplicação, preferencialmente antes de tocar domínio ou banco.
 
+## Arquitetura de Reações (core compartilhado)
+
+A arquitetura oficial para reações é centralizada e reutilizável entre módulos.
+
+- Tabelas núcleo:
+  - `reaction_targets`: cadastro do recurso reagível (owner org, tipo de alvo, flag `allow_reactions`)
+  - `reactions`: eventos de reação por usuário (`target_id`, `user_id`, `emoji`)
+  - `reaction_counters`: contadores agregados por alvo+emoji para leitura rápida
+- Tabela de vínculo inicial por módulo:
+  - `community_space_post_reaction_targets`: mapeia `community_space_posts` para `reaction_targets`
+- Regras de implementação:
+  - novos módulos devem adicionar tabela de vínculo `*_reaction_targets` para seus recursos, reaproveitando o núcleo
+  - evitar criar `*_reactions` por módulo sem necessidade excepcional
+  - API de reação deve validar auth/tenant/permissão antes de tocar `reactions`
+- Camada de código atual:
+  - core compartilhado: `src/lib/reactions/core.ts`
+  - integração de comunidades: `src/lib/communities/post-reactions.ts`
+  - acesso/permissão de post: `src/lib/communities/post-access.ts`
+  - endpoint de toggle para publicações: `src/app/api/communities/[communityId]/spaces/[spaceId]/posts/[postId]/reactions/route.ts`
+
 ## Módulos arquivados / fora do escopo padrão
 
 - `src/app/(app)/chats`
@@ -52,3 +72,4 @@ Esses módulos permanecem versionados, mas não fazem parte do produto ativo. N�
 - Se a mudança é de contrato HTTP, revise também o route handler correspondente.
 - Se a mudança toca auth, tenant scope ou lifecycle de usuários, valide impacto em permissões e RLS.
 - Se a mudança toca schema, trate migration + types + chamadas Supabase como um conjunto único.
+- Se a mudança envolve reações, altere primeiro o core (`reaction_targets/reactions/reaction_counters`) e só depois conecte o módulo consumidor.

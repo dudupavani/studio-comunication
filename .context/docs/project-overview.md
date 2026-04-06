@@ -6,6 +6,7 @@
 
 - `inbox` e notificações: hub central de notificações e conteúdos recentes.
 - `calendar`: eventos e agenda.
+- `comunidades` e publicações: feed segmentado, criação de conteúdo e interações.
 - `users`, `orgs`, `units`, `teams` e grupos: gestão de estrutura organizacional e lifecycle do usuário.
 
 ## Módulos arquivados / ocultos do produto
@@ -31,6 +32,7 @@ Esses módulos permanecem no repositório apenas para reativação futura. Para 
 
 - `src/types/supabase.ts` é a única fonte de verdade para `Database`.
 - Toda mudança de schema precisa de migration em `database/migrations`.
+- Reações usam arquitetura compartilhada (`reaction_targets`, `reactions`, `reaction_counters`) com tabela de vínculo por módulo.
 - Chat com menções deve usar a RPC `create_chat_message_with_mentions`; não inserir direto em `chat_messages`.
 - O inbox é a central de notificações; chat é a exceção com comportamento próprio.
 - A UI de usuários expõe apenas ações de desativar e remover; exclusão permanente não vai para a UI do cliente.

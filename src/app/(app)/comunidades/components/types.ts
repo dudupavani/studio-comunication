@@ -2,6 +2,7 @@ import type {
   ChangeEvent,
 } from "react";
 import type { Profile } from "@/lib/types";
+import type { ReactionSummary } from "@/lib/reactions/core";
 
 export type CommunityVisibility = "global" | "segmented";
 export type SegmentType = "group" | "team";
@@ -47,6 +48,8 @@ export type CommunityFeedItem = {
   excerpt?: string | null;
   coverUrl?: string | null;
   authorName?: string | null;
+  authorAvatarUrl?: string | null;
+  reactions?: ReactionSummary[];
   createdAt: string;
 };
 
