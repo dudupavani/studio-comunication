@@ -419,6 +419,3 @@ export function AnnouncementDetailContent({
     </div>
   );
 }
- </div>
-  );
-}

@@ -3,8 +3,6 @@ import { logError } from "@/lib/log";
 import {
   announcementActionUrl,
   calendarEventActionUrl,
-  chatActionUrl,
-  designerAssetActionUrl,
   inboxFallbackUrl,
 } from "./action-urls";
 import {
@@ -69,64 +67,6 @@ function baseDraft(event: NormalizedNotificationEvent, userId: string) {
   } satisfies Pick<NotificationInsert, "org_id" | "user_id" | "read_at">;
 }
 
-function buildChatMessageDraft(
-  event: NormalizedNotificationEvent<"chat.message_received">,
-  recipient: string
-): NotificationInsert {
-  const metadata = {
-    chat_id: event.payload.chatId,
-    message_id: event.payload.messageId,
-    actor_id: event.actorId,
-    chat_name: event.payload.chatName ?? null,
-    preview: event.payload.preview ?? null,
-  };
-
-  const body = truncate(event.payload.preview, 240) || "Abra o chat para ler a mensagem";
-  return {
-    ...baseDraft(event, recipient),
-    type: "chat.message",
-    title: event.payload.chatName
-      ? `Nova mensagem em ${event.payload.chatName}`
-      : "Nova mensagem",
-    message: body,
-    body,
-    action_url: chatActionUrl(event.payload.chatId),
-    metadata,
-  };
-}
-
-function buildChatMentionDraft(
-  event: NormalizedNotificationEvent<"chat.mention">,
-  recipient: string
-): NotificationInsert {
-  const mentionedId =
-    event.payload.mentionType === "user"
-      ? event.payload.mentionedUserId ?? recipient
-      : null;
-
-  const metadata = {
-    chat_id: event.payload.chatId,
-    message_id: event.payload.messageId,
-    actor_id: event.actorId,
-    mention_type: event.payload.mentionType,
-    mentioned_user_id: mentionedId,
-    chat_name: event.payload.chatName ?? null,
-    preview: event.payload.preview ?? null,
-  };
-
-  const body = truncate(event.payload.preview, 240) || "Uma mensagem mencionou você";
-  return {
-    ...baseDraft(event, recipient),
-    type: "chat.mention",
-    title: event.payload.chatName
-      ? `Você foi mencionado em ${event.payload.chatName}`
-      : "Você foi mencionado no chat",
-    message: body,
-    body,
-    action_url: chatActionUrl(event.payload.chatId),
-    metadata,
-  };
-}
 
 function buildAnnouncementDraft(
   event: NormalizedNotificationEvent<"announcement.sent">,
@@ -149,25 +89,6 @@ function buildAnnouncementDraft(
   };
 }
 
-function buildDesignerDraft(
-  event: NormalizedNotificationEvent<"designer.asset_ready">,
-  recipient: string
-): NotificationInsert {
-  const metadata = {
-    asset_id: event.payload.assetId,
-    actor_id: event.actorId,
-  };
-
-  return {
-    ...baseDraft(event, recipient),
-    type: "designer.asset_ready",
-    title: `Arte pronta: ${event.payload.title}`,
-    message: "Seu arquivo está disponível para edição",
-    body: "Seu arquivo está disponível para edição",
-    action_url: designerAssetActionUrl(event.payload.assetId),
-    metadata,
-  };
-}
 
 function buildCalendarDraft(
   event: NormalizedNotificationEvent<"calendar.event_created">,
@@ -197,14 +118,8 @@ const HANDLERS: Record<
   NotificationEventType,
   (event: NormalizedNotificationEvent, recipients: string[]) => NotificationInsert[]
 > = {
-  "chat.message_received": (event, recipients) =>
-    recipients.map((userId) => buildChatMessageDraft(event as any, userId)),
-  "chat.mention": (event, recipients) =>
-    recipients.map((userId) => buildChatMentionDraft(event as any, userId)),
   "announcement.sent": (event, recipients) =>
     recipients.map((userId) => buildAnnouncementDraft(event as any, userId)),
-  "designer.asset_ready": (event, recipients) =>
-    recipients.map((userId) => buildDesignerDraft(event as any, userId)),
   "calendar.event_created": (event, recipients) =>
     recipients.map((userId) => buildCalendarDraft(event as any, userId)),
 };

@@ -26,7 +26,7 @@ export function TeamMultiSelect({
   value,
   onChange,
   showSelectedSummary = true,
-  apiBase = "/api/chats/recipients",
+  apiBase = "/api/users/recipients",
 }: TeamMultiSelectProps) {
   const { toast } = useToast();
   const [items, setItems] = useState<TeamOption[]>([]);

@@ -7,13 +7,10 @@ export const MODULE_TITLES: Record<string, string> = {
   "/users": "Usuários",
   "/calendar": "Calendário",
   "/groups": "Grupos de usuários",
-  "/chats": "Chats",
   "/comunicados": "Comunicados",
   "/comunidades": "Comunidades",
   "/inbox": "Inbox",
-  "/learning": "Cursos",
   "/teams": "Equipes",
-  "/design-editor": "Designer",
   // adicione outros módulos aqui
 };
 

@@ -27,7 +27,7 @@ export function GroupMultiSelect({
   value,
   onChange,
   showSelectedSummary = true,
-  apiBase = "/api/chats/recipients",
+  apiBase = "/api/users/recipients",
 }: GroupMultiSelectProps) {
   const { toast } = useToast();
   const [items, setItems] = useState<UserGroupOption[]>([]);

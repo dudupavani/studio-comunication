@@ -16,7 +16,6 @@ type Props = {
   onChange: (html: string) => void;
   placeholder?: string;
   className?: string;
-  chatId?: string;
   orgId?: string | null;
   minHeight?: string;
   maxHeight?: string;

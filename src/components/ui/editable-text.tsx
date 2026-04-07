@@ -103,5 +103,3 @@ export function EditableText({
     </span>
   );
 }
-;
-}

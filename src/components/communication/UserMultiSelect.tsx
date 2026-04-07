@@ -29,7 +29,7 @@ export function UserMultiSelect({
   value,
   onChange,
   showSelectedSummary = true,
-  apiBase = "/api/chats/recipients",
+  apiBase = "/api/users/recipients",
   stretchList = false,
 }: UserMultiSelectProps) {
   const { toast } = useToast();

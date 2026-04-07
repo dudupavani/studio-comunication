@@ -1,1 +1,0 @@
-export { applyShapeLiveConstraint } from "./shape";
