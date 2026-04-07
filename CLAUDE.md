@@ -17,7 +17,6 @@ Este arquivo é a entrada do Claude Code para o repositório `studio`.
 
 ## Regras operacionais
 
-- `AGENTS.md` vence qualquer conflito com docs auxiliares.
 - Use `.context/` como knowledge base compartilhada; não trate a pasta como memória primária nem como repositório de estado.
 - Não assuma que snapshots, logs ou planos antigos são válidos; use somente os docs curados mantidos na `.context/docs/`.
 - Exclua do escopo padrão os módulos arquivados definidos em `AGENTS.md`, tratando-os como inexistentes até haver pedido explícito de reativação ou manutenção.

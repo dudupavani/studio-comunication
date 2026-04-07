@@ -20,14 +20,6 @@ export function GlobalHeaderActions({ user }: GlobalHeaderActionsProps) {
           <Bell />
         </Link>
       </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        type="button"
-        aria-label="Favoritos"
-        disabled>
-        <Bookmark />
-      </Button>
       <QuickAccessMenu />
       <UserMenu user={user} />
     </div>

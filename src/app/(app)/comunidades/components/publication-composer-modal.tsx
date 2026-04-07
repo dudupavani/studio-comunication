@@ -247,7 +247,7 @@ export function PublicationComposerModal({
         footer={
           isViewMode ? null : (
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1">
                 <Button
                   type="button"
                   variant="ghost"
