@@ -66,10 +66,6 @@ export function SpaceFormDialog({
           <DialogTitle>
             {mode === "create" ? "Novo espaço" : "Editar espaço"}
           </DialogTitle>
-          <DialogDescription>
-            Defina o nome e o tipo de espaço para organizar o conteúdo da
-            comunidade.
-          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -94,7 +90,7 @@ export function SpaceFormDialog({
               onValueChange={(spaceType: SpaceType) =>
                 setValue((current) => ({ ...current, spaceType }))
               }
-              className="flex items-center gap-4">
+              className="flex flex-col items-center gap-4">
               <RadioChoiceCard
                 value="publicacoes"
                 title="Publicações"

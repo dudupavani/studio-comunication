@@ -20,7 +20,7 @@ const RadioChoiceCard = React.forwardRef<
     <RadioGroupPrimitive.Item
       ref={ref}
       className={cn(
-        "group flex w-full items-start justify-between gap-4 rounded-2xl border border-border bg-background p-5 text-left ring-offset-background transition-colors hover:bg-accent/30 hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-foreground data-[state=checked]:bg-accent/20",
+        "group flex w-full items-start justify-between gap-4 rounded-lg border border-border bg-background p-5 text-left ring-offset-background transition-colors hover:bg-accent/30 hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-foreground data-[state=checked]:bg-accent/20",
         className,
       )}
       {...props}>

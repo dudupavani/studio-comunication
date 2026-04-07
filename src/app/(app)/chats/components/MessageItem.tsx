@@ -140,12 +140,12 @@ export function MessageItem({
             className={cn(
               "w-fit rounded-2xl px-4 py-4 text-sm leading-5",
               isOwn
-                ? "bg-white border text-primary"
-                : "bg-gray-200 text-primary",
+                ? "bg-card border text-foreground"
+                : "bg-muted text-foreground",
               hasMentionHighlight ? "bg-amber-50 ring-1 ring-amber-200" : ""
             )}>
             {renderedContent}
-            <span className="mt-2 block text-right text-xs text-gray-500">
+            <span className="mt-2 block text-right text-xs text-muted-foreground">
               {absoluteTime}
             </span>
           </div>
@@ -195,7 +195,7 @@ export function MessageItem({
                           {(att.size / 1024).toFixed(1)} KB
                         </div>
                       ) : null}
-                      <span className="mt-2 block text-right text-xs text-gray-500">
+                      <span className="mt-2 block text-right text-xs text-muted-foreground">
                         {absoluteTime}
                       </span>
                     </div>

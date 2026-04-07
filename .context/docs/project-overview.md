@@ -28,18 +28,9 @@ Esses módulos permanecem no repositório apenas para reativação futura. Para 
 - Jest como runner de testes principal e Playwright para E2E.
 - Integrações de AI centralizadas em `src/lib/ai`.
 
-## Regras de domínio que mais afetam implementação
+## Pontos de Entrada
 
-- `src/types/supabase.ts` é a única fonte de verdade para `Database`.
-- Toda mudança de schema precisa de migration em `database/migrations`.
-- Reações usam arquitetura compartilhada (`reaction_targets`, `reactions`, `reaction_counters`) com tabela de vínculo por módulo.
-- Chat com menções deve usar a RPC `create_chat_message_with_mentions`; não inserir direto em `chat_messages`.
-- O inbox é a central de notificações; chat é a exceção com comportamento próprio.
-- A UI de usuários expõe apenas ações de desativar e remover; exclusão permanente não vai para a UI do cliente.
-
-## Ponto de entrada para agentes
-
-- Regras canônicas: `AGENTS.md`
-- Arquitetura e boundaries: [architecture.md](./architecture.md)
-- Workflow e validações: [development-workflow.md](./development-workflow.md)
-- Regras de UI/UX: [design.md](./design.md)
+- Regras Canônicas (Técnicas): `AGENTS.md`
+- Arquitetura e Boundaries: `.context/docs/architecture.md`
+- Workflow e Validações: `.context/docs/development-workflow.md`
+- Regras de UI/UX: `.context/docs/design.md`

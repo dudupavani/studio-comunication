@@ -40,7 +40,7 @@ export default function UserSummary({
       )}
 
       <div className="flex flex-col gap-0 ">
-        <div className="font-semibold text-left text-xs sm:text-sm text-primary leading-4">
+        <div className="font-semibold text-left text-xs sm:text-sm text-foreground leading-4">
           {displayName}
         </div>
         {displaySubtitle ? (

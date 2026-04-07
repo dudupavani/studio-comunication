@@ -1,5 +1,4 @@
 @AGENTS.md
-@.context/docs/README.md
 @.context/docs/project-overview.md
 
 # Claude Code Project Memory
@@ -9,9 +8,7 @@ Este arquivo é a entrada do Claude Code para o repositório `studio`.
 ## Ordem de leitura
 
 1. Use `AGENTS.md` como fonte canônica das regras do projeto.
-2. Use `.context/docs/README.md` como índice da base compartilhada.
-3. Use `.context/docs/project-overview.md` para enquadrar a tarefa no contexto global da aplicação.
-4. Consulte apenas o doc específico para a tarefa atual:
+2. Consulte apenas o doc específico para a tarefa atual:
    - UI/UX: `.context/docs/design.md`
    - fluxo de domínio, API ou schema: `.context/docs/architecture.md`
    - execução e validação local: `.context/docs/development-workflow.md`

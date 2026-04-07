@@ -93,7 +93,6 @@
   - Muitos 500 em rotas de AI tendem a ser causados por envs ausentes, problemas de rede ou modelo inválido; verificar essas três coisas primeiro.
 
 - **Componentes de UI**
+  ## Componentes de UI
   - Não customizar componentes da pasta `components/ui` (ex.: `sheet.tsx`, `button.tsx`) a menos que isso seja explicitamente solicitado.
-## AI Context References
-- Documentation index: `.context/docs/README.md`
-- Agent playbooks: `.context/agents/README.md`
+

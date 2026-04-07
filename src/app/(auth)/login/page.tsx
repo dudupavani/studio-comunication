@@ -9,8 +9,8 @@ export default function LoginPage() {
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'url("/images/login-image.webp")' }}
         />
-        <div className="relative flex h-full flex-col justify-center p-10 text-primary-foreground">
-          <div className="space-y-2 text-primary-foreground">
+        <div className="relative flex h-full flex-col justify-center p-10 text-white">
+          <div className="space-y-2 text-white">
             <h1 className="text-5xl font-bold">Bem-vindo de volta</h1>
             <p className="text-2xl">
               O lugar onde sua organização centraliza comunicação, equipes e

@@ -187,7 +187,7 @@ export function SentAnnouncementsTable({ items }: Props) {
           return (
             <div
               key={item.announcementId}
-              className="rounded-lg border border-border p-4 space-y-2 bg-white shadow-sm">
+              className="rounded-lg border border-border p-4 space-y-2 bg-card shadow-sm">
               <div className="flex items-start justify-between gap-2">
                 <div className="text-sm font-semibold line-clamp-2">
                   {item.title}

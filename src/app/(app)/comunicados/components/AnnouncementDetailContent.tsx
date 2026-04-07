@@ -278,7 +278,7 @@ export function AnnouncementDetailContent({
                       autoResize
                       minHeight={32}
                       maxHeight={240}
-                      className="min-h-[40px] bg-white pr-16 text-sm"
+                      className="min-h-[40px] bg-card pr-16 text-sm"
                     />
                     <div className="absolute right-2 bottom-2">
                       <Button
@@ -354,12 +354,12 @@ export function AnnouncementDetailContent({
             ) : null}
 
             {announcement.allowComments && showComments ? (
-              <div className="w-full rounded-xl border border-gray-200 bg-muted p-3 sm:p-4 md:p-6">
+              <div className="w-full rounded-xl border border-border bg-muted/50 p-3 sm:p-4 md:p-6">
                 <div className="space-y-3">
                   {(announcement.comments ?? []).map((commentItem) => (
                     <div
                       key={commentItem.id}
-                      className="rounded-xl border bg-white p-4 text-sm space-y-4 sm:space-y-2">
+                      className="rounded-xl border border-border bg-card p-4 text-sm space-y-4 sm:space-y-2">
                       <div className="flex flex-col-reverse items-start justify-between gap-1 sm:gap-3">
                         <UserSummary
                           avatarUrl={commentItem.authorAvatar}
@@ -417,5 +417,8 @@ export function AnnouncementDetailContent({
         ) : null}
       </div>
     </div>
+  );
+}
+ </div>
   );
 }

@@ -170,7 +170,7 @@ export function ImageCropper({
               className="rounded-full object-cover w-full h-full"
             />
           ) : (
-            <div className="w-full h-full border-2 border-dashed hover:border-gray-300 hover:bg-gray-100 transition rounded-full flex items-center justify-center text-muted-foreground">
+            <div className="w-full h-full border-2 border-dashed hover:border-border hover:bg-accent transition rounded-full flex items-center justify-center text-muted-foreground">
               <span>Imagem de perfil</span>
             </div>
           )}
@@ -179,7 +179,7 @@ export function ImageCropper({
           <Button
             type="button"
             size="icon"
-            className="absolute top-2 right-2 rounded-full w-8 h-8 bg-white border border-gray-200 text-gray-800 hover:bg-gray-200"
+            className="absolute top-2 right-2 rounded-full w-8 h-8 bg-card border border-border text-foreground hover:bg-accent"
             onClick={(e) => {
               e.stopPropagation();
               handleRemove();

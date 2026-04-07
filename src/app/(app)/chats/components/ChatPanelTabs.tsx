@@ -34,7 +34,7 @@ export function ChatPanelTabs({ active, onChange, onClose }: Props) {
           size="icon-md"
           onClick={onClose}
           aria-label="Fechar painel"
-          className="border-b border-border rounded-none w-14 h-14 hover:bg-gray-200">
+          className="border-b border-border rounded-none w-14 h-14 hover:bg-accent">
           <X className="h-4 w-4" />
         </Button>
       ) : null}
@@ -52,7 +52,7 @@ export function ChatPanelTabs({ active, onChange, onClose }: Props) {
               className={cn(
                 "text-muted-foreground",
                 selected &&
-                  "bg-gray-300 border border-gray-600 text-primary shadow-md"
+                  "bg-accent border border-border text-foreground shadow-md"
               )}
               aria-label={tab.label}
               title={tab.label}>

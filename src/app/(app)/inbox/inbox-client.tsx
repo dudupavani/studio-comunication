@@ -185,7 +185,7 @@ export default function InboxClient({ items }: Props) {
                             </h6>
                           </div>
                           <div className="flex flex-col gap-1 text-xs text-muted-foreground mt-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center gap-2 font-medium text-primary">
+                            <div className="flex items-center gap-2 font-medium text-foreground">
                               <Avatar className="h-7 w-7">
                                 <AvatarImage
                                   src={item.senderAvatar ?? undefined}
@@ -223,7 +223,7 @@ export default function InboxClient({ items }: Props) {
                         </div>
                         <div className="flex-1 space-y-2">
                           <div className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center gap-2 font-medium text-primary">
+                            <div className="flex items-center gap-2 font-medium text-foreground">
                               <Avatar className="h-7 w-7">
                                 <AvatarImage
                                   src={item.senderAvatar ?? undefined}

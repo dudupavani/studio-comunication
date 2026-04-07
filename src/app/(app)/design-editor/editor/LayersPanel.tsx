@@ -42,16 +42,16 @@ function SortableLayerItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`h-9 flex items-center pl-0 pr-1 border-b text-sm select-none ${
+      className={`h-9 flex items-center pl-0 pr-1 border-b border-border text-sm select-none ${
         selected
-          ? "font-medium bg-gray-200 text-primary"
-          : "hover:bg-gray-100 text-gray-600 hover:text-gray-700"
+          ? "font-medium bg-accent text-foreground"
+          : "hover:bg-accent text-muted-foreground hover:text-foreground"
       }`}>
       <span
         {...attributes}
         {...listeners}
         className="mr-1 cursor-grab active:cursor-grabbing">
-        <GripVertical className="w-4 h-3 text-gray-400" />
+        <GripVertical className="w-4 h-3 text-muted-foreground" />
       </span>
       <div onClick={onSelect} className="flex-1 cursor-pointer">
         {label}

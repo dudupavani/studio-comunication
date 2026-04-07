@@ -84,7 +84,7 @@ export default function AppSidebar({ activeOrgSlug: _activeOrgSlug = null }: Sid
                 <SidebarMenuItem>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
+                    className="w-full justify-start p-3 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                     asChild>
                     <Link href="/comunidades">
                       <Users size={20} />
@@ -101,7 +101,7 @@ export default function AppSidebar({ activeOrgSlug: _activeOrgSlug = null }: Sid
                   <SidebarMenuItem>
                     <Button
                       variant="ghost"
-                      className="w-full justify-start p-3 hover:bg-gray-800 hover:text-white transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
+                      className="w-full justify-start p-3 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors duration-200 ease-out group-data-[state=collapsed]:pl-3.5"
                       asChild>
                       <Link
                         href="/inbox"

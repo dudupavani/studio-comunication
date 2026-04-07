@@ -259,7 +259,7 @@ export default function AnnouncementModal({ announcement, children }: Props) {
                                     ).toLocaleString()}
                                   </span>
                                 </div>
-                                <p className="mt-1 pl-0 sm:pl-12 whitespace-pre-wrap text-sm text-primary">
+                                <p className="mt-1 pl-0 sm:pl-12 whitespace-pre-wrap text-sm text-foreground">
                                   {comment.content}
                                 </p>
                               </div>

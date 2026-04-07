@@ -28,7 +28,7 @@ export function SelectedRecipients({
 }: SelectedRecipientsProps) {
   if (!users.length && !groups.length && !teams.length) {
     return (
-      <div className="rounded-lg bg-muted border border-dashed border-gray-200 px-4 py-3 text-xs text-center text-gray-600">
+      <div className="rounded-lg bg-muted border border-dashed border-border px-4 py-3 text-xs text-center text-muted-foreground">
         Nenhum destinatário selecionado. Utilize as abas da direita para
         adicionar usuários, grupos ou equipes.
       </div>

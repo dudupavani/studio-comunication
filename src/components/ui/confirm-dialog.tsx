@@ -37,8 +37,8 @@ export default function ConfirmDialog({
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h3 className="text-lg font-semibold">{title}</h3>
+          <div className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg border border-border">
+            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
             {description ? (
               <p className="mt-2 text-sm text-muted-foreground">
                 {description}
@@ -49,7 +49,7 @@ export default function ConfirmDialog({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-md border px-3 py-2 hover:bg-muted">
+                className="rounded-md border border-border px-3 py-2 hover:bg-accent transition-colors">
                 Cancelar
               </button>
 
@@ -64,10 +64,10 @@ export default function ConfirmDialog({
                 ))}
                 <button
                   type="submit"
-                  className={`rounded-md px-3 py-2 text-white ${
+                  className={`rounded-md px-3 py-2 text-primary-foreground transition-colors ${
                     danger
-                      ? "bg-red-600 hover:bg-red-700"
-                      : "bg-black hover:bg-black/90"
+                      ? "bg-destructive hover:bg-destructive/90"
+                      : "bg-primary hover:bg-primary/90"
                   }`}>
                   {confirmText}
                 </button>

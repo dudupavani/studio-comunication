@@ -51,7 +51,7 @@ export function DatePicker({
           type="button"
           variant="outline"
           className={cn(
-            "w-full justify-between text-left text-primary font-normal bg-muted focus:outline-none focus:ring-1 focus:ring-ring focus:ring-offset-2 focus:bg-white",
+            "w-full justify-between text-left text-foreground font-normal bg-muted focus:outline-none focus:ring-1 focus:ring-ring focus:ring-offset-2 focus:bg-background",
             !date && "text-muted-foreground",
             className
           )}>

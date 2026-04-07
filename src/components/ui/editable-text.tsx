@@ -54,8 +54,8 @@ export function EditableText({
       className={clsx(
         "inline-grid items-center rounded border transition-colors",
         isEditing
-          ? "border-gray-500"
-          : "border-transparent hover:border-gray-200 hover:bg-gray-100",
+          ? "border-muted-foreground/50"
+          : "border-transparent hover:border-border hover:bg-accent",
         className
       )}
       // o span invisível define LxA; o conteúdo (div/input) ocupa a mesma célula
@@ -102,4 +102,6 @@ export function EditableText({
       )}
     </span>
   );
+}
+;
 }

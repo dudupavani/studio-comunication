@@ -203,7 +203,7 @@ export function CoverPositioner({
             <Button
               type="button"
               variant="secondary"
-              className="bg-gray-200/80"
+              className="bg-secondary hover:bg-secondary/80"
               size="sm"
               onClick={onCancel}>
               Cancelar
@@ -212,7 +212,7 @@ export function CoverPositioner({
               type="button"
               variant="secondary"
               size="sm"
-              className="bg-gray-200/80"
+              className="bg-secondary hover:bg-secondary/80"
               disabled={uploading}
               onClick={handleApply}>
               {uploading ? "Enviando..." : "Aplicar capa"}
