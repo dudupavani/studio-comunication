@@ -1,32 +1,40 @@
 @AGENTS.md
 @.context/docs/project-overview.md
 
-# Claude Code Project Memory
+# Claude Code
 
-Este arquivo é a entrada do Claude Code para o repositório `studio`.
+Entry point do Claude Code para o repositório `studio`.
 
-## Ordem de leitura
+## Lazy loading — carregue apenas o doc da tarefa atual
 
-1. Use `AGENTS.md` como fonte canônica das regras do projeto.
-2. Consulte apenas o doc específico para a tarefa atual:
-   - UI/UX: `.context/docs/design.md`
-   - fluxo de domínio, API ou schema: `.context/docs/architecture.md`
-   - execução e validação local: `.context/docs/development-workflow.md`
-   - testes e critérios de verificação: `.context/docs/testing-strategy.md`
-   - revisão de segurança, auth e permissões: `.context/docs/security.md`
+- UI/UX → `.context/docs/design.md`
+- Arquitetura, domínio ou schema → `.context/docs/architecture.md`
+- Validação e execução local → `.context/docs/development-workflow.md`
+- Testes → `.context/docs/testing-strategy.md`
+- Segurança, auth e permissões → `.context/docs/security.md`
+- Índice completo → `.context/docs/README.md`
 
 ## Regras operacionais
 
-- Use `.context/` como knowledge base compartilhada; não trate a pasta como memória primária nem como repositório de estado.
-- Não assuma que snapshots, logs ou planos antigos são válidos; use somente os docs curados mantidos na `.context/docs/`.
-- Exclua do escopo padrão os módulos arquivados definidos em `AGENTS.md`, tratando-os como inexistentes até haver pedido explícito de reativação ou manutenção.
-- Antes de editar, classifique a tarefa globalmente: arquitetura, domínio, schema, permissões, UI/UX, AI e risco de regressão.
-- Para mudanças simples, siga `AGENTS.md` e consulte a `.context` apenas se a tarefa exigir contexto adicional.
-- Para mudanças sensíveis, use os comandos em `.claude/commands/` e os subagents em `.claude/agents/`.
+- `.context/` é a knowledge base compartilhada entre todos os agentes; não é memória de sessão.
+- Módulos arquivados definidos em `AGENTS.md` são tratados como inexistentes por padrão.
+- Antes de editar, classifique a tarefa: arquitetura, schema, permissões, UI/UX, AI, risco de regressão.
+- Para mudanças simples, `AGENTS.md` é suficiente.
+- Para mudanças sensíveis, use os comandos abaixo e delegue para subagents quando cabível.
 
-## Operação recomendada no Claude Code
+## Comandos
 
-- Use `/preflight` para classificar a tarefa e carregar o contexto certo antes de implementar.
-- Use `/ui-task` para mudanças visuais ou de experiência.
-- Use `/schema-task` para mudanças que tocam banco, Supabase, migrations, RPC ou tipos.
-- Use `/review-change` para revisão final com foco em arquitetura, segurança e validação.
+- `/preflight` — classifica a tarefa e identifica contexto obrigatório antes de implementar
+- `/ui-task` — mudanças visuais ou de experiência
+- `/schema-task` — mudanças que tocam Supabase, migrations, RPC ou tipos
+- `/review-change` — revisão final com foco em arquitetura, segurança e validação
+
+## Subagents
+
+Delegate para `.claude/agents/` quando a tarefa combinar com o papel descrito:
+
+- `supabase-expert` — schema, migrations, RPC, RLS
+- `feature-developer` — implementações cross-layer
+- `frontend-specialist` — UI e consistência visual
+- `code-reviewer` — revisão de mudanças
+- `security-auditor` — auth, permissões e tenant scope

@@ -3,7 +3,7 @@ description: Executa tarefas que afetam schema, Supabase, migrations, RPC ou tip
 argument-hint: [tarefa de schema ou Supabase]
 ---
 
-Use @AGENTS.md, @.context/docs/architecture.md, @.context/docs/development-workflow.md, @.context/docs/testing-strategy.md e @database/CLAUDE.md.
+Use @.context/docs/architecture.md, @.context/docs/development-workflow.md e @.context/docs/testing-strategy.md.
 
 Tarefa:
 
@@ -19,7 +19,7 @@ Antes de editar:
 
 Checklist obrigatório antes de concluir:
 
-1. Migration criada ou atualizada em `database/migrations` com padrão `YYYYMMDD_descricao_snake_case.sql`
+1. Migration criada em `database/migrations` com padrão `YYYYMMDD_descricao_snake_case.sql`
 2. `src/types/supabase.ts` atualizado quando necessário
 3. `src/lib/supabase/types.ts` mantido apenas como reexport
 4. Uso correto da RPC de chat com menções, se aplicável

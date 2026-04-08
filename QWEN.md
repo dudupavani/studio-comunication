@@ -1,6 +1,6 @@
-# Gemini — studio
+# Qwen — studio
 
-Entry point do Gemini para o repositório `studio`.
+Entry point do Qwen Code para o repositório `studio`.
 
 ## Regras canônicas
 

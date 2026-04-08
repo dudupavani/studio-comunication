@@ -3,6 +3,18 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { PublicationComposerModal } from "@/app/(app)/comunidades/components/publication-composer-modal";
 
+// Mock de ícones para evitar erro de ESM do lucide-react no Jest
+jest.mock("lucide-react", () => ({
+  FileText: () => null,
+  Heart: () => null,
+  ImagePlus: () => null,
+  MessageCircle: () => null,
+  MoreHorizontal: () => null,
+  Paperclip: () => null,
+  Type: () => null,
+  X: () => null,
+}));
+
 // Mock de componentes UI que podem ser complexos
 jest.mock("@/components/ui/web-components/expandable-modal", () => ({
   ExpandableModal: ({ children, open, header, footer, onOpenChange }: any) => 

@@ -3,7 +3,7 @@ description: Executa tarefas de UI seguindo os padrões visuais e arquiteturais 
 argument-hint: [tarefa de UI]
 ---
 
-Use @AGENTS.md, @.context/docs/design.md, @.context/docs/architecture.md e @src/CLAUDE.md.
+Use @.context/docs/design.md e @.context/docs/architecture.md.
 
 Tarefa:
 

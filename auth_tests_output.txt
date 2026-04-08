@@ -1,0 +1,837 @@
+
+> nextn@0.1.0 test
+> jest tests/auth
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+PASS tests/auth/callback-route.test.ts
+PASS tests/auth/actions.test.ts
+FAIL tests/auth/reset-password-form.test.tsx
+  ● ResetPasswordForm › renders reset password form
+
+    TestingLibraryElementError: Found multiple elements with the text of: /new password/i
+
+    Here are the matching elements:
+
+    Ignored nodes: comments, script, style
+    [36m<input[39m
+      [33maria-describedby[39m=[32m":r0:-form-item-description"[39m
+      [33maria-invalid[39m=[32m"false"[39m
+      [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+      [33mid[39m=[32m":r0:-form-item"[39m
+      [33mname[39m=[32m"password"[39m
+      [33mplaceholder[39m=[32m"••••••••"[39m
+      [33mtype[39m=[32m"password"[39m
+      [33mvalue[39m=[32m""[39m
+    [36m/>[39m
+
+    Ignored nodes: comments, script, style
+    [36m<input[39m
+      [33maria-describedby[39m=[32m":r1:-form-item-description"[39m
+      [33maria-invalid[39m=[32m"false"[39m
+      [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+      [33mid[39m=[32m":r1:-form-item"[39m
+      [33mname[39m=[32m"confirmPassword"[39m
+      [33mplaceholder[39m=[32m"••••••••"[39m
+      [33mtype[39m=[32m"password"[39m
+      [33mvalue[39m=[32m""[39m
+    [36m/>[39m
+
+    (If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"rounded-lg border bg-card text-card-foreground shadow-sm w-full max-w-md mx-auto"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-col space-y-1.5 p-4 text-center"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-semibold tracking-tight text-2xl"[39m
+            [36m>[39m
+              [0mReset Password[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+            [36m>[39m
+              [0mEnter your new password below.[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"p-4"[39m
+          [36m>[39m
+            [36m<form[39m
+              [33mclass[39m=[32m"space-y-4"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"space-y-2"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground"[39m
+                  [33mfor[39m=[32m":r0:-form-item"[39m
+                [36m>[39m
+                  [0mNew Password[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33maria-describedby[39m=[32m":r0:-form-item-description"[39m
+                  [33maria-invalid[39m=[32m"false"[39m
+                  [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+                  [33mid[39m=[32m":r0:-form-item"[39m
+                  [33mname[39m=[32m"password"[39m
+                  [33mplaceholder[39m=[32m"••••••••"[39m
+                  [33mtype[39m=[32m"password"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"space-y-2"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground"[39m
+                  [33mfor[39m=[32m":r1:-form-item"[39m
+                [36m>[39m
+                  [0mConfirm New Password[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33maria-describedby[39m=[32m":r1:-form-item-description"[39m
+                  [33maria-invalid[39m=[32m"false"[39m
+                  [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+                  [33mid[39m=[32m":r1:-form-item"[39m
+                  [33mname[39m=[32m"confirmPassword"[39m
+                  [33mplaceholder[39m=[32m"••••••••"[39m
+                  [33mtype[39m=[32m"password"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 [&_svg]:size-[18px] w-full"[39m
+                [33mtype[39m=[32m"submit"[39m
+              [36m>[39m
+                [0mUpdate Password[0m
+              [36m</button>[39m
+            [36m</form>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"mt-4 text-sm text-center"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mhref[39m=[32m"/login"[39m
+              [36m>[39m
+                [0mBack to Login[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      31 |   it("renders reset password form", () => {
+      32 |     render(<ResetPasswordForm />);
+    > 33 |     expect(screen.getByLabelText(/new password/i)).toBeInTheDocument();
+         |                   ^
+      34 |     expect(screen.getByLabelText(/confirm new password/i)).toBeInTheDocument();
+      35 |     expect(screen.getByRole("button", { name: /update password/i })).toBeInTheDocument();
+      36 |   });
+
+      at Object.getElementError (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19)
+      at getElementError (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:20:35)
+      at getMultipleElementsFoundError (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:23:10)
+      at node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+      at node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByLabelText (tests/auth/reset-password-form.test.tsx:33:19)
+
+  ● ResetPasswordForm › shows error if passwords don't match
+
+    TestingLibraryElementError: Found multiple elements with the text of: /new password/i
+
+    Here are the matching elements:
+
+    Ignored nodes: comments, script, style
+    [36m<input[39m
+      [33maria-describedby[39m=[32m":r2:-form-item-description"[39m
+      [33maria-invalid[39m=[32m"false"[39m
+      [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+      [33mid[39m=[32m":r2:-form-item"[39m
+      [33mname[39m=[32m"password"[39m
+      [33mplaceholder[39m=[32m"••••••••"[39m
+      [33mtype[39m=[32m"password"[39m
+      [33mvalue[39m=[32m""[39m
+    [36m/>[39m
+
+    Ignored nodes: comments, script, style
+    [36m<input[39m
+      [33maria-describedby[39m=[32m":r3:-form-item-description"[39m
+      [33maria-invalid[39m=[32m"false"[39m
+      [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+      [33mid[39m=[32m":r3:-form-item"[39m
+      [33mname[39m=[32m"confirmPassword"[39m
+      [33mplaceholder[39m=[32m"••••••••"[39m
+      [33mtype[39m=[32m"password"[39m
+      [33mvalue[39m=[32m""[39m
+    [36m/>[39m
+
+    (If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"rounded-lg border bg-card text-card-foreground shadow-sm w-full max-w-md mx-auto"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-col space-y-1.5 p-4 text-center"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-semibold tracking-tight text-2xl"[39m
+            [36m>[39m
+              [0mReset Password[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+            [36m>[39m
+              [0mEnter your new password below.[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"p-4"[39m
+          [36m>[39m
+            [36m<form[39m
+              [33mclass[39m=[32m"space-y-4"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"space-y-2"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground"[39m
+                  [33mfor[39m=[32m":r2:-form-item"[39m
+                [36m>[39m
+                  [0mNew Password[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33maria-describedby[39m=[32m":r2:-form-item-description"[39m
+                  [33maria-invalid[39m=[32m"false"[39m
+                  [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+                  [33mid[39m=[32m":r2:-form-item"[39m
+                  [33mname[39m=[32m"password"[39m
+                  [33mplaceholder[39m=[32m"••••••••"[39m
+                  [33mtype[39m=[32m"password"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"space-y-2"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground"[39m
+                  [33mfor[39m=[32m":r3:-form-item"[39m
+                [36m>[39m
+                  [0mConfirm New Password[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33maria-describedby[39m=[32m":r3:-form-item-description"[39m
+                  [33maria-invalid[39m=[32m"false"[39m
+                  [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+                  [33mid[39m=[32m":r3:-form-item"[39m
+                  [33mname[39m=[32m"confirmPassword"[39m
+                  [33mplaceholder[39m=[32m"••••••••"[39m
+                  [33mtype[39m=[32m"password"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 [&_svg]:size-[18px] w-full"[39m
+                [33mtype[39m=[32m"submit"[39m
+              [36m>[39m
+                [0mUpdate Password[0m
+              [36m</button>[39m
+            [36m</form>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"mt-4 text-sm text-center"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mhref[39m=[32m"/login"[39m
+              [36m>[39m
+                [0mBack to Login[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      39 |     render(<ResetPasswordForm />);
+      40 |     
+    > 41 |     fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: "password123" } });
+         |                             ^
+      42 |     fireEvent.change(screen.getByLabelText(/confirm new password/i), { target: { value: "mismatch" } });
+      43 |     fireEvent.click(screen.getByRole("button", { name: /update password/i }));
+      44 |
+
+      at Object.getElementError (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19)
+      at getElementError (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:20:35)
+      at getMultipleElementsFoundError (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:23:10)
+      at node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+      at node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByLabelText (tests/auth/reset-password-form.test.tsx:41:29)
+
+  ● ResetPasswordForm › calls updatePassword on valid submission
+
+    TestingLibraryElementError: Found multiple elements with the text of: /new password/i
+
+    Here are the matching elements:
+
+    Ignored nodes: comments, script, style
+    [36m<input[39m
+      [33maria-describedby[39m=[32m":r4:-form-item-description"[39m
+      [33maria-invalid[39m=[32m"false"[39m
+      [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+      [33mid[39m=[32m":r4:-form-item"[39m
+      [33mname[39m=[32m"password"[39m
+      [33mplaceholder[39m=[32m"••••••••"[39m
+      [33mtype[39m=[32m"password"[39m
+      [33mvalue[39m=[32m""[39m
+    [36m/>[39m
+
+    Ignored nodes: comments, script, style
+    [36m<input[39m
+      [33maria-describedby[39m=[32m":r5:-form-item-description"[39m
+      [33maria-invalid[39m=[32m"false"[39m
+      [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+      [33mid[39m=[32m":r5:-form-item"[39m
+      [33mname[39m=[32m"confirmPassword"[39m
+      [33mplaceholder[39m=[32m"••••••••"[39m
+      [33mtype[39m=[32m"password"[39m
+      [33mvalue[39m=[32m""[39m
+    [36m/>[39m
+
+    (If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"rounded-lg border bg-card text-card-foreground shadow-sm w-full max-w-md mx-auto"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-col space-y-1.5 p-4 text-center"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-semibold tracking-tight text-2xl"[39m
+            [36m>[39m
+              [0mReset Password[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+            [36m>[39m
+              [0mEnter your new password below.[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"p-4"[39m
+          [36m>[39m
+            [36m<form[39m
+              [33mclass[39m=[32m"space-y-4"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"space-y-2"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground"[39m
+                  [33mfor[39m=[32m":r4:-form-item"[39m
+                [36m>[39m
+                  [0mNew Password[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33maria-describedby[39m=[32m":r4:-form-item-description"[39m
+                  [33maria-invalid[39m=[32m"false"[39m
+                  [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+                  [33mid[39m=[32m":r4:-form-item"[39m
+                  [33mname[39m=[32m"password"[39m
+                  [33mplaceholder[39m=[32m"••••••••"[39m
+                  [33mtype[39m=[32m"password"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"space-y-2"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground"[39m
+                  [33mfor[39m=[32m":r5:-form-item"[39m
+                [36m>[39m
+                  [0mConfirm New Password[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33maria-describedby[39m=[32m":r5:-form-item-description"[39m
+                  [33maria-invalid[39m=[32m"false"[39m
+                  [33mclass[39m=[32m"flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-foreground text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background disabled:cursor-not-allowed disabled:opacity-80 disabled:border-muted disabled:text-muted-foreground md:text-sm"[39m
+                  [33mid[39m=[32m":r5:-form-item"[39m
+                  [33mname[39m=[32m"confirmPassword"[39m
+                  [33mplaceholder[39m=[32m"••••••••"[39m
+                  [33mtype[39m=[32m"password"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 [&_svg]:size-[18px] w-full"[39m
+                [33mtype[39m=[32m"submit"[39m
+              [36m>[39m
+                [0mUpdate Password[0m
+              [36m</button>[39m
+            [36m</form>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"mt-4 text-sm text-center"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mhref[39m=[32m"/login"[39m
+              [36m>[39m
+                [0mBack to Login[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      53 |     render(<ResetPasswordForm />);
+      54 |     
+    > 55 |     fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: "new-password-123" } });
+         |                             ^
+      56 |     fireEvent.change(screen.getByLabelText(/confirm new password/i), { target: { value: "new-password-123" } });
+      57 |     fireEvent.click(screen.getByRole("button", { name: /update password/i }));
+      58 |
+
+      at Object.getElementError (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19)
+      at getElementError (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:20:35)
+      at getMultipleElementsFoundError (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:23:10)
+      at node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+      at node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByLabelText (tests/auth/reset-password-form.test.tsx:55:29)
+
+PASS tests/auth/forgot-password-form.test.tsx
+PASS tests/auth/login-form.test.tsx
+RangeError: Maximum call stack size exceeded
+    at emitInitNative (node:internal/async_hooks:209:5)
+    at emitInitScript (node:internal/async_hooks:505:3)
+    at initAsyncResource (node:internal/timers:165:5)
+    at new Immediate (node:internal/timers:635:5)
+    at setImmediate (node:timers:305:10)
+    at setImmediate (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:639:7)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+RangeError: Maximum call stack size exceeded
+    at emitInitNative (node:internal/async_hooks:209:5)
+    at emitInitScript (node:internal/async_hooks:505:3)
+    at initAsyncResource (node:internal/timers:165:5)
+    at new Immediate (node:internal/timers:635:5)
+    at setImmediate (node:timers:305:10)
+    at setImmediate (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:639:7)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+RangeError: Maximum call stack size exceeded
+    at emitInitNative (node:internal/async_hooks:209:5)
+    at emitInitScript (node:internal/async_hooks:505:3)
+    at initAsyncResource (node:internal/timers:165:5)
+    at new Immediate (node:internal/timers:635:5)
+    at setImmediate (node:timers:305:10)
+    at setImmediate (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:639:7)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+RangeError: Maximum call stack size exceeded
+    at emitInitNative (node:internal/async_hooks:209:5)
+    at emitInitScript (node:internal/async_hooks:505:3)
+    at initAsyncResource (node:internal/timers:165:5)
+    at new Immediate (node:internal/timers:635:5)
+    at setImmediate (node:timers:305:10)
+    at setImmediate (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:639:7)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+    at listener (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1/node_modules/next/src/server/node-environment-extensions/unhandled-rejection.tsx:635:9)
+FAIL tests/auth/pages.test.tsx
+  ● Test suite failed to run
+
+    Jest worker encountered 4 child process exceptions, exceeding retry limit
+
+      at ChildProcessWorker.initialize (node_modules/.pnpm/jest-worker@30.3.0/node_modules/jest-worker/build/index.js:805:21)
+
+Test Suites: 2 failed, 4 passed, 6 total
+Tests:       3 failed, 18 passed, 21 total
+Snapshots:   0 total
+Time:        7.027 s
+Ran all test suites matching tests/auth.

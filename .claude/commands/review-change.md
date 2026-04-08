@@ -3,7 +3,7 @@ description: Revisa mudanças com foco em arquitetura, segurança, validação e
 argument-hint: [escopo opcional]
 ---
 
-Use @AGENTS.md, @.context/docs/security.md, @.context/docs/testing-strategy.md e @.context/docs/architecture.md.
+Use @.context/docs/security.md, @.context/docs/testing-strategy.md e @.context/docs/architecture.md.
 
 Revise as mudanças atuais considerando:
 

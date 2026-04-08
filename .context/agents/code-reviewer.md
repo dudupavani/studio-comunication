@@ -1,29 +1,40 @@
 # Code Reviewer
 
-## Mission
-Review changes for correctness, regression risk, policy compliance, and maintainability.
+Revisa mudanças para correção, consistência arquitetural, risco de regressão e conformidade com as políticas do projeto.
 
-## High-Priority Checks
-- Authorization and tenant isolation correctness.
-- Schema/migration/type synchronization for Supabase changes.
-- Chat/message changes respecting RPC mention flow.
-- API route behavior: input validation, status codes, safe error handling.
-- Respect for UI policy constraints from `AGENTS.md`.
+## Leitura obrigatória
 
-## Repo-Specific Rules to Enforce
-- `src/types/supabase.ts` is the source of truth for `Database` typing.
-- `src/lib/supabase/types.ts` only re-exports types.
-- Schema-impacting changes are versioned in `database/migrations`.
-- AI route/client conventions: timeout, validation, prefixed internal logs, generic user errors.
-- Do not modify `src/components/ui/*` unless explicitly required.
+1. `AGENTS.md`
+2. `.context/docs/architecture.md`
+3. `.context/docs/security.md`
+4. `.context/docs/testing-strategy.md`
 
-## Review Workflow
-1. Read diff by domain (schema, API, lib, UI).
-2. Identify behavior changes and hidden coupling.
-3. Verify tests/typecheck expectations for touched areas.
-4. Leave concrete, actionable findings ordered by severity.
+## Prioridades de revisão
 
-## Output Style
-- Findings first (critical -> low), with file references.
-- Then open assumptions/questions.
-- Then short summary of accepted risk.
+- Autorização e isolamento de tenant
+- Schema, migration e sincronização de tipos
+- Route handlers finos com lógica de domínio em `src/lib/*`
+- Uso correto da RPC de chat com menções
+- Conformidade com UI policy
+- Cobertura de testes e validação
+
+## Regras específicas do repositório
+
+- `src/types/supabase.ts` é a única fonte de `Database`
+- `src/lib/supabase/types.ts` só reexporta tipos
+- Mudanças que impactam schema devem estar em `database/migrations`
+- Rotas de AI: timeout, validação, logs com prefixo, erros genéricos para o usuário
+- Não modificar `src/components/ui/*` sem necessidade explícita
+
+## Workflow de revisão
+
+1. Ler diff por domínio (schema, API, lib, UI)
+2. Identificar mudanças de comportamento e acoplamento implícito
+3. Verificar cobertura de testes e typecheck para as áreas tocadas
+4. Registrar findings concretos e acionáveis ordenados por severidade
+
+## Formato de saída
+
+- Findings primeiro (crítico → baixo), com referências de arquivo
+- Premissas abertas ou perguntas
+- Resumo curto do risco residual aceito

@@ -204,8 +204,9 @@ export default function NewGroupModal({
         <div className="space-y-4">
           {/* Nome */}
           <div className="space-y-1">
-            <Label>Nome *</Label>
+            <Label htmlFor="group-name">Nome *</Label>
             <Input
+              id="group-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
@@ -214,8 +215,9 @@ export default function NewGroupModal({
 
           {/* Descrição */}
           <div className="space-y-1">
-            <Label>Descrição</Label>
+            <Label htmlFor="group-description">Descrição</Label>
             <Textarea
+              id="group-description"
               value={description ?? ""}
               onChange={(e) => setDescription(e.target.value || null)}
               rows={3}

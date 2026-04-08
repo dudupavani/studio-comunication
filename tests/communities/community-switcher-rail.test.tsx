@@ -2,6 +2,12 @@
 
 import { render, screen, fireEvent } from "@testing-library/react";
 import { CommunitySwitcherRail } from "@/app/(app)/comunidades/components/community-switcher-rail";
+import type { CommunityItem } from "@/app/(app)/comunidades/components/types";
+
+jest.mock("lucide-react", () => ({
+  Inbox: () => null,
+  Plus: () => null,
+}));
 
 // Mock do next/image e next/link
 jest.mock("next/image", () => ({
@@ -18,9 +24,37 @@ describe("CommunitySwitcherRail", () => {
   const mockOnSelectCommunity = jest.fn();
   const mockOnCreateCommunity = jest.fn();
 
-  const communities = [
-    { id: "c1", name: "Alpha" },
-    { id: "c2", name: "Beta" },
+  const communities: CommunityItem[] = [
+    {
+      id: "c1",
+      name: "Alpha",
+      orgId: "org1",
+      visibility: "global",
+      segmentType: null,
+      segmentTargetIds: [],
+      allowUnitMasterPost: true,
+      allowUnitUserPost: false,
+      spacesCount: 0,
+      canManage: true,
+      canPost: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "c2",
+      name: "Beta",
+      orgId: "org1",
+      visibility: "global",
+      segmentType: null,
+      segmentTargetIds: [],
+      allowUnitMasterPost: true,
+      allowUnitUserPost: false,
+      spacesCount: 0,
+      canManage: true,
+      canPost: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
   ];
 
   const defaultProps = {
@@ -79,10 +113,10 @@ describe("CommunitySwitcherRail", () => {
   });
 
   it("renders loading skeletons when communitiesLoading is true", () => {
-    render(<CommunitySwitcherRail {...defaultProps} communitiesLoading={true} />);
+    const { container } = render(<CommunitySwitcherRail {...defaultProps} communitiesLoading={true} />);
     
-    // Skeletons are rendered as div with className "skeleton"
-    const skeletons = screen.getAllByRole("status", { hidden: true }).filter(el => el.className.includes("skeleton"));
+    const skeletons = container.querySelectorAll(".animate-pulse");
+    expect(skeletons.length).toBeGreaterThan(0);
     expect(screen.queryByText("Alpha")).not.toBeInTheDocument();
   });
 

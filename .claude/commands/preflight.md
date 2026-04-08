@@ -3,7 +3,7 @@ description: Classifica a tarefa globalmente e identifica o contexto obrigatóri
 argument-hint: [tarefa]
 ---
 
-Use @AGENTS.md, @.context/docs/README.md e @.context/docs/project-overview.md como base.
+Use @.context/docs/README.md e @.context/docs/project-overview.md como base.
 
 Para a tarefa abaixo, faça um preflight global antes de qualquer implementação:
 

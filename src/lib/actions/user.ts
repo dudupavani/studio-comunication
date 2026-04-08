@@ -28,7 +28,7 @@ async function getSessionUserId() {
 }
 
 /** platform_admin vem de profiles.global_role */
-async function isPlatformAdmin(): Promise<boolean> {
+export async function isPlatformAdmin(): Promise<boolean> {
   const supabase = createClient();
   const uid = await getSessionUserId();
   if (!uid) return false;
@@ -43,7 +43,7 @@ async function isPlatformAdmin(): Promise<boolean> {
 }
 
 /** Retorna { org_id, role } do usuário logado em org_members (modelo 1 usuário -> 1 org) */
-async function getMyOrgMembership(): Promise<{
+export async function getMyOrgMembership(): Promise<{
   org_id: string;
   role: OrgRole | UnitRole;
 } | null> {

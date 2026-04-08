@@ -13,6 +13,8 @@ jest.mock("lucide-react", () => ({
   MoreHorizontal: () => null,
   Rss: () => null,
   SquareMenu: () => null,
+  CirclePlus: () => null,
+  FileText: () => null,
   X: () => null,
 }));
 
@@ -111,7 +113,7 @@ describe("CommunityContentPane", () => {
       />,
     );
 
-    const button = screen.getByRole("button", { name: "Nova publicação" });
+    const button = screen.getByRole("button", { name: "Criar" });
     expect(button).toBeEnabled();
 
     await user.click(button);

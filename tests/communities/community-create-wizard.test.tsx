@@ -1,8 +1,15 @@
 /** @jest-environment jsdom */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { CommunityCreateWizard } from "@/app/(app)/comunidades/components/community-create-wizard";
 import { useToast } from "@/hooks/use-toast";
+
+jest.mock("lucide-react", () => ({
+  ArrowRight: () => null,
+  CheckCircle: () => null,
+  ChevronDown: () => null,
+  X: () => null,
+}));
 
 // Mock do useToast
 jest.mock("@/hooks/use-toast", () => ({
@@ -27,7 +34,7 @@ describe("CommunityCreateWizard", () => {
     });
   });
 
-  it("renders step 1 initially and requires a name to advance", () => {
+  it("renders step 1 initially and requires a name to advance", async () => {
     render(
       <CommunityCreateWizard
         submitting={false}
@@ -35,6 +42,12 @@ describe("CommunityCreateWizard", () => {
         onCancel={mockOnCancel}
       />
     );
+
+    // Permitir que o useEffect inicial (loadSegments) resolva
+    // Isso evita avisos de "not wrapped in act"
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
 
     expect(screen.getByText("Dê um nome para a sua comunidade")).toBeInTheDocument();
     
@@ -164,24 +177,35 @@ describe("CommunityCreateWizard", () => {
     fireEvent.change(screen.getByLabelText(/dê um nome para a sua comunidade/i), {
       target: { value: "Comu Segmentada" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /avançar/i }));
+    
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /avançar/i }));
+    });
 
     // Step 2 - Selecionar Grupo
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /selecione o\(os\) grupo\(os\)/i })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /selecione o\(os\) grupo\(os\)/i }));
+    const trigger = screen.getByRole("button", { name: /selecione o\(os\) grupo\(os\)/i });
+    
+    await act(async () => {
+      fireEvent.click(trigger);
+    });
     
     await waitFor(() => {
-      const option = screen.getByText("Grupo 1");
-      fireEvent.click(option);
+      expect(screen.getByText("Grupo 1")).toBeInTheDocument();
     });
 
-    // Fechar popover clicando fora ou verificando se o badge apareceu (o badge é renderizado no botão)
-    expect(screen.getByText("Grupo 1")).toBeInTheDocument();
+    const option = screen.getByText("Grupo 1");
+    fireEvent.click(option);
 
-    fireEvent.click(screen.getByRole("button", { name: /criar comunidade/i }));
+    // Fechar popover clicando fora ou verificando se o badge apareceu (o badge é renderizado no botão)
+    expect(screen.getAllByText("Grupo 1").length).toBeGreaterThan(0);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /criar comunidade/i }));
+    });
 
     expect(mockOnSubmit).toHaveBeenCalledWith(expect.objectContaining({
       name: "Comu Segmentada",

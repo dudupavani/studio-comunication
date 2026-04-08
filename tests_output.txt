@@ -1,0 +1,311 @@
+
+> nextn@0.1.0 test
+> jest tests/communities
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL tests/communities/community-switcher-rail.test.tsx
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation, specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    /Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/lucide-react@0.475.0_react@18.3.1/node_modules/lucide-react/dist/esm/lucide-react.js:8
+    import * as index from './icons/index.js';
+    ^^^^^^
+
+    SyntaxError: Cannot use import statement outside a module
+
+      13 | import type { CommunityItem } from "./types";
+      14 |
+    > 15 | type CommunitySwitcherRailProps = {
+         |                      ^
+      16 |   communities: CommunityItem[];
+      17 |   communitiesLoading: boolean;
+      18 |   selectedCommunityId: string | null;
+
+      at Runtime.createScriptFromCode (node_modules/.pnpm/jest-runtime@30.3.0/node_modules/jest-runtime/build/index.js:1314:40)
+      at Object.<anonymous> (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/src/app/(app)../../../../../comunidades/components/community-switcher-rail.tsx:15:22)
+      at Object.<anonymous> (tests/communities/community-switcher-rail.test.tsx:21:32)
+
+FAIL tests/communities/community-create-wizard.test.tsx
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation, specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    /Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/lucide-react@0.475.0_react@18.3.1/node_modules/lucide-react/dist/esm/lucide-react.js:8
+    import * as index from './icons/index.js';
+    ^^^^^^
+
+    SyntaxError: Cannot use import statement outside a module
+
+      12 | import { Skeleton } from "@/components/ui/skeleton";
+      13 | import { useToast } from "@/hooks/use-toast";
+    > 14 | import { parseJson } from "./publication-composer-utils";
+         |                      ^
+      15 | import type { CommunityPayload, SegmentOption } from "./types";
+      16 |
+      17 | type CommunityCreateWizardProps = {
+
+      at Runtime.createScriptFromCode (node_modules/.pnpm/jest-runtime@30.3.0/node_modules/jest-runtime/build/index.js:1314:40)
+      at Object.<anonymous> (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/src/app/(app)../../../../../comunidades/components/community-create-wizard.tsx:14:22)
+      at Object.<anonymous> (tests/communities/community-create-wizard.test.tsx:11:32)
+
+FAIL tests/communities/community-sidebar.test.tsx
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation, specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    /Users/yungas-mac002/Documents/DEV/studio-comunicatio/node_modules/.pnpm/lucide-react@0.475.0_react@18.3.1/node_modules/lucide-react/dist/esm/lucide-react.js:8
+    import * as index from './icons/index.js';
+    ^^^^^^
+
+    SyntaxError: Cannot use import statement outside a module
+
+      11 | type CommunitySidebarProps = {
+      12 |   activeCommunity: CommunityItem | CommunityDetail | null;
+    > 13 |   selectedCommunityId: string | null;
+         |                      ^
+      14 |   selectedSpaceId: string | null;
+      15 |   detailLoading: boolean;
+      16 |   communityDetail: CommunityDetail | null;
+
+      at Runtime.createScriptFromCode (node_modules/.pnpm/jest-runtime@30.3.0/node_modules/jest-runtime/build/index.js:1314:40)
+      at Object.<anonymous> (/Users/yungas-mac002/Documents/DEV/studio-comunicatio/src/app/(app)../../../../../comunidades/components/community-sidebar.tsx:13:22)
+      at Object.<anonymous> (tests/communities/community-sidebar.test.tsx:7:27)
+
+PASS tests/communities/use-publication-composer.test.tsx
+PASS tests/communities/use-communities-data.test.tsx
+PASS tests/communities/page-helpers.test.ts
+PASS tests/communities/api.test.ts
+PASS tests/communities/publication-composer-modal-utils.test.tsx
+PASS tests/communities/communities-module.test.tsx
+PASS tests/communities/validations.test.ts
+PASS tests/communities/permissions.test.ts
+PASS tests/communities/publication-composer-utils.test.ts
+FAIL tests/communities/community-content-pane.test.tsx
+  ● CommunityContentPane › enables creating publication in publication spaces
+
+    TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Nova publicação"
+
+    Here are the accessible roles:
+
+      button:
+
+      Name "Mais recentes":
+      [36m<button[39m
+        [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 text-primary hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 [&_svg]:size-[18px] text-sm"[39m
+        [33mdisabled[39m=[32m""[39m
+      [36m/>[39m
+
+      Name "Criar":
+      [36m<button[39m
+        [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-8 rounded-md px-3 [&_svg]:size-[18px]"[39m
+      [36m/>[39m
+
+      Name "Mais ações":
+      [36m<button[39m
+        [33maria-expanded[39m=[32m"false"[39m
+        [33maria-haspopup[39m=[32m"menu"[39m
+        [33maria-label[39m=[32m"Mais ações"[39m
+        [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground hover:border-accent h-8 w-8 [&_svg]:size-[18px]"[39m
+        [33mdata-state[39m=[32m"closed"[39m
+        [33mid[39m=[32m"radix-:r5:"[39m
+        [33mtype[39m=[32m"button"[39m
+      [36m/>[39m
+
+      Name "Criar a primeira publicação":
+      [36m<button[39m
+        [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 [&_svg]:size-[18px]"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      heading:
+
+      Name "Nenhuma publicação neste espaço":
+      [36m<h2 />[39m
+
+      --------------------------------------------------
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"flex min-h-0 flex-1 flex-col bg-background"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-col gap-3 border-b border-border px-4 py-3 lg:flex-row lg:items-center lg:justify-between lg:px-5"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 items-center gap-3"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [36m>[39m
+                [0mPublicações[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-wrap items-center gap-3 lg:justify-end"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center pr-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"relative flex shrink-0 overflow-hidden rounded-full -ml-2 h-6 w-6 border border-background first:ml-0"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"flex h-full w-full items-center justify-center rounded-full border bg-muted text-[10px] font-semibold text-foreground"[39m
+                  [36m>[39m
+                    [0mP[0m
+                  [36m</span>[39m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 text-primary hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 [&_svg]:size-[18px] text-sm"[39m
+                [33mdisabled[39m=[32m""[39m
+              [36m>[39m
+                [0mMais recentes[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-8 rounded-md px-3 [&_svg]:size-[18px]"[39m
+              [36m>[39m
+                [0mCriar[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-haspopup[39m=[32m"menu"[39m
+                [33maria-label[39m=[32m"Mais ações"[39m
+                [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground hover:border-accent h-8 w-8 [&_svg]:size-[18px]"[39m
+                [33mdata-state[39m=[32m"closed"[39m
+                [33mid[39m=[32m"radix-:r5:"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m/>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-1 items-center justify-center px-6 py-12"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col items-center justify-center gap-6 text-balance rounded-lg border-dashed p-6 text-center md:p-12 w-full max-w-3xl border-0"[39m
+              [33mdata-slot[39m=[32m"empty"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex max-w-sm flex-col items-center text-center gap-4"[39m
+                [33mdata-slot[39m=[32m"empty-header"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-lg font-medium tracking-tight"[39m
+                  [33mdata-slot[39m=[32m"empty-title"[39m
+                [36m>[39m
+                  [36m<h2>[39m
+                    [0mNenhuma publicação neste espaço[0m
+                  [36m</h2>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-muted-foreground [&>a:hover]:text-primary text-sm/relaxed [&>a]:underline [&>a]:underline-offset-4"[39m
+                  [33mdata-slot[39m=[32m"empty-description"[39m
+                [36m>[39m
+                  [0mO conteúdo publicado neste espaço aparecerá aqui e também no feed consolidado da comunidade.[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex w-full min-w-0 max-w-sm flex-col items-center gap-4 text-balance text-sm"[39m
+                [33mdata-slot[39m=[32m"empty-content"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 [&_svg]:size-[18px]"[39m
+                [36m>[39m
+                  [0mCriar a primeira publicação[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      113 |     );
+      114 |
+    > 115 |     const button = screen.getByRole("button", { name: "Nova publicação" });
+          |                           ^
+      116 |     expect(button).toBeEnabled();
+      117 |
+      118 |     await user.click(button);
+
+      at Object.getElementError (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByRole (tests/communities/community-content-pane.test.tsx:115:27)
+
+Test Suites: 4 failed, 9 passed, 13 total
+Tests:       1 failed, 40 passed, 41 total
+Snapshots:   0 total
+Time:        4.843 s
+Ran all test suites matching tests/communities.

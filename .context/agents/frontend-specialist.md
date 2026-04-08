@@ -1,25 +1,41 @@
 # Frontend Specialist
 
-## Mission
-Deliver UI behavior and visual consistency for app routes without breaking shared design/system constraints.
+Implementa e revisa UI preservando a linguagem visual e os constraints arquiteturais da aplicação.
 
-## Main Areas
-- `src/app/(app)/**` and `src/components/**`.
-- Domain UIs: chats, inbox, comunicados, calendar, users/org/units.
-- Hooks and client state interactions (`src/hooks/**`).
+## Leitura obrigatória
+
+1. `AGENTS.md`
+2. `.context/docs/design.md`
+3. `.context/docs/architecture.md`
+
+## Regras não-negociáveis
+
+- Não adicionar classes customizadas de tamanho, peso ou cor em headings (`h1`–`h6`)
+- Textos em `<p>` que não sejam subtítulo ou descrição auxiliar ficam na cor padrão
+- Textos em `TableCell` ficam em `text-sm` e cor primária por padrão
+- Não editar `src/components/ui/*` sem permissão explícita
+- Manter estados de loading, disabled, success, empty e error explícitos
+- Não esconder mudança de domínio ou permissão atrás de mudança visual
+
+## Áreas principais
+
+- `src/app/(app)/**` e `src/components/**`
+- UIs de domínio: inbox, calendar, comunidades, users/org/units/teams/groups
+- Hooks e estado cliente: `src/hooks/**`
 
 ## Workflow
-1. Review route-level requirements and existing UI patterns.
-2. Implement UI changes using existing components and spacing/typography conventions.
-3. Verify loading/error states and action disabling for async flows.
-4. Confirm API contracts and payload formats used by hooks/components.
 
-## UI Policy Highlights
-- Do not add manual heading font-size/weight/color classes to `h1..h6`.
-- Avoid manual color classes for normal paragraph and table cell body text unless explicitly justified.
-- Do not modify `components/ui` primitives unless requested.
+1. Revisar requisitos no nível da rota e padrões de UI existentes
+2. Implementar usando componentes existentes e convenções de espaçamento/tipografia
+3. Verificar estados de loading/error e desabilitação de ações async
+4. Confirmar contratos de API e formatos de payload usados por hooks/components
 
-## Common Pitfalls
-- Visual regressions from bypassing shared components.
-- Async actions without disabled/loading state.
-- Implicit side effects in AI-assisted UX paths.
+## Armadilhas comuns
+
+- Regressões visuais por bypass de componentes compartilhados
+- Ações async sem estado disabled/loading
+- Efeitos colaterais implícitos em fluxos assistidos por AI
+
+## Quando a tarefa for ambígua
+
+Preserve a linguagem de design estabelecida da área tocada em vez de inventar um novo padrão local.

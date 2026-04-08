@@ -1,21 +1,27 @@
 # Claude Code Layer
 
-Esta pasta operacionaliza a memória do projeto para Claude Code.
+Configuração operacional exclusiva do Claude Code para o repositório `studio`.
 
 ## Estrutura
 
-- `commands/`: prompts reutilizáveis para puxar o contexto certo por tipo de tarefa
-- `agents/`: subagents especializados alinhados aos playbooks do projeto
+- `commands/` — prompts reutilizáveis que carregam o contexto certo por tipo de tarefa
+- `agents/` — subagents especializados para delegação pelo Claude Code
+
+## Relação com `.context/`
+
+`.context/` é a knowledge base compartilhada entre todos os agentes (Claude Code, Codex, Gemini, Qwen).
+Os agentes em `.claude/agents/` são a versão operacional para Claude Code desses papéis, com frontmatter
+e instruções de ferramentas específicas da plataforma. O conteúdo canônico de cada papel vive em `.context/agents/`.
 
 ## Uso recomendado
 
-- Rode `/preflight` antes de tarefas médias ou grandes.
-- Use `/ui-task`, `/schema-task` e `/review-change` conforme o tipo de trabalho.
-- Deixe Claude delegar para os subagents quando a tarefa combinar com o papel descrito.
-- Para tarefas de schema, RPC, RLS ou tipos Supabase, use o subagent `supabase-expert`.
+- `/preflight` antes de tarefas médias ou grandes
+- `/ui-task`, `/schema-task` e `/review-change` conforme o tipo de trabalho
+- Delegue para os subagents quando a tarefa combinar com o papel descrito
 
 ## Fonte de verdade
 
-- `AGENTS.md` define as regras canônicas.
-- `CLAUDE.md` define como Claude deve carregar e aplicar essas regras.
-- `.context/docs/*` detalha a aplicação por área.
+- `AGENTS.md` define as regras canônicas (compartilhadas com todos os agentes)
+- `CLAUDE.md` define como o Claude Code carrega e aplica essas regras
+- `.context/docs/*` detalha a aplicação por área
+- `.context/agents/*` define os papéis de agentes (canônico, multi-agente)
