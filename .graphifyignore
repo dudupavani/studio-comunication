@@ -1,0 +1,39 @@
+# Dependencies and generated outputs
+node_modules/
+.next/
+out/
+build/
+coverage/
+.tests-dist/
+.genkit/
+graphify-out/
+
+# Local secrets and environment files
+.env*
+*.pem
+
+# Agent/runtime caches
+.git/
+.claude/
+.qwen/
+.codex/
+.vercel/
+
+# Project files that are instructions or generated noise, not domain knowledge
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+QWEN.md
+auth_tests_output.txt
+tests_output.txt
+server.log
+backup.sql
+remove_sidebar_cleanup.txt
+
+# Archived or hidden product modules per AGENTS.md/.context rules
+src/app/(app)/comunicados/
+src/app/api/comunicados/
+src/app/(app)/chats/
+src/app/(app)/design-editor/
+src/app/(app)/learning/
+plans/comunicados-*

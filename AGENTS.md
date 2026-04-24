@@ -96,3 +96,12 @@
   ## Componentes de UI
   - Não customizar componentes da pasta `components/ui` (ex.: `sheet.tsx`, `button.tsx`) a menos que isso seja explicitamente solicitado.
 
+## graphify
+
+Este projeto tem um grafo de conhecimento do graphify em `graphify-out/`.
+
+Regras:
+- Se `graphify-out/GRAPH_REPORT.md` existir, leia esse arquivo antes de responder perguntas de arquitetura ou codebase.
+- Se `graphify-out/wiki/index.md` existir, navegue pela wiki em vez de ler arquivos brutos sem necessidade.
+- Para perguntas cross-module do tipo "como X se relaciona com Y", prefira `graphify query "<pergunta>"`, `graphify path "<A>" "<B>"` ou `graphify explain "<conceito>"` em vez de `grep`.
+- Após modificar arquivos de código nesta sessão, rode `graphify update .` para manter o grafo atualizado quando `graphify-out/graph.json` existir.
