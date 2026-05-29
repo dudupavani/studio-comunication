@@ -1,37 +1,28 @@
-# Gemini — studio
+# Gemini - studio-comunication
 
-Entry point do Gemini para o repositório `studio`.
+Entry point do Gemini para o repositorio `studio-comunication`.
 
-## Regras canônicas
+## Regras canonicas
 
-Leia `AGENTS.md` (raiz) antes de qualquer implementação. Em caso de conflito entre documentos, `AGENTS.md` prevalece.
+Leia `AGENTS.md` na raiz antes de qualquer implementacao. Em caso de conflito entre documentos, `AGENTS.md` prevalece.
 
-## Knowledge base compartilhada
+## Contexto
 
-`.context/` é a base de conhecimento do projeto. Consulte apenas o doc relevante para a tarefa atual — não carregue tudo proativamente:
+A antiga pasta compartilhada de contexto foi removida. Use apenas:
 
-| Tarefa | Doc |
-|--------|-----|
-| UI/UX, componentes, tipografia | `.context/docs/design.md` |
-| Arquitetura, boundaries, domínio | `.context/docs/architecture.md` |
-| Schema, Supabase, migrations, RPC | `.context/docs/architecture.md` + `.context/docs/development-workflow.md` |
-| Segurança, auth, permissões | `.context/docs/security.md` |
-| Testes e validação | `.context/docs/testing-strategy.md` |
-| Índice completo | `.context/docs/README.md` |
+- `AGENTS.md` para regras canonicas do projeto.
+- `graphify-out/GRAPH_REPORT.md` e `graphify-out/wiki/`, quando existirem, para navegacao arquitetural.
+- Codigo atual, migrations, testes e tipos como fonte de verdade para detalhes de implementacao.
 
 ## Agentes especializados
 
-Quando a tarefa exigir especialização, carregue o agente relevante de `.context/agents/`:
+Nao carregue agentes de caminhos legados removidos.
 
-- `supabase-expert.md` — schema, migrations, RPC, RLS
-- `feature-developer.md` — implementações cross-layer
-- `frontend-specialist.md` — UI e consistência visual
-- `code-reviewer.md` — revisão de mudanças
-- `security-auditor.md` — auth, permissões e tenant scope
+Quando a tarefa exigir especializacao, use o mecanismo nativo disponivel no ambiente Gemini ou as instrucoes canonicas em `AGENTS.md`.
 
 ## Regras operacionais
 
-- Módulos arquivados listados em `AGENTS.md` são tratados como inexistentes por padrão.
-- Antes de editar, classifique a tarefa: arquitetura, schema, permissões, UI/UX, AI, risco de regressão.
-- Prefira o menor slice seguro de mudança.
-- Para mudanças de schema: migration → push → gen types → typecheck (nessa ordem, sem pular etapas).
+- Modulos arquivados listados em `AGENTS.md` sao tratados como inexistentes por padrao.
+- Antes de editar, classifique a tarefa: arquitetura, schema, permissoes, UI/UX, AI, risco de regressao.
+- Prefira o menor slice seguro de mudanca.
+- Para mudancas de schema: migration em `database/migrations`, atualizacao de `src/types/supabase.ts` e typecheck.

@@ -7,7 +7,7 @@ Use this agent for code review after changes or when review is requested.
 Source order:
 1. AGENTS.md is mandatory and canonical.
 2. graphify-out/GRAPH_REPORT.md should be read when it exists and the task is architectural or cross-module.
-3. docs/architecture.md, docs/security.md, and docs/testing-strategy.md are supporting context only. Ignore any part that conflicts with AGENTS.md or current code.
+3. Current code and tests are the source of truth for implementation details not covered by AGENTS.md.
 
 Review like an owner. Lead with concrete findings ordered by severity. Include file and line references when possible. Focus on bugs, regressions, security, tenant scope, architectural drift, and missing tests. Avoid style-only comments unless they hide a real risk.
 """

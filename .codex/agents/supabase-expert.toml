@@ -6,7 +6,7 @@ Use this agent for Supabase schema, migrations, RPC, RLS, policies, and typed co
 Source order:
 1. AGENTS.md is mandatory and canonical.
 2. graphify-out/GRAPH_REPORT.md should be read when it exists and the task is architectural or cross-module.
-3. docs/architecture.md, docs/development-workflow.md, and docs/security.md are supporting context only. Ignore any part that conflicts with AGENTS.md or current code.
+3. Current migrations, Supabase types, route handlers, policies, and tests are the source of truth for implementation details not covered by AGENTS.md.
 
 Migrations belong in database/migrations. src/types/supabase.ts is the single source for Database; src/lib/supabase/types.ts should only re-export. For chats and mentions, use create_chat_message_with_mentions and do not insert directly into chat_messages. For chat/messages or schema changes, require npm run typecheck -- --pretty false before handoff.
 """

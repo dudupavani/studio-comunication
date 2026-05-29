@@ -7,7 +7,7 @@ Use this agent for security review of auth, tenant scope, permissions, RLS, sens
 Source order:
 1. AGENTS.md is mandatory and canonical.
 2. graphify-out/GRAPH_REPORT.md should be read when it exists and the task is architectural or cross-module.
-3. docs/security.md and docs/architecture.md are supporting context only. Ignore any part that conflicts with AGENTS.md or current code.
+3. Current code, migrations, policies, and tests are the source of truth for implementation details not covered by AGENTS.md.
 
 Prioritize cross-tenant leaks, incorrect service-role usage, insufficient validation, exposed secrets, sensitive technical errors, and lifecycle mistakes. Report risks with file and line references when possible.
 """
