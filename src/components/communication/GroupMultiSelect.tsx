@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { X, Users } from "lucide-react";
+import { useCallback } from "react";
+import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
+import { useMultiSelect } from "@/hooks/use-multi-select";
 
 export interface UserGroupOption {
   id: string;
@@ -29,93 +29,17 @@ export function GroupMultiSelect({
   showSelectedSummary = true,
   apiBase = "/api/users/recipients",
 }: GroupMultiSelectProps) {
-  const { toast } = useToast();
-  const [items, setItems] = useState<UserGroupOption[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState("");
-  const [cursor, setCursor] = useState<string | undefined>();
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-
-  const load = useCallback(
-    async ({
-      append,
-      cursor: cursorArg,
-      query: queryArg,
-    }: {
-      append: boolean;
-      cursor?: string;
-      query: string;
-    }) => {
-      if (abortRef.current) {
-        abortRef.current.abort();
-      }
-      const controller = new AbortController();
-      abortRef.current = controller;
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        params.set("limit", "20");
-        if (queryArg) params.set("q", queryArg);
-        if (cursorArg) params.set("cursor", cursorArg);
-
-        const res = await fetch(`${apiBase}/groups?${params.toString()}`, {
-          credentials: "include",
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        if (!res.ok) {
-          const body = (await res.json().catch(() => null)) as any;
-          throw new Error(body?.error?.message || `HTTP ${res.status}`);
-        }
-
-        const payload = (await res.json()) as {
-          items: UserGroupOption[];
-          nextCursor?: string;
-        };
-
-        setItems((prev) =>
-          append ? [...prev, ...payload.items] : payload.items
-        );
-        setCursor(payload.nextCursor);
-      } catch (err: any) {
-        if (err?.name === "AbortError") return;
-        console.error("GroupMultiSelect load error", err);
-        toast({
-          title: "Erro ao carregar grupos",
-          description: err?.message ?? "Tente novamente.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
-    [apiBase, toast]
-  );
-
-  useEffect(() => {
-    load({ append: false, cursor: undefined, query: "" });
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      abortRef.current?.abort();
-    };
-  }, [load]);
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      load({ append: false, cursor: undefined, query });
-    }, 300);
-  }, [query, load]);
+  const { items, loading, query, setQuery, cursor, load } =
+    useMultiSelect<UserGroupOption>({
+      endpoint: "groups",
+      apiBase,
+      errorTitle: "Erro ao carregar grupos",
+    });
 
   const toggleGroup = useCallback(
     (group: UserGroupOption) => {
       const exists = value.some((item) => item.id === group.id);
-      if (exists) {
-        onChange(value.filter((item) => item.id !== group.id));
-      } else {
-        onChange([...value, group]);
-      }
+      onChange(exists ? value.filter((item) => item.id !== group.id) : [...value, group]);
     },
     [onChange, value]
   );

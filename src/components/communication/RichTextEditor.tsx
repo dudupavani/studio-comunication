@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/utils/sanitize";
 
 const COMMANDS: Array<{
   icon: ComponentType<{ className?: string }>;
@@ -44,8 +45,9 @@ export function RichTextEditor({
   useEffect(() => {
     const el = editorRef.current;
     if (!el) return;
-    if (value && value !== el.innerHTML) {
-      el.innerHTML = value;
+    const safe = sanitizeHtml(value);
+    if (safe !== el.innerHTML) {
+      el.innerHTML = safe;
     }
   }, [value]);
 
@@ -55,7 +57,7 @@ export function RichTextEditor({
     document.execCommand(command, false);
     const el = editorRef.current;
     if (el) {
-      onChange(el.innerHTML);
+      onChange(sanitizeHtml(el.innerHTML));
     }
   };
 
@@ -84,9 +86,9 @@ export function RichTextEditor({
           suppressContentEditableWarning
           onInput={(event) => {
             const html = (event.currentTarget as HTMLDivElement).innerHTML;
-            onChange(html);
+            onChange(sanitizeHtml(html));
           }}
-          onBlur={(event) => onChange(event.currentTarget.innerHTML)}
+          onBlur={(event) => onChange(sanitizeHtml(event.currentTarget.innerHTML))}
         />
 
         {!value && placeholder ? (

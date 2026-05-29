@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
 import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useMultiSelect } from "@/hooks/use-multi-select";
 
 export interface UserOption {
   id: string;
@@ -32,91 +32,17 @@ export function UserMultiSelect({
   apiBase = "/api/users/recipients",
   stretchList = false,
 }: UserMultiSelectProps) {
-  const { toast } = useToast();
-  const [items, setItems] = useState<UserOption[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState("");
-  const [cursor, setCursor] = useState<string | undefined>();
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-
-  const load = useCallback(
-    async ({
-      append,
-      cursor: cursorArg,
-      query: queryArg,
-    }: {
-      append: boolean;
-      cursor?: string;
-      query: string;
-    }) => {
-      if (abortRef.current) {
-        abortRef.current.abort();
-      }
-      const controller = new AbortController();
-      abortRef.current = controller;
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        params.set("limit", "20");
-        if (queryArg) params.set("q", queryArg);
-        if (cursorArg) params.set("cursor", cursorArg);
-
-        const res = await fetch(`${apiBase}/users?${params.toString()}`, {
-          credentials: "include",
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        if (!res.ok) {
-          const body = (await res.json().catch(() => null)) as any;
-          throw new Error(body?.error?.message || `HTTP ${res.status}`);
-        }
-        const payload = (await res.json()) as {
-          items: UserOption[];
-          nextCursor?: string;
-        };
-        setItems((prev) =>
-          append ? [...prev, ...payload.items] : payload.items
-        );
-        setCursor(payload.nextCursor);
-      } catch (err: any) {
-        if (err?.name === "AbortError") return;
-        console.error("UserMultiSelect load error", err);
-        toast({
-          title: "Erro ao carregar usuários",
-          description: err?.message ?? "Tente novamente.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
-    [apiBase, toast]
-  );
-
-  useEffect(() => {
-    load({ append: false, cursor: undefined, query: "" });
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      abortRef.current?.abort();
-    };
-  }, [load]);
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      load({ append: false, cursor: undefined, query });
-    }, 300);
-  }, [query, load]);
+  const { items, loading, query, setQuery, cursor, load } =
+    useMultiSelect<UserOption>({
+      endpoint: "users",
+      apiBase,
+      errorTitle: "Erro ao carregar usuários",
+    });
 
   const toggleUser = useCallback(
     (user: UserOption) => {
       const exists = value.some((item) => item.id === user.id);
-      if (exists) {
-        onChange(value.filter((item) => item.id !== user.id));
-      } else {
-        onChange([...value, user]);
-      }
+      onChange(exists ? value.filter((item) => item.id !== user.id) : [...value, user]);
     },
     [onChange, value]
   );
@@ -127,7 +53,7 @@ export function UserMultiSelect({
         <div className="flex flex-wrap gap-2">
           {value.map((user) => (
             <Badge key={user.id} variant="secondary">
-              {user.full_name || user.id}
+              {user.full_name || "Usuário sem nome"}
               <Button
                 type="button"
                 onClick={() => toggleUser(user)}
@@ -177,9 +103,11 @@ export function UserMultiSelect({
                     <span className="text-sm font-medium">
                       {user.full_name || "Usuário sem nome"}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {user.id}
-                    </span>
+                    {user.cargo ? (
+                      <span className="text-xs text-muted-foreground">
+                        {user.cargo}
+                      </span>
+                    ) : null}
                   </div>
                 </label>
               );
