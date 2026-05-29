@@ -1,6 +1,18 @@
+---
+description: Estratégia de testes, gates mínimos e foco por área
+globs:
+  - "tests/**"
+  - "e2e/**"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/*.spec.tsx"
+alwaysApply: false
+---
+
 # Estratégia de Testes
 
-## Stack atual de verificação
+## Stack atual
 
 - `npm run test`: suite principal com Jest
 - `npm run test:e2e`: Playwright para fluxos end-to-end
@@ -8,18 +20,17 @@
 
 ## Gates mínimos
 
+Sempre:
 ```bash
 npm run typecheck
 ```
 
 Obrigatório para mudanças em chat, mensagens ou schema Supabase:
-
 ```bash
 npm run typecheck -- --pretty false
 ```
 
 Para mudanças amplas ou com risco de regressão estrutural:
-
 ```bash
 npm run test
 npm run lint
@@ -30,14 +41,13 @@ npm run build
 
 - Auth e permissões: isolamento multi-tenant, matriz de papéis e negação de acesso
 - Chat e mensagens: fluxo de menções, visibilidade, destinatários e notificações
-- Comunicados: destinatários, comentários, reações, views e métricas
 - Comunidades/publicações: criação/edição/remoção de post, reação toggle e atualização de contador
 - Core de reações: vínculo por módulo (`*_reaction_targets`), toggle idempotente e integridade tenant (`org_id`)
 - Calendar: serialização, permissões e update/delete
 - Schema: migrations presentes, tipos atualizados e compilação limpa
-- UI crítica: loading, disabled, empty/error states e aderência às regras de `design.md`
+- UI crítica: loading, disabled, empty/error states e aderência às regras de ui.md
 
-## Organização atual útil
+## Arquivos de teste existentes
 
 - `tests/permissions.test.ts`
 - `tests/api/calendar.events.route.test.ts`
@@ -46,4 +56,4 @@ npm run build
 ## Critério de revisão
 
 - Toda mudança deve deixar claro quais checks foram executados.
-- Se o comportamento mudou e não houver cobertura automatizada viável, isso deve ser registrado como risco residual.
+- Se o comportamento mudou e não houver cobertura automatizada viável, registre como risco residual.

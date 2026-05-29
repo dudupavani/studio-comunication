@@ -3,8 +3,6 @@ description: Executa tarefas que afetam schema, Supabase, migrations, RPC ou tip
 argument-hint: [tarefa de schema ou Supabase]
 ---
 
-Use @.context/docs/architecture.md, @.context/docs/development-workflow.md e @.context/docs/testing-strategy.md.
-
 Tarefa:
 
 $ARGUMENTS
@@ -23,7 +21,6 @@ Checklist obrigatório antes de concluir:
 2. `src/types/supabase.ts` atualizado quando necessário
 3. `src/lib/supabase/types.ts` mantido apenas como reexport
 4. Uso correto da RPC de chat com menções, se aplicável
-5. `npm run typecheck` executado
-6. `npm run typecheck -- --pretty false` quando a mudança tocar chat, mensagens ou schema
+5. `npm run typecheck -- --pretty false` executado
 
 Pense sempre no impacto sistêmico, não só no arquivo alterado.

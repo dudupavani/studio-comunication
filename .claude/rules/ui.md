@@ -1,35 +1,40 @@
-# Regras de Design e UI para Agentes
+---
+description: Regras de UI, design, tipografia, iconografia e estados de UX
+globs:
+  - "src/components/**"
+  - "src/app/**/*.tsx"
+  - "src/app/**/*.ts"
+  - "src/hooks/**"
+alwaysApply: false
+---
 
-Este documento é um guia operacional para implementação e revisão de UI. Ele complementa `AGENTS.md` e não substitui as regras canônicas.
+# Regras de UI
 
-## Regras na estrutura de montagem das telas
+## Estrutura de montagem das telas
 
-1. Não utilizar `src/components/ui/card.tsx` para estruturar páginas.
-2. Em telas de estado vazio (quando ainda não existe conteúdo criado), utilizar sempre:
-
-- Componente `src/components/ui/empty.tsx` como padrão de empty state.
-- Se a tela de estado vazio necessitar de uma ação de criar algum conteúdo, o componente `src/components/ui/empty.tsx` deve ter um botão (variant="primary" size="sm" ) para realizar esta ação (Exemplo: Criar grupo, Criar equipe, Criar Unidade, etc).
-- Nas telas de estado vazio nnão se aplica nenhum outro elemento na tela que não seja o item mencionado acima.
+- Não utilizar `src/components/ui/card.tsx` para estruturar páginas.
+- Em telas de estado vazio, utilizar `src/components/ui/empty.tsx` como padrão.
+  - Se precisar de ação de criação, o componente deve ter um botão `variant="primary" size="sm"`.
+  - Não aplicar outros elementos na tela de estado vazio além desse componente.
 
 ## Tipografia e texto
 
 - Não adicionar classes extras de tamanho, peso ou cor em `h1` até `h6`.
 - Textos em `<p>` que não sejam subtítulo ou descrição auxiliar devem usar a cor padrão.
 - Textos em `TableCell` devem ficar em `text-sm` e cor primária por padrão.
-- Se houver dúvida entre “seguir o padrão atual” e “inventar novo estilo”, siga o padrão atual do domínio.
+- Se houver dúvida entre "seguir o padrão atual" e "inventar novo estilo", siga o padrão atual do domínio.
 
-## Regras de Iconografia
+## Iconografia
 
-1. Biblioteca de ícones oficial: `https://lucide.dev`.
-2. O ícone que representam entidades da aplicação:
-
-- Grupos de usuários: `Component`.
-- Equipes: `Users`.
-- Usuários: `Users`.
-- Usuário: `User`.
-- Unidades: `House`.
-- Organização: `Building2`.
-- Botão de "Criar", "Novo", "Adicionar": `CirclePlus`.
+- Biblioteca oficial: Lucide (`https://lucide.dev`).
+- Ícones por entidade:
+  - Grupos de usuários: `Component`
+  - Equipes: `Users`
+  - Usuários: `Users`
+  - Usuário: `User`
+  - Unidades: `House`
+  - Organização: `Building2`
+  - Botão de "Criar", "Novo", "Adicionar": `CirclePlus`
 
 ## Componentes compartilhados
 
@@ -44,13 +49,13 @@ Este documento é um guia operacional para implementação e revisão de UI. Ele
 - Fluxos relevantes devem tratar empty state, error state e success feedback com clareza.
 - Em falhas de AI, mostrar erro curto e genérico ao usuário.
 
-## Mudanças em UI com impacto arquitetural
+## UI com impacto arquitetural
 
 - Se a UI implica regra de negócio, valide o módulo de domínio e o route handler correspondente.
 - Se a UI toca lifecycle de usuários, permissões ou escopo multi-tenant, revise impacto em auth e segurança antes de concluir.
 - Não esconder mudança estrutural atrás de ajuste visual.
 
-## Revisão visual antes de concluir
+## Checklist antes de concluir
 
 - A mudança respeita o padrão visual existente da área?
 - Há consistência de espaçamento, alinhamento e hierarquia?

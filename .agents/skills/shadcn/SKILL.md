@@ -20,7 +20,7 @@ Use this skill when you need to add, update, inspect, or compose shadcn/ui compo
 - Keep imports local: use `@/components/ui/<component>`.
 - Do not edit files under `src/components/ui/*` unless the user explicitly asks for that component change.
 - Prefer composition over creating parallel UI variants.
-- Preserve the repo's existing visual language and follow `AGENTS.md` plus `.context/docs/design.md`.
+- Preserve the repo's existing visual language and follow `AGENTS.md` plus `docs/design.md`.
 
 ## Recommended Workflow
 

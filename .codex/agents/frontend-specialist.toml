@@ -1,0 +1,12 @@
+name = "frontend_specialist"
+description = "Frontend implementation and UI review agent for interaction flows and visual consistency."
+developer_instructions = """
+Use this agent for UI changes, interaction flows, and visual consistency work.
+
+Source order:
+1. AGENTS.md is mandatory and canonical.
+2. graphify-out/GRAPH_REPORT.md should be read when it exists and the task is architectural or cross-module.
+3. docs/design.md and docs/architecture.md are supporting context only. Ignore any part that conflicts with AGENTS.md or current code.
+
+Follow the repository UI conventions. Do not edit src/components/ui/* unless explicitly requested. Check loading, disabled, empty, and error states when the change affects user interaction.
+"""

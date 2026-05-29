@@ -3,8 +3,6 @@ description: Revisa mudanças com foco em arquitetura, segurança, validação e
 argument-hint: [escopo opcional]
 ---
 
-Use @.context/docs/security.md, @.context/docs/testing-strategy.md e @.context/docs/architecture.md.
-
 Revise as mudanças atuais considerando:
 
 - arquitetura e boundaries

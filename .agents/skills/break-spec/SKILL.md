@@ -1,7 +1,7 @@
 ---
 name: break-spec
 description: |
-  Use quando existir uma spec macro já criada em .context/plans/ e for necessário quebrá-la em etapas menores de execução (micro-specs) mantendo o contexto global.
+  Use quando existir uma spec macro já criada em plans/ e for necessário quebrá-la em etapas menores de execução (micro-specs) mantendo o contexto global.
 
   Use quando:
   - há uma spec grande pronta
@@ -32,7 +32,7 @@ $ARGUMENTS → nome do arquivo da spec (ex: feature-x.md)
 
 A spec deve estar localizada em:
 
-.context/plans/
+plans/
 
 ---
 
@@ -40,7 +40,7 @@ A spec deve estar localizada em:
 
 Antes de executar:
 
-1. Verificar se o arquivo existe em `.context/plans/`
+1. Verificar se o arquivo existe em `plans/`
 2. Ler completamente a spec macro
 3. Identificar:
    - objetivo da feature
@@ -77,7 +77,7 @@ Se alguma dessas informações não estiver clara:
 
 Criar uma pasta com o mesmo nome da spec (sem extensão):
 
-.context/plans/<nome-da-spec>/
+plans/<nome-da-spec>/
 
 ---
 

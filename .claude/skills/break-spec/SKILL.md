@@ -1,83 +1,83 @@
----
+﻿---
 name: break-spec
 description: |
-  Use quando existir uma spec macro já criada em .context/plans/ e for necessário quebrá-la em etapas menores de execução (micro-specs) mantendo o contexto global.
+  Use quando existir uma spec macro jÃ¡ criada em plans/ e for necessÃ¡rio quebrÃ¡-la em etapas menores de execuÃ§Ã£o (micro-specs) mantendo o contexto global.
 
   Use quando:
-  - há uma spec grande pronta
-  - é necessário transformar em etapas sequenciais de implementação
-  - há risco de perder contexto arquitetural ao implementar direto
+  - hÃ¡ uma spec grande pronta
+  - Ã© necessÃ¡rio transformar em etapas sequenciais de implementaÃ§Ã£o
+  - hÃ¡ risco de perder contexto arquitetural ao implementar direto
 
-  NÃO use quando:
-  - a spec ainda não existe
-  - a tarefa é pequena e não precisa decomposição
-  - já existem tasks bem definidas
+  NÃƒO use quando:
+  - a spec ainda nÃ£o existe
+  - a tarefa Ã© pequena e nÃ£o precisa decomposiÃ§Ã£o
+  - jÃ¡ existem tasks bem definidas
 ---
 
-# Break Spec — Decomposição de Spec Macro
+# Break Spec â€” DecomposiÃ§Ã£o de Spec Macro
 
 ## Objetivo
 
-Transformar uma spec macro em etapas menores de execução (micro-specs),
+Transformar uma spec macro em etapas menores de execuÃ§Ã£o (micro-specs),
 preservando integralmente o contexto, requisitos e comportamento da feature,
-sem perda, simplificação ou reinterpretação.
+sem perda, simplificaÃ§Ã£o ou reinterpretaÃ§Ã£o.
 
 ---
 
 ## Entrada
 
-Argumento obrigatório:
+Argumento obrigatÃ³rio:
 
-$ARGUMENTS → nome do arquivo da spec (ex: feature-x.md)
+$ARGUMENTS â†’ nome do arquivo da spec (ex: feature-x.md)
 
 A spec deve estar localizada em:
 
-.context/plans/
+plans/
 
 ---
 
-## Pré-condições
+## PrÃ©-condiÃ§Ãµes
 
 Antes de executar:
 
-1. Verificar se o arquivo existe em `.context/plans/`
+1. Verificar se o arquivo existe em `plans/`
 2. Ler completamente a spec macro
 3. Identificar:
    - objetivo da feature
    - resultado final esperado
-   - regras de negócio
-   - restrições
-   - o que não pode quebrar
+   - regras de negÃ³cio
+   - restriÃ§Ãµes
+   - o que nÃ£o pode quebrar
 
-4. Identificar EXPLICITAMENTE os requisitos críticos da spec, incluindo:
-   - regras obrigatórias (non-negotiable constraints)
-   - instruções de execução
-   - regras de permissão e acesso
+4. Identificar EXPLICITAMENTE os requisitos crÃ­ticos da spec, incluindo:
+   - regras obrigatÃ³rias (non-negotiable constraints)
+   - instruÃ§Ãµes de execuÃ§Ã£o
+   - regras de permissÃ£o e acesso
    - regras de UI/comportamento
    - qualquer item marcado como MUST, REQUIRED ou equivalente
 
-5. Identificar TODAS as referências externas mencionadas na spec:
+5. Identificar TODAS as referÃªncias externas mencionadas na spec:
    - arquivos de design (ex: Figma via MCP)
    - contratos de API
-   - documentação externa
+   - documentaÃ§Ã£o externa
    - qualquer fonte declarada como source of truth
 
 6. Mapear:
-   - onde cada requisito crítico aparece na spec
-   - quais partes da spec dependem de cada referência externa
+   - onde cada requisito crÃ­tico aparece na spec
+   - quais partes da spec dependem de cada referÃªncia externa
 
-Se alguma dessas informações não estiver clara:
-→ parar e informar inconsistência
+Se alguma dessas informaÃ§Ãµes nÃ£o estiver clara:
+â†’ parar e informar inconsistÃªncia
 
 ---
 
-## Execução
+## ExecuÃ§Ã£o
 
-### 1. Criar pasta de saída
+### 1. Criar pasta de saÃ­da
 
-Criar uma pasta com o mesmo nome da spec (sem extensão):
+Criar uma pasta com o mesmo nome da spec (sem extensÃ£o):
 
-.context/plans/<nome-da-spec>/
+plans/<nome-da-spec>/
 
 ---
 
@@ -87,19 +87,19 @@ Criar arquivo:
 
 00-master-plan.md
 
-Conteúdo:
+ConteÃºdo:
 
 - resumo da feature
 - objetivo geral
 - resultado final esperado
 - lista sequencial das etapas
-- dependência entre etapas
+- dependÃªncia entre etapas
 
-Adicional obrigatório:
+Adicional obrigatÃ³rio:
 
-- lista completa dos requisitos críticos (sem resumo)
-- lista completa das referências externas
-- mapeamento de quais etapas dependem de quais requisitos e referências
+- lista completa dos requisitos crÃ­ticos (sem resumo)
+- lista completa das referÃªncias externas
+- mapeamento de quais etapas dependem de quais requisitos e referÃªncias
 
 ---
 
@@ -107,7 +107,7 @@ Adicional obrigatório:
 
 Gerar entre 6 e 10 etapas.
 
-Cada etapa deve ser funcional (não técnica isolada).
+Cada etapa deve ser funcional (nÃ£o tÃ©cnica isolada).
 
 Criar arquivos:
 
@@ -117,7 +117,7 @@ Criar arquivos:
 
 ---
 
-### 4. Estrutura obrigatória de cada micro-spec
+### 4. Estrutura obrigatÃ³ria de cada micro-spec
 
 Cada arquivo deve conter:
 
@@ -127,9 +127,9 @@ Qual parte da feature essa etapa atende
 
 ## Objetivo da etapa
 
-O que será entregue
+O que serÃ¡ entregue
 
-## Relação com o todo
+## RelaÃ§Ã£o com o todo
 
 Como isso contribui para o resultado final
 
@@ -137,123 +137,123 @@ Como isso contribui para o resultado final
 
 O que entra nesta etapa
 
-## Não pode quebrar
+## NÃ£o pode quebrar
 
 Regras globais que devem ser respeitadas
 
-OBRIGATÓRIO:
+OBRIGATÃ“RIO:
 
-- Incluir TODOS os requisitos críticos aplicáveis à etapa
+- Incluir TODOS os requisitos crÃ­ticos aplicÃ¡veis Ã  etapa
 - Preservar o texto original ou equivalente sem perda de significado
-- NÃO simplificar
-- NÃO reinterpretar
-- NÃO reduzir nível de obrigatoriedade (MUST continua MUST)
+- NÃƒO simplificar
+- NÃƒO reinterpretar
+- NÃƒO reduzir nÃ­vel de obrigatoriedade (MUST continua MUST)
 
-- Incluir TODAS as referências externas utilizadas nesta etapa
-- Se uma referência externa influencia comportamento, ela DEVE estar explícita
+- Incluir TODAS as referÃªncias externas utilizadas nesta etapa
+- Se uma referÃªncia externa influencia comportamento, ela DEVE estar explÃ­cita
 
 ## Resultado esperado
 
-Estado final após a etapa
+Estado final apÃ³s a etapa
 
-## Critérios de aceite
+## CritÃ©rios de aceite
 
-Como validar que a etapa foi concluída
+Como validar que a etapa foi concluÃ­da
 
-## Dependências
+## DependÃªncias
 
-Etapas anteriores necessárias
+Etapas anteriores necessÃ¡rias
 
 ## Rastreabilidade
 
-- Listar quais requisitos da spec original estão sendo atendidos nesta etapa
-- Referenciar explicitamente (por seção ou descrição)
+- Listar quais requisitos da spec original estÃ£o sendo atendidos nesta etapa
+- Referenciar explicitamente (por seÃ§Ã£o ou descriÃ§Ã£o)
 
 ---
 
-## Regras de decomposição
+## Regras de decomposiÃ§Ã£o
 
-- Não quebrar por arquivo técnico
-- Não quebrar por função isolada
+- NÃ£o quebrar por arquivo tÃ©cnico
+- NÃ£o quebrar por funÃ§Ã£o isolada
 - Quebrar por valor funcional
-- Cada etapa deve ser validável isoladamente
+- Cada etapa deve ser validÃ¡vel isoladamente
 - Manter contexto global em todas as etapas
 
-REGRAS CRÍTICAS:
+REGRAS CRÃTICAS:
 
 - Nenhum requisito pode ser omitido
 - Nenhum requisito pode ser enfraquecido
 - Nenhum requisito pode ser reinterpretado
-- Requisitos críticos DEVEM ser repetidos sempre que aplicáveis
+- Requisitos crÃ­ticos DEVEM ser repetidos sempre que aplicÃ¡veis
 
-Atualização da regra de duplicação:
+AtualizaÃ§Ã£o da regra de duplicaÃ§Ã£o:
 
-- Evitar duplicação desnecessária
-- MAS duplicação de requisitos críticos é obrigatória quando necessário
+- Evitar duplicaÃ§Ã£o desnecessÃ¡ria
+- MAS duplicaÃ§Ã£o de requisitos crÃ­ticos Ã© obrigatÃ³ria quando necessÃ¡rio
 
 ---
 
-## Preservação de Requisitos Críticos
+## PreservaÃ§Ã£o de Requisitos CrÃ­ticos
 
 O agente DEVE garantir que:
 
-- Nenhum requisito obrigatório seja perdido
+- Nenhum requisito obrigatÃ³rio seja perdido
 - Nenhuma regra marcada como MUST seja convertida em SHOULD ou equivalente
-- Nenhuma instrução seja simplificada a ponto de alterar comportamento
-- O resultado final das micro-specs seja funcionalmente idêntico à spec original
+- Nenhuma instruÃ§Ã£o seja simplificada a ponto de alterar comportamento
+- O resultado final das micro-specs seja funcionalmente idÃªntico Ã  spec original
 
 ---
 
-## Tratamento de Referências Externas
+## Tratamento de ReferÃªncias Externas
 
-- TODAS as referências externas da spec original DEVEM ser preservadas
-- Se uma referência externa impacta uma etapa, ela DEVE aparecer na micro-spec
-- Se uma referência externa é definida como source of truth:
-  - ela se torna automaticamente um requisito não-negociável
-  - deve ser tratada com o mesmo nível de obrigatoriedade que regras MUST
+- TODAS as referÃªncias externas da spec original DEVEM ser preservadas
+- Se uma referÃªncia externa impacta uma etapa, ela DEVE aparecer na micro-spec
+- Se uma referÃªncia externa Ã© definida como source of truth:
+  - ela se torna automaticamente um requisito nÃ£o-negociÃ¡vel
+  - deve ser tratada com o mesmo nÃ­vel de obrigatoriedade que regras MUST
 
-- NÃO inferir novas referências externas
-- NÃO remover referências existentes
-
----
-
-## Restrições
-
-- Não implementar código
-- Não alterar a spec original
-- Não inventar arquitetura
-- Não assumir comportamento não descrito
-- Não criar tarefas técnicas desconectadas do valor
-- NÃO omitir requisitos críticos
-- NÃO reinterpretar requisitos
-- NÃO omitir referências externas
+- NÃƒO inferir novas referÃªncias externas
+- NÃƒO remover referÃªncias existentes
 
 ---
 
-## Verificação de Integridade (OBRIGATÓRIO)
+## RestriÃ§Ãµes
 
-Após gerar as micro-specs, o agente DEVE validar:
+- NÃ£o implementar cÃ³digo
+- NÃ£o alterar a spec original
+- NÃ£o inventar arquitetura
+- NÃ£o assumir comportamento nÃ£o descrito
+- NÃ£o criar tarefas tÃ©cnicas desconectadas do valor
+- NÃƒO omitir requisitos crÃ­ticos
+- NÃƒO reinterpretar requisitos
+- NÃƒO omitir referÃªncias externas
+
+---
+
+## VerificaÃ§Ã£o de Integridade (OBRIGATÃ“RIO)
+
+ApÃ³s gerar as micro-specs, o agente DEVE validar:
 
 1. Cobertura completa:
-   - Todos os requisitos da spec original estão presentes em pelo menos uma etapa
+   - Todos os requisitos da spec original estÃ£o presentes em pelo menos uma etapa
 
-2. Preservação:
+2. PreservaÃ§Ã£o:
    - Nenhum requisito foi perdido
    - Nenhum requisito foi enfraquecido
    - Nenhuma regra MUST foi alterada
 
-3. Referências externas:
-   - Todas as referências foram preservadas
-   - Todas as referências aplicáveis aparecem nas etapas corretas
+3. ReferÃªncias externas:
+   - Todas as referÃªncias foram preservadas
+   - Todas as referÃªncias aplicÃ¡veis aparecem nas etapas corretas
 
-4. Equivalência funcional:
+4. EquivalÃªncia funcional:
    - Executar todas as micro-specs resulta no mesmo comportamento da spec original
 
 5. Rastreabilidade:
    - Cada requisito da spec original pode ser rastreado para pelo menos uma micro-spec
 
 Se qualquer item falhar:
-→ PARAR e reportar inconsistência
+â†’ PARAR e reportar inconsistÃªncia
 
 ---
 
@@ -264,29 +264,29 @@ Entregar:
 1. Caminho da pasta criada
 2. Lista de arquivos gerados
 3. Resumo das etapas criadas
-4. Confirmação de coerência com a spec original
-5. Mapeamento de requisitos → micro-specs
-6. Confirmação explícita de preservação total dos requisitos
-7. Confirmação explícita de preservação das referências externas
+4. ConfirmaÃ§Ã£o de coerÃªncia com a spec original
+5. Mapeamento de requisitos â†’ micro-specs
+6. ConfirmaÃ§Ã£o explÃ­cita de preservaÃ§Ã£o total dos requisitos
+7. ConfirmaÃ§Ã£o explÃ­cita de preservaÃ§Ã£o das referÃªncias externas
 
 ---
 
 ## Erros
 
-Se o arquivo não existir:
-→ informar erro e parar
+Se o arquivo nÃ£o existir:
+â†’ informar erro e parar
 
 Se a spec for insuficiente:
-→ listar lacunas e parar
+â†’ listar lacunas e parar
 
 Se houver ambiguidade:
-→ apontar antes de continuar
+â†’ apontar antes de continuar
 
 Se qualquer requisito for perdido, alterado ou enfraquecido:
-→ erro crítico e parar execução
+â†’ erro crÃ­tico e parar execuÃ§Ã£o
 
-Se qualquer referência externa for omitida:
-→ erro crítico e parar execução
+Se qualquer referÃªncia externa for omitida:
+â†’ erro crÃ­tico e parar execuÃ§Ã£o
 
-Se não for possível garantir equivalência funcional:
-→ erro crítico e parar execução
+Se nÃ£o for possÃ­vel garantir equivalÃªncia funcional:
+â†’ erro crÃ­tico e parar execuÃ§Ã£o

@@ -1,3 +1,14 @@
+---
+description: Segurança, permissões, isolamento multi-tenant e revisão de auth
+globs:
+  - "src/app/api/**"
+  - "src/lib/auth*"
+  - "src/lib/auth/**"
+  - "src/lib/permissions*"
+  - "src/lib/permissions/**"
+alwaysApply: false
+---
+
 # Segurança e Permissões
 
 ## Modelo de segurança
@@ -28,14 +39,14 @@ O app é multi-tenant e depende de controles em camadas:
 - Toda mudança de schema deve vir com migration e atualização de `src/types/supabase.ts`.
 - Em endpoints de reação, validar que `target_id` pertence ao `org_id` ativo e ao recurso acessível pelo usuário.
 
-## Revisão de segurança por tipo de tarefa
+## Onde revisar por tipo de tarefa
 
-- Auth/permissão: conferir `src/lib/auth-context.ts`, `src/lib/auth/*`, `src/lib/permissions*`
-- APIs: conferir validação, status code, shape de erro e tenant scope
-- Supabase: conferir uso do client correto, tipos e impacto em RLS/policies
-- AI: conferir timeout, logs `INTERNAL_AI_ERROR` e `ROUTE_AI_ERROR`, além de erro genérico para o usuário
+- Auth/permissão: `src/lib/auth-context.ts`, `src/lib/auth/*`, `src/lib/permissions*`
+- APIs: validação, status code, shape de erro e tenant scope
+- Supabase: uso do client correto, tipos e impacto em RLS/policies
+- AI: timeout, logs `INTERNAL_AI_ERROR` e `ROUTE_AI_ERROR`, erro genérico para o usuário
 
-## Perguntas que o agente deve responder antes de concluir
+## Perguntas obrigatórias antes de concluir
 
 - Esta mudança pode vazar dados entre tenants?
 - O route handler valida payload e auth antes de executar a regra?

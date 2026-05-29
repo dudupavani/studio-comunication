@@ -3,8 +3,6 @@ description: Executa tarefas de UI seguindo os padrões visuais e arquiteturais 
 argument-hint: [tarefa de UI]
 ---
 
-Use @.context/docs/design.md e @.context/docs/architecture.md.
-
 Tarefa:
 
 $ARGUMENTS
