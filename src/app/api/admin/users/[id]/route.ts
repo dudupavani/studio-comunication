@@ -51,7 +51,6 @@ export async function DELETE(
       return json(500, {
         ok: false,
         error: "Erro ao validar organização do usuário.",
-        details: membershipErr.message,
       });
     }
     if (!membership) {
@@ -89,7 +88,6 @@ export async function DELETE(
       return json(500, {
         ok: false,
         error: `Erro ao limpar dados em ${table}.`,
-        details: error.message,
       });
     }
   }
@@ -100,7 +98,6 @@ export async function DELETE(
     return json(500, {
       ok: false,
       error: "Erro ao remover usuário do auth.",
-      details: authErr.message,
     });
   }
 

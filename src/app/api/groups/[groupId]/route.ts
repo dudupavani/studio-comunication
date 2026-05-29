@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { toLoggableError } from "@/lib/log";
+import { getAuthContext } from "@/lib/auth-context";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,9 @@ export async function GET(
   context: RouteContext<"/api/groups/[groupId]">
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId) return jsonError(401, "Não autenticado.");
+
     const parsed = ParamsSchema.safeParse(await context.params);
     if (!parsed.success) {
       return jsonError(400, "Parâmetros inválidos", parsed.error.flatten());
@@ -70,6 +74,9 @@ export async function PATCH(
   context: RouteContext<"/api/groups/[groupId]">
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId) return jsonError(401, "Não autenticado.");
+
     const parsed = ParamsSchema.safeParse(await context.params);
     if (!parsed.success) {
       return jsonError(400, "Parâmetros inválidos", parsed.error.flatten());
@@ -163,6 +170,9 @@ export async function DELETE(
   context: RouteContext<"/api/groups/[groupId]">
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId) return jsonError(401, "Não autenticado.");
+
     const parsed = ParamsSchema.safeParse(await context.params);
     if (!parsed.success) {
       return jsonError(400, "Parâmetros inválidos", parsed.error.flatten());

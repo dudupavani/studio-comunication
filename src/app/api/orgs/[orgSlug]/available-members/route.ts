@@ -2,12 +2,18 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { resolveIdentityMap } from "@/lib/identity";
+import { getAuthContext } from "@/lib/auth-context";
 
 export async function GET(
   req: Request,
   ctx: { params: Promise<{ orgSlug: string }> }
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId) {
+      return NextResponse.json({ ok: false, error: "Não autenticado." }, { status: 401 });
+    }
+
     const { orgSlug } = await ctx.params;
     
     // Precisamos obter o ID da organização a partir do slug
@@ -26,6 +32,14 @@ export async function GET(
     }
     
     const orgId = org.id;
+
+    // Verificar que o usuário autenticado pertence à organização solicitada
+    if (auth.platformRole !== "platform_admin" && auth.orgId !== orgId) {
+      return NextResponse.json(
+        { ok: false, error: "Acesso negado." },
+        { status: 403 }
+      );
+    }
 
     const url = new URL(req.url);
     const unitId = url.searchParams.get("unitId");
@@ -50,7 +64,7 @@ export async function GET(
         unitError
       );
       return NextResponse.json(
-        { ok: false, error: unitError.message },
+        { ok: false, error: "Erro ao buscar membros da unidade." },
         { status: 500 }
       );
     }
@@ -69,7 +83,7 @@ export async function GET(
         orgMembersError
       );
       return NextResponse.json(
-        { ok: false, error: orgMembersError.message },
+        { ok: false, error: "Erro ao buscar membros da organização." },
         { status: 500 }
       );
     }
@@ -100,7 +114,7 @@ export async function GET(
     return NextResponse.json({ ok: true, users });
   } catch (e: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message ?? "Erro inesperado" },
+      { ok: false, error: "Erro inesperado." },
       { status: 500 }
     );
   }
