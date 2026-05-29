@@ -33,6 +33,14 @@ export async function GET(
     
     const orgId = org.id;
 
+    // Verificar que o usuário autenticado pertence à organização solicitada
+    if (auth.platformRole !== "platform_admin" && auth.orgId !== orgId) {
+      return NextResponse.json(
+        { ok: false, error: "Acesso negado." },
+        { status: 403 }
+      );
+    }
+
     const url = new URL(req.url);
     const unitId = url.searchParams.get("unitId");
     if (!unitId) {

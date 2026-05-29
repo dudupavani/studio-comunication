@@ -22,10 +22,28 @@ export async function POST(req: Request) {
     const uniqueIds = Array.from(new Set(userIds));
     const supabase = createServiceClient();
 
+    // Escopo de tenant: platform_admin pode resolver qualquer usuário;
+    // demais só resolvem usuários que pertencem à sua organização.
+    let scopedIds = uniqueIds;
+    if (auth.platformRole !== "platform_admin" && auth.orgId) {
+      const { data: orgMemberRows } = await supabase
+        .from("org_members")
+        .select("user_id")
+        .eq("org_id", auth.orgId)
+        .in("user_id", uniqueIds);
+      scopedIds = (orgMemberRows ?? []).map((r: any) => r.user_id as string);
+      if (scopedIds.length === 0) {
+        return NextResponse.json(
+          { byId: {} },
+          { headers: { "Cache-Control": "private, max-age=30" } }
+        );
+      }
+    }
+
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("id, full_name, avatar_url")
-      .in("id", uniqueIds);
+      .in("id", scopedIds);
 
     if (profilesError) {
       console.warn("IDENTITY resolve profile lookup error", profilesError);
@@ -55,7 +73,7 @@ export async function POST(req: Request) {
       };
     });
 
-    const missing = uniqueIds.filter(
+    const missing = scopedIds.filter(
       (id) => !byId[id] || !byId[id].full_name || !byId[id].avatar_url || !byId[id].email
     );
 
@@ -103,7 +121,7 @@ export async function POST(req: Request) {
       const { data: cargoRows, error: cargoError } = await supabase
         .from("employee_profile")
         .select("user_id, cargo")
-        .in("user_id", uniqueIds);
+        .in("user_id", scopedIds);
 
       if (cargoError) {
         console.warn("IDENTITY resolve cargo lookup error", cargoError);

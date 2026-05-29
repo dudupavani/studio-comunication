@@ -2,6 +2,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthContext } from "@/lib/auth-context";
+import type { AuthContext } from "@/lib/auth-context";
+
+function canManageUnit(auth: AuthContext, unitId: string): boolean {
+  return (
+    auth.platformRole === "platform_admin" ||
+    auth.orgRole === "org_admin" ||
+    auth.orgRole === "org_master" ||
+    (auth.orgRole === "unit_master" && auth.unitIds.includes(unitId))
+  );
+}
 
 // Regex para diferenciar id (uuid) de slug
 const UUID_V4 =
@@ -83,12 +93,7 @@ export async function POST(
     if (unit.org_id !== auth.orgId)
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-    const canManageUnit =
-      auth.platformRole === "platform_admin" ||
-      auth.orgRole === "org_admin" ||
-      auth.orgRole === "org_master" ||
-      (auth.orgRole === "unit_master" && auth.unitIds.includes(unit.id));
-    if (!canManageUnit)
+    if (!canManageUnit(auth, unit.id))
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
     // garantir que o usuário pertence à mesma org
@@ -164,12 +169,7 @@ export async function DELETE(
     if (unit.org_id !== auth.orgId)
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-    const canManageUnit =
-      auth.platformRole === "platform_admin" ||
-      auth.orgRole === "org_admin" ||
-      auth.orgRole === "org_master" ||
-      (auth.orgRole === "unit_master" && auth.unitIds.includes(unit.id));
-    if (!canManageUnit)
+    if (!canManageUnit(auth, unit.id))
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
     const { error: delErr } = await supabase
