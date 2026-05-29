@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import { getAuthContext } from "@/lib/auth-context";
-import { canManageUsers } from "@/lib/permissions-users";
 
 export const dynamic = "force-dynamic";
 
@@ -69,12 +68,7 @@ export async function POST(
     );
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-  const admin = createClient(supabaseUrl, serviceKey, {
-    auth: { persistSession: false },
-  });
+  const admin = createAdminClient();
 
   // 1) Marca como habilitado no profiles
   const { error: updateErr } = await admin
@@ -89,7 +83,7 @@ export async function POST(
   if (updateErr) {
     console.error("[enable] profiles update error:", updateErr);
     return NextResponse.json(
-      { ok: false, error: updateErr.message },
+      { ok: false, error: "Erro ao ativar usuário." },
       { status: 500 }
     );
   }

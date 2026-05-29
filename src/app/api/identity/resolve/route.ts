@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { toLoggableError } from "@/lib/log";
+import { getAuthContext } from "@/lib/auth-context";
 
 const Body = z.object({
   userIds: z.array(z.string().uuid()).min(1),
@@ -10,6 +11,11 @@ const Body = z.object({
 
 export async function POST(req: Request) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId) {
+      return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+    }
+
     const body = await req.json();
     const { userIds } = Body.parse(body);
 

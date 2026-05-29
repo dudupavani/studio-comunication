@@ -57,8 +57,16 @@ export async function POST(_req: Request) {
     };
 
     const invitedOrgId = (md["invited_org_id"] as string) || null;
-    const invitedRole = (md["invited_role"] as string) || null;
+    const invitedRoleRaw = (md["invited_role"] as string) || null;
     const invitedBy = (md["invited_by"] as string) || null;
+
+    const ALLOWED_ROLES = ["org_admin", "org_master", "unit_master", "unit_user"] as const;
+    type AllowedRole = (typeof ALLOWED_ROLES)[number];
+
+    const invitedRole: AllowedRole | null =
+      invitedRoleRaw && (ALLOWED_ROLES as readonly string[]).includes(invitedRoleRaw)
+        ? (invitedRoleRaw as AllowedRole)
+        : null;
 
     // Log leve para depuração (sem dados sensíveis)
     logInfo("finalize-invite:metadata", {
@@ -69,7 +77,7 @@ export async function POST(_req: Request) {
       invitedRole: !!invitedRole,
     });
 
-    // 5) Sem metadados => idempotente (não falha)
+    // 5) Sem metadados ou papel inválido => idempotente (não falha)
     if (!invitedOrgId || !invitedRole) {
       logInfo("finalize-invite:noop", { userId, reason: "no-invite-metadata" });
       return NextResponse.json(

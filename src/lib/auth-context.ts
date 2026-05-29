@@ -145,7 +145,7 @@ async function _getAuthContext(
     user,
   };
 
-  if (isDev) {
+  if (process.env.NODE_ENV === "development") {
     console.log("DEBUG getAuthContext — computed:", authContext);
   }
 

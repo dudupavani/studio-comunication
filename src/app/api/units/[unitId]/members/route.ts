@@ -49,7 +49,7 @@ export async function GET(
       .order("created_at", { ascending: true });
 
     if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: "Erro ao buscar membros." }, { status: 500 });
     return NextResponse.json({ members: data ?? [] });
   } catch (e: any) {
     return NextResponse.json(
@@ -83,6 +83,14 @@ export async function POST(
     if (unit.org_id !== auth.orgId)
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
+    const canManageUnit =
+      auth.platformRole === "platform_admin" ||
+      auth.orgRole === "org_admin" ||
+      auth.orgRole === "org_master" ||
+      (auth.orgRole === "unit_master" && auth.unitIds.includes(unit.id));
+    if (!canManageUnit)
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+
     // garantir que o usuário pertence à mesma org
     const { data: orgMember, error: orgMemberErr } = await supabase
       .from("org_members")
@@ -92,7 +100,7 @@ export async function POST(
       .maybeSingle();
     if (orgMemberErr)
       return NextResponse.json(
-        { error: orgMemberErr.message },
+        { error: "Erro ao verificar vínculo com a organização." },
         { status: 500 }
       );
     if (!orgMember)
@@ -118,7 +126,7 @@ export async function POST(
       .from("unit_members")
       .insert(payload);
     if (insertErr)
-      return NextResponse.json({ error: insertErr.message }, { status: 500 });
+      return NextResponse.json({ error: "Erro ao adicionar membro." }, { status: 500 });
 
     return NextResponse.json({ ok: true, status: "added" });
   } catch (e: any) {
@@ -156,13 +164,21 @@ export async function DELETE(
     if (unit.org_id !== auth.orgId)
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
+    const canManageUnit =
+      auth.platformRole === "platform_admin" ||
+      auth.orgRole === "org_admin" ||
+      auth.orgRole === "org_master" ||
+      (auth.orgRole === "unit_master" && auth.unitIds.includes(unit.id));
+    if (!canManageUnit)
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+
     const { error: delErr } = await supabase
       .from("unit_members")
       .delete()
       .eq("unit_id", unit.id)
       .eq("user_id", userId);
     if (delErr)
-      return NextResponse.json({ error: delErr.message }, { status: 500 });
+      return NextResponse.json({ error: "Erro ao remover membro." }, { status: 500 });
 
     return NextResponse.json({ ok: true, status: "removed" });
   } catch (e: any) {
