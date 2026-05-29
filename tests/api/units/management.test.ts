@@ -1,13 +1,17 @@
 import { NextRequest } from "next/server";
 import { POST as addMembersPOST } from "@/app/api/units/[unitId]/add-members/route";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getAuthContext } from "@/lib/auth-context";
 
-// Mocks
 jest.mock("@/lib/supabase/service", () => ({
   createServiceClient: jest.fn(),
 }));
+jest.mock("@/lib/auth-context", () => ({
+  getAuthContext: jest.fn(),
+}));
 
 const mockedCreateServiceClient = createServiceClient as jest.Mock;
+const mockedGetAuthContext = getAuthContext as jest.Mock;
 
 class MockSupabase {
   public _responses: any[] = [];
@@ -50,6 +54,13 @@ describe("Unit Management API Routes", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedGetAuthContext.mockResolvedValue({
+      userId: "admin-user",
+      orgId,
+      orgRole: "org_admin",
+      platformRole: null,
+      unitIds: [],
+    });
   });
 
   describe("POST /api/units/[unitId]/add-members", () => {
@@ -57,17 +68,14 @@ describe("Unit Management API Routes", () => {
       const mockSvc = new MockSupabase();
       mockedCreateServiceClient.mockReturnValue(mockSvc);
 
-      // Sequence:
-      // 1. Check existing (userId1 existing, userId2 new)
-      // 2. Insert new (only userId2)
       mockSvc.setResponses([
-        { data: [{ user_id: userId1 }], error: null }, // Existing memberfound
-        { data: null, error: null } // Insert success
+        { data: [{ user_id: userId1 }], error: null },
+        { data: null, error: null },
       ]);
 
       const req = new NextRequest(`http://localhost/api/units/${unitId}/add-members`, {
         method: "POST",
-        body: JSON.stringify({ org_id: orgId, user_ids: [userId1, userId2] }),
+        body: JSON.stringify({ user_ids: [userId1, userId2] }),
       });
 
       const res = await addMembersPOST(req, { params: Promise.resolve({ unitId }) });
@@ -76,31 +84,77 @@ describe("Unit Management API Routes", () => {
       const json = await res.json();
       expect(json.ok).toBe(true);
       expect(json.inserted).toBe(1);
-      
-      // Verify insert was called with the correct data
+
       expect(mockSvc.insert).toHaveBeenCalledWith(
         expect.arrayContaining([
-          expect.objectContaining({ user_id: userId2, unit_id: unitId, org_id: orgId })
+          expect.objectContaining({ user_id: userId2, unit_id: unitId, org_id: orgId }),
         ]),
         { defaultToNull: false }
       );
-      // Verify userId1 was filtered out
       expect(mockSvc.insert).not.toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ user_id: userId1 })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ user_id: userId1 })]),
         expect.anything()
       );
     });
 
-    it("returns 400 for invalid UUIDs", async () => {
+    it("returns 401 when not authenticated", async () => {
+      mockedGetAuthContext.mockResolvedValue(null);
+      const req = new NextRequest(`http://localhost/api/units/${unitId}/add-members`, {
+        method: "POST",
+        body: JSON.stringify({ user_ids: [userId1] }),
+      });
+      const res = await addMembersPOST(req, { params: Promise.resolve({ unitId }) });
+      expect(res.status).toBe(401);
+    });
+
+    it("returns 403 for unit_user", async () => {
+      mockedGetAuthContext.mockResolvedValue({
+        userId: "unit-user", orgId, orgRole: "unit_user", platformRole: null, unitIds: [unitId],
+      });
+      const req = new NextRequest(`http://localhost/api/units/${unitId}/add-members`, {
+        method: "POST",
+        body: JSON.stringify({ user_ids: [userId1] }),
+      });
+      const res = await addMembersPOST(req, { params: Promise.resolve({ unitId }) });
+      expect(res.status).toBe(403);
+    });
+
+    it("returns 400 for invalid unitId", async () => {
       const req = new NextRequest(`http://localhost/api/units/invalid-uuid/add-members`, {
         method: "POST",
-        body: JSON.stringify({ org_id: orgId, user_ids: [userId1] }),
+        body: JSON.stringify({ user_ids: [userId1] }),
       });
-
       const res = await addMembersPOST(req, { params: Promise.resolve({ unitId: "invalid-uuid" }) });
       expect(res.status).toBe(400);
+    });
+
+    it("org_id in insert row comes from auth context, not request body", async () => {
+      const mockSvc = new MockSupabase();
+      mockedCreateServiceClient.mockReturnValue(mockSvc);
+      mockSvc.setResponses([
+        { data: [], error: null },
+        { data: null, error: null },
+      ]);
+
+      const req = new NextRequest(`http://localhost/api/units/${unitId}/add-members`, {
+        method: "POST",
+        body: JSON.stringify({ org_id: "fake-org-id-should-be-ignored", user_ids: [userId2] }),
+      });
+
+      await addMembersPOST(req, { params: Promise.resolve({ unitId }) });
+
+      expect(mockSvc.insert).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ org_id: orgId }),
+        ]),
+        expect.anything()
+      );
+      expect(mockSvc.insert).not.toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ org_id: "fake-org-id-should-be-ignored" }),
+        ]),
+        expect.anything()
+      );
     });
   });
 });

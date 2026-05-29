@@ -1,27 +1,26 @@
 // src/app/api/units/[unitId]/members/[userId]/route.ts
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getAuthContext } from "@/lib/auth-context";
+import { canManageUnit } from "@/lib/permissions-units";
 
-// Type guard para estreitar para string
 function isUUID(v: unknown): v is string {
   return typeof v === "string" && /^[0-9a-fA-F-]{36}$/.test(v);
 }
 
-/**
- * DELETE /api/units/:unitId/members/:userId?org_id=...
- * Remove (desvincula) um usuário de uma unidade.
- *
- * Mantém o padrão já usado (org_id por querystring).
- * Não altera outros endpoints.
- */
 export async function DELETE(
   req: Request,
   context: RouteContext<"/api/units/[unitId]/members/[userId]">
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId)
+      return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
+    if (!auth.orgId)
+      return NextResponse.json({ ok: false, error: "no-org" }, { status: 400 });
+
     const supabase = createServiceClient();
 
-    // Params
     const { unitId, userId } = await context.params;
     if (!isUUID(unitId) || !isUUID(userId)) {
       return NextResponse.json(
@@ -30,22 +29,18 @@ export async function DELETE(
       );
     }
 
-    // Query: org_id (seguindo padrão vigente)
-    const { searchParams } = new URL(req.url);
-    const orgId = searchParams.get("org_id");
-    if (!isUUID(orgId)) {
-      return NextResponse.json(
-        { ok: false, error: "org_id é obrigatório" },
-        { status: 400 }
-      );
+    if (!canManageUnit(auth, unitId)) {
+      return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
     }
 
-    // (Recomendado) Confirmar que a unit pertence à org informada
+    const orgId = auth.orgId;
+
+    // Confirmar que a unit pertence à org do usuário autenticado
     const { data: unitRow, error: unitErr } = await supabase
       .from("units")
       .select("id, org_id")
       .eq("id", unitId)
-      .single();
+      .maybeSingle();
 
     if (unitErr) {
       return NextResponse.json(
@@ -53,7 +48,13 @@ export async function DELETE(
         { status: 500 }
       );
     }
-    if (!unitRow || unitRow.org_id !== orgId) {
+    if (!unitRow) {
+      return NextResponse.json(
+        { ok: false, error: "Unidade não encontrada" },
+        { status: 404 }
+      );
+    }
+    if (unitRow.org_id !== orgId) {
       return NextResponse.json(
         { ok: false, error: "Unidade não pertence à organização informada" },
         { status: 403 }

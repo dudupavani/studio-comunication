@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getAuthContext } from "@/lib/auth-context";
 import { toLoggableError } from "@/lib/log";
 import { resolveIdentityMap } from "@/lib/identity";
 
@@ -11,6 +12,12 @@ export async function GET(
   context: RouteContext<"/api/groups/[groupId]/available-members">
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId)
+      return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+    if (!auth.orgId)
+      return NextResponse.json({ error: "no-org" }, { status: 400 });
+
     const rawParams = await context.params;
     const parsed = ParamsSchema.safeParse(rawParams);
     if (!parsed.success) {
@@ -41,6 +48,9 @@ export async function GET(
         { error: "Grupo não encontrado." },
         { status: 404 }
       );
+    }
+    if (group.org_id !== auth.orgId) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
     // IDs já no grupo

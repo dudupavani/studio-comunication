@@ -1,6 +1,8 @@
 // src/app/api/units/[unitId]/add-members/route.ts
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getAuthContext } from "@/lib/auth-context";
+import { canManageUnit } from "@/lib/permissions-units";
 
 function isUUID(v: unknown): v is string {
   return typeof v === "string" && /^[0-9a-fA-F-]{36}$/.test(v);
@@ -17,9 +19,14 @@ export async function POST(
   context: RouteContext<"/api/units/[unitId]/add-members">
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId)
+      return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
+    if (!auth.orgId)
+      return NextResponse.json({ ok: false, error: "no-org" }, { status: 400 });
+
     const supabase = createServiceClient();
 
-    // params
     const unitIdParam = (await context.params).unitId;
     if (!isUUID(unitIdParam)) {
       return NextResponse.json(
@@ -27,9 +34,14 @@ export async function POST(
         { status: 400 }
       );
     }
-    const unitId: string = unitIdParam; // garantir tipo não-nulo
+    const unitId: string = unitIdParam;
 
-    // body
+    if (!canManageUnit(auth, unitId)) {
+      return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
+    }
+
+    const orgId = auth.orgId;
+
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return NextResponse.json(
@@ -38,10 +50,9 @@ export async function POST(
       );
     }
 
-    const orgId = (body as any).org_id as unknown;
     const userIds = (body as any).user_ids as unknown;
 
-    if (!isUUID(orgId) || !Array.isArray(userIds) || userIds.length === 0) {
+    if (!Array.isArray(userIds) || userIds.length === 0) {
       return NextResponse.json(
         { ok: false, error: "Parâmetros inválidos" },
         { status: 400 }
@@ -77,9 +88,9 @@ export async function POST(
     const toInsert: InsertRow[] = validUserIds
       .filter((id) => !already.has(id))
       .map((id) => ({
-        org_id: orgId, // string garantido
-        unit_id: unitId, // string garantido
-        user_id: id, // string garantido
+        org_id: orgId,
+        unit_id: unitId,
+        user_id: id,
       }));
 
     if (toInsert.length === 0) {

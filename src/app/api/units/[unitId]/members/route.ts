@@ -2,16 +2,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthContext } from "@/lib/auth-context";
-import type { AuthContext } from "@/lib/auth-context";
-
-function canManageUnit(auth: AuthContext, unitId: string): boolean {
-  return (
-    auth.platformRole === "platform_admin" ||
-    auth.orgRole === "org_admin" ||
-    auth.orgRole === "org_master" ||
-    (auth.orgRole === "unit_master" && auth.unitIds.includes(unitId))
-  );
-}
+import { canManageUnit } from "@/lib/permissions-units";
 
 // Regex para diferenciar id (uuid) de slug
 const UUID_V4 =
