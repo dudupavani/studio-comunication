@@ -1,6 +1,7 @@
 // src/app/api/units/[unitId]/members/[userId]/route.ts
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getAuthContext } from "@/lib/auth-context";
 
 // Type guard para estreitar para string
 function isUUID(v: unknown): v is string {
@@ -19,6 +20,11 @@ export async function DELETE(
   context: RouteContext<"/api/units/[unitId]/members/[userId]">
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId) {
+      return NextResponse.json({ ok: false, error: "Não autenticado." }, { status: 401 });
+    }
+
     const supabase = createServiceClient();
 
     // Params
@@ -48,16 +54,25 @@ export async function DELETE(
       .single();
 
     if (unitErr) {
-      return NextResponse.json(
-        { ok: false, error: unitErr.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ ok: false, error: "Erro ao verificar unidade." }, { status: 500 });
     }
-    if (!unitRow || unitRow.org_id !== orgId) {
-      return NextResponse.json(
-        { ok: false, error: "Unidade não pertence à organização informada" },
-        { status: 403 }
-      );
+    if (!unitRow) {
+      return NextResponse.json({ ok: false, error: "Unidade não encontrada." }, { status: 404 });
+    }
+
+    // Tenant scope: usa auth.orgId como fonte confiável, não o query param
+    if (auth.platformRole !== "platform_admin" && auth.orgId !== unitRow.org_id) {
+      return NextResponse.json({ ok: false, error: "Acesso negado." }, { status: 403 });
+    }
+
+    // Role check
+    const canManage =
+      auth.platformRole === "platform_admin" ||
+      auth.orgRole === "org_admin" ||
+      auth.orgRole === "org_master" ||
+      (auth.orgRole === "unit_master" && auth.unitIds.includes(unitId));
+    if (!canManage) {
+      return NextResponse.json({ ok: false, error: "Acesso negado." }, { status: 403 });
     }
 
     // Verificar existência do vínculo
@@ -70,10 +85,7 @@ export async function DELETE(
       .maybeSingle();
 
     if (linkErr) {
-      return NextResponse.json(
-        { ok: false, error: linkErr.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ ok: false, error: "Erro ao verificar vínculo." }, { status: 500 });
     }
 
     if (!linkRow) {
@@ -90,17 +102,11 @@ export async function DELETE(
       .eq("user_id", userId);
 
     if (delErr) {
-      return NextResponse.json(
-        { ok: false, error: delErr.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ ok: false, error: "Erro ao remover membro." }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, removed: 1 });
   } catch (e: any) {
-    return NextResponse.json(
-      { ok: false, error: e?.message ?? "Unknown error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, error: "Erro inesperado." }, { status: 500 });
   }
 }

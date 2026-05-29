@@ -10,5 +10,13 @@ export async function GET() {
       { status: 401 }
     );
   }
-  return NextResponse.json({ ok: true, data: ctx });
+  return NextResponse.json({
+    ok: true,
+    data: {
+      userId: ctx.userId,
+      orgId: ctx.orgId,
+      orgRole: ctx.orgRole,
+      platformRole: ctx.platformRole,
+    },
+  });
 }

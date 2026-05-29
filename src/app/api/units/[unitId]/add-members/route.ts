@@ -1,6 +1,7 @@
 // src/app/api/units/[unitId]/add-members/route.ts
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getAuthContext } from "@/lib/auth-context";
 
 function isUUID(v: unknown): v is string {
   return typeof v === "string" && /^[0-9a-fA-F-]{36}$/.test(v);
@@ -17,6 +18,11 @@ export async function POST(
   context: RouteContext<"/api/units/[unitId]/add-members">
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId) {
+      return NextResponse.json({ ok: false, error: "Não autenticado." }, { status: 401 });
+    }
+
     const supabase = createServiceClient();
 
     // params
@@ -48,6 +54,21 @@ export async function POST(
       );
     }
 
+    // Tenant scope
+    if (auth.platformRole !== "platform_admin" && auth.orgId !== orgId) {
+      return NextResponse.json({ ok: false, error: "Acesso negado." }, { status: 403 });
+    }
+
+    // Role check
+    const canManage =
+      auth.platformRole === "platform_admin" ||
+      auth.orgRole === "org_admin" ||
+      auth.orgRole === "org_master" ||
+      (auth.orgRole === "unit_master" && auth.unitIds.includes(unitId));
+    if (!canManage) {
+      return NextResponse.json({ ok: false, error: "Acesso negado." }, { status: 403 });
+    }
+
     // normaliza e valida os user_ids
     const validUserIds: string[] = (userIds as unknown[])
       .filter((v): v is string => typeof v === "string")
@@ -66,7 +87,7 @@ export async function POST(
 
     if (existErr) {
       return NextResponse.json(
-        { ok: false, error: existErr.message },
+        { ok: false, error: "Erro ao verificar membros existentes." },
         { status: 500 }
       );
     }
@@ -92,7 +113,7 @@ export async function POST(
 
     if (insertErr) {
       return NextResponse.json(
-        { ok: false, error: insertErr.message },
+        { ok: false, error: "Erro ao adicionar membros." },
         { status: 500 }
       );
     }
@@ -100,7 +121,7 @@ export async function POST(
     return NextResponse.json({ ok: true, inserted: toInsert.length });
   } catch (e: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message ?? "Erro inesperado" },
+      { ok: false, error: "Erro inesperado." },
       { status: 500 }
     );
   }

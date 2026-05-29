@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
 import { toLoggableError } from "@/lib/log";
 import { resolveIdentityMap } from "@/lib/identity";
+import { getAuthContext } from "@/lib/auth-context";
 
 const ParamsSchema = z.object({ groupId: z.string().uuid() });
 
@@ -11,6 +12,11 @@ export async function GET(
   context: RouteContext<"/api/groups/[groupId]/available-members">
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth?.userId) {
+      return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+    }
+
     const rawParams = await context.params;
     const parsed = ParamsSchema.safeParse(rawParams);
     if (!parsed.success) {
@@ -31,16 +37,15 @@ export async function GET(
       .maybeSingle();
 
     if (groupErr) {
-      return NextResponse.json(
-        { error: "Erro ao carregar grupo.", details: toLoggableError(groupErr) },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Erro ao carregar grupo." }, { status: 500 });
     }
     if (!group) {
-      return NextResponse.json(
-        { error: "Grupo não encontrado." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Grupo não encontrado." }, { status: 404 });
+    }
+
+    // Tenant scope
+    if (auth.platformRole !== "platform_admin" && auth.orgId !== group.org_id) {
+      return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
     }
 
     // IDs já no grupo
@@ -50,13 +55,7 @@ export async function GET(
       .eq("group_id", group.id);
 
     if (membersErr) {
-      return NextResponse.json(
-        {
-          error: "Erro ao carregar membros do grupo.",
-          details: toLoggableError(membersErr),
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Erro ao carregar membros do grupo." }, { status: 500 });
     }
 
     const existingIds = new Set(
@@ -70,13 +69,7 @@ export async function GET(
       .eq("org_id", group.org_id);
 
     if (orgErr) {
-      return NextResponse.json(
-        {
-          error: "Erro ao carregar usuários da organização.",
-          details: toLoggableError(orgErr),
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Erro ao carregar usuários da organização." }, { status: 500 });
     }
 
     const userIds = Array.from(
@@ -100,13 +93,7 @@ export async function GET(
       .in("user_id", userIds);
 
     if (unitErr) {
-      return NextResponse.json(
-        {
-          error: "Erro ao carregar unidades.",
-          details: toLoggableError(unitErr),
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Erro ao carregar unidades." }, { status: 500 });
     }
 
     const unitIds = Array.from(
@@ -182,13 +169,7 @@ export async function GET(
         .in("id", teamIds);
 
       if (teamsErr) {
-        return NextResponse.json(
-          {
-            error: "Erro ao carregar nomes das equipes.",
-            details: toLoggableError(teamsErr),
-          },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "Erro ao carregar nomes das equipes." }, { status: 500 });
       }
       (teams ?? []).forEach((row: any) =>
         teamNameMap.set(row.id as string, row.name ?? null)
@@ -219,10 +200,7 @@ export async function GET(
     return NextResponse.json({ users });
   } catch (error) {
     return NextResponse.json(
-      {
-        error: "Erro inesperado ao carregar usuários disponíveis.",
-        details: toLoggableError(error),
-      },
+      { error: "Erro inesperado ao carregar usuários disponíveis." },
       { status: 500 }
     );
   }
