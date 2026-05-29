@@ -1,14 +1,8 @@
 ## Codex agent rules
 
-## Base compartilhada de contexto
+## Regras canônicas do projeto
 
 - `AGENTS.md` é a fonte canônica de regras do projeto.
-- `.context/` é uma base compartilhada de apoio para agentes; ela não substitui `AGENTS.md`.
-- Antes de mudanças relevantes, consulte `.context/docs/README.md` e siga o doc específico por tarefa:
-  - UI/UX: `.context/docs/design.md`
-  - fluxo de domínio, API ou schema: `.context/docs/architecture.md`
-  - validação e checks: `.context/docs/development-workflow.md` e `.context/docs/testing-strategy.md`
-  - revisão de segurança/permissão: `.context/docs/security.md`
 - Em caso de conflito, `AGENTS.md` prevalece sobre qualquer outro documento.
 
 - **Módulos ocultos / arquivados**
