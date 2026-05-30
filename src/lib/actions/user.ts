@@ -7,9 +7,9 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { Profile } from "../types";
 import type { PlatformRole, OrgRole, UnitRole } from "@/lib/types/roles";
 import { PLATFORM_ADMIN } from "@/lib/types/roles";
-import { safeDeleteUser } from "@/lib/auth/safe-delete";
 import type { TablesInsert } from "@/lib/supabase/types";
 import { adminAddMember, adminUpdateMemberRole } from "@/lib/admin/org-members";
+import { removeUserFromCurrentOrg } from "@/lib/users/remove-from-org";
 
 /** Admin client (service_role) – usar só em Server Actions / Route Handlers */
 async function getAdminClient() {
@@ -193,7 +193,7 @@ export async function updateUserProfile(formData: FormData) {
 /* ===================== ADMIN: LIST/GET ===================== */
 
 export async function getUsers(
-  orgId?: string,
+  orgId: string,
   opts?: {
     page?: number;
     pageSize?: number;
@@ -220,73 +220,50 @@ export async function getUsers(
 
   const supabaseAdmin = await getAdminClient();
 
-  // 1) org_members - buscar user_id e role (pode ser filtrado pela org)
-  let orgMems: { user_id: string; role: string }[] | null = null;
-  let orgMemsError: any = null;
+  // 1+2) Join org_members → profiles, paginado na fonte.
+  // Evita montar .in() com milhares de IDs (URL GET estoura ~8 KB).
+  const from = (options.page - 1) * options.pageSize;
+  const to = from + options.pageSize - 1;
+
+  let joinQuery = supabaseAdmin
+    .from("org_members")
+    .select(
+      `user_id, role, profiles!inner(
+        id, full_name, avatar_url, phone, global_role, created_at, disabled, disabled_at
+      )`
+    )
+    .order(options.orderBy, {
+      ascending: options.orderDir === "asc",
+      foreignTable: "profiles",
+    })
+    .range(from, to);
 
   if (orgId) {
-    const { data, error } = await supabaseAdmin
-      .from("org_members")
-      .select("user_id, role")
-      .eq("org_id", orgId);
-
-    orgMems = data || null;
-    orgMemsError = error;
-  } else {
-    const { data, error } = await supabaseAdmin
-      .from("org_members")
-      .select("user_id, role");
-
-    orgMems = data || null;
-    orgMemsError = error;
+    joinQuery = joinQuery.eq("org_id", orgId) as typeof joinQuery;
   }
 
-  console.debug("getUsers — org_members count:", orgMems?.length ?? 0);
+  const { data: joinRows, error: joinError } = await joinQuery;
 
-  if (orgMemsError) {
-    console.error("Erro buscando org_members:", orgMemsError);
+  if (joinError) {
+    console.error("Erro buscando org_members+profiles:", joinError);
     console.timeEnd("getUsers");
     return [];
   }
 
-  const allUserIds = orgMems ? orgMems.map((m) => m.user_id) : [];
-
-  // Se temos orgId mas não temos membros, retornar array vazio
-  if (orgId && allUserIds.length === 0) {
+  if (orgId && (!joinRows || joinRows.length === 0)) {
     console.debug("getUsers — profiles count:", 0);
     console.timeEnd("getUsers");
     return [];
   }
 
-  // 2) profiles — paginar aqui e só aqui
-  const from = (options.page - 1) * options.pageSize;
-  const to = from + options.pageSize - 1;
+  const orgMems: { user_id: string; role: string }[] = (joinRows ?? []).map(
+    (r: any) => ({ user_id: r.user_id as string, role: r.role as string })
+  );
+  const profiles: any[] = (joinRows ?? []).map((r: any) => r.profiles);
 
-  let profilesQuery = supabaseAdmin
-    .from("profiles")
-    .select(
-      "id, full_name, avatar_url, phone, global_role, created_at, disabled, disabled_at"
-    )
-    .order(options.orderBy, { ascending: options.orderDir === "asc" })
-    .range(from, to);
+  console.debug("getUsers — profiles count:", profiles.length);
 
-  if (allUserIds.length > 0) {
-    profilesQuery = profilesQuery.in("id", allUserIds);
-  }
-
-  const { data: profiles, error: profilesError } = await profilesQuery;
-
-  console.debug("getUsers — profiles count:", profiles?.length ?? 0);
-
-  if (profilesError) {
-    console.error("Erro buscando profiles:", profilesError);
-    console.timeEnd("getUsers");
-    return [];
-  }
-
-  const pageUserIds = Array.isArray(profiles)
-    ? profiles.map((p: any) => p.id)
-    : [];
+  const pageUserIds = profiles.map((p: any) => p.id as string);
 
   // 2.1) Buscar e-mails no Auth APENAS para os users da página
   const emailMap = new Map<string, string>();
@@ -593,26 +570,10 @@ export async function updateUser(formData: FormData) {
 
 /* ===================== ADMIN: DELETE ===================== */
 export async function deleteUser(userId: string) {
-  const supabaseAdmin = await getAdminClient();
+  const result = await removeUserFromCurrentOrg(userId);
 
-  // Proteção: NUNCA deletar platform_admin
-  const { data: target } = await supabaseAdmin
-    .from("profiles")
-    .select("global_role")
-    .eq("id", userId)
-    .maybeSingle();
+  if (!result.ok) return { error: result.error };
 
-  if (target?.global_role === PLATFORM_ADMIN) {
-    return {
-      error:
-        "Usuários com global_role=platform_admin não podem ser deletados automaticamente.",
-    };
-  }
-
-  const del = await safeDeleteUser(userId);
-  if (!del.ok) return { error: del.error };
-
-  revalidatePath("/users");
   return { error: null };
 }
 

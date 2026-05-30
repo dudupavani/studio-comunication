@@ -6,8 +6,23 @@ export type NotificationRow = Tables<"notifications">;
 export type NotificationInsert = TablesInsert<"notifications">;
 
 export type NotificationEventType =
+  | "chat.message_received"
+  | "chat.mention"
   | "announcement.sent"
+  | "designer.asset_ready"
   | "calendar.event_created";
+
+export type ChatMessageReceivedPayload = {
+  chatId: string;
+  chatName?: string | null;
+  messageId: number | string;
+  preview?: string | null;
+};
+
+export type ChatMentionPayload = ChatMessageReceivedPayload & {
+  mentionType: "user" | "all";
+  mentionedUserId?: string | null;
+};
 
 export type AnnouncementSentPayload = {
   announcementId: string;
@@ -22,8 +37,16 @@ export type CalendarEventCreatedPayload = {
   startsAt?: string | null;
 };
 
+export type DesignerAssetReadyPayload = {
+  assetId: string;
+  title: string;
+};
+
 export type NotificationEventPayloads = {
+  "chat.message_received": ChatMessageReceivedPayload;
+  "chat.mention": ChatMentionPayload;
   "announcement.sent": AnnouncementSentPayload;
+  "designer.asset_ready": DesignerAssetReadyPayload;
   "calendar.event_created": CalendarEventCreatedPayload;
 };
 

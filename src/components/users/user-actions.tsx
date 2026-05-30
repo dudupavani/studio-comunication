@@ -1,9 +1,8 @@
-'use client'
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import { MoreHorizontal, Pencil, UserMinus } from "lucide-react";
 
 import {
   AlertDialog,
@@ -14,50 +13,48 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useToast } from "@/hooks/use-toast"
-import { deleteUser } from "@/lib/actions/user"
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { deleteUser } from "@/lib/actions/user";
 
 export function UserActions({ userId }: { userId: string }) {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const { toast } = useToast();
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
-  const handleDelete = async () => {
-    setIsDeleting(true)
-    const { error } = await deleteUser(userId)
-    setIsDeleting(false)
+  const handleRemove = async () => {
+    setIsRemoving(true);
+    const { error } = await deleteUser(userId);
+    setIsRemoving(false);
 
     if (error) {
       toast({
-        variant: 'destructive',
-        title: 'Error deleting user',
+        variant: "destructive",
+        title: "Erro ao remover usuário",
         description: error,
-      })
+      });
     } else {
       toast({
-        title: 'User deleted',
-        description: 'The user has been successfully deleted.',
-      })
-      setShowDeleteDialog(false)
-      // No need to call router.refresh() because revalidatePath is used in server action
+        title: "Usuário removido",
+        description: "O usuário foi removido da organização.",
+      });
+      setShowRemoveDialog(false);
     }
-  }
+  };
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="w-8 h-8 p-0">
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">Abrir menu</span>
             <MoreHorizontal className="w-4 h-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -65,36 +62,38 @@ export function UserActions({ userId }: { userId: string }) {
           <DropdownMenuItem asChild>
             <Link href={`/users/${userId}/edit`}>
               <Pencil className="w-4 h-4 mr-2" />
-              Edit
+              Editar
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setShowDeleteDialog(true)} className="text-destructive">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
+          <DropdownMenuItem
+            onSelect={() => setShowRemoveDialog(true)}
+            className="text-destructive">
+            <UserMinus className="w-4 h-4 mr-2" />
+            Remover
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to delete this user?</AlertDialogTitle>
+            <AlertDialogTitle>Remover usuário da organização?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the user&apos;s account.
+              Essa ação remove os vínculos do usuário com a organização e mantém
+              o histórico para auditoria.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
+              onClick={handleRemove}
+              disabled={isRemoving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isRemoving ? "Removendo..." : "Remover"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
+  );
 }

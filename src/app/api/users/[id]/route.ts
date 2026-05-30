@@ -4,6 +4,7 @@ import { getAuthContext } from "@/lib/auth-context";
 import { canManageUsers } from "@/lib/permissions-users";
 import { createServiceClient } from "@/lib/supabase/service";
 import { toLoggableError } from "@/lib/log";
+import { removeUserFromCurrentOrg } from "@/lib/users/remove-from-org";
 
 const ParamsSchema = z.object({ id: z.string().uuid() });
 
@@ -195,6 +196,31 @@ export async function GET(
     return jsonError(
       500,
       "Erro inesperado ao carregar colaborador.",
+      toLoggableError(error)
+    );
+  }
+}
+
+export async function DELETE(
+  _req: Request,
+  context: RouteContext<"/api/users/[id]">
+) {
+  try {
+    const parsedParams = ParamsSchema.safeParse(await context.params);
+    if (!parsedParams.success) {
+      return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());
+    }
+
+    const result = await removeUserFromCurrentOrg(parsedParams.data.id);
+    if (!result.ok) {
+      return jsonError(result.status, result.error);
+    }
+
+    return NextResponse.json({ ok: true, removed: true });
+  } catch (error) {
+    return jsonError(
+      500,
+      "Erro inesperado ao remover colaborador.",
       toLoggableError(error)
     );
   }

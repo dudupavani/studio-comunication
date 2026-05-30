@@ -95,8 +95,8 @@ export function CommunitySwitcherRail({
                     aria-label={`Abrir comunidade ${community.name}`}>
                     <span
                       className={cn(
-                        "flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-zinc-700 text-sm font-semibold text-zinc-50",
-                        isActive && "bg-zinc-900",
+                        "flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary text-sm font-semibold text-muted",
+                        isActive && "bg-red-500",
                       )}>
                       {getCommunityInitial(community.name)}
                     </span>

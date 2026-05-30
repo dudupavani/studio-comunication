@@ -9,6 +9,7 @@ import { isOrgAdminFor, isUnitMasterFor } from "@/lib/permissions-org";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MembersTabServer from "@/components/units/members/members-tab.server";
 import UnitDetailsForm from "@/components/units/unit-details-form";
+import { getUnitMemberCount } from "@/lib/actions/unit-members";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,11 +48,10 @@ export default async function UnitDetailPage({
 
   if (!canPlatform && !canOrgAdmin && !canUnitMaster) redirect("/units");
 
-  const membersTab = await MembersTabServer({
-    orgId: fullOrg.id,
-    unitId: unit.id,
-    unitSlug: unit.slug,
-  });
+  const [membersTab, memberCount] = await Promise.all([
+    MembersTabServer({ orgId: fullOrg.id, unitId: unit.id, unitSlug: unit.slug }),
+    getUnitMemberCount(fullOrg.id, unit.id),
+  ]);
 
   return (
     <div className="p-8">
@@ -61,18 +61,15 @@ export default async function UnitDetailPage({
             <ArrowLeft />
           </Link>
         </Button>
-        <div className="flex flex-col gap-1">
+        <div className="space-y-1">
           <h2>{unit.name}</h2>
-          <p className="text-sm text-muted-foreground">
-            Configurações da unidade
-          </p>
         </div>
       </div>
 
       <Tabs defaultValue="details" className="w-full">
         <TabsList>
           <TabsTrigger value="details">Detalhes</TabsTrigger>
-          <TabsTrigger value="members">Membros</TabsTrigger>
+          <TabsTrigger value="members">Membros ({memberCount})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="details" className="pt-4">

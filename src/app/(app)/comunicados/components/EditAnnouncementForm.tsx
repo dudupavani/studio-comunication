@@ -260,7 +260,6 @@ export function EditAnnouncementForm({
                 value={content}
                 onChange={setContent}
                 placeholder="Escreva o comunicado..."
-                chatId={`comunicados-${announcementId}`}
                 orgId={orgId}
               />
             </div>

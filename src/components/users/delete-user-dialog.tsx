@@ -36,7 +36,7 @@ export default function DeleteUserDialog({
   async function onConfirm() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
+      const res = await fetch(`/api/users/${userId}`, {
         method: "DELETE",
       });
       const payload = await res.json().catch(() => ({}));
@@ -45,7 +45,7 @@ export default function DeleteUserDialog({
       }
       toast({
         title: "Usuário removido",
-        description: `${userName ?? "Usuário"} foi excluído da plataforma.`,
+        description: `${userName ?? "Usuário"} foi removido da organização.`,
       });
       setOpen(false);
       router.refresh();
@@ -53,7 +53,7 @@ export default function DeleteUserDialog({
     } catch (err: any) {
       toast({
         variant: "destructive",
-        title: "Erro ao excluir",
+        title: "Erro ao remover",
         description: err?.message ?? "Tente novamente.",
       });
     } finally {
@@ -79,8 +79,8 @@ export default function DeleteUserDialog({
             Remover usuário
           </DialogTitle>
           <DialogDescription>
-            Essa ação exclui permanentemente o usuário e todo o seu acesso.
-            Deseja continuar com a remoção de{" "}
+            Essa ação remove o vínculo do usuário com a organização, mantendo o
+            histórico para auditoria. Deseja continuar com a remoção de{" "}
             <strong>{userName ?? "este usuário"}</strong>?
           </DialogDescription>
         </DialogHeader>

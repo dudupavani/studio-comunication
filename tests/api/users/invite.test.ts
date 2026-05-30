@@ -120,6 +120,127 @@ describe("User Invitation API Routes", () => {
       expect(res.status).toBe(403);
     });
 
+    it("org_admin não pode convidar org_admin", async () => {
+      const mockAdmin = new MockSupabase();
+      mockedGetAuthContext.mockResolvedValue({
+        user: { id: inviterId },
+        orgId,
+        platformRole: null,
+        orgRole: "org_admin",
+      });
+      mockedCanManageUsers.mockReturnValue(true);
+      mockedSupabaseJs.mockReturnValue(mockAdmin);
+
+      const req = new NextRequest("http://localhost/api/users/invite-magic", {
+        method: "POST",
+        body: JSON.stringify({ email: invitedEmail, orgId, role: "org_admin" }),
+      });
+
+      const res = await invitePOST(req);
+      expect(res.status).toBe(403);
+      const json = await res.json();
+      expect(json.ok).toBe(false);
+      expect(mockAdmin.auth.signInWithOtp).not.toHaveBeenCalled();
+    });
+
+    it("org_admin pode convidar org_master", async () => {
+      const mockAdmin = new MockSupabase();
+      mockedGetAuthContext.mockResolvedValue({
+        user: { id: inviterId },
+        orgId,
+        platformRole: null,
+        orgRole: "org_admin",
+      });
+      mockedCanManageUsers.mockReturnValue(true);
+      mockedSupabaseJs.mockReturnValue(mockAdmin);
+      mockAdmin.setResponses([{ data: { role: "org_admin" }, error: null }]);
+
+      const req = new NextRequest("http://localhost/api/users/invite-magic", {
+        method: "POST",
+        body: JSON.stringify({ email: invitedEmail, orgId, role: "org_master" }),
+      });
+
+      const res = await invitePOST(req);
+      expect(res.status).toBe(200);
+      expect(mockAdmin.auth.signInWithOtp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: expect.objectContaining({
+            data: expect.objectContaining({ invited_role: "org_master" }),
+          }),
+        })
+      );
+    });
+
+    it("org_master não pode convidar org_master", async () => {
+      const mockAdmin = new MockSupabase();
+      mockedGetAuthContext.mockResolvedValue({
+        user: { id: inviterId },
+        orgId,
+        platformRole: null,
+        orgRole: "org_master",
+      });
+      mockedCanManageUsers.mockReturnValue(true);
+      mockedSupabaseJs.mockReturnValue(mockAdmin);
+
+      const req = new NextRequest("http://localhost/api/users/invite-magic", {
+        method: "POST",
+        body: JSON.stringify({ email: invitedEmail, orgId, role: "org_master" }),
+      });
+
+      const res = await invitePOST(req);
+      expect(res.status).toBe(403);
+      expect(mockAdmin.auth.signInWithOtp).not.toHaveBeenCalled();
+    });
+
+    it("org_admin pode convidar unit_master", async () => {
+      const mockAdmin = new MockSupabase();
+      mockedGetAuthContext.mockResolvedValue({
+        user: { id: inviterId },
+        orgId,
+        platformRole: null,
+        orgRole: "org_admin",
+      });
+      mockedCanManageUsers.mockReturnValue(true);
+      mockedSupabaseJs.mockReturnValue(mockAdmin);
+      mockAdmin.setResponses([{ data: { role: "org_admin" }, error: null }]);
+
+      const req = new NextRequest("http://localhost/api/users/invite-magic", {
+        method: "POST",
+        body: JSON.stringify({ email: invitedEmail, orgId, role: "unit_master" }),
+      });
+
+      const res = await invitePOST(req);
+      expect(res.status).toBe(200);
+    });
+
+    it("platform_admin pode convidar org_admin", async () => {
+      const mockAdmin = new MockSupabase();
+      mockedGetAuthContext.mockResolvedValue({
+        user: { id: inviterId },
+        orgId,
+        platformRole: "platform_admin",
+        orgRole: null,
+      });
+      mockedCanManageUsers.mockReturnValue(true);
+      mockedSupabaseJs.mockReturnValue(mockAdmin);
+      mockAdmin.setResponses([{ data: { role: "org_admin" }, error: null }]);
+
+      const req = new NextRequest("http://localhost/api/users/invite-magic", {
+        method: "POST",
+        body: JSON.stringify({ email: invitedEmail, orgId, role: "org_admin" }),
+      });
+
+      const res = await invitePOST(req);
+      expect(res.status).toBe(200);
+      expect(mockAdmin.auth.signInWithOtp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: expect.objectContaining({
+            data: expect.objectContaining({ invited_role: "org_admin" }),
+          }),
+        })
+      );
+    });
+
     it("returns 403 if requester is not admin of specified org", async () => {
       const mockAdmin = new MockSupabase();
       mockedGetAuthContext.mockResolvedValue({ user: { id: inviterId } });

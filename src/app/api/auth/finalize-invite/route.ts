@@ -86,6 +86,47 @@ export async function POST(_req: Request) {
       );
     }
 
+    // 5b) Re-validação de papéis em tempo de finalização.
+    //     Matriz espelhada ao invite:
+    //       org_admin  → somente platform_admin pode conceder
+    //       org_master → platform_admin ou org_admin da mesma org pode conceder
+    if (invitedRole === "org_admin" || invitedRole === "org_master") {
+      let inviterIsAuthorized = false;
+
+      if (invitedBy) {
+        const { data: inviterProfile } = await admin
+          .from("profiles")
+          .select("global_role")
+          .eq("id", invitedBy)
+          .maybeSingle();
+
+        if (inviterProfile?.global_role === "platform_admin") {
+          inviterIsAuthorized = true;
+        } else if (invitedRole === "org_master") {
+          // org_admin da mesma org também pode conceder org_master
+          const { data: inviterMembership } = await admin
+            .from("org_members")
+            .select("role")
+            .eq("user_id", invitedBy)
+            .eq("org_id", invitedOrgId)
+            .maybeSingle();
+          inviterIsAuthorized = inviterMembership?.role === "org_admin";
+        }
+      }
+
+      if (!inviterIsAuthorized) {
+        logInfo("finalize-invite:privileged-role-blocked", {
+          userId,
+          invitedRole,
+          reason: "inviter-not-authorized",
+        });
+        return NextResponse.json(
+          { ok: true, noop: true, reason: "role-not-authorized" },
+          { status: 200 }
+        );
+      }
+    }
+
     // 6) Idempotência: já existe vínculo?
     const { data: existsRow, error: existsErr } = await admin
       .from("org_members")
@@ -107,7 +148,27 @@ export async function POST(_req: Request) {
     }
 
     if (!existsRow) {
-      // 7) Inserir vínculo (service key bypassa RLS com segurança)
+      // 7a) Garantir que o profile existe antes de inserir em org_members.
+      //     O trigger handle_new_user deveria ter criado, mas este upsert
+      //     age como segundo cinturão caso o trigger não tenha disparado
+      //     (ex: ambiente de staging sem o trigger versionado).
+      const fullName =
+        (md["full_name"] as string | undefined) ||
+        (md["name"] as string | undefined) ||
+        null;
+      const { error: profileErr } = await admin
+        .from("profiles")
+        .insert({ id: userId, full_name: fullName });
+      // 23505 = unique_violation: trigger already created the profile — safe to ignore
+      if (profileErr && profileErr.code !== "23505") {
+        logError("finalize-invite:profile-ensure", { error: profileErr, userId });
+        return NextResponse.json(
+          { ok: false, error: "Falha ao garantir perfil do usuário." },
+          { status: 500 }
+        );
+      }
+
+      // 7b) Inserir vínculo (service key bypassa RLS com segurança)
       const { error: insertErr } = await admin
         .from("org_members")
         .insert({ org_id: invitedOrgId, user_id: userId, role: invitedRole });

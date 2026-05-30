@@ -31,11 +31,11 @@ export default async function MembersTabServer({
 
   return (
     <div>
-      <div className="flex items-end justify-between mb-4">
-        <h2 className="text-xl font-semibold">
+      <div className="flex items-center justify-between mb-4">
+        <h4>
           Membros da unidade{" "}
           <span className="font-light text-muted-foreground">({total})</span>
-        </h2>
+        </h4>
         <AddUnitMemberModal orgId={orgId} unitId={unitId} />
       </div>
 

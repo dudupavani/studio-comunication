@@ -24,6 +24,63 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return chunks;
 }
 
+async function validateRecipientsInOrg(
+  supabase: ReturnType<typeof createServiceClient>,
+  orgId: string,
+  recipientIds: string[]
+) {
+  if (recipientIds.length === 0) return { ok: true as const };
+
+  const { data, error } = await supabase
+    .from("org_members")
+    .select("user_id")
+    .eq("org_id", orgId)
+    .in("user_id", recipientIds);
+
+  if (error) {
+    return { ok: false as const, status: 500, message: "Failed to validate recipients" };
+  }
+
+  const validIds = new Set((data ?? []).map((row) => row.user_id));
+  const invalidIds = recipientIds.filter((userId) => !validIds.has(userId));
+  if (invalidIds.length > 0) {
+    return { ok: false as const, status: 403, message: "Invalid recipient scope" };
+  }
+
+  return { ok: true as const };
+}
+
+function normalizeCreatedMessageId(data: unknown, fallback: string) {
+  if (typeof data === "number" || typeof data === "string") return data;
+  if (data && typeof data === "object") {
+    const row = data as { id?: number | string; message_id?: number | string };
+    return row.id ?? row.message_id ?? fallback;
+  }
+  return fallback;
+}
+
+async function createChatMessageWithMentions(
+  supabase: ReturnType<typeof createServiceClient>,
+  args: {
+    chatId: string;
+    senderId: string;
+    message: string;
+  }
+) {
+  const { data, error } = await supabase.rpc("create_chat_message_with_mentions", {
+    p_chat_id: args.chatId,
+    p_sender_id: args.senderId,
+    p_message: args.message,
+    p_attachments: null,
+    p_mentions: [],
+  });
+
+  return {
+    data: normalizeCreatedMessageId(data, args.chatId),
+    error,
+  };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabaseUser = createServerClientWithCookies();
@@ -99,6 +156,14 @@ export async function POST(req: NextRequest) {
 
     const allowReplies = payload.allowReplies ?? true;
     const messageContent = payload.message;
+    const scopeCheck = await validateRecipientsInOrg(
+      createServiceClient(),
+      auth.orgId,
+      recipients
+    );
+    if (!scopeCheck.ok) {
+      return errorResponse(scopeCheck.status, "invalid_recipient_scope", scopeCheck.message);
+    }
 
     if (payload.mode === "group") {
       const { data: chatRow, error: chatError } = await supabaseWriter
@@ -141,16 +206,12 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      const { data: insertedMessage, error: messageError } = await supabaseWriter
-        .from("chat_messages")
-        .insert({
-          chat_id: chatId,
-          sender_id: auth.userId,
+      const { data: messageId, error: messageError } =
+        await createChatMessageWithMentions(supabaseWriter, {
+          chatId,
+          senderId: auth.userId,
           message: messageContent,
-          attachments: null,
-        })
-        .select("id")
-        .maybeSingle();
+        });
 
       if (messageError) {
         console.error("MESSAGES create message error:", messageError);
@@ -160,8 +221,6 @@ export async function POST(req: NextRequest) {
           messageError.message ?? "Failed to send message"
         );
       }
-
-      const messageId = (insertedMessage as any)?.id ?? chatId;
 
       await publishNotificationEvent({
         eventType: "chat.message_received",
@@ -233,20 +292,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const messageRows = chatEntries.map((entry) => ({
-      chat_id: entry.id,
-      sender_id: auth.userId,
-      message: messageContent,
-      attachments: null,
-    }));
+    const messageIdByChat = new Map<string, number | string>();
 
-    const insertedMessages: Array<{ chat_id: string; id: number }> = [];
-
-    for (const chunk of chunkArray(messageRows, 100)) {
-      const { data: chunkData, error: messageError } = await supabaseWriter
-        .from("chat_messages")
-        .insert(chunk)
-        .select("id, chat_id");
+    for (const entry of chatEntries) {
+      const { data: messageId, error: messageError } =
+        await createChatMessageWithMentions(supabaseWriter, {
+          chatId: entry.id,
+          senderId: auth.userId,
+          message: messageContent,
+        });
       if (messageError) {
         console.error("MESSAGES create broadcast message error:", messageError);
         return errorResponse(
@@ -255,20 +309,8 @@ export async function POST(req: NextRequest) {
           messageError.message ?? "Failed to send message"
         );
       }
-      if (Array.isArray(chunkData)) {
-        insertedMessages.push(
-          ...chunkData.map((row: any) => ({
-            chat_id: String(row.chat_id),
-            id: row.id as number,
-          }))
-        );
-      }
+      messageIdByChat.set(entry.id, messageId);
     }
-
-    const messageIdByChat = new Map<string, number>();
-    insertedMessages.forEach((row) => {
-      messageIdByChat.set(String(row.chat_id), row.id);
-    });
 
     const notificationPromises = chatEntries.map((entry) =>
       publishNotificationEvent({

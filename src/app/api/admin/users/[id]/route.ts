@@ -1,4 +1,3 @@
-// Hard delete de usuário (somente platform_admin ou org_admin da mesma org)
 import { NextResponse, type NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -16,52 +15,43 @@ export async function DELETE(
   req: NextRequest,
   context: RouteContext<"/api/admin/users/[id]">
 ) {
-  // Em algumas configurações o params pode vir vazio; extraímos do pathname como fallback.
   const fallbackId = req.nextUrl.pathname.split("/").filter(Boolean).pop();
   const resolved = await context.params;
   const parsed = ParamsSchema.safeParse(
     resolved?.id ? { id: resolved.id } : { id: fallbackId }
   );
   if (!parsed.success) {
-    return json(400, { ok: false, error: "Parâmetros inválidos." });
+    return json(400, { ok: false, error: "Parametros invalidos." });
   }
 
   const targetUserId = parsed.data.id;
   const auth = await getAuthContext();
-  if (!auth) return json(401, { ok: false, error: "Não autenticado." });
+  if (!auth) return json(401, { ok: false, error: "Nao autenticado." });
 
-  const isPlatform = auth.platformRole === "platform_admin";
-  const isOrgAdmin = auth.orgRole === "org_admin" && !!auth.orgId;
-  if (!isPlatform && !isOrgAdmin) {
-    return json(403, { ok: false, error: "Sem permissão para excluir usuário." });
+  if (auth.platformRole !== "platform_admin") {
+    return json(403, { ok: false, error: "Sem permissao para excluir usuario." });
   }
 
   const svc = createServiceClient();
+  const { data: targetProfile, error: targetProfileError } = await svc
+    .from("profiles")
+    .select("global_role")
+    .eq("id", targetUserId)
+    .maybeSingle();
 
-  // Se for org_admin, o alvo precisa pertencer à mesma organização
-  if (isOrgAdmin && auth.orgId) {
-    const { data: membership, error: membershipErr } = await svc
-      .from("org_members")
-      .select("org_id")
-      .eq("org_id", auth.orgId)
-      .eq("user_id", targetUserId)
-      .maybeSingle();
-
-    if (membershipErr) {
-      return json(500, {
-        ok: false,
-        error: "Erro ao validar organização do usuário.",
-      });
-    }
-    if (!membership) {
-      return json(403, {
-        ok: false,
-        error: "Usuário não pertence à sua organização.",
-      });
-    }
+  if (targetProfileError) {
+    return json(500, {
+      ok: false,
+      error: "Erro ao validar usuario alvo.",
+    });
+  }
+  if (targetProfile?.global_role === "platform_admin") {
+    return json(403, {
+      ok: false,
+      error: "Usuarios platform_admin nao podem ser excluidos por esta rota.",
+    });
   }
 
-  // Limpa vínculos antes de apagar do auth.users para evitar FKs sem cascade.
   const cleanupTables: Array<{
     table: keyof Pick<
       Database["public"]["Tables"],
@@ -92,16 +82,14 @@ export async function DELETE(
     }
   }
 
-  // Remove do auth.users via service role
   const { error: authErr } = await svc.auth.admin.deleteUser(targetUserId);
   if (authErr) {
     return json(500, {
       ok: false,
-      error: "Erro ao remover usuário do auth.",
+      error: "Erro ao remover usuario do auth.",
     });
   }
 
-  // Atualiza listagens
   revalidatePath("/users");
   return json(200, { ok: true });
 }

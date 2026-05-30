@@ -89,6 +89,70 @@ function buildAnnouncementDraft(
   };
 }
 
+function buildChatMessageDraft(
+  event: NormalizedNotificationEvent<"chat.message_received">,
+  recipient: string
+): NotificationInsert {
+  const body = truncate(event.payload.preview, 280) ?? "Você recebeu uma mensagem";
+  return {
+    ...baseDraft(event, recipient),
+    type: "chat.message_received",
+    title: event.payload.chatName
+      ? `Nova mensagem: ${event.payload.chatName}`
+      : "Nova mensagem",
+    message: body,
+    body,
+    action_url: inboxFallbackUrl(),
+    metadata: {
+      chatId: event.payload.chatId,
+      messageId: event.payload.messageId,
+      actor_id: event.actorId,
+    },
+  };
+}
+
+function buildChatMentionDraft(
+  event: NormalizedNotificationEvent<"chat.mention">,
+  recipient: string
+): NotificationInsert {
+  const body = truncate(event.payload.preview, 280) ?? "Você foi mencionado em uma mensagem";
+  return {
+    ...baseDraft(event, recipient),
+    type: "chat.mention",
+    title: event.payload.chatName
+      ? `Menção: ${event.payload.chatName}`
+      : "Você foi mencionado",
+    message: body,
+    body,
+    action_url: inboxFallbackUrl(),
+    metadata: {
+      chatId: event.payload.chatId,
+      messageId: event.payload.messageId,
+      mentionType: event.payload.mentionType,
+      mentionedUserId: event.payload.mentionedUserId ?? null,
+      actor_id: event.actorId,
+    },
+  };
+}
+
+function buildDesignerDraft(
+  event: NormalizedNotificationEvent<"designer.asset_ready">,
+  recipient: string
+): NotificationInsert {
+  return {
+    ...baseDraft(event, recipient),
+    type: "designer.asset_ready",
+    title: `Arquivo pronto: ${event.payload.title}`,
+    message: "Seu arquivo está pronto.",
+    body: "Seu arquivo está pronto.",
+    action_url: inboxFallbackUrl(),
+    metadata: {
+      assetId: event.payload.assetId,
+      actor_id: event.actorId,
+    },
+  };
+}
+
 
 function buildCalendarDraft(
   event: NormalizedNotificationEvent<"calendar.event_created">,
@@ -118,8 +182,14 @@ const HANDLERS: Record<
   NotificationEventType,
   (event: NormalizedNotificationEvent, recipients: string[]) => NotificationInsert[]
 > = {
+  "chat.message_received": (event, recipients) =>
+    recipients.map((userId) => buildChatMessageDraft(event as any, userId)),
+  "chat.mention": (event, recipients) =>
+    recipients.map((userId) => buildChatMentionDraft(event as any, userId)),
   "announcement.sent": (event, recipients) =>
     recipients.map((userId) => buildAnnouncementDraft(event as any, userId)),
+  "designer.asset_ready": (event, recipients) =>
+    recipients.map((userId) => buildDesignerDraft(event as any, userId)),
   "calendar.event_created": (event, recipients) =>
     recipients.map((userId) => buildCalendarDraft(event as any, userId)),
 };

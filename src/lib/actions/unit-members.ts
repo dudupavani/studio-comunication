@@ -70,6 +70,20 @@ async function fetchEmailsByUserIds(
 // Listar membros da unidade (BASE, sem e-mail)
 // ============================
 
+// orgId deve vir de auth.orgId validado — a função usa service role e não impõe RLS.
+export async function getUnitMemberCount(
+  orgId: string,
+  unitId: string
+): Promise<number> {
+  const supabase = createServiceClient();
+  const { count } = await supabase
+    .from("unit_members")
+    .select("*", { count: "exact", head: true })
+    .eq("org_id", orgId)
+    .eq("unit_id", unitId);
+  return count ?? 0;
+}
+
 export async function listUnitMembers(orgId: string, unitId: string) {
   const supabase = createServiceClient();
 

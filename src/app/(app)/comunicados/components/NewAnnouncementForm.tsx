@@ -412,7 +412,6 @@ export function NewAnnouncementForm({ orgId }: Props) {
                 value={content}
                 onChange={setContent}
                 placeholder="Escreva o comunicado..."
-                chatId="comunicados"
                 orgId={orgId}
                 minHeight="240px"
               />

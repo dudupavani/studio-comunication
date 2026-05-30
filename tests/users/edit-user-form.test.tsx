@@ -87,8 +87,8 @@ describe("EditUserForm", () => {
     expect(screen.getByDisplayValue("Analista")).toBeInTheDocument();
     
     const selects = screen.getAllByTestId("select");
-    expect(selects[0].value).toBe("unit_user");
-    expect(selects[1].value).toBe("un1");
+    expect((selects[0] as HTMLSelectElement).value).toBe("unit_user");
+    expect((selects[1] as HTMLSelectElement).value).toBe("un1");
   });
 
   it("submits the form successfully", async () => {

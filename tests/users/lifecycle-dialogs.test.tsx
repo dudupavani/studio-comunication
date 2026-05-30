@@ -101,7 +101,7 @@ describe("User Lifecycle Dialogs", () => {
       fireEvent.click(confirmButton!);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith("/api/admin/users/u1", expect.any(Object));
+        expect(global.fetch).toHaveBeenCalledWith("/api/users/u1", expect.any(Object));
         expect(mockToast).toHaveBeenCalled();
       });
     });

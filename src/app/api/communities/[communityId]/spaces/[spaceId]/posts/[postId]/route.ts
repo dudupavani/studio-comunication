@@ -169,6 +169,10 @@ export async function GET(
       console.error("COMMUNITY_POST_REACTIONS_LOAD_ERROR", error);
     }
 
+    const authorProfile = Array.isArray(post.profiles)
+      ? post.profiles[0] ?? null
+      : post.profiles;
+
     return NextResponse.json({
       item: {
         id: post.id,
@@ -176,8 +180,8 @@ export async function GET(
         spaceId: post.space_id,
         orgId: post.org_id ?? auth.orgId,
         createdBy: post.created_by,
-        authorName: post.profiles?.full_name ?? null,
-        authorAvatarUrl: post.profiles?.avatar_url ?? null,
+        authorName: authorProfile?.full_name ?? null,
+        authorAvatarUrl: authorProfile?.avatar_url ?? null,
         createdAt: post.created_at,
         title: post.title,
         coverPath: post.cover_path ?? null,

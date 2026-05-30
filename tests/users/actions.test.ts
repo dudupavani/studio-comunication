@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { revalidatePath } from "next/cache";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { removeUserFromCurrentOrg } from "@/lib/users/remove-from-org";
 
 jest.mock("@/lib/supabase/server", () => ({
   createClient: jest.fn(),
@@ -20,6 +21,10 @@ jest.mock("@/lib/supabase/service", () => ({
 
 jest.mock("@supabase/supabase-js", () => ({
   createClient: jest.fn(),
+}));
+
+jest.mock("@/lib/users/remove-from-org", () => ({
+  removeUserFromCurrentOrg: jest.fn(),
 }));
 
 jest.mock("next/cache", () => ({
@@ -93,15 +98,23 @@ describe("User Actions", () => {
   });
 
   describe("deleteUser", () => {
-    it("prevents deleting platform_admin", async () => {
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({ data: { global_role: "platform_admin" } }),
+    it("removes the user from the current org without hard deleting auth", async () => {
+      (removeUserFromCurrentOrg as jest.Mock).mockResolvedValue({ ok: true, removed: true });
+
+      const result = await deleteUser("admin-id");
+      expect(result.error).toBeNull();
+      expect(removeUserFromCurrentOrg).toHaveBeenCalledWith("admin-id");
+      expect(mockSupabase.auth.admin.updateUserById).not.toHaveBeenCalled();
+    });
+
+    it("returns removal errors", async () => {
+      (removeUserFromCurrentOrg as jest.Mock).mockResolvedValue({
+        ok: false,
+        error: "Sem permissão para remover usuário.",
       });
 
       const result = await deleteUser("admin-id");
-      expect(result.error).toContain("platform_admin não podem ser deletados");
+      expect(result.error).toBe("Sem permissão para remover usuário.");
     });
   });
 
@@ -168,28 +181,28 @@ describe("User Actions", () => {
     const { getUsers } = require("@/lib/actions/user");
 
     it("fetches and maps users with roles and names", async () => {
-      const createMockChain = (data: any = []) => {
-        const chain = {
-          select: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockReturnThis(),
-          maybeSingle: jest.fn().mockReturnThis(),
-          order: jest.fn().mockReturnThis(),
-          range: jest.fn().mockReturnThis(),
-          in: jest.fn().mockReturnThis(),
-          then: jest.fn().mockImplementation((onSuccess) => {
-            return Promise.resolve(onSuccess({ data, error: null }));
-          }),
-        };
-        return chain;
+      // getUsers agora usa join org_members → profiles em uma única query.
+      // O resultado do join tem shape: { user_id, role, profiles: { id, ... } }
+      const joinRow = {
+        user_id: "u1",
+        role: "org_admin",
+        profiles: { id: "u1", full_name: "Ana", avatar_url: null, phone: null, global_role: null, created_at: new Date().toISOString(), disabled: false, disabled_at: null },
       };
 
+      const createMockChain = (data: any = []) => ({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        range: jest.fn().mockReturnThis(),
+        in: jest.fn().mockReturnThis(),
+        then: jest.fn().mockImplementation((onSuccess) =>
+          Promise.resolve(onSuccess({ data, error: null }))
+        ),
+      });
+
       mockSupabase.from.mockImplementation((table: string) => {
-        if (table === "org_members") {
-          return createMockChain([{ user_id: "u1", role: "org_admin" }]);
-        }
-        if (table === "profiles") {
-          return createMockChain([{ id: "u1", full_name: "Ana" }]);
-        }
+        if (table === "org_members") return createMockChain([joinRow]);
         return createMockChain([]);
       });
 

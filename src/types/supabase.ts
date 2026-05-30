@@ -955,6 +955,171 @@ export type Database = {
           },
         ]
       }
+      chat_members: {
+        Row: {
+          chat_id: string
+          id: number
+          joined_at: string
+          role: Database["public"]["Enums"]["chat_member_role"]
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          id?: number
+          joined_at?: string
+          role?: Database["public"]["Enums"]["chat_member_role"]
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          id?: number
+          joined_at?: string
+          role?: Database["public"]["Enums"]["chat_member_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_members_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_message_mentions: {
+        Row: {
+          id: number
+          mentioned_user_id: string | null
+          message_id: number
+          raw_label: string | null
+          type: string
+        }
+        Insert: {
+          id?: number
+          mentioned_user_id?: string | null
+          message_id: number
+          raw_label?: string | null
+          type: string
+        }
+        Update: {
+          id?: number
+          mentioned_user_id?: string | null
+          message_id?: number
+          raw_label?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_mentions_mentioned_user_id_fkey"
+            columns: ["mentioned_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_message_mentions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          attachments: Json | null
+          chat_id: string
+          created_at: string
+          id: number
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          chat_id: string
+          created_at?: string
+          id?: number
+          message: string
+          sender_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          chat_id?: string
+          created_at?: string
+          id?: number
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chats: {
+        Row: {
+          allow_replies: boolean
+          created_at: string
+          created_by: string
+          id: string
+          name: string | null
+          org_id: string
+          type: Database["public"]["Enums"]["chat_type"]
+        }
+        Insert: {
+          allow_replies?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          name?: string | null
+          org_id: string
+          type?: Database["public"]["Enums"]["chat_type"]
+        }
+        Update: {
+          allow_replies?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string | null
+          org_id?: string
+          type?: Database["public"]["Enums"]["chat_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chats_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -1685,6 +1850,20 @@ export type Database = {
         Args: { p_community_id: string; p_user_id: string }
         Returns: boolean
       }
+      remove_user_from_org: {
+        Args: { p_user_id: string; p_org_id: string }
+        Returns: undefined
+      }
+      create_chat_message_with_mentions: {
+        Args: {
+          p_attachments?: Json | null
+          p_chat_id: string
+          p_mentions?: Json
+          p_message: string
+          p_sender_id: string
+        }
+        Returns: number
+      }
 
       get_user_identity_many: {
         Args: { p_user_ids: string[] }
@@ -1694,6 +1873,14 @@ export type Database = {
           full_name: string
           org_id: string
           user_id: string
+        }[]
+      }
+      get_unread_chat_notifications: {
+        Args: { p_user_id: string }
+        Returns: {
+          chat_id: string
+          last_notification_at: string | null
+          unread_count: number
         }[]
       }
       group_unit: { Args: { gid: string }; Returns: string }
@@ -1731,19 +1918,28 @@ export type Database = {
       slugify: { Args: { txt: string }; Returns: string }
       unit_org: { Args: { uid_: string }; Returns: string }
       update_profile_self: {
-        Args: { p_avatar_url: string; p_full_name: string; p_phone: string }
+        Args: {
+          p_avatar_url: string | null
+          p_full_name: string | null
+          p_phone: string | null
+        }
         Returns: undefined
       }
       user_id_by_email: { Args: { p_email: string }; Returns: string }
     }
     Enums: {
       app_role: "org_admin" | "org_master" | "unit_master" | "unit_user"
+      chat_member_role: "admin" | "member"
+      chat_type: "direct" | "group" | "broadcast"
       community_segment_type: "group" | "team"
       community_space_type: "publicacoes" | "eventos"
       community_visibility: "global" | "segmented"
       notification_type:
         | "announcement.sent"
         | "calendar.event_created"
+        | "chat.message_received"
+        | "chat.mention"
+        | "designer.asset_ready"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1875,12 +2071,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["org_admin", "org_master", "unit_master", "unit_user"],
+      chat_member_role: ["admin", "member"],
+      chat_type: ["direct", "group", "broadcast"],
       community_segment_type: ["group", "team"],
       community_space_type: ["publicacoes", "eventos"],
       community_visibility: ["global", "segmented"],
       notification_type: [
         "announcement.sent",
         "calendar.event_created",
+        "chat.message_received",
+        "chat.mention",
+        "designer.asset_ready",
       ],
     },
   },

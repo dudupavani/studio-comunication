@@ -90,7 +90,7 @@ export default async function UsersPage({
   if (isDev) console.time("load-users(getUsers)");
   let users: Awaited<ReturnType<typeof getUsers>>;
   try {
-    users = await getUsers(effectiveOrgId);
+    users = effectiveOrgId ? await getUsers(effectiveOrgId) : [];
   } catch (err) {
     if (isDev) console.error("ERROR getUsers:", err);
     throw err;
