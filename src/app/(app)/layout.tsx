@@ -4,13 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 import { logError, toLoggableError } from "@/lib/log";
-import { getActiveOrgForSidebar } from "@/lib/active-org";
 
-import AppSidebar from "@/components/sidebar/app-sidebar";
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar";
 import { AppShellHeader } from "@/components/app-shell-header";
 
 // ✅ SSR: finaliza convite sem mexer na UI
@@ -97,21 +91,11 @@ export default async function AppLayout({
     created_at: user.created_at,
   };
 
-  await getActiveOrgForSidebar();
-
   return (
-    <SidebarProvider defaultOpen>
-      <AppSidebar activeOrgSlug={null} />
-
-      <SidebarInset className="min-h-screen">
-        {/* 🔄 Fallback em cliente (CSR) */}
-        <FinalizeInviteCSR />
-
-        <AppShellHeader user={userProfile} />
-
-        {/* Conteúdo */}
-        <div className={cn("flex flex-col")}>{children}</div>
-      </SidebarInset>
-    </SidebarProvider>
+    <div className={cn("flex min-h-screen flex-col")}>
+      <FinalizeInviteCSR />
+      <AppShellHeader user={userProfile} />
+      <div className="flex flex-col">{children}</div>
+    </div>
   );
 }

@@ -149,7 +149,7 @@ export function ImageCropper({
   };
 
   return (
-    <div className="mb-8">
+    <div className="mb-3">
       <Input
         type="file"
         accept="image/*"
@@ -159,7 +159,7 @@ export function ImageCropper({
       />
       <div className="relative">
         <div
-          className="w-40 h-40 rounded-full border-2 border-white shadow-md flex items-center justify-center cursor-pointer"
+          className="w-40 h-40 rounded-2xl border-2 border-white shadow-md flex items-center justify-center cursor-pointer"
           onClick={() => fileInputRef.current?.click()}>
           {preview ? (
             <Image
@@ -167,10 +167,10 @@ export function ImageCropper({
               alt="Avatar preview"
               width={160}
               height={160}
-              className="rounded-full object-cover w-full h-full"
+              className="rounded-2xl object-cover w-full h-full"
             />
           ) : (
-            <div className="w-full h-full border-2 border-dashed hover:border-border hover:bg-accent transition rounded-full flex items-center justify-center text-muted-foreground">
+            <div className="w-full h-full text-sm border border-dashed hover:border-border hover:bg-accent transition rounded-2xl flex items-center justify-center text-muted-foreground">
               <span>Imagem de perfil</span>
             </div>
           )}

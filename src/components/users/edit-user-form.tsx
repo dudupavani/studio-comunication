@@ -236,7 +236,7 @@ export default function EditUserForm(props: Props) {
               onChange={(event) => setCargo(event.target.value)}
             />
           </div>
-          <div className="space-y-2 max-w-[220px]">
+          <div className="space-y-2 max-w-55">
             <div className="flex items-center gap-1">
               <Label htmlFor="dataEntrada">Data de admissão</Label>
               <TooltipProvider delayDuration={100}>

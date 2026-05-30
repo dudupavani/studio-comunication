@@ -34,7 +34,7 @@ export default function UserSummary({
           className="h-8 w-8 rounded-full object-cover border border-muted"
         />
       ) : (
-        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium bg-muted">
+        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
           {getInitials(name ?? fallback)}
         </div>
       )}

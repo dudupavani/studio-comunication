@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent } from "../ui/card";
 import { ImageCropper } from "./image-cropper";
 import type { Profile } from "@/lib/types";
 
@@ -129,11 +128,10 @@ export function ProfileForm({ user }: { user: Profile }) {
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="flex flex-col items-center">
+    <div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="flex flex-col items-start">
               <ImageCropper
                 onCrop={handleCrop}
                 preview={preview}
@@ -162,7 +160,7 @@ export function ProfileForm({ user }: { user: Profile }) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@example.com" {...field} readOnly disabled />
+                    <Input placeholder="seu@email.com" {...field} readOnly disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -199,8 +197,7 @@ export function ProfileForm({ user }: { user: Profile }) {
               </Button>
             </div>
           </form>
-        </Form>
-      </CardContent>
-    </Card>
+      </Form>
+    </div>
   );
 }

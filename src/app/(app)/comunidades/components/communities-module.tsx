@@ -167,7 +167,7 @@ export default function CommunitiesModule({
         onConfirm={communitiesData.handleDeleteSpace}
       />
 
-      <div className="flex min-h-[100dvh] min-w-0 flex-1 flex-col bg-background">
+      <div className="flex min-h-dvh min-w-0 flex-1 flex-col bg-background">
         <CommunityWorkspaceHeader
           activeCommunity={communitiesData.activeCommunity}
           isFeedView={!communitiesData.selectedSpaceId}

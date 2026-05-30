@@ -57,7 +57,7 @@ export default async function MembersTabServer({
               <TableRow>
                 <TableHead>Membro</TableHead>
                 <TableHead>Função</TableHead>
-                <TableHead className="w-[80px] text-right">Ação</TableHead>
+                <TableHead className="w-20 text-right">Ação</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

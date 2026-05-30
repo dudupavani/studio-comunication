@@ -1,11 +1,12 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { GlobalHeaderActions } from "@/components/global-header-actions";
 import ModuleTitle from "@/components/modules-title";
 import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { Profile } from "@/lib/types";
 
 type AppShellHeaderProps = {
@@ -22,7 +23,15 @@ export function AppShellHeader({ user }: AppShellHeaderProps) {
   return (
     <header className="flex shrink-0 items-center gap-2 border-b py-2">
       <div className="flex w-full items-center gap-2 px-4">
-        <SidebarTrigger className="-ml-1" />
+        <Link href="/" className="shrink-0">
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            width={32}
+            height={32}
+            className="object-contain"
+          />
+        </Link>
         <Separator
           orientation="vertical"
           className="mr-2 data-[orientation=vertical]:h-4"

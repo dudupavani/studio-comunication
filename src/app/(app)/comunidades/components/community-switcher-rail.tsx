@@ -40,14 +40,14 @@ export function CommunitySwitcherRail({
   onCreateCommunity,
 }: CommunitySwitcherRailProps) {
   return (
-    <aside className="flex w-full flex-col gap-8 border-b border-border bg-background px-4 py-6 lg:min-h-[100dvh] lg:w-[214px] lg:border-b-0 lg:border-r lg:px-[15px] lg:py-[25px]">
+    <aside className="flex w-full flex-col gap-8 border-b border-border bg-background px-4 py-6 lg:min-h-dvh lg:w-53.5 lg:border-b-0 lg:border-r lg:px-3.75 lg:py-6.25">
       <Link href="/comunidades" className="flex items-center gap-3">
         <Image
           src="/logo.png"
           alt="Logo"
           width={27}
           height={27}
-          className="h-[27px] w-[27px] object-contain"
+          className="h-6.75 w-6.75 object-contain"
         />
         <span className="text-sm font-medium text-foreground">Logo</span>
       </Link>
