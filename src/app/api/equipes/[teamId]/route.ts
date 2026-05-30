@@ -8,6 +8,7 @@ import {
   createServerClientWithCookies,
 } from "@/lib/supabase/server";
 import { toLoggableError } from "@/lib/log";
+import { canUsePermission } from "@/lib/permissions/user-functions";
 
 const TEAM_MANAGER_ROLES = new Set([
   "org_admin",
@@ -19,10 +20,14 @@ function jsonError(status: number, message: string, details?: unknown) {
   return NextResponse.json({ error: message, details }, { status });
 }
 
-function canManageTeams(auth: AuthContext | null) {
+async function canManageTeams(auth: AuthContext | null) {
   if (!auth) return false;
   if (auth.platformRole === "platform_admin") return true;
-  return auth.orgRole ? TEAM_MANAGER_ROLES.has(auth.orgRole) : false;
+  if (auth.orgRole === "org_admin" || auth.orgRole === "unit_master") return true;
+  if (auth.orgRole === "org_master") {
+    return canUsePermission(auth, "manage_teams");
+  }
+  return false;
 }
 
 async function getTeamContext() {
@@ -32,7 +37,7 @@ async function getTeamContext() {
       error: jsonError(401, "É preciso estar autenticado para acessar equipes."),
     };
   }
-  if (!canManageTeams(auth)) {
+  if (!(await canManageTeams(auth))) {
     return { error: jsonError(403, "Acesso negado para equipes.") };
   }
   if (!auth.orgId) {

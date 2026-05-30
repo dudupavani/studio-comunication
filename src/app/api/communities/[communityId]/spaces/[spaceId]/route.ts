@@ -32,7 +32,7 @@ export async function PATCH(
       return jsonError(400, "Não foi possível determinar a organização ativa.");
     }
 
-    if (!canManageCommunities(auth)) {
+    if (!(await canManageCommunities(auth))) {
       return jsonError(403, "Você não tem permissão para editar espaços.");
     }
 
@@ -125,7 +125,7 @@ export async function DELETE(
       return jsonError(400, "Não foi possível determinar a organização ativa.");
     }
 
-    if (!canManageCommunities(auth)) {
+    if (!(await canManageCommunities(auth))) {
       return jsonError(403, "Você não tem permissão para remover espaços.");
     }
 

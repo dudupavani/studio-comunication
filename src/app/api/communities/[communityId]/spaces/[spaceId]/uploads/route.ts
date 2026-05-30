@@ -156,7 +156,7 @@ async function ensureUploadAccess(
   auth: NonNullable<Awaited<ReturnType<typeof getAuthContext>>>,
 ) {
   const svc = createServiceClient();
-  const canManage = canManageCommunities(auth);
+  const canManage = await canManageCommunities(auth);
 
   const [communityRes, segmentsRes, spaceRes, memberships] = await Promise.all([
     svc
@@ -213,6 +213,7 @@ async function ensureUploadAccess(
     community,
     segmentTargetIds,
     memberships,
+    canManage,
   });
 
   if (!canView) {
@@ -223,7 +224,7 @@ async function ensureUploadAccess(
     };
   }
 
-  if (!canPostInCommunity(auth, community)) {
+  if (!canPostInCommunity(auth, community, canManage)) {
     return {
       ok: false as const,
       status: 403,

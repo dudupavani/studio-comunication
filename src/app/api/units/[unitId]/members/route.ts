@@ -84,7 +84,7 @@ export async function POST(
     if (unit.org_id !== auth.orgId)
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-    if (!canManageUnit(auth, unit.id))
+    if (!(await canManageUnit(auth, unit.id)))
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
     // garantir que o usuário pertence à mesma org
@@ -160,7 +160,7 @@ export async function DELETE(
     if (unit.org_id !== auth.orgId)
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-    if (!canManageUnit(auth, unit.id))
+    if (!(await canManageUnit(auth, unit.id)))
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
     const { error: delErr } = await supabase

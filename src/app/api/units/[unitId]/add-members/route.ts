@@ -36,7 +36,7 @@ export async function POST(
     }
     const unitId: string = unitIdParam;
 
-    if (!canManageUnit(auth, unitId)) {
+    if (!(await canManageUnit(auth, unitId))) {
       return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
     }
 

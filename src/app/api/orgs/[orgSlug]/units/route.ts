@@ -9,7 +9,7 @@ export async function GET(
   context: RouteContext<"/api/orgs/[orgSlug]/units">
 ) {
   const auth = await getAuthContext();
-  if (!auth || !canManageUsers(auth)) {
+  if (!auth || !(await canManageUsers(auth))) {
     return NextResponse.json(
       { error: "Acesso negado: apenas platform_admin ou org_admin." },
       { status: 403 }

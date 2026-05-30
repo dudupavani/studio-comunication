@@ -52,7 +52,7 @@ export async function POST(
     const payload = parsed.data;
 
     const svc = createServiceClient();
-    const canManage = canManageCommunities(auth);
+    const canManage = await canManageCommunities(auth);
 
     const [communityRes, segmentsRes, spaceRes, memberships] = await Promise.all([
       svc
@@ -99,12 +99,12 @@ export async function POST(
     const segmentMap = buildSegmentMap(segments);
     const segmentTargetIds = (segmentMap.get(communityId) ?? []).map((s) => s.target_id);
 
-    const canView = canViewCommunityRecord({ auth, community, segmentTargetIds, memberships });
+    const canView = canViewCommunityRecord({ auth, community, segmentTargetIds, memberships, canManage });
     if (!canView) {
       return jsonError(403, "Você não tem acesso a esta comunidade.");
     }
 
-    const canPost = canPostInCommunity(auth, community);
+    const canPost = canPostInCommunity(auth, community, canManage);
     if (!canPost) {
       return jsonError(403, "Você não tem permissão para publicar nesta comunidade.");
     }

@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { PlatformRole, OrgRole, UnitRole, AppRole } from "@/lib/types/roles";
 import { PLATFORM_ROLES, ORG_ROLES, UNIT_ROLES, APP_ROLES, ORG_ADMIN, UNIT_USER } from "@/lib/types/roles";
+import { getAuthContext } from "@/lib/auth-context";
+import { canUsePermission } from "@/lib/permissions/user-functions";
 
 const PLATFORM_ADMIN: PlatformRole = "platform_admin";
 const DEFAULT_ORG_ROLE: OrgRole = ORG_ADMIN;
@@ -18,6 +20,7 @@ export type Unit = {
   address?: string | null;
   cnpj?: string | null;
   phone?: string | null;
+  state?: string | null;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -70,6 +73,15 @@ async function getMyOrgMembership() {
 
 /** Quem pode gerenciar unidades da org? platform_admin OU org_admin da org */
 async function assertCanManageUnits(targetOrgId: string) {
+  const auth = await getAuthContext();
+  if (auth?.platformRole === PLATFORM_ADMIN) return;
+  if (
+    auth?.orgId === targetOrgId &&
+    auth.orgRole === "org_master" &&
+    (await canUsePermission(auth, "manage_units"))
+  ) {
+    return;
+  }
   const [platform, me] = await Promise.all([
     isPlatformAdmin(),
     getMyOrgMembership(),
@@ -85,20 +97,29 @@ async function assertCanManageUnits(targetOrgId: string) {
 /* ===================== QUERIES ===================== */
 
 /** Lista unidades de uma organização (RLS restringe o acesso) */
-export async function listUnits(orgId: string): Promise<Result<Unit[]>> {
+export async function listUnits(
+  orgId: string,
+  opts?: { page?: number; pageSize?: number }
+): Promise<Result<Unit[]> & { total?: number }> {
   try {
     const supabase = createClient();
     const uid = await getSessionUserId();
     if (!uid) return { ok: false, error: "Usuário não autenticado." };
 
-    const { data, error } = await supabase
+    const page = opts?.page ?? 1;
+    const pageSize = opts?.pageSize ?? 20;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await supabase
       .from("units")
-      .select("id, name, slug, org_id, address, cnpj, phone")
+      .select("id, name, slug, org_id, address, cnpj, phone, state", { count: "exact" })
       .eq("org_id", orgId)
-      .order("name");
+      .order("name")
+      .range(from, to);
 
     if (error) return { ok: false, error: error.message };
-    return { ok: true, data: (data ?? []) as Unit[] };
+    return { ok: true, data: (data ?? []) as Unit[], total: count ?? 0 };
   } catch (e: any) {
     return { ok: false, error: e.message ?? "Falha ao listar unidades." };
   }
@@ -138,7 +159,7 @@ export async function getUnitBySlug(
     // 3) busca unidade
     const { data, error } = await supabase
       .from("units")
-      .select("id, name, slug, org_id, address, cnpj, phone")
+      .select("id, name, slug, org_id, address, cnpj, phone, state")
       .eq("org_id", orgId)
       .eq("slug", slug)
       .single();
@@ -176,7 +197,7 @@ export async function createUnit(
       const { data, error } = await supabase
         .from("units")
         .insert({ org_id: orgId, name: trimmed, slug: candidate })
-        .select("id, name, slug, org_id, address, cnpj, phone")
+        .select("id, name, slug, org_id, address, cnpj, phone, state")
         .single();
 
       if (!error && data) {
@@ -231,7 +252,7 @@ export async function updateUnit(
         .from("units")
         .update({ name: trimmed, slug: candidate })
         .eq("id", unitId)
-        .select("id, name, slug, org_id, address, cnpj, phone")
+        .select("id, name, slug, org_id, address, cnpj, phone, state")
         .single();
 
       if (!error && data) {
@@ -252,7 +273,7 @@ export async function updateUnit(
 /** Atualiza detalhes da unidade (endereço, CNPJ, telefone) */
 export async function updateUnitDetails(
   unitId: string,
-  payload: Partial<Pick<Unit, "name" | "address" | "cnpj" | "phone">>,
+  payload: Partial<Pick<Unit, "name" | "address" | "cnpj" | "phone" | "state">>,
   opts?: { revalidate?: string }
 ): Promise<Result<Unit>> {
   try {
@@ -276,7 +297,7 @@ export async function updateUnitDetails(
 
     // Campos adicionais (sem nome/slug)
     const extraFields: Record<string, any> = {};
-    for (const k of ["address", "cnpj", "phone"] as const) {
+    for (const k of ["address", "cnpj", "phone", "state"] as const) {
       if (k in payload) extraFields[k] = (payload as any)[k];
     }
 
@@ -297,7 +318,7 @@ export async function updateUnitDetails(
           .from("units")
           .update({ name: trimmed, slug: candidate, ...extraFields })
           .eq("id", unitId)
-          .select("id, name, slug, org_id, address, cnpj, phone")
+          .select("id, name, slug, org_id, address, cnpj, phone, state")
           .single();
 
         if (!error && data) {
@@ -316,7 +337,7 @@ export async function updateUnitDetails(
       .from("units")
       .update(extraFields)
       .eq("id", unitId)
-      .select("id, name, slug, org_id, address, cnpj, phone")
+      .select("id, name, slug, org_id, address, cnpj, phone, state")
       .single();
 
     if (error) return { ok: false, error: error.message };

@@ -154,6 +154,9 @@ describe("UsersClient", () => {
         authContext={{ orgId: "o1", orgRole: "org_admin" }}
         canPlatform={false}
         roleFilter={null}
+        searchQuery={null}
+        currentPage={1}
+        totalPages={1}
       />
     );
 
@@ -171,6 +174,9 @@ describe("UsersClient", () => {
         authContext={{ orgId: "o1", orgRole: "org_admin" }}
         canPlatform={false}
         roleFilter={null}
+        searchQuery={null}
+        currentPage={1}
+        totalPages={1}
       />
     );
 
@@ -192,6 +198,9 @@ describe("UsersClient", () => {
         authContext={{ orgId: "o1", orgRole: "org_admin" }}
         canPlatform={false}
         roleFilter={null}
+        searchQuery={null}
+        currentPage={1}
+        totalPages={1}
       />
     );
 
@@ -213,6 +222,9 @@ describe("UsersClient", () => {
         authContext={{ orgId: "o1", orgRole: "org_admin" }}
         canPlatform={false}
         roleFilter={null}
+        searchQuery={null}
+        currentPage={1}
+        totalPages={1}
       />
     );
 

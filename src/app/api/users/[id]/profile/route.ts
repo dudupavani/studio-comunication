@@ -5,6 +5,7 @@ import { canManageUsers } from "@/lib/permissions-users";
 import { createServiceClient } from "@/lib/supabase/service";
 import { toLoggableError } from "@/lib/log";
 import { revalidatePath } from "next/cache";
+import { canManageTargetUser } from "@/lib/permissions/user-functions";
 
 const ParamsSchema = z.object({ id: z.string().uuid() });
 
@@ -21,7 +22,7 @@ export async function PUT(
     if (!auth) {
       return jsonError(401, "É preciso estar autenticado.");
     }
-    if (!canManageUsers(auth)) {
+    if (!(await canManageUsers(auth))) {
       return jsonError(403, "Apenas gestores podem editar perfis de colaboradores.");
     }
     if (!auth.orgId) {
@@ -80,6 +81,15 @@ export async function PUT(
         "Erro ao carregar dados do colaborador.",
         toLoggableError(profileErr)
       );
+    }
+    if (
+      !canManageTargetUser(auth, {
+        userId: targetUserId,
+        orgRole: membership.role,
+        globalRole: profileRow?.global_role ?? null,
+      })
+    ) {
+      return jsonError(403, "Sem permissao para editar este colaborador.");
     }
     if (profileRow?.global_role === "platform_admin") {
       return jsonError(

@@ -5,6 +5,10 @@ import { getAuthContext } from "@/lib/auth-context";
 import { canManageUsers } from "@/lib/permissions-users";
 import { createServiceClient } from "@/lib/supabase/service";
 import { toLoggableError } from "@/lib/log";
+import {
+  canManageTargetUser,
+  loadManageTargetUser,
+} from "@/lib/permissions/user-functions";
 
 const ParamsSchema = z.object({ id: z.string().uuid() });
 
@@ -33,7 +37,7 @@ export async function PUT(
     if (!auth) {
       return jsonError(401, "É preciso estar autenticado.");
     }
-    if (!canManageUsers(auth)) {
+    if (!(await canManageUsers(auth))) {
       return jsonError(403, "Apenas gestores podem atualizar colaboradores.");
     }
     if (!auth.orgId) {
@@ -79,6 +83,10 @@ export async function PUT(
     }
     if (!membership) {
       return jsonError(404, "Colaborador não encontrado nesta organização.");
+    }
+    const target = await loadManageTargetUser(orgId, targetUserId);
+    if (!target || !canManageTargetUser(auth, target)) {
+      return jsonError(403, "Sem permissao para atualizar este colaborador.");
     }
 
     const { data: upserted, error: upsertErr } = await supabase

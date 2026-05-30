@@ -34,6 +34,17 @@ export default async function UsersPage({
   const roleFilter =
     (Array.isArray(roleParam) ? roleParam[0] : roleParam) ?? null;
 
+  const searchParam = sp?.q;
+  const searchQuery =
+    (Array.isArray(searchParam) ? searchParam[0] : searchParam) ?? undefined;
+
+  const pageParam = sp?.page;
+  const currentPage = Math.max(
+    1,
+    parseInt((Array.isArray(pageParam) ? pageParam[0] : pageParam) ?? "1", 10) || 1
+  );
+  const PAGE_SIZE = 20;
+
   // 🔐 Auth context
   if (isDev) console.time("auth-context");
   const auth = await getAuthContext();
@@ -56,7 +67,7 @@ export default async function UsersPage({
   }
 
   // ✅ Permissão (server-side)
-  const canManage = canManageUsers(auth);
+  const canManage = await canManageUsers(auth);
   if (isDev) {
     console.log("DEBUG /users canManageUsers:", canManage);
     console.log("DEBUG /users permission snapshot:", {
@@ -88,15 +99,19 @@ export default async function UsersPage({
 
   // 🧮 Carga de usuários (com métricas)
   if (isDev) console.time("load-users(getUsers)");
-  let users: Awaited<ReturnType<typeof getUsers>>;
+  let result: Awaited<ReturnType<typeof getUsers>>;
   try {
-    users = effectiveOrgId ? await getUsers(effectiveOrgId) : [];
+    result = effectiveOrgId
+      ? await getUsers(effectiveOrgId, { search: searchQuery, page: currentPage, pageSize: PAGE_SIZE })
+      : { users: [], total: 0 };
   } catch (err) {
     if (isDev) console.error("ERROR getUsers:", err);
     throw err;
   } finally {
     if (isDev) console.timeEnd("load-users(getUsers)");
   }
+
+  const totalPages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
 
   const t1 = performance.now();
   if (isDev) {
@@ -106,10 +121,13 @@ export default async function UsersPage({
   return (
     <div className="p-4">
       <UsersClient
-        initialUsers={users}
+        initialUsers={result.users}
         authContext={auth}
         canPlatform={canPlatform}
         roleFilter={roleFilter}
+        searchQuery={searchQuery ?? null}
+        currentPage={currentPage}
+        totalPages={totalPages}
       />
     </div>
   );

@@ -78,7 +78,7 @@ export async function GET(
     }
 
     const svc = createServiceClient();
-    const canManage = canManageCommunities(auth);
+    const canManage = await canManageCommunities(auth);
 
     const { community, communityError, segments, segmentsError, spaces, spacesError } =
       await loadCommunityBundle(svc, communityId);
@@ -112,6 +112,7 @@ export async function GET(
       community,
       segmentTargetIds,
       memberships,
+      canManage,
     });
 
     if (!canView) {
@@ -129,7 +130,7 @@ export async function GET(
         allowUnitMasterPost: community.allow_unit_master_post,
         allowUnitUserPost: community.allow_unit_user_post,
         canManage,
-        canPost: canPostInCommunity(auth, community),
+        canPost: canPostInCommunity(auth, community, canManage),
         createdAt: community.created_at,
         updatedAt: community.updated_at,
         spaces: spaces.map((space: any) => ({
@@ -171,7 +172,7 @@ export async function PATCH(
       return jsonError(400, "Não foi possível determinar a organização ativa.");
     }
 
-    const canManage = canManageCommunities(auth);
+    const canManage = await canManageCommunities(auth);
     if (!canManage) {
       return jsonError(403, "Você não tem permissão para editar comunidades.");
     }
@@ -281,7 +282,7 @@ export async function PATCH(
         allowUnitMasterPost: updatedCommunity.allow_unit_master_post,
         allowUnitUserPost: updatedCommunity.allow_unit_user_post,
         canManage,
-        canPost: canPostInCommunity(auth, updatedCommunity),
+        canPost: canPostInCommunity(auth, updatedCommunity, canManage),
         createdAt: updatedCommunity.created_at,
         updatedAt: updatedCommunity.updated_at,
         spaces: spaces.map((space: any) => ({
@@ -323,7 +324,7 @@ export async function DELETE(
       return jsonError(400, "Não foi possível determinar a organização ativa.");
     }
 
-    const canManage = canManageCommunities(auth);
+    const canManage = await canManageCommunities(auth);
     if (!canManage) {
       return jsonError(403, "Você não tem permissão para remover comunidades.");
     }

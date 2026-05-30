@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { CirclePlus } from "lucide-react";
 
 import {
   Sheet,
@@ -168,7 +168,8 @@ export default function AddUnitMemberModal({
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button>
-          <Plus size={22} />
+          
+          <CirclePlus size={22}  />
           Adicionar
         </Button>
       </SheetTrigger>

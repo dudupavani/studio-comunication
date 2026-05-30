@@ -1,5 +1,6 @@
 import type { AuthContext } from "@/lib/auth-context";
 import type { Enums, Tables } from "@/lib/supabase/types";
+import { canUsePermission } from "@/lib/permissions/user-functions";
 
 export type CommunityRow = Tables<"communities">;
 export type CommunitySegmentRow = Tables<"community_segments">;
@@ -9,22 +10,28 @@ export type CommunityVisibility = Enums<"community_visibility">;
 export type CommunitySegmentType = Enums<"community_segment_type">;
 export type CommunitySpaceType = Enums<"community_space_type">;
 
-export function canManageCommunities(auth: AuthContext | null) {
+export async function canManageCommunities(auth: AuthContext | null) {
   if (!auth) return false;
   if (auth.platformRole === "platform_admin") return true;
-  return auth.orgRole === "org_admin" || auth.orgRole === "org_master";
+  if (auth.orgRole === "org_admin") return true;
+  if (auth.orgRole === "org_master") {
+    return canUsePermission(auth, "manage_communities");
+  }
+  return false;
 }
 
 export function canPostInCommunity(
   auth: AuthContext | null,
-  community: Pick<CommunityRow, "allow_unit_master_post" | "allow_unit_user_post">
+  community: Pick<CommunityRow, "allow_unit_master_post" | "allow_unit_user_post">,
+  canManage = false
 ) {
   if (!auth) return false;
 
   if (auth.platformRole === "platform_admin") return true;
-  if (auth.orgRole === "org_admin" || auth.orgRole === "org_master") {
+  if (auth.orgRole === "org_admin") {
     return true;
   }
+  if (auth.orgRole === "org_master") return canManage;
 
   if (auth.orgRole === "unit_master") {
     return community.allow_unit_master_post;
@@ -62,10 +69,11 @@ export function canViewCommunityRecord(args: {
     groupIds: Set<string>;
     teamIds: Set<string>;
   };
+  canManage?: boolean;
 }) {
   const { auth, community, segmentTargetIds, memberships } = args;
 
-  if (canManageCommunities(auth)) return true;
+  if (args.canManage) return true;
   if (community.visibility === "global") return true;
 
   return hasSegmentMatch(community.segment_type, segmentTargetIds, memberships);

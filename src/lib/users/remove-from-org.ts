@@ -16,7 +16,7 @@ export async function removeUserFromCurrentOrg(
   if (!auth) {
     return { ok: false, status: 401, error: "Nao autenticado." };
   }
-  if (!canManageUsers(auth)) {
+  if (!(await canManageUsers(auth))) {
     return { ok: false, status: 403, error: "Sem permissao para remover usuario." };
   }
   if (!auth.orgId) {
@@ -51,7 +51,7 @@ export async function removeUserFromCurrentOrg(
 
   const { data: membership, error: membershipError } = await svc
     .from("org_members")
-    .select("org_id")
+    .select("org_id, role")
     .eq("org_id", auth.orgId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -61,6 +61,13 @@ export async function removeUserFromCurrentOrg(
   }
   if (!membership) {
     return { ok: false, status: 404, error: "Usuario nao pertence a organizacao ativa." };
+  }
+  if (
+    auth.platformRole !== PLATFORM_ADMIN &&
+    auth.orgRole === "org_master" &&
+    membership.role === "org_admin"
+  ) {
+    return { ok: false, status: 403, error: "Org master nao pode remover org_admin." };
   }
 
   const { error: rpcError } = await svc.rpc("remove_user_from_org", {

@@ -20,7 +20,7 @@ const Body = z.object({
 export async function POST(request: Request) {
   // 1) Autorização
   const auth = await getAuthContext();
-  if (!auth || !canManageUsers(auth)) {
+  if (!auth || !(await canManageUsers(auth))) {
     return NextResponse.json(
       {
         ok: false,
@@ -61,18 +61,11 @@ export async function POST(request: Request) {
   // Matriz de autorização de papel:
   //   platform_admin  → qualquer papel
   //   org_admin       → org_master, unit_master, unit_user (não pode criar outro org_admin)
-  //   org_master      → unit_master, unit_user
+  //   org_master      → org_master, unit_master, unit_user
   const actorIsPlatformAdmin = auth.platformRole === "platform_admin";
-  const actorIsOrgAdmin = auth.orgRole === "org_admin";
 
   if (!actorIsPlatformAdmin) {
     if (invitedRole === "org_admin") {
-      return NextResponse.json(
-        { ok: false, error: "Sem permissão para convidar com este papel." },
-        { status: 403 }
-      );
-    }
-    if (invitedRole === "org_master" && !actorIsOrgAdmin) {
       return NextResponse.json(
         { ok: false, error: "Sem permissão para convidar com este papel." },
         { status: 403 }

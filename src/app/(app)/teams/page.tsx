@@ -7,6 +7,7 @@ import TeamsClient from "@/components/teams/TeamsClient";
 import type { OrgUserOption, TeamSummary } from "@/components/teams/types";
 import { enrichOrgUsersWithAuthMetadata } from "@/lib/teams/enrich-org-users";
 import { enrichOrgUsersWithEmployeeProfile } from "@/lib/teams/user-directory";
+import { canUsePermission } from "@/lib/permissions/user-functions";
 
 const TEAM_MANAGER_ROLES = new Set([
   "org_admin",
@@ -14,10 +15,14 @@ const TEAM_MANAGER_ROLES = new Set([
   "unit_master",
 ]);
 
-function canAccess(auth: Awaited<ReturnType<typeof getAuthContext>>) {
+async function canAccess(auth: Awaited<ReturnType<typeof getAuthContext>>) {
   if (!auth) return false;
   if (auth.platformRole === "platform_admin") return true;
-  return auth.orgRole ? TEAM_MANAGER_ROLES.has(auth.orgRole) : false;
+  if (auth.orgRole === "org_admin" || auth.orgRole === "unit_master") return true;
+  if (auth.orgRole === "org_master") {
+    return canUsePermission(auth, "manage_teams");
+  }
+  return false;
 }
 
 export default async function TeamsPage() {
@@ -33,7 +38,7 @@ export default async function TeamsPage() {
     );
   }
 
-  if (!canAccess(auth)) {
+  if (!(await canAccess(auth))) {
     return (
       <div className="p-6">
         <h1>Equipes</h1>

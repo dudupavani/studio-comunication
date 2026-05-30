@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import EditUserPage from "@/app/(app)/users/[id]/edit/page";
 import { getAuthContext } from "@/lib/auth-context";
 import { canManageUsers } from "@/lib/permissions-users";
+import { canManageTargetUserById } from "@/lib/permissions/user-functions";
 import { getUserById, getUserRoles } from "@/lib/actions/user";
 import { listUnits } from "@/lib/actions/units";
 import { createClient } from "@/lib/supabase/server";
@@ -46,6 +47,10 @@ jest.mock("@/lib/permissions-users", () => ({
   canManageUsers: jest.fn(),
 }));
 
+jest.mock("@/lib/permissions/user-functions", () => ({
+  canManageTargetUserById: jest.fn(),
+}));
+
 jest.mock("@/lib/actions/user", () => ({
   getUserById: jest.fn(),
   getUserRoles: jest.fn(),
@@ -65,6 +70,8 @@ const mockedGetAuthContext =
   getAuthContext as jest.MockedFunction<typeof getAuthContext>;
 const mockedCanManageUsers =
   canManageUsers as jest.MockedFunction<typeof canManageUsers>;
+const mockedCanManageTargetUserById =
+  canManageTargetUserById as jest.MockedFunction<typeof canManageTargetUserById>;
 const mockedGetUserById = getUserById as jest.MockedFunction<typeof getUserById>;
 const mockedListUnits = listUnits as jest.MockedFunction<typeof listUnits>;
 const mockedGetUserRoles =
@@ -96,7 +103,7 @@ describe("app/(app)/users/[id]/edit/page", () => {
 
   it("redirects to profile when user cannot manage users", async () => {
     mockedGetAuthContext.mockResolvedValue({ orgId: "org-1" } as any);
-    mockedCanManageUsers.mockReturnValue(false);
+    mockedCanManageUsers.mockResolvedValue(false);
 
     await expect(
       EditUserPage({
@@ -109,7 +116,7 @@ describe("app/(app)/users/[id]/edit/page", () => {
 
   it("redirects to profile when auth has no orgId", async () => {
     mockedGetAuthContext.mockResolvedValue({ orgId: null } as any);
-    mockedCanManageUsers.mockReturnValue(true);
+    mockedCanManageUsers.mockResolvedValue(true);
 
     await expect(
       EditUserPage({
@@ -122,7 +129,8 @@ describe("app/(app)/users/[id]/edit/page", () => {
 
   it("calls notFound when target user does not exist", async () => {
     mockedGetAuthContext.mockResolvedValue({ orgId: "org-1" } as any);
-    mockedCanManageUsers.mockReturnValue(true);
+    mockedCanManageUsers.mockResolvedValue(true);
+    mockedCanManageTargetUserById.mockResolvedValue(true);
     mockedGetUserById.mockResolvedValue(null as any);
     mockedListUnits.mockResolvedValue({ ok: true, data: [] } as any);
     mockedGetUserRoles.mockResolvedValue({
@@ -169,7 +177,8 @@ describe("app/(app)/users/[id]/edit/page", () => {
 
   it("renders edit form with loaded defaults", async () => {
     mockedGetAuthContext.mockResolvedValue({ orgId: "org-1" } as any);
-    mockedCanManageUsers.mockReturnValue(true);
+    mockedCanManageUsers.mockResolvedValue(true);
+    mockedCanManageTargetUserById.mockResolvedValue(true);
     mockedGetUserById.mockResolvedValue({
       full_name: "Ana Silva",
       email: "ana@example.com",
@@ -240,7 +249,8 @@ describe("app/(app)/users/[id]/edit/page", () => {
 
   it("applies safe fallbacks for units, roles and employee profile", async () => {
     mockedGetAuthContext.mockResolvedValue({ orgId: "org-1" } as any);
-    mockedCanManageUsers.mockReturnValue(true);
+    mockedCanManageUsers.mockResolvedValue(true);
+    mockedCanManageTargetUserById.mockResolvedValue(true);
     mockedGetUserById.mockResolvedValue({
       full_name: "Bruno Costa",
       email: "bruno@example.com",

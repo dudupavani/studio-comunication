@@ -167,8 +167,8 @@ export default function EditUserForm(props: Props) {
     <form onSubmit={onSubmit} className="space-y-12">
       <section className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-20">
         <div className="space-y-2">
-          <h4>Dados pessoais</h4>
-          <p className="text-sm text-muted-foreground">
+          <h5>Dados pessoais</h5>
+          <p className="text-xs text-muted-foreground">
             Informações básicas do colaborador
           </p>
         </div>
@@ -193,8 +193,8 @@ export default function EditUserForm(props: Props) {
 
       <section className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-20">
         <div className="space-y-2">
-          <h4>Vínculos</h4>
-          <p className="text-sm text-muted-foreground">
+          <h5>Vínculos</h5>
+          <p className="text-xs text-muted-foreground">
             Defina os vínculos do colaborador na plataforma e na organização.
           </p>
         </div>

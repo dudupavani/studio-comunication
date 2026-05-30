@@ -5,7 +5,7 @@ import { canManageUsers } from "@/lib/permissions-users";
 
 export async function GET() {
   const auth = await getAuthContext();
-  if (!auth || !canManageUsers(auth)) {
+  if (!auth || !(await canManageUsers(auth))) {
     return NextResponse.json(
       { error: "Acesso negado: apenas platform_admin ou org_admin." },
       { status: 403 }

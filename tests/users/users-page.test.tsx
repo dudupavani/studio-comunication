@@ -104,7 +104,7 @@ describe("app/(app)/users/page", () => {
       user: { user_metadata: {} },
       orgId: "org-1",
     } as any);
-    mockedCanManageUsers.mockReturnValue(false);
+    mockedCanManageUsers.mockResolvedValue(false);
 
     await expect(
       UsersPage({
@@ -130,7 +130,7 @@ describe("app/(app)/users/page", () => {
     ] as any;
 
     mockedGetAuthContext.mockResolvedValue(auth);
-    mockedCanManageUsers.mockReturnValue(true);
+    mockedCanManageUsers.mockResolvedValue(true);
     mockedIsPlatformAdmin.mockReturnValue(true);
     mockedGetUsers.mockResolvedValue(users);
 

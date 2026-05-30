@@ -10,6 +10,12 @@ import { PLATFORM_ADMIN } from "@/lib/types/roles";
 import type { TablesInsert } from "@/lib/supabase/types";
 import { adminAddMember, adminUpdateMemberRole } from "@/lib/admin/org-members";
 import { removeUserFromCurrentOrg } from "@/lib/users/remove-from-org";
+import { getAuthContext } from "@/lib/auth-context";
+import {
+  canManageTargetUser,
+  canUsePermission,
+  loadManageTargetUser,
+} from "@/lib/permissions/user-functions";
 
 /** Admin client (service_role) – usar só em Server Actions / Route Handlers */
 async function getAdminClient() {
@@ -140,48 +146,30 @@ export async function updateUserProfile(formData: FormData) {
     }
   }
 
-  // 3) Atualizar PROFILE diretamente (somente campos permitidos)
-  const profilePayload: TablesInsert<"profiles"> = { id: user.id };
-  let hasProfileUpdates = false;
-  if (typeof name === "string" && name.length > 0) {
-    profilePayload.full_name = name;
-    hasProfileUpdates = true;
-  }
-  if (typeof phone !== "undefined") {
-    profilePayload.phone = phone || null;
-    hasProfileUpdates = true;
-  }
-  if (typeof avatar_url !== "undefined") {
-    profilePayload.avatar_url = avatar_url;
-    hasProfileUpdates = true;
-  }
+  // 3) Atualizar PROFILE via RPC update_profile_self (SECURITY DEFINER, owner=postgres).
+  //    Usa RPC em vez de upsert direto para evitar avaliação de policies UPDATE de
+  //    profiles, que historicamente causavam recursão infinita (código 42P17).
+  const hasProfileUpdates =
+    (typeof name === "string" && name.length > 0) ||
+    typeof phone !== "undefined" ||
+    typeof avatar_url !== "undefined";
 
   if (hasProfileUpdates) {
-    const { error: profileErr } = await supabase
-      .from("profiles")
-      .upsert(profilePayload, { onConflict: "id" });
+    const rpcFullName =
+      typeof name === "string" && name.length > 0 ? name : null;
+    const rpcPhone = typeof phone !== "undefined" ? (phone || null) : null;
+    // '__KEEP_AVATAR__' sinaliza para a RPC manter o valor atual
+    const rpcAvatarUrl =
+      typeof avatar_url !== "undefined" ? (avatar_url ?? null) : "__KEEP_AVATAR__";
 
-    if (profileErr) {
-      // Fallback: em ambientes onde a policy de insert não está ativa, tenta via service role
-      const isRls =
-        profileErr.code === "42501" ||
-        /row-level security/i.test(profileErr.message ?? "") ||
-        /violates row-level security/i.test(profileErr.message ?? "");
+    const { error: rpcErr } = await supabase.rpc("update_profile_self", {
+      p_full_name: rpcFullName,
+      p_phone: rpcPhone,
+      p_avatar_url: rpcAvatarUrl,
+    });
 
-      if (isRls) {
-        const svc = createServiceClient();
-        const { error: svcErr } = await svc
-          .from("profiles")
-          .upsert(profilePayload, { onConflict: "id" });
-
-        if (!svcErr) {
-          // sucesso via service role
-        } else {
-          return { error: svcErr.message };
-        }
-      } else {
-        return { error: profileErr.message };
-      }
+    if (rpcErr) {
+      return { error: rpcErr.message };
     }
   }
 
@@ -192,6 +180,16 @@ export async function updateUserProfile(formData: FormData) {
 
 /* ===================== ADMIN: LIST/GET ===================== */
 
+export type GetUsersResult = {
+  users: (Profile & {
+    org_role?: string;
+    unit_roles?: string[];
+    unit_names?: string[];
+    disabled?: boolean;
+  })[];
+  total: number;
+};
+
 export async function getUsers(
   orgId: string,
   opts?: {
@@ -199,15 +197,9 @@ export async function getUsers(
     pageSize?: number;
     orderBy?: string;
     orderDir?: "asc" | "desc";
+    search?: string;
   }
-): Promise<
-  (Profile & {
-    org_role?: string;
-    unit_roles?: string[];
-    unit_names?: string[];
-    disabled?: boolean;
-  })[]
-> {
+): Promise<GetUsersResult> {
   console.time("getUsers");
 
   // Default options
@@ -225,6 +217,8 @@ export async function getUsers(
   const from = (options.page - 1) * options.pageSize;
   const to = from + options.pageSize - 1;
 
+  const search = opts?.search?.trim();
+
   let joinQuery = supabaseAdmin
     .from("org_members")
     .select(
@@ -232,28 +226,36 @@ export async function getUsers(
         id, full_name, avatar_url, phone, global_role, created_at, disabled, disabled_at
       )`
     )
+    .eq("org_id", orgId)
     .order(options.orderBy, {
       ascending: options.orderDir === "asc",
       foreignTable: "profiles",
     })
     .range(from, to);
 
-  if (orgId) {
-    joinQuery = joinQuery.eq("org_id", orgId) as typeof joinQuery;
+  let countQuery = supabaseAdmin
+    .from("org_members")
+    .select("profiles!inner(id)", { count: "exact", head: true })
+    .eq("org_id", orgId);
+
+  if (search) {
+    joinQuery = joinQuery.ilike("profiles.full_name", `%${search}%`) as typeof joinQuery;
+    countQuery = countQuery.ilike("profiles.full_name", `%${search}%`) as typeof countQuery;
   }
 
-  const { data: joinRows, error: joinError } = await joinQuery;
+  const [{ data: joinRows, error: joinError }, { count: totalCount }] =
+    await Promise.all([joinQuery, countQuery]);
 
   if (joinError) {
     console.error("Erro buscando org_members+profiles:", joinError);
     console.timeEnd("getUsers");
-    return [];
+    return { users: [], total: 0 };
   }
 
-  if (orgId && (!joinRows || joinRows.length === 0)) {
+  if (!joinRows || joinRows.length === 0) {
     console.debug("getUsers — profiles count:", 0);
     console.timeEnd("getUsers");
-    return [];
+    return { users: [], total: totalCount ?? 0 };
   }
 
   const orgMems: { user_id: string; role: string }[] = (joinRows ?? []).map(
@@ -448,7 +450,7 @@ export async function getUsers(
   });
 
   console.timeEnd("getUsers");
-  return result;
+  return { users: result, total: totalCount ?? result.length };
 }
 
 export async function getAllProfiles(): Promise<Profile[]> {
@@ -634,6 +636,14 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
   }
 
   // Confere se é org_admin na mesma org ou platform_admin
+  const auth = await getAuthContext();
+  if (!auth) {
+    return { ok: false, error: "Not authenticated" };
+  }
+  if (targetRole === "org_admin" && auth.platformRole !== PLATFORM_ADMIN) {
+    return { ok: false, error: "Forbidden" };
+  }
+
   const { data: canDo, error: permErr } = await supabase.rpc(
     "is_platform_admin"
   );
@@ -652,7 +662,8 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
     if (orgCheckErr) return { ok: false, error: orgCheckErr.message };
     const role = meOrgRole?.role as OrgRole | UnitRole | null;
     const allowed =
-      role === "org_admin" || role === "org_master" || role === "unit_master";
+      role === "org_admin" ||
+      (role === "org_master" && (await canUsePermission(auth, "manage_users")));
     if (!allowed) return { ok: false, error: "Forbidden" };
   }
 
@@ -665,6 +676,17 @@ export async function updateUserRoles(input: UpdateUserRolesInput) {
     .maybeSingle();
 
   if (omErr) return { ok: false, error: omErr.message };
+  const target = await loadManageTargetUser(orgId, userId);
+  if (target && !canManageTargetUser(auth, target)) {
+    return { ok: false, error: "Forbidden" };
+  }
+  if (
+    auth.platformRole !== PLATFORM_ADMIN &&
+    auth.orgRole === "org_master" &&
+    membership?.role === "org_admin"
+  ) {
+    return { ok: false, error: "Forbidden" };
+  }
 
   if (!membership) {
     const { error: insertOmErr } = await adminAddMember(orgId, userId, targetRole);

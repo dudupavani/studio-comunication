@@ -3,25 +3,24 @@ import { notFound } from "next/navigation";
 import { getAuthContext } from "@/lib/auth-context";
 import type { Profile } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
+import { canUsePermission } from "@/lib/permissions/user-functions";
 
-export function resolveManagePermission(
+export async function resolveManagePermission(
   auth: NonNullable<Awaited<ReturnType<typeof getAuthContext>>>,
 ) {
-  return (
-    auth.platformRole === "platform_admin" ||
-    auth.orgRole === "org_admin" ||
-    auth.orgRole === "org_master"
-  );
+  if (auth.platformRole === "platform_admin" || auth.orgRole === "org_admin") {
+    return true;
+  }
+  if (auth.orgRole === "org_master") {
+    return canUsePermission(auth, "manage_communities");
+  }
+  return false;
 }
 
-export function resolveCreateCommunityPermission(
+export async function resolveCreateCommunityPermission(
   auth: NonNullable<Awaited<ReturnType<typeof getAuthContext>>>,
 ) {
-  return (
-    auth.platformRole === "platform_admin" ||
-    auth.orgRole === "org_admin" ||
-    auth.orgRole === "org_master"
-  );
+  return resolveManagePermission(auth);
 }
 
 export async function loadCommunitiesPageContext() {
@@ -51,8 +50,8 @@ export async function loadCommunitiesPageContext() {
 
   return {
     auth,
-    canManage: resolveManagePermission(auth),
-    canCreateCommunity: resolveCreateCommunityPermission(auth),
+    canManage: await resolveManagePermission(auth),
+    canCreateCommunity: await resolveCreateCommunityPermission(auth),
     userProfile,
   };
 }

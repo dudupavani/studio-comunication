@@ -84,7 +84,7 @@ export async function GET(
       return jsonError(400, "Não foi possível determinar a organização ativa.");
     }
 
-    const canManage = canManageCommunities(auth);
+    const canManage = await canManageCommunities(auth);
 
     const {
       community,
@@ -121,6 +121,7 @@ export async function GET(
       community,
       segmentTargetIds,
       memberships,
+      canManage,
     });
 
     if (!canView) {
@@ -166,7 +167,7 @@ export async function POST(
       return jsonError(400, "Não foi possível determinar a organização ativa.");
     }
 
-    const canManage = canManageCommunities(auth);
+    const canManage = await canManageCommunities(auth);
     if (!canManage) {
       return jsonError(403, "Você não tem permissão para criar espaços.");
     }

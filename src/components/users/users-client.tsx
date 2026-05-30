@@ -53,8 +53,17 @@ import NewUserModal from "@/components/users/new-user-modal";
 import DisableUserDialog from "@/components/users/disable-user-dialog";
 import EnableUserDialog from "@/components/users/enable-user-dialog";
 import DeleteUserDialog from "@/components/users/delete-user-dialog";
-import EmailCopy from "@/components/EmailCopy"; // ⬅️ novo import
+import EmailCopy from "@/components/EmailCopy";
 import UserSummary from "@/components/shared/user-summary";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 // Função para determinar a role a ser exibida com base na prioridade
 function getDisplayRole(user: any): string {
@@ -90,11 +99,17 @@ export default function UsersClient({
   authContext,
   canPlatform,
   roleFilter: initialRoleFilter,
+  searchQuery: initialSearchQuery,
+  currentPage,
+  totalPages,
 }: {
   initialUsers: any[];
   authContext: any;
   canPlatform: boolean;
   roleFilter: string | null;
+  searchQuery: string | null;
+  currentPage: number;
+  totalPages: number;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -104,6 +119,7 @@ export default function UsersClient({
   const [roleFilter, setRoleFilter] = useState<string | null>(
     initialRoleFilter
   );
+  const [searchInput, setSearchInput] = useState<string>(initialSearchQuery ?? "");
   const [statusFilter, setStatusFilter] = useState<string>(
     (searchParams?.get("status") as string) || "all"
   );
@@ -111,7 +127,26 @@ export default function UsersClient({
   const [teamFilter, setTeamFilter] = useState<string>("all");
   const canDeleteUsers =
     canPlatform ||
-    (authContext?.orgRole === "org_admin" && !!authContext?.orgId);
+    ((authContext?.orgRole === "org_admin" ||
+      authContext?.orgRole === "org_master") &&
+      !!authContext?.orgId);
+
+  const canEditTarget = (user: any) => {
+    if (canPlatform) return user.global_role !== PLATFORM_ADMIN;
+    if (authContext?.orgRole === "org_admin") {
+      return user.global_role !== PLATFORM_ADMIN;
+    }
+    if (authContext?.orgRole === "org_master") {
+      return (
+        user.global_role !== PLATFORM_ADMIN && user.org_role !== "org_admin"
+      );
+    }
+    return false;
+  };
+
+  const canChangeLifecycle = (user: any) =>
+    (canPlatform || authContext?.orgRole === "org_admin") &&
+    user.global_role !== PLATFORM_ADMIN;
 
   const appliedFilterCount = useMemo(() => {
     let count = 0;
@@ -232,6 +267,13 @@ export default function UsersClient({
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
+  const buildPageUrl = (page: number) => {
+    const params = new URLSearchParams(searchParamsString);
+    if (page <= 1) params.delete("page");
+    else params.set("page", String(page));
+    return `?${params.toString()}`;
+  };
+
   const handleClearFilters = (event?: React.MouseEvent) => {
     event?.stopPropagation();
     setRoleFilter(null);
@@ -246,10 +288,30 @@ export default function UsersClient({
     router.push(query ? `?${query}` : "?", { scroll: false });
   };
 
+  const handleSearch = (value: string) => {
+    setSearchInput(value);
+    const params = new URLSearchParams(searchParamsString);
+    if (value.trim()) {
+      params.set("q", value.trim());
+    } else {
+      params.delete("q");
+    }
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
   return (
     <>
       {/* Header */}
       <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 max-w-sm">
+          <input
+            type="search"
+            placeholder="Buscar por nome..."
+            value={searchInput}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
         <div className="flex justify-end gap-4">
           <Sheet>
             <SheetTrigger asChild>
@@ -264,13 +326,15 @@ export default function UsersClient({
                     <span className="absolute -top-1 -right-1 inline-flex h-5 w-5 text-center items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground transition-opacity group-hover:opacity-0">
                       {appliedFilterCount}
                     </span>
-                    <button
-                      type="button"
+                    <span
+                      role="button"
+                      tabIndex={0}
                       onClick={handleClearFilters}
+                      onKeyDown={(e) => e.key === "Enter" && handleClearFilters()}
                       className="absolute -top-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-200 text-[9px] font-semibold text-red-700 opacity-0 transition-opacity group-hover:opacity-100"
                       aria-label="Limpar filtros">
                       <X className="h-3 w-3" />
-                    </button>
+                    </span>
                   </>
                 )}
               </Button>
@@ -368,7 +432,9 @@ export default function UsersClient({
               </div>
             </SheetContent>
           </Sheet>
-          {(canPlatform || authContext?.orgRole === "org_admin") &&
+          {(canPlatform ||
+            authContext?.orgRole === "org_admin" ||
+            authContext?.orgRole === "org_master") &&
             authContext?.orgId && <NewUserModal />}
         </div>
       </div>
@@ -475,18 +541,21 @@ export default function UsersClient({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {/* Editar */}
-                        <DropdownMenuItem
-                          className="flex items-center gap-2 cursor-pointer"
-                          onSelect={() => {
-                            router.push(`/users/${user.id}/edit`);
-                          }}>
-                          <Pencil className="h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
+                        {canEditTarget(user) && (
+                          <DropdownMenuItem
+                            className="flex items-center gap-2 cursor-pointer"
+                            onSelect={() => {
+                              router.push(`/users/${user.id}/edit`);
+                            }}>
+                            <Pencil className="h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                        )}
 
                         {/* Ações perigosas - escondidas para platform_admin */}
                         {!isPlatformAdminProfile(user) && (
                           <>
+                            {canChangeLifecycle(user) && (
                             <DropdownMenuItem asChild>
                               {user?.disabled ? (
                                 <EnableUserDialog
@@ -518,8 +587,9 @@ export default function UsersClient({
                                 />
                               )}
                             </DropdownMenuItem>
+                            )}
 
-                            {canDeleteUsers && (
+                            {canDeleteUsers && canEditTarget(user) && (
                               <DropdownMenuItem asChild>
                                 <DeleteUserDialog
                                   userId={user.id}
@@ -577,15 +647,18 @@ export default function UsersClient({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      className="flex items-center gap-2 cursor-pointer"
-                      onSelect={() => router.push(`/users/${user.id}/edit`)}>
-                      <Pencil className="h-4 w-4" />
-                      Editar
-                    </DropdownMenuItem>
+                    {canEditTarget(user) && (
+                      <DropdownMenuItem
+                        className="flex items-center gap-2 cursor-pointer"
+                        onSelect={() => router.push(`/users/${user.id}/edit`)}>
+                        <Pencil className="h-4 w-4" />
+                        Editar
+                      </DropdownMenuItem>
+                    )}
 
                     {!isPlatformAdminProfile(user) && (
                       <>
+                        {canChangeLifecycle(user) && (
                         <DropdownMenuItem asChild>
                           {user?.disabled ? (
                             <EnableUserDialog
@@ -617,8 +690,9 @@ export default function UsersClient({
                             />
                           )}
                         </DropdownMenuItem>
+                        )}
 
-                        {canDeleteUsers && (
+                        {canDeleteUsers && canEditTarget(user) && (
                           <DropdownMenuItem asChild>
                             <DeleteUserDialog
                               userId={user.id}
@@ -677,6 +751,60 @@ export default function UsersClient({
           ))
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href={buildPageUrl(currentPage - 1)}
+                  aria-disabled={currentPage <= 1}
+                  className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((page) => {
+                  if (totalPages <= 7) return true;
+                  if (page === 1 || page === totalPages) return true;
+                  if (Math.abs(page - currentPage) <= 1) return true;
+                  return false;
+                })
+                .reduce<(number | "ellipsis")[]>((acc, page, idx, arr) => {
+                  if (idx > 0 && (page as number) - (arr[idx - 1] as number) > 1) {
+                    acc.push("ellipsis");
+                  }
+                  acc.push(page);
+                  return acc;
+                }, [])
+                .map((item, idx) =>
+                  item === "ellipsis" ? (
+                    <PaginationItem key={`ellipsis-${idx}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem key={item}>
+                      <PaginationLink
+                        href={buildPageUrl(item)}
+                        isActive={item === currentPage}>
+                        {item}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+
+              <PaginationItem>
+                <PaginationNext
+                  href={buildPageUrl(currentPage + 1)}
+                  aria-disabled={currentPage >= totalPages}
+                  className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </>
   );
 }

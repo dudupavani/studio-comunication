@@ -1,5 +1,7 @@
 // src/lib/permissions-org.ts
 import { createClient } from "@/lib/supabase/server";
+import { getAuthContext } from "@/lib/auth-context";
+import { canUsePermission } from "@/lib/permissions/user-functions";
 
 export async function isOrgAdminFor(orgId: string, userId: string) {
   const supabase = await createClient();
@@ -63,7 +65,13 @@ export async function isUnitMasterFor(
     }
     return false;
   }
-  if (org?.role === "org_master") {
+  const auth = await getAuthContext();
+  if (
+    org?.role === "org_master" &&
+    auth?.userId === userId &&
+    auth.orgId === orgId &&
+    (await canUsePermission(auth, "manage_units"))
+  ) {
     return true;
   }
 

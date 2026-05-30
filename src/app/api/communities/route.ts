@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     }
 
     const svc = createServiceClient();
-    const canManage = canManageCommunities(auth);
+    const canManage = await canManageCommunities(auth);
 
     const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
 
@@ -101,6 +101,7 @@ export async function GET(req: NextRequest) {
           community,
           segmentTargetIds,
           memberships,
+          canManage,
         });
       })
       .map((community) => {
@@ -118,7 +119,7 @@ export async function GET(req: NextRequest) {
           allowUnitUserPost: community.allow_unit_user_post,
           spacesCount: spacesCountMap.get(community.id) ?? 0,
           canManage,
-          canPost: canPostInCommunity(auth, community),
+          canPost: canPostInCommunity(auth, community, canManage),
           createdAt: community.created_at,
           updatedAt: community.updated_at,
         };
@@ -143,7 +144,7 @@ export async function POST(req: NextRequest) {
       return jsonError(400, "Não foi possível determinar a organização ativa.");
     }
 
-    const canManage = canManageCommunities(auth);
+    const canManage = await canManageCommunities(auth);
     if (!canManage) {
       return jsonError(403, "Você não tem permissão para criar comunidades.");
     }
@@ -229,7 +230,7 @@ export async function POST(req: NextRequest) {
           allowUnitMasterPost: insertedCommunity.allow_unit_master_post,
           allowUnitUserPost: insertedCommunity.allow_unit_user_post,
           canManage,
-          canPost: canPostInCommunity(auth, insertedCommunity),
+          canPost: canPostInCommunity(auth, insertedCommunity, canManage),
           createdAt: insertedCommunity.created_at,
           updatedAt: insertedCommunity.updated_at,
         },

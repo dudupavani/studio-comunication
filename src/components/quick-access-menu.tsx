@@ -8,6 +8,7 @@ import {
   Users2,
   Building,
   Building2,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,7 @@ const LINKS = [
   { href: "/teams", label: "Equipes", icon: Users2 },
   { href: "/units", label: "Unidades", icon: Building },
   { href: "/orgs", label: "Organização", icon: Building2 },
+  { href: "/user-functions", label: "Funções de usuários", icon: ShieldCheck },
 ];
 
 export function QuickAccessMenu() {

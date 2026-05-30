@@ -5,6 +5,10 @@ import { canManageUsers } from "@/lib/permissions-users";
 import { createServiceClient } from "@/lib/supabase/service";
 import { toLoggableError } from "@/lib/log";
 import { removeUserFromCurrentOrg } from "@/lib/users/remove-from-org";
+import {
+  canManageTargetUser,
+  loadManageTargetUser,
+} from "@/lib/permissions/user-functions";
 
 const ParamsSchema = z.object({ id: z.string().uuid() });
 
@@ -21,7 +25,7 @@ export async function GET(
     if (!auth) {
       return jsonError(401, "É preciso estar autenticado.");
     }
-    if (!canManageUsers(auth)) {
+    if (!(await canManageUsers(auth))) {
       return jsonError(403, "Apenas gestores podem acessar este recurso.");
     }
     if (!auth.orgId) {
@@ -53,6 +57,10 @@ export async function GET(
     }
     if (!membership) {
       return jsonError(404, "Colaborador não encontrado nesta organização.");
+    }
+    const target = await loadManageTargetUser(orgId, targetUserId);
+    if (!target || !canManageTargetUser(auth, target)) {
+      return jsonError(403, "Sem permissao para acessar este colaborador.");
     }
 
     const [profileRes, authUserRes, employeeRes, unitsRes, teamsRes, orgTeamsRes] =

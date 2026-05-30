@@ -31,16 +31,16 @@ export default function UserSummary({
         <img
           src={avatarUrl}
           alt={displayName}
-          className="h-8 w-8 rounded-full object-cover"
+          className="h-8 w-8 rounded-full object-cover border border-muted"
         />
       ) : (
-        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium bg-muted">
           {getInitials(name ?? fallback)}
         </div>
       )}
 
-      <div className="flex flex-col gap-0 ">
-        <div className="font-semibold text-left text-xs sm:text-sm text-foreground leading-4">
+      <div className="flex flex-col gap-1 ">
+        <div className="font-medium text-left text-xs sm:text-sm text-foreground leading-4">
           {displayName}
         </div>
         {displaySubtitle ? (

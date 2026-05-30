@@ -13,7 +13,7 @@ export async function ensureCommunityPostScopeAccess(
   auth: AuthContext
 ) {
   const svc = createServiceClient();
-  const canManage = canManageCommunities(auth);
+  const canManage = await canManageCommunities(auth);
 
   const [communityRes, segmentsRes, spaceRes, memberships] = await Promise.all([
     svc
@@ -78,6 +78,7 @@ export async function ensureCommunityPostScopeAccess(
     community,
     segmentTargetIds,
     memberships,
+    canManage,
   });
 
   if (!canView) {

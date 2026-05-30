@@ -36,7 +36,7 @@ export function AddUnitModal({
       <DialogTrigger asChild>
         <Button type="button" variant="default">
           <CirclePlus />
-          Adicionar unidade
+          Adicionar
         </Button>
       </DialogTrigger>
       <DialogContent>

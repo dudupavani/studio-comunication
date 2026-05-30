@@ -6,6 +6,7 @@ import EditUserForm from "@/components/users/edit-user-form";
 import { getUserById, getUserRoles } from "@/lib/actions/user"; // <-- SINGULAR
 import { getAuthContext } from "@/lib/auth-context";
 import { canManageUsers } from "@/lib/permissions-users";
+import { canManageTargetUserById } from "@/lib/permissions/user-functions";
 import { listUnits } from "@/lib/actions/units";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,12 +22,15 @@ export default async function EditUserPage({
   const auth = await getAuthContext();
   if (!auth) redirect("/");
 
-  if (!canManageUsers(auth)) {
+  if (!(await canManageUsers(auth))) {
     redirect("/profile");
   }
 
   // Verifica se tem orgId
   if (!auth.orgId) {
+    redirect("/profile");
+  }
+  if (!(await canManageTargetUserById(auth, id))) {
     redirect("/profile");
   }
 

@@ -29,7 +29,7 @@ export async function DELETE(
       );
     }
 
-    if (!canManageUnit(auth, unitId)) {
+    if (!(await canManageUnit(auth, unitId))) {
       return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
     }
 

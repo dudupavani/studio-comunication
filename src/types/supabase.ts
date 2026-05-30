@@ -1204,6 +1204,143 @@ export type Database = {
           },
         ]
       }
+      user_permission_profiles: {
+        Row: {
+          base_role: Database["public"]["Enums"]["app_role"]
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          base_role: Database["public"]["Enums"]["app_role"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          base_role?: Database["public"]["Enums"]["app_role"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permission_profiles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permission_profiles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permission_profiles_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_permission_profile_permissions: {
+        Row: {
+          created_at: string
+          permission_key: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          permission_key: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          permission_key?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permission_profile_permissions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "user_permission_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_permission_profile_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          org_id: string
+          profile_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          org_id: string
+          profile_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          org_id?: string
+          profile_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permission_profile_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permission_profile_assignments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permission_profile_assignments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "user_permission_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permission_profile_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_members: {
         Row: {
           created_at: string
@@ -1611,6 +1748,7 @@ export type Database = {
           org_id: string
           phone: string | null
           slug: string | null
+          state: string | null
         }
         Insert: {
           address?: string | null
@@ -1622,6 +1760,7 @@ export type Database = {
           org_id: string
           phone?: string | null
           slug?: string | null
+          state?: string | null
         }
         Update: {
           address?: string | null
@@ -1633,6 +1772,7 @@ export type Database = {
           org_id?: string
           phone?: string | null
           slug?: string | null
+          state?: string | null
         }
         Relationships: [
           {

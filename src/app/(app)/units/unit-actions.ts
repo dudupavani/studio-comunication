@@ -43,6 +43,7 @@ export async function updateUnitDetailsAction(
   const address = (formData.get("address") as string) || null;
   const cnpj = (formData.get("cnpj") as string) || null;
   const phone = (formData.get("phone") as string) || null;
+  const state = (formData.get("state") as string) || null;
 
   // Validação básica
   if (!orgId || !unitId || !name) {
@@ -50,7 +51,7 @@ export async function updateUnitDetailsAction(
   }
 
   // Atualiza os detalhes da unidade
-  const res = await updateUnitDetails(unitId, { name, address, cnpj, phone });
+  const res = await updateUnitDetails(unitId, { name, address, cnpj, phone, state });
 
   // Revalida a página da unidade
   if (res.ok && res.data?.slug) {

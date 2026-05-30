@@ -74,7 +74,7 @@ export async function GET(
     }
 
     const svc = createServiceClient();
-    const canManage = canManageCommunities(auth);
+    const canManage = await canManageCommunities(auth);
 
     const [communityRes, segmentsRes, spacesRes, memberships] = await Promise.all([
       svc
@@ -126,6 +126,7 @@ export async function GET(
       community,
       segmentTargetIds,
       memberships,
+      canManage,
     });
 
     if (!canView) {

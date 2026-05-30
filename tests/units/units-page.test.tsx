@@ -73,7 +73,7 @@ describe("app/(app)/units/page", () => {
   it("redirects to /login when auth context is missing", async () => {
     mockedGetAuthContext.mockResolvedValue(null as any);
 
-    await expect(UnitsPage()).rejects.toThrow("REDIRECT:/login");
+    await expect(UnitsPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT:/login");
     expect(mockedRedirect).toHaveBeenCalledWith("/login");
   });
 
@@ -85,7 +85,7 @@ describe("app/(app)/units/page", () => {
       orgRole: null,
     } as any);
 
-    await expect(UnitsPage()).rejects.toThrow("REDIRECT:/dashboard");
+    await expect(UnitsPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT:/dashboard");
     expect(mockedRedirect).toHaveBeenCalledWith("/dashboard");
     expect(mockedGetOrgWithDetails).not.toHaveBeenCalled();
   });
@@ -99,7 +99,7 @@ describe("app/(app)/units/page", () => {
     } as any);
     mockedGetOrgWithDetails.mockResolvedValue({ ok: false, data: null } as any);
 
-    await expect(UnitsPage()).rejects.toThrow("REDIRECT:/dashboard");
+    await expect(UnitsPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT:/dashboard");
     expect(mockedRedirect).toHaveBeenCalledWith("/dashboard");
   });
 
@@ -116,7 +116,7 @@ describe("app/(app)/units/page", () => {
     } as any);
     mockedIsOrgAdminFor.mockResolvedValue(false);
 
-    await expect(UnitsPage()).rejects.toThrow("REDIRECT:/dashboard");
+    await expect(UnitsPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT:/dashboard");
     expect(mockedRedirect).toHaveBeenCalledWith("/dashboard");
     expect(mockedListUnits).not.toHaveBeenCalled();
   });
@@ -134,7 +134,7 @@ describe("app/(app)/units/page", () => {
     } as any);
     mockedListUnits.mockResolvedValue({ ok: true, data: [] } as any);
 
-    const element = (await UnitsPage()) as any;
+    const element = (await UnitsPage({ searchParams: Promise.resolve({}) })) as any;
     renderToStaticMarkup(element);
 
     expect(element.props.className).toBe("p-6");
@@ -163,7 +163,7 @@ describe("app/(app)/units/page", () => {
     } as any);
     mockedCreateUnitAction.mockResolvedValue({ ok: true } as any);
 
-    const element = (await UnitsPage()) as any;
+    const element = (await UnitsPage({ searchParams: Promise.resolve({}) })) as any;
     renderToStaticMarkup(element);
 
     expect(element.props.className).toBe("p-6");
@@ -201,7 +201,7 @@ describe("app/(app)/units/page", () => {
       data: [{ id: "unit-1", slug: "unit-1", name: "Unidade 1" }],
     } as any);
 
-    const element = await UnitsPage();
+    const element = await UnitsPage({ searchParams: Promise.resolve({}) });
     renderToStaticMarkup(element as any);
     const addModalProps = mockedAddUnitModal.mock.calls[0][0];
     const action = addModalProps.action as (fd: FormData) => Promise<void>;
@@ -232,7 +232,7 @@ describe("app/(app)/units/page", () => {
       error: "Falha ao criar",
     } as any);
 
-    const element = await UnitsPage();
+    const element = await UnitsPage({ searchParams: Promise.resolve({}) });
     renderToStaticMarkup(element as any);
     const addModalProps = mockedAddUnitModal.mock.calls[0][0];
     const action = addModalProps.action as (fd: FormData) => Promise<void>;
