@@ -9,6 +9,10 @@ export const dynamic = "force-dynamic";
 
 // ============ Helpers ============
 function jsonError(status: number, message: string, extra?: unknown) {
+  if (status >= 500) {
+    console.error("[groups/[groupId]]", extra);
+    return NextResponse.json({ error: message }, { status });
+  }
   return NextResponse.json({ error: message, details: extra }, { status });
 }
 
@@ -32,6 +36,7 @@ export async function GET(
   try {
     const auth = await getAuthContext();
     if (!auth?.userId) return jsonError(401, "Não autenticado.");
+    if (!auth.orgId) return jsonError(403, "Sem organização ativa.");
 
     const parsed = ParamsSchema.safeParse(await context.params);
     if (!parsed.success) {
@@ -45,6 +50,7 @@ export async function GET(
       .from("user_groups")
       .select("*")
       .eq("id", groupId)
+      .eq("org_id", auth.orgId)
       .single();
 
     if (error?.code === "PGRST116" || (!group && !error)) {
@@ -76,6 +82,7 @@ export async function PATCH(
   try {
     const auth = await getAuthContext();
     if (!auth?.userId) return jsonError(401, "Não autenticado.");
+    if (!auth.orgId) return jsonError(403, "Sem organização ativa.");
 
     const parsed = ParamsSchema.safeParse(await context.params);
     if (!parsed.success) {
@@ -95,7 +102,6 @@ export async function PATCH(
       name: z.string().optional().nullable(),
       description: z.string().optional().nullable(),
       color: z.string().optional().nullable(),
-      orgId: z.string().uuid().optional(),
     });
 
     const parsedBody = BodySchema.safeParse(bodyRaw);
@@ -106,7 +112,7 @@ export async function PATCH(
       });
     }
 
-    const { name, description, color, orgId } = parsedBody.data;
+    const { name, description, color } = parsedBody.data;
     const patch: Record<string, unknown> = {};
     if (typeof name !== "undefined") patch.name = norm(name);
     if (typeof description !== "undefined")
@@ -115,11 +121,12 @@ export async function PATCH(
 
     const supabase = await createClient();
 
-    // confirma que existe
+    // confirma que existe e pertence à org da sessão
     const { data: existing, error: getErr } = await supabase
       .from("user_groups")
       .select("*")
       .eq("id", groupId)
+      .eq("org_id", auth.orgId)
       .single();
 
     if (getErr?.code === "PGRST116" || (!existing && !getErr)) {
@@ -127,11 +134,6 @@ export async function PATCH(
     }
     if (getErr) {
       return jsonError(500, "Erro ao buscar grupo", toLoggableError(getErr));
-    }
-
-    // (opcional) reforço de escopo
-    if (orgId && existing.org_id && orgId !== existing.org_id) {
-      return jsonError(403, "OrgId incompatível com o grupo");
     }
 
     // nada para atualizar? devolve o atual
@@ -144,6 +146,7 @@ export async function PATCH(
       .from("user_groups")
       .update(patch)
       .eq("id", groupId)
+      .eq("org_id", auth.orgId)
       .select("*")
       .single();
 
@@ -172,6 +175,7 @@ export async function DELETE(
   try {
     const auth = await getAuthContext();
     if (!auth?.userId) return jsonError(401, "Não autenticado.");
+    if (!auth.orgId) return jsonError(403, "Sem organização ativa.");
 
     const parsed = ParamsSchema.safeParse(await context.params);
     if (!parsed.success) {
@@ -183,7 +187,8 @@ export async function DELETE(
     const { error } = await supabase
       .from("user_groups")
       .delete()
-      .eq("id", groupId);
+      .eq("id", groupId)
+      .eq("org_id", auth.orgId);
 
     if (error?.code === "PGRST116") {
       return jsonError(404, "Grupo não encontrado");

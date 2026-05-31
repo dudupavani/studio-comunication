@@ -52,8 +52,9 @@ export async function GET(
       .single();
 
     if (unitErr) {
+      console.error("search-users unitErr:", unitErr);
       return NextResponse.json(
-        { ok: false, error: unitErr.message },
+        { ok: false, error: "Erro interno" },
         { status: 500 }
       );
     }
@@ -98,8 +99,9 @@ export async function GET(
       .eq("unit_id", unitId);
 
     if (existingErr) {
+      console.error("search-users existingErr:", existingErr);
       return NextResponse.json(
-        { ok: false, error: existingErr.message },
+        { ok: false, error: "Erro interno" },
         { status: 500 }
       );
     }
@@ -114,8 +116,9 @@ export async function GET(
       .eq("org_id", orgIdFromUnit);
 
     if (orgErr) {
+      console.error("search-users orgErr:", orgErr);
       return NextResponse.json(
-        { ok: false, error: orgErr.message },
+        { ok: false, error: "Erro interno" },
         { status: 500 }
       );
     }
@@ -160,8 +163,9 @@ export async function GET(
 
     return NextResponse.json({ ok: true, users: filtered });
   } catch (e: any) {
+    console.error("search-users unexpected:", e);
     return NextResponse.json(
-      { ok: false, error: e?.message ?? "Unknown error" },
+      { ok: false, error: "Erro interno" },
       { status: 500 }
     );
   }

@@ -100,63 +100,59 @@ export async function POST(request: Request) {
   }
 
   // 5) Descobrir/validar org do convite
-  async function getInviterAdminOrgIdFallback(): Promise<string | null> {
-    const { data, error } = await supabaseAdmin
-      .from("org_members")
-      .select("org_id, role")
-      .eq("user_id", inviterId);
-    if (error) {
-      logError("invite-magic:orgLookup", { error, inviterId });
-      return null;
-    }
-    const adminRow = (data || []).find((r) =>
-      ["org_admin", "org_master"].includes(r.role)
-    );
-    return adminRow?.org_id ?? null;
-  }
-
   let invitedOrgId: string | null = null;
   if (orgIdFromBody) {
-    const { data: checkRow, error: checkErr } = await supabaseAdmin
-      .from("org_members")
-      .select("role")
-      .eq("user_id", inviterId)
-      .eq("org_id", orgIdFromBody)
-      .maybeSingle();
+    if (actorIsPlatformAdmin) {
+      // platform_admin pode convidar para qualquer org — apenas valida que ela existe
+      const { data: orgRow, error: orgExistsErr } = await supabaseAdmin
+        .from("orgs")
+        .select("id")
+        .eq("id", orgIdFromBody)
+        .maybeSingle();
+      if (orgExistsErr || !orgRow) {
+        return NextResponse.json(
+          { ok: false, error: "Organização não encontrada." },
+          { status: 404 }
+        );
+      }
+    } else {
+      const { data: checkRow, error: checkErr } = await supabaseAdmin
+        .from("org_members")
+        .select("role")
+        .eq("user_id", inviterId)
+        .eq("org_id", orgIdFromBody)
+        .maybeSingle();
 
-    if (checkErr) {
-      logError("invite-magic:orgCheck", {
-        error: checkErr,
-        inviterId,
-        orgIdFromBody,
-      });
-      return NextResponse.json(
-        { ok: false, error: "Falha ao validar a organização informada." },
-        { status: 400 }
-      );
-    }
-    if (
-      !checkRow?.role ||
-      !["org_admin", "org_master"].includes(checkRow.role)
-    ) {
-      return NextResponse.json(
-        { ok: false, error: "Você não é admin da organização informada." },
-        { status: 403 }
-      );
+      if (checkErr) {
+        logError("invite-magic:orgCheck", {
+          error: checkErr,
+          inviterId,
+          orgIdFromBody,
+        });
+        return NextResponse.json(
+          { ok: false, error: "Falha ao validar a organização informada." },
+          { status: 400 }
+        );
+      }
+      if (
+        !checkRow?.role ||
+        !["org_admin", "org_master"].includes(checkRow.role)
+      ) {
+        return NextResponse.json(
+          { ok: false, error: "Você não é admin da organização informada." },
+          { status: 403 }
+        );
+      }
     }
     invitedOrgId = orgIdFromBody;
   } else {
-    invitedOrgId = await getInviterAdminOrgIdFallback();
-    if (!invitedOrgId) {
+    if (!auth.orgId) {
       return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Não foi possível determinar a organização do remetente. Informe orgId no convite.",
-        },
+        { ok: false, error: "Informe orgId no convite." },
         { status: 400 }
       );
     }
+    invitedOrgId = auth.orgId;
   }
 
   // 6) Redirect do Magic Link (volta para o seu fluxo original)
@@ -186,7 +182,7 @@ export async function POST(request: Request) {
       context: { email, invitedOrgId, invitedRole, inviterId },
     });
     return NextResponse.json(
-      { ok: false, error: error.message ?? "Falha ao enviar Magic Link." },
+      { ok: false, error: "Falha ao enviar convite." },
       { status: 400 }
     );
   }

@@ -33,7 +33,7 @@ export async function GET(
 
     if (orgErr) {
       console.error("Resolve org slug error:", orgErr);
-      return NextResponse.json({ error: orgErr.message }, { status: 500 });
+      return NextResponse.json({ error: "Erro interno" }, { status: 500 });
     }
 
     if (!org?.id) {
@@ -46,29 +46,11 @@ export async function GET(
     orgId = org.id;
   }
 
-  // 1) Sessão
-  const {
-    data: { user },
-    error: authErr,
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // 2) Checa platform_admin (usa uid explícito)
-  const { data: isAdmin, error: rpcErr } = await supabase.rpc(
-    "is_platform_admin",
-    { uid: user.id }
-  );
-  if (rpcErr) {
-    console.error("is_platform_admin RPC error:", rpcErr);
-    return NextResponse.json({ error: rpcErr.message }, { status: 500 });
-  }
-  if (!isAdmin) {
+  if (auth.platformRole !== "platform_admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // 3) Lista unidades da organização
+  // Lista unidades da organização
   const { data, error } = await supabase
     .from("units")
     .select("id, name")
@@ -77,7 +59,7 @@ export async function GET(
 
   if (error) {
     console.error("List units error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 
   return NextResponse.json(data ?? []);

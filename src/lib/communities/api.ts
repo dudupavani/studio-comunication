@@ -34,7 +34,7 @@ export function isSameOriginRequest(req: Request) {
     }
   }
 
-  return true;
+  return false;
 }
 
 export async function loadMembershipSets(

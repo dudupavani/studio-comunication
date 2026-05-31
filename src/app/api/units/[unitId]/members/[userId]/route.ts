@@ -43,8 +43,9 @@ export async function DELETE(
       .maybeSingle();
 
     if (unitErr) {
+      console.error("unit-member delete unitErr:", unitErr);
       return NextResponse.json(
-        { ok: false, error: unitErr.message },
+        { ok: false, error: "Erro interno" },
         { status: 500 }
       );
     }
@@ -71,8 +72,9 @@ export async function DELETE(
       .maybeSingle();
 
     if (linkErr) {
+      console.error("unit-member delete linkErr:", linkErr);
       return NextResponse.json(
-        { ok: false, error: linkErr.message },
+        { ok: false, error: "Erro interno" },
         { status: 500 }
       );
     }
@@ -91,16 +93,18 @@ export async function DELETE(
       .eq("user_id", userId);
 
     if (delErr) {
+      console.error("unit-member delete delErr:", delErr);
       return NextResponse.json(
-        { ok: false, error: delErr.message },
+        { ok: false, error: "Erro interno" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ ok: true, removed: 1 });
   } catch (e: any) {
+    console.error("unit-member delete unexpected:", e);
     return NextResponse.json(
-      { ok: false, error: e?.message ?? "Unknown error" },
+      { ok: false, error: "Erro interno" },
       { status: 500 }
     );
   }

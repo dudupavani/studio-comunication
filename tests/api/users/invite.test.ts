@@ -213,17 +213,18 @@ describe("User Invitation API Routes", () => {
       expect(res.status).toBe(200);
     });
 
-    it("platform_admin pode convidar org_admin", async () => {
+    it("platform_admin pode convidar org_admin para qualquer org", async () => {
       const mockAdmin = new MockSupabase();
       mockedGetAuthContext.mockResolvedValue({
         user: { id: inviterId },
-        orgId,
+        orgId: undefined, // platform_admin pode não ter org própria
         platformRole: "platform_admin",
         orgRole: null,
       });
       mockedCanManageUsers.mockReturnValue(true);
       mockedSupabaseJs.mockReturnValue(mockAdmin);
-      mockAdmin.setResponses([{ data: { role: "org_admin" }, error: null }]);
+      // platform_admin path: verifica existência da org (não org_members)
+      mockAdmin.setResponses([{ data: { id: orgId }, error: null }]);
 
       const req = new NextRequest("http://localhost/api/users/invite-magic", {
         method: "POST",
@@ -239,6 +240,56 @@ describe("User Invitation API Routes", () => {
           }),
         })
       );
+    });
+
+    it("platform_admin recebe 404 quando orgId não existe", async () => {
+      const mockAdmin = new MockSupabase();
+      mockedGetAuthContext.mockResolvedValue({
+        user: { id: inviterId },
+        orgId: undefined,
+        platformRole: "platform_admin",
+        orgRole: null,
+      });
+      mockedCanManageUsers.mockReturnValue(true);
+      mockedSupabaseJs.mockReturnValue(mockAdmin);
+      // org não encontrada
+      mockAdmin.setResponses([{ data: null, error: null }]);
+
+      const req = new NextRequest("http://localhost/api/users/invite-magic", {
+        method: "POST",
+        body: JSON.stringify({ email: invitedEmail, orgId, role: "unit_user" }),
+      });
+
+      const res = await invitePOST(req);
+      expect(res.status).toBe(404);
+      expect(mockAdmin.auth.signInWithOtp).not.toHaveBeenCalled();
+    });
+
+    it("não expõe error.message do Supabase Auth ao cliente em falha de envio", async () => {
+      const mockAdmin = new MockSupabase();
+      mockedGetAuthContext.mockResolvedValue({
+        user: { id: inviterId },
+        orgId,
+        platformRole: null,
+        orgRole: "org_admin",
+      });
+      mockedCanManageUsers.mockReturnValue(true);
+      mockedSupabaseJs.mockReturnValue(mockAdmin);
+      mockAdmin.setResponses([{ data: { role: "org_admin" }, error: null }]);
+      mockAdmin.auth.signInWithOtp = jest.fn().mockResolvedValue({
+        error: { message: "For security purposes, you can only request this once every 60 seconds." },
+      });
+
+      const req = new NextRequest("http://localhost/api/users/invite-magic", {
+        method: "POST",
+        body: JSON.stringify({ email: invitedEmail, orgId, role: "unit_user" }),
+      });
+
+      const res = await invitePOST(req);
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).not.toContain("60 seconds");
+      expect(json.error).toBe("Falha ao enviar convite.");
     });
 
     it("returns 403 if requester is not admin of specified org", async () => {

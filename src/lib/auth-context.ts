@@ -50,12 +50,13 @@ async function _getAuthContext(
   const user: User = userData.user;
 
   // 2) Consultas paralelas já filtradas por este usuário
+  const svc = createServiceClient();
   const labelParallel = isDev ? makeLabel("auth:parallel") : null;
   if (labelParallel) console.time(labelParallel);
   const [profileRes, orgRes, unitRes] = await Promise.all([
-    supabase
+    svc
       .from("profiles")
-      .select("id, global_role")
+      .select("global_role")
       .eq("id", user.id)
       .maybeSingle(),
     supabase.from("org_members").select("org_id, role").eq("user_id", user.id),
@@ -66,22 +67,10 @@ async function _getAuthContext(
   ]);
   if (labelParallel) console.timeEnd(labelParallel);
 
-  // 3) Platform role
+  // 3) Platform role — single read via service client (bypasses RLS)
   let platformRole: PlatformRole | null = null;
-  const profileAny = (profileRes.data ?? {}) as any;
-  if (profileAny?.global_role === PLATFORM_ADMIN) {
+  if (profileRes.data?.global_role === PLATFORM_ADMIN) {
     platformRole = PLATFORM_ADMIN;
-  } else {
-    const svc = createServiceClient();
-    const { data: svcProfile } = await svc
-      .from("profiles")
-      .select("global_role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (svcProfile?.global_role === PLATFORM_ADMIN) {
-      platformRole = PLATFORM_ADMIN;
-    }
   }
 
   // 4) Escolher melhor papel/org (com precedência)
@@ -94,7 +83,6 @@ async function _getAuthContext(
   }>;
 
   if (platformRole === PLATFORM_ADMIN && orgRows.length === 0) {
-    const svc = createServiceClient();
     const { data: svcOrgRows, error: svcOrgErr } = await svc
       .from("org_members")
       .select("org_id, role")
@@ -142,10 +130,6 @@ async function _getAuthContext(
     unitIds,
     user,
   };
-
-  if (process.env.NODE_ENV === "development") {
-    console.log("DEBUG getAuthContext — computed:", authContext);
-  }
 
   return authContext;
 }

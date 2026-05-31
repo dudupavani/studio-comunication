@@ -15,8 +15,9 @@ export async function PUT(request: Request) {
     }
     return NextResponse.json({ ok: true });
   } catch (error) {
+    console.error("profile PUT:", toLoggableError(error));
     return NextResponse.json(
-      { ok: false, error: "Erro ao atualizar perfil.", details: toLoggableError(error) },
+      { ok: false, error: "Erro ao atualizar perfil." },
       { status: 500 }
     );
   }

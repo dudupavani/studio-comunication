@@ -200,6 +200,12 @@ export async function getUsers(
     search?: string;
   }
 ): Promise<GetUsersResult> {
+  const auth = await getAuthContext();
+  if (!auth) throw new Error("Não autenticado.");
+  if (auth.platformRole !== PLATFORM_ADMIN && auth.orgId !== orgId) {
+    throw new Error("Acesso não autorizado.");
+  }
+
   console.time("getUsers");
 
   // Default options
@@ -454,6 +460,11 @@ export async function getUsers(
 }
 
 export async function getAllProfiles(): Promise<Profile[]> {
+  const auth = await getAuthContext();
+  if (!auth || auth.platformRole !== PLATFORM_ADMIN) {
+    throw new Error("Acesso não autorizado.");
+  }
+
   const supabaseAdmin = await getAdminClient();
 
   const { data: profiles, error } = await supabaseAdmin

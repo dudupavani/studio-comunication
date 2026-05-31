@@ -166,4 +166,37 @@ describe("lib/communities/api", () => {
       ),
     ).toBe(false);
   });
+
+  it("isSameOriginRequest rejects requests with no Origin and no Referer", () => {
+    // Requests without headers (curl, scripts) must not be treated as same-origin
+    expect(
+      isSameOriginRequest(
+        new Request("https://app.example.com/api/communities", {
+          method: "POST",
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("isSameOriginRequest accepts same-origin Referer when Origin is absent", () => {
+    expect(
+      isSameOriginRequest(
+        new Request("https://app.example.com/api/communities", {
+          method: "POST",
+          headers: { referer: "https://app.example.com/comunidades" },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("isSameOriginRequest rejects cross-origin Referer when Origin is absent", () => {
+    expect(
+      isSameOriginRequest(
+        new Request("https://app.example.com/api/communities", {
+          method: "POST",
+          headers: { referer: "https://evil.example/page" },
+        }),
+      ),
+    ).toBe(false);
+  });
 });

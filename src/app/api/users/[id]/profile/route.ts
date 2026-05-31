@@ -102,10 +102,26 @@ export async function PUT(
 
     if (avatarInput && avatarInput !== "REMOVE" && typeof avatarInput !== "string") {
       const file = avatarInput as File;
+      const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      if (!ALLOWED_MIME.includes(file.type)) {
+        return jsonError(400, "Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF.");
+      }
       if (file.size > 0) {
+        // Validar tipo real por magic bytes para rejeitar arquivos com Content-Type falso
+        const buffer = await file.arrayBuffer();
+        const header = new Uint8Array(buffer.slice(0, 12));
+        const isJpeg = header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff;
+        const isPng = header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4e && header[3] === 0x47;
+        const isGif = header[0] === 0x47 && header[1] === 0x49 && header[2] === 0x46;
+        const isWebp =
+          header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46 &&
+          header[8] === 0x57 && header[9] === 0x45 && header[10] === 0x42 && header[11] === 0x50;
+        if (!isJpeg && !isPng && !isGif && !isWebp) {
+          return jsonError(400, "Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF.");
+        }
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("avatars")
-          .upload(`${targetUserId}/avatar.jpg`, file, { upsert: true });
+          .upload(`${targetUserId}/avatar.jpg`, buffer, { upsert: true, contentType: file.type });
 
         if (uploadError) {
           return jsonError(500, "Falha ao enviar a imagem.", toLoggableError(uploadError));

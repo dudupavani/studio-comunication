@@ -15,10 +15,9 @@ export async function GET(
     }
 
     const { orgSlug } = await ctx.params;
-    
-    // Precisamos obter o ID da organização a partir do slug
-    const supabaseClient = createServiceClient();
-    const { data: org, error: orgError } = await supabaseClient
+
+    const supabase = createServiceClient();
+    const { data: org, error: orgError } = await supabase
       .from("orgs")
       .select("id")
       .eq("slug", orgSlug)
@@ -50,10 +49,24 @@ export async function GET(
       );
     }
 
-    const supabase2 = createServiceClient();
+    // Confirmar que a unidade pertence à organização resolvida
+    const { data: unitRow, error: unitOrgErr } = await supabase
+      .from("units")
+      .select("id")
+      .eq("id", unitId)
+      .eq("org_id", orgId)
+      .maybeSingle();
+
+    if (unitOrgErr) {
+      console.error("[/api/orgs/.../available-members] units ERROR:", unitOrgErr);
+      return NextResponse.json({ ok: false, error: "Erro interno" }, { status: 500 });
+    }
+    if (!unitRow) {
+      return NextResponse.json({ ok: false, error: "Unidade não encontrada" }, { status: 404 });
+    }
 
     // Busca todos os membros da unidade
-    const { data: unitMembers, error: unitError } = await supabase2
+    const { data: unitMembers, error: unitError } = await supabase
       .from("unit_members")
       .select("user_id")
       .eq("unit_id", unitId);
@@ -72,7 +85,7 @@ export async function GET(
     const unitUserIds = (unitMembers || []).map((m: any) => m.user_id);
 
     // Busca todos os membros da organização
-    const { data: orgMembers, error: orgMembersError } = await supabase2
+    const { data: orgMembers, error: orgMembersError } = await supabase
       .from("org_members")
       .select("user_id")
       .eq("org_id", orgId);
@@ -98,7 +111,7 @@ export async function GET(
     }
 
     const identityMap = await resolveIdentityMap(candidateIds, {
-      svc: supabase2,
+      svc: supabase,
       orgId,
     });
 

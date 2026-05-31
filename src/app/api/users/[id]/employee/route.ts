@@ -25,6 +25,9 @@ const BodySchema = z.object({
 });
 
 function jsonError(status: number, message: string, details?: unknown) {
+  if (status >= 500) {
+    return NextResponse.json({ ok: false, error: message }, { status });
+  }
   return NextResponse.json({ ok: false, error: message, details }, { status });
 }
 

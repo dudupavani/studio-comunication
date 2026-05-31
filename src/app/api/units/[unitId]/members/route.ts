@@ -49,12 +49,14 @@ export async function GET(
       .eq("unit_id", unit.id)
       .order("created_at", { ascending: true });
 
-    if (error)
+    if (error) {
+      console.error("[unit-members GET] select error:", error);
       return NextResponse.json({ error: "Erro ao buscar membros." }, { status: 500 });
+    }
     return NextResponse.json({ members: data ?? [] });
   } catch (e: any) {
     return NextResponse.json(
-      { error: e?.message ?? "internal-error" },
+      { error: "Erro interno" },
       { status: 500 }
     );
   }
@@ -94,11 +96,13 @@ export async function POST(
       .eq("org_id", unit.org_id)
       .eq("user_id", userId)
       .maybeSingle();
-    if (orgMemberErr)
+    if (orgMemberErr) {
+      console.error("[unit-members POST] orgMemberErr:", orgMemberErr);
       return NextResponse.json(
         { error: "Erro ao verificar vínculo com a organização." },
         { status: 500 }
       );
+    }
     if (!orgMember)
       return NextResponse.json({ error: "user-not-in-org" }, { status: 400 });
 
@@ -121,13 +125,15 @@ export async function POST(
     const { error: insertErr } = await supabase
       .from("unit_members")
       .insert(payload);
-    if (insertErr)
+    if (insertErr) {
+      console.error("[unit-members POST] insertErr:", insertErr);
       return NextResponse.json({ error: "Erro ao adicionar membro." }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true, status: "added" });
   } catch (e: any) {
     return NextResponse.json(
-      { error: e?.message ?? "internal-error" },
+      { error: "Erro interno" },
       { status: 500 }
     );
   }
@@ -168,13 +174,15 @@ export async function DELETE(
       .delete()
       .eq("unit_id", unit.id)
       .eq("user_id", userId);
-    if (delErr)
+    if (delErr) {
+      console.error("[unit-members DELETE] delErr:", delErr);
       return NextResponse.json({ error: "Erro ao remover membro." }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true, status: "removed" });
   } catch (e: any) {
     return NextResponse.json(
-      { error: e?.message ?? "internal-error" },
+      { error: "Erro interno" },
       { status: 500 }
     );
   }

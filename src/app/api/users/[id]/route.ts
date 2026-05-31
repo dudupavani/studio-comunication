@@ -13,6 +13,10 @@ import {
 const ParamsSchema = z.object({ id: z.string().uuid() });
 
 function jsonError(status: number, message: string, details?: unknown) {
+  if (status >= 500) {
+    console.error("[users/[id]]", details);
+    return NextResponse.json({ error: message }, { status });
+  }
   return NextResponse.json({ error: message, details }, { status });
 }
 
@@ -214,12 +218,23 @@ export async function DELETE(
   context: RouteContext<"/api/users/[id]">
 ) {
   try {
+    const auth = await getAuthContext();
+    if (!auth) {
+      return jsonError(401, "É preciso estar autenticado.");
+    }
+    if (!(await canManageUsers(auth))) {
+      return jsonError(403, "Apenas gestores podem acessar este recurso.");
+    }
+    if (!auth.orgId) {
+      return jsonError(400, "Organização ativa não encontrada para o usuário.");
+    }
+
     const parsedParams = ParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());
     }
 
-    const result = await removeUserFromCurrentOrg(parsedParams.data.id);
+    const result = await removeUserFromCurrentOrg(parsedParams.data.id, auth);
     if (!result.ok) {
       return jsonError(result.status, result.error);
     }
