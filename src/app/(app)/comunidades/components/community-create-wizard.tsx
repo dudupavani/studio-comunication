@@ -152,8 +152,8 @@ export function CommunityCreateWizard({
       setTeamsLoading(true);
 
       const [groupsRes, teamsRes] = await Promise.all([
-        fetch("/api/comunicados/recipients/groups?limit=100", { cache: "no-store" }),
-        fetch("/api/comunicados/recipients/teams?limit=100", { cache: "no-store" }),
+        fetch("/api/messages/recipients/groups?limit=100", { cache: "no-store" }),
+        fetch("/api/messages/recipients/teams?limit=100", { cache: "no-store" }),
       ]);
 
       const [groupsPayload, teamsPayload] = await Promise.all([

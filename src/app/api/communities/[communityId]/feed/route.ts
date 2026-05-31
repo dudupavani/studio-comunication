@@ -12,6 +12,7 @@ import { communityParamsSchema } from "@/lib/communities/validations";
 import { buildSegmentMap, jsonError, loadMembershipSets } from "@/lib/communities/api";
 import { buildCommunityPostReactionSummaryByPost } from "@/lib/communities/post-reactions";
 import { getEmptyReactionSummary } from "@/lib/reactions/core";
+import { isCommunityStoragePathOwnedByScope } from "@/lib/communities/storage-paths";
 
 const POSTS_BUCKET = "posts";
 const SIGNED_URL_TTL_IN_SECONDS = 60 * 60;
@@ -165,11 +166,18 @@ export async function GET(
       if (!postsRes.error && postsRes.data) {
         const coverUrlMap = await createSignedUrlMapForPaths(
           svc,
-          postsRes.data
-            .map((post: any) =>
-              typeof post.cover_path === "string" ? post.cover_path : "",
-            )
-            .filter(Boolean),
+          postsRes.data.flatMap((post: any) => {
+            const path = typeof post.cover_path === "string" ? post.cover_path : "";
+            if (!path) return [];
+            return isCommunityStoragePathOwnedByScope({
+              path,
+              orgId: auth.orgId!,
+              communityId,
+              spaceId: post.space_id,
+            })
+              ? [path]
+              : [];
+          }),
         );
 
         let reactionsByPost = new Map<string, ReturnType<typeof getEmptyReactionSummary>>();
@@ -200,12 +208,9 @@ export async function GET(
             authorId: post.created_by ?? null,
             title: post.title ?? null,
             excerpt,
-            coverUrl:
-              (post.cover_path
-                ? coverUrlMap.get(post.cover_path) ?? null
-                : null) ??
-              post.cover_url ??
-              null,
+            coverUrl: post.cover_path
+              ? coverUrlMap.get(post.cover_path) ?? null
+              : post.cover_url ?? null,
             authorName: post.profiles?.full_name ?? null,
             authorAvatarUrl: post.profiles?.avatar_url ?? null,
             createdAt: post.created_at,

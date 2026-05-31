@@ -12,9 +12,11 @@ import {
 import { createCommunitySchema } from "@/lib/communities/validations";
 import {
   buildSegmentMap,
+  isSameOriginRequest,
   jsonError,
   loadMembershipSets,
   normalizeUniqueViolation,
+  validateCommunitySegmentTargets,
 } from "@/lib/communities/api";
 
 export async function GET(req: NextRequest) {
@@ -133,6 +135,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const userSupabase = createServerClientWithCookies();
     const auth = await getAuthContext(userSupabase);
 
@@ -162,6 +168,16 @@ export async function POST(req: NextRequest) {
       payload.visibility === "segmented" ? payload.segmentType ?? null : null;
 
     const svc = createServiceClient();
+
+    const validSegmentTargets = await validateCommunitySegmentTargets({
+      svc,
+      orgId: auth.orgId,
+      segmentType: normalizedSegmentType,
+      targetIds: segmentTargetIds,
+    });
+    if (!validSegmentTargets) {
+      return jsonError(400, "Segmentacao invalida para esta organizacao.");
+    }
 
     const { data: insertedCommunity, error: insertCommunityError } = await svc
       .from("communities")

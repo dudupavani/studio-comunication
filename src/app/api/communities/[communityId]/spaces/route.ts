@@ -14,6 +14,7 @@ import {
 } from "@/lib/communities/validations";
 import {
   buildSegmentMap,
+  isSameOriginRequest,
   jsonError,
   loadMembershipSets,
   normalizeUniqueViolation,
@@ -149,6 +150,10 @@ export async function POST(
   context: { params: Promise<{ communityId: string }> }
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const parsedParams = communityParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());

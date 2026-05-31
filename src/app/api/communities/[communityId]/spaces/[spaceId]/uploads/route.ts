@@ -11,7 +11,13 @@ import {
   type CommunitySegmentRow,
 } from "@/lib/communities/permissions";
 import { communitySpaceParamsSchema } from "@/lib/communities/validations";
-import { buildSegmentMap, jsonError, loadMembershipSets } from "@/lib/communities/api";
+import {
+  buildSegmentMap,
+  isSameOriginRequest,
+  jsonError,
+  loadMembershipSets,
+} from "@/lib/communities/api";
+import { isCommunityStoragePathOwnedByScope } from "@/lib/communities/storage-paths";
 
 const POSTS_BUCKET = "posts";
 const SIGNED_URL_TTL_IN_SECONDS = 60 * 60;
@@ -73,20 +79,6 @@ function isBlockedAttachment(file: File) {
   return (
     BLOCKED_ATTACHMENT_EXTENSIONS.has(extension) ||
     BLOCKED_ATTACHMENT_MIME_TYPES.has(mimeType)
-  );
-}
-
-function validatePathOwnership(args: {
-  path: string;
-  orgId: string;
-  communityId: string;
-  spaceId: string;
-}) {
-  const { path, orgId, communityId, spaceId } = args;
-  const segments = path.split("/");
-  if (segments.length < 4) return false;
-  return (
-    segments[0] === orgId && segments[1] === communityId && segments[2] === spaceId
   );
 }
 
@@ -240,6 +232,10 @@ export async function POST(
   context: { params: Promise<{ communityId: string; spaceId: string }> },
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const parsedParams = communitySpaceParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());
@@ -346,6 +342,10 @@ export async function DELETE(
   context: { params: Promise<{ communityId: string; spaceId: string }> },
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const parsedParams = communitySpaceParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());
@@ -375,7 +375,7 @@ export async function DELETE(
     }
 
     if (
-      !validatePathOwnership({
+      !isCommunityStoragePathOwnedByScope({
         path,
         orgId: auth.orgId,
         communityId: parsedParams.data.communityId,

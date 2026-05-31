@@ -72,8 +72,8 @@ export function CommunityFormDialog({
         setSegmentLoading(true);
         const endpoint =
           segmentType === "group"
-            ? "/api/comunicados/recipients/groups?limit=100"
-            : "/api/comunicados/recipients/teams?limit=100";
+            ? "/api/messages/recipients/groups?limit=100"
+            : "/api/messages/recipients/teams?limit=100";
 
         const payload = await parseJson<{ items: any[] }>(
           await fetch(endpoint, { cache: "no-store" }),

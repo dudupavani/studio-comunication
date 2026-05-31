@@ -6,10 +6,14 @@ import {
   communitySpacePostParamsSchema,
   createCommunitySpacePostSchema,
 } from "@/lib/communities/validations";
-import { jsonError } from "@/lib/communities/api";
+import { isSameOriginRequest, jsonError } from "@/lib/communities/api";
 import { ensureCommunityPostScopeAccess } from "@/lib/communities/post-access";
 import { buildCommunityPostReactionSummaryByPost } from "@/lib/communities/post-reactions";
 import { getEmptyReactionSummary } from "@/lib/reactions/core";
+import {
+  getInvalidCommunityStoragePaths,
+  isCommunityStoragePathOwnedByScope,
+} from "@/lib/communities/storage-paths";
 
 const POSTS_BUCKET = "posts";
 const SIGNED_URL_TTL_IN_SECONDS = 60 * 60;
@@ -129,7 +133,14 @@ export async function GET(
     const storagePaths = collectPostStoragePaths({
       cover_path: post.cover_path ?? null,
       blocks: post.blocks,
-    });
+    }).filter((path) =>
+      isCommunityStoragePathOwnedByScope({
+        path,
+        orgId: auth.orgId!,
+        communityId,
+        spaceId,
+      })
+    );
     const signedUrlMap = await createSignedUrlMapForPaths(access.svc, storagePaths);
     const normalizedBlocks = Array.isArray(post.blocks)
       ? post.blocks.map((block) => {
@@ -138,18 +149,16 @@ export async function GET(
 
           if (
             item.type === "image" &&
-            typeof item.imagePath === "string" &&
-            signedUrlMap.has(item.imagePath)
+            typeof item.imagePath === "string"
           ) {
-            return { ...item, imageUrl: signedUrlMap.get(item.imagePath) };
+            return { ...item, imageUrl: signedUrlMap.get(item.imagePath) ?? "" };
           }
 
           if (
             item.type === "attachment" &&
-            typeof item.filePath === "string" &&
-            signedUrlMap.has(item.filePath)
+            typeof item.filePath === "string"
           ) {
-            return { ...item, fileUrl: signedUrlMap.get(item.filePath) };
+            return { ...item, fileUrl: signedUrlMap.get(item.filePath) ?? "" };
           }
 
           return item;
@@ -185,10 +194,9 @@ export async function GET(
         createdAt: post.created_at,
         title: post.title,
         coverPath: post.cover_path ?? null,
-        coverUrl:
-          (post.cover_path ? signedUrlMap.get(post.cover_path) ?? null : null) ??
-          post.cover_url ??
-          null,
+        coverUrl: post.cover_path
+          ? signedUrlMap.get(post.cover_path) ?? null
+          : post.cover_url ?? null,
         blocks: normalizedBlocks,
         reactions,
       },
@@ -203,6 +211,10 @@ export async function PATCH(
   context: { params: Promise<{ communityId: string; spaceId: string; postId: string }> },
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const parsedParams = communitySpacePostParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());
@@ -256,6 +268,21 @@ export async function PATCH(
     }
 
     const payload = parsedBody.data;
+    if (payload.coverUrl && !payload.coverPath) {
+      return jsonError(400, "Capa invalida.");
+    }
+
+    const invalidStoragePaths = getInvalidCommunityStoragePaths({
+      orgId: auth.orgId,
+      communityId,
+      spaceId,
+      coverPath: payload.coverPath,
+      blocks: payload.blocks,
+    });
+    if (invalidStoragePaths.length > 0) {
+      return jsonError(403, "Arquivo fora do escopo da publicacao.");
+    }
+
     const { data: updated, error: updateError } = await access.svc
       .from("community_space_posts")
       .update({
@@ -294,10 +321,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ communityId: string; spaceId: string; postId: string }> },
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const parsedParams = communitySpacePostParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());
@@ -354,7 +385,14 @@ export async function DELETE(
       return jsonError(500, "Falha ao excluir publicação.", deleteError);
     }
 
-    const storagePaths = collectPostStoragePaths(existingPost);
+    const storagePaths = collectPostStoragePaths(existingPost).filter((path) =>
+      isCommunityStoragePathOwnedByScope({
+        path,
+        orgId: auth.orgId!,
+        communityId,
+        spaceId,
+      })
+    );
     if (storagePaths.length > 0) {
       const { error: storageError } = await access.svc.storage
         .from(POSTS_BUCKET)

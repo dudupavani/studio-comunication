@@ -75,17 +75,11 @@ export default async function AppLayout({
       ? profileData?.global_role
       : null;
 
-  const metadataRole =
-    user.user_metadata?.global_role === "platform_admin" ||
-    user.user_metadata?.global_role === "platform_support"
-      ? user.user_metadata?.global_role
-      : null;
-
   const userProfile: Profile = {
     id: user.id,
     email: user.email ?? "",
     full_name: profileData?.full_name || user.user_metadata?.name || "",
-    global_role: profileRole ?? metadataRole ?? null,
+    global_role: profileRole ?? null,
     phone: profileData?.phone || "",
     avatar_url: profileData?.avatar_url || "",
     created_at: user.created_at,

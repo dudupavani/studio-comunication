@@ -1,8 +1,10 @@
 import {
   buildSegmentMap,
+  isSameOriginRequest,
   jsonError,
   loadMembershipSets,
   normalizeUniqueViolation,
+  validateCommunitySegmentTargets,
 } from "@/lib/communities/api";
 
 describe("lib/communities/api", () => {
@@ -104,5 +106,64 @@ describe("lib/communities/api", () => {
     expect(fakeSvc.from).toHaveBeenCalledWith("equipe_members");
     expect([...memberships.groupIds]).toEqual(["group-1"]);
     expect([...memberships.teamIds]).toEqual(["team-1"]);
+  });
+
+  it("validateCommunitySegmentTargets accepts only targets from the active org", async () => {
+    const inMock = jest.fn(async (field: string, ids: string[]) => ({
+      data: ids.includes("group-owned")
+        ? [{ id: "group-owned" }]
+        : [],
+      error: null,
+    }));
+    const fakeSvc = {
+      from: jest.fn(() => ({
+        select: () => ({
+          eq: () => ({
+            in: inMock,
+          }),
+        }),
+      })),
+    };
+
+    await expect(
+      validateCommunitySegmentTargets({
+        svc: fakeSvc as any,
+        orgId: "org-1",
+        segmentType: "group",
+        targetIds: ["group-owned"],
+      }),
+    ).resolves.toBe(true);
+
+    await expect(
+      validateCommunitySegmentTargets({
+        svc: fakeSvc as any,
+        orgId: "org-1",
+        segmentType: "group",
+        targetIds: ["group-owned", "group-other-org"],
+      }),
+    ).resolves.toBe(false);
+
+    expect(fakeSvc.from).toHaveBeenCalledWith("user_groups");
+    expect(inMock).toHaveBeenCalledWith("id", ["group-owned"]);
+  });
+
+  it("isSameOriginRequest rejects cross-origin browser mutations", () => {
+    expect(
+      isSameOriginRequest(
+        new Request("https://app.example.com/api/communities", {
+          method: "POST",
+          headers: { origin: "https://app.example.com" },
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      isSameOriginRequest(
+        new Request("https://app.example.com/api/communities", {
+          method: "POST",
+          headers: { origin: "https://evil.example" },
+        }),
+      ),
+    ).toBe(false);
   });
 });

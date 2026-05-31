@@ -7,13 +7,21 @@ import {
   communitySpaceParamsSchema,
   updateCommunitySpaceSchema,
 } from "@/lib/communities/validations";
-import { jsonError, normalizeUniqueViolation } from "@/lib/communities/api";
+import {
+  isSameOriginRequest,
+  jsonError,
+  normalizeUniqueViolation,
+} from "@/lib/communities/api";
 
 export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ communityId: string; spaceId: string }> }
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const parsedParams = communitySpaceParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());
@@ -103,10 +111,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ communityId: string; spaceId: string }> }
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const parsedParams = communitySpaceParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());

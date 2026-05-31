@@ -17,6 +17,26 @@ export function normalizeUniqueViolation(message: string) {
   return message.toLowerCase().includes("unique") || message.toLowerCase().includes("duplic");
 }
 
+export function isSameOriginRequest(req: Request) {
+  const expectedOrigin = new URL(req.url).origin;
+  const origin = req.headers.get("origin");
+
+  if (origin) {
+    return origin === expectedOrigin;
+  }
+
+  const referer = req.headers.get("referer");
+  if (referer) {
+    try {
+      return new URL(referer).origin === expectedOrigin;
+    } catch {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export async function loadMembershipSets(
   svc: TypedSupabaseClient,
   orgId: string,
@@ -59,4 +79,29 @@ export function buildSegmentMap(rows: CommunitySegmentRow[]) {
   });
 
   return byCommunity;
+}
+
+export async function validateCommunitySegmentTargets(args: {
+  svc: TypedSupabaseClient;
+  orgId: string;
+  segmentType: "group" | "team" | null;
+  targetIds: string[];
+}) {
+  const targetIds = Array.from(new Set(args.targetIds.filter(Boolean)));
+  if (!args.segmentType || targetIds.length === 0) {
+    return true;
+  }
+
+  const query =
+    args.segmentType === "group"
+      ? args.svc.from("user_groups").select("id").eq("org_id", args.orgId)
+      : args.svc.from("equipes").select("id").eq("org_id", args.orgId);
+
+  const { data, error } = await query.in("id", targetIds);
+  if (error) {
+    throw error;
+  }
+
+  const foundIds = new Set((data ?? []).map((row) => row.id));
+  return targetIds.every((targetId) => foundIds.has(targetId));
 }

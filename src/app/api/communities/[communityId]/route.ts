@@ -15,9 +15,11 @@ import {
 } from "@/lib/communities/validations";
 import {
   buildSegmentMap,
+  isSameOriginRequest,
   jsonError,
   loadMembershipSets,
   normalizeUniqueViolation,
+  validateCommunitySegmentTargets,
   type TypedSupabaseClient,
 } from "@/lib/communities/api";
 
@@ -154,6 +156,10 @@ export async function PATCH(
   context: { params: Promise<{ communityId: string }> }
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const paramsParsed = communityParamsSchema.safeParse(await context.params);
     if (!paramsParsed.success) {
       return jsonError(400, "Parâmetros inválidos.", paramsParsed.error.flatten());
@@ -203,6 +209,16 @@ export async function PATCH(
 
     if (!existing || existing.org_id !== auth.orgId) {
       return jsonError(404, "Comunidade não encontrada.");
+    }
+
+    const validSegmentTargets = await validateCommunitySegmentTargets({
+      svc,
+      orgId: auth.orgId,
+      segmentType: normalizedSegmentType,
+      targetIds: segmentTargetIds,
+    });
+    if (!validSegmentTargets) {
+      return jsonError(400, "Segmentacao invalida para esta organizacao.");
     }
 
     const { data: updatedCommunity, error: updateCommunityError } = await svc
@@ -302,10 +318,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ communityId: string }> }
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const paramsParsed = communityParamsSchema.safeParse(await context.params);
     if (!paramsParsed.success) {
       return jsonError(400, "Parâmetros inválidos.", paramsParsed.error.flatten());

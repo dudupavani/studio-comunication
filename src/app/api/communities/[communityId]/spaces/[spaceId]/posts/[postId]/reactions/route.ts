@@ -8,7 +8,7 @@ import {
   communitySpacePostParamsSchema,
   communityPostReactionSchema,
 } from "@/lib/communities/validations";
-import { jsonError } from "@/lib/communities/api";
+import { isSameOriginRequest, jsonError } from "@/lib/communities/api";
 import { getCommunityPostReactionTarget } from "@/lib/communities/post-reactions";
 import {
   listReactionActorsForTarget,
@@ -151,6 +151,10 @@ export async function POST(
   }
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const parsedParams = communitySpacePostParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());

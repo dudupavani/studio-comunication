@@ -71,8 +71,6 @@ async function _getAuthContext(
   const profileAny = (profileRes.data ?? {}) as any;
   if (profileAny?.global_role === PLATFORM_ADMIN) {
     platformRole = PLATFORM_ADMIN;
-  } else if (user.user_metadata?.global_role === PLATFORM_ADMIN) {
-    platformRole = PLATFORM_ADMIN;
   } else {
     const svc = createServiceClient();
     const { data: svcProfile } = await svc

@@ -15,15 +15,21 @@ import {
 } from "@/lib/communities/validations";
 import {
   buildSegmentMap,
+  isSameOriginRequest,
   jsonError,
   loadMembershipSets,
 } from "@/lib/communities/api";
+import { getInvalidCommunityStoragePaths } from "@/lib/communities/storage-paths";
 
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ communityId: string; spaceId: string }> }
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return jsonError(403, "Origem invalida.");
+    }
+
     const parsedParams = communitySpaceParamsSchema.safeParse(await context.params);
     if (!parsedParams.success) {
       return jsonError(400, "Parâmetros inválidos.", parsedParams.error.flatten());
@@ -107,6 +113,21 @@ export async function POST(
     const canPost = canPostInCommunity(auth, community, canManage);
     if (!canPost) {
       return jsonError(403, "Você não tem permissão para publicar nesta comunidade.");
+    }
+
+    if (payload.coverUrl && !payload.coverPath) {
+      return jsonError(400, "Capa invalida.");
+    }
+
+    const invalidStoragePaths = getInvalidCommunityStoragePaths({
+      orgId: auth.orgId,
+      communityId,
+      spaceId,
+      coverPath: payload.coverPath,
+      blocks: payload.blocks,
+    });
+    if (invalidStoragePaths.length > 0) {
+      return jsonError(403, "Arquivo fora do escopo da publicacao.");
     }
 
     const { data: inserted, error: insertError } = await svc

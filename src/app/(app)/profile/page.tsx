@@ -25,10 +25,7 @@ export default async function ProfilePage() {
     id: user.id,
     email: user.email ?? "",
     full_name: profileData?.full_name || user.user_metadata.name || "",
-    global_role:
-      profileData?.global_role ??
-      (user.user_metadata.global_role as Profile["global_role"]) ??
-      null,
+    global_role: profileData?.global_role ?? null,
     phone: profileData?.phone || "",
     avatar_url: profileData?.avatar_url || "",
     created_at: user.created_at,
