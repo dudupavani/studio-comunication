@@ -150,25 +150,11 @@ async function _getAuthContext(
   return authContext;
 }
 
-function createAsyncCache<T>(fn: () => Promise<T>) {
-  let promise: Promise<T> | null = null;
-  return () => {
-    if (!promise) {
-      promise = fn();
-    }
-    return promise;
-  };
-}
-
-// memo por request + exports explícitos
-// Memo apenas para a versão sem cliente fornecido
-const getAuthContextCached = createAsyncCache(() => _getAuthContext());
-
 export function getAuthContext(
   supabaseClient?: SupabaseClient<Database>
 ): Promise<AuthContext | null> {
   if (supabaseClient) return _getAuthContext(supabaseClient);
-  return getAuthContextCached();
+  return _getAuthContext();
 }
 
 export default getAuthContext;

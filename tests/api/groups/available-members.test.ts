@@ -3,14 +3,17 @@ import { GET } from "@/app/api/groups/[groupId]/available-members/route";
 import { getAuthContext } from "@/lib/auth-context";
 import { createServiceClient } from "@/lib/supabase/service";
 import { resolveIdentityMap } from "@/lib/identity";
+import { canUsePermission } from "@/lib/permissions/user-functions";
 
 jest.mock("@/lib/auth-context", () => ({ getAuthContext: jest.fn() }));
 jest.mock("@/lib/supabase/service", () => ({ createServiceClient: jest.fn() }));
 jest.mock("@/lib/identity", () => ({ resolveIdentityMap: jest.fn() }));
+jest.mock("@/lib/permissions/user-functions", () => ({ canUsePermission: jest.fn() }));
 
 const mockedGetAuthContext = getAuthContext as jest.Mock;
 const mockedCreateServiceClient = createServiceClient as jest.Mock;
 const mockedResolveIdentityMap = resolveIdentityMap as jest.Mock;
+const mockedCanUsePermission = canUsePermission as jest.Mock;
 
 const ORG_ID = "aaaaaaaa-0000-0000-0000-000000000001";
 const OTHER_ORG_ID = "aaaaaaaa-0000-0000-0000-000000000099";
@@ -48,6 +51,7 @@ function makeSupabase(opts: {
 beforeEach(() => {
   jest.clearAllMocks();
   mockedResolveIdentityMap.mockResolvedValue(new Map());
+  mockedCanUsePermission.mockResolvedValue(false);
 });
 
 describe("GET /api/groups/[groupId]/available-members", () => {
@@ -69,6 +73,17 @@ describe("GET /api/groups/[groupId]/available-members", () => {
       expect(res.status).toBe(400);
       const json = await res.json();
       expect(json.error).toBe("no-org");
+    });
+
+    it("returns 403 when user cannot manage group members", async () => {
+      mockedGetAuthContext.mockResolvedValue({
+        userId: "me", orgId: ORG_ID, orgRole: "unit_user", platformRole: null, unitIds: [],
+      });
+      mockedCreateServiceClient.mockReturnValue(makeSupabase());
+      const res = await GET(makeRequest(), makeCtx() as any);
+      expect(res.status).toBe(403);
+      const json = await res.json();
+      expect(json.error).toBe("forbidden");
     });
   });
 

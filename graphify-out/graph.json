@@ -171,7 +171,7 @@
       "source_file": "src\\app\\(app)\\layout.tsx",
       "source_location": "L1",
       "id": "src_app_app_layout_tsx",
-      "community": 9,
+      "community": 4,
       "norm_label": "layout.tsx"
     },
     {
@@ -180,7 +180,7 @@
       "source_file": "src\\app\\(app)\\layout.tsx",
       "source_location": "L16",
       "id": "layout_applayout",
-      "community": 9,
+      "community": 4,
       "norm_label": "applayout()"
     },
     {
@@ -306,7 +306,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\community-content-pane.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_app_comunidades_components_community_content_pane_tsx",
-      "community": 10,
+      "community": 9,
       "norm_label": "community-content-pane.tsx"
     },
     {
@@ -315,7 +315,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\community-content-pane.tsx",
       "source_location": "L65",
       "id": "community_content_pane_getinitials",
-      "community": 10,
+      "community": 9,
       "norm_label": "getinitials()"
     },
     {
@@ -324,7 +324,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\community-content-pane.tsx",
       "source_location": "L75",
       "id": "community_content_pane_formatfeeddate",
-      "community": 10,
+      "community": 9,
       "norm_label": "formatfeeddate()"
     },
     {
@@ -333,7 +333,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\community-content-pane.tsx",
       "source_location": "L87",
       "id": "community_content_pane_formatlikecountlabel",
-      "community": 10,
+      "community": 9,
       "norm_label": "formatlikecountlabel()"
     },
     {
@@ -342,7 +342,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\community-content-pane.tsx",
       "source_location": "L91",
       "id": "community_content_pane_formatcommentscountlabel",
-      "community": 10,
+      "community": 9,
       "norm_label": "formatcommentscountlabel()"
     },
     {
@@ -351,7 +351,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\community-content-pane.tsx",
       "source_location": "L139",
       "id": "community_content_pane_canmanagepublication",
-      "community": 10,
+      "community": 9,
       "norm_label": "canmanagepublication()"
     },
     {
@@ -360,7 +360,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\community-content-pane.tsx",
       "source_location": "L142",
       "id": "community_content_pane_openlikersdialog",
-      "community": 10,
+      "community": 9,
       "norm_label": "openlikersdialog()"
     },
     {
@@ -369,7 +369,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\community-content-pane.tsx",
       "source_location": "L150",
       "id": "community_content_pane_shouldsuppresscardopen",
-      "community": 10,
+      "community": 9,
       "norm_label": "shouldsuppresscardopen()"
     },
     {
@@ -378,7 +378,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\community-content-pane.tsx",
       "source_location": "L154",
       "id": "community_content_pane_suppresscardopenforaction",
-      "community": 10,
+      "community": 9,
       "norm_label": "suppresscardopenforaction()"
     },
     {
@@ -387,7 +387,7 @@
       "source_file": "src\\app\\(app)\\comunidades\\components\\community-create-wizard.tsx",
       "source_location": "L1",
       "id": "src_app_app_comunidades_components_community_create_wizard_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "community-create-wizard.tsx"
     },
     {
@@ -396,7 +396,7 @@
       "source_file": "src\\app\\(app)\\comunidades\\components\\community-create-wizard.tsx",
       "source_location": "L194",
       "id": "community_create_wizard_handleadvance",
-      "community": 3,
+      "community": 2,
       "norm_label": "handleadvance()"
     },
     {
@@ -405,7 +405,7 @@
       "source_file": "src\\app\\(app)\\comunidades\\components\\community-create-wizard.tsx",
       "source_location": "L206",
       "id": "community_create_wizard_handlecreate",
-      "community": 3,
+      "community": 2,
       "norm_label": "handlecreate()"
     },
     {
@@ -414,7 +414,7 @@
       "source_file": "src\\app\\(app)\\comunidades\\components\\community-form-dialog.tsx",
       "source_location": "L1",
       "id": "src_app_app_comunidades_components_community_form_dialog_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "community-form-dialog.tsx"
     },
     {
@@ -423,7 +423,7 @@
       "source_file": "src\\app\\(app)\\comunidades\\components\\community-form-dialog.tsx",
       "source_location": "L121",
       "id": "community_form_dialog_togglesegmenttarget",
-      "community": 3,
+      "community": 2,
       "norm_label": "togglesegmenttarget()"
     },
     {
@@ -432,7 +432,7 @@
       "source_file": "src\\app\\(app)\\comunidades\\components\\community-form-dialog.tsx",
       "source_location": "L134",
       "id": "community_form_dialog_submit",
-      "community": 3,
+      "community": 2,
       "norm_label": "submit()"
     },
     {
@@ -513,7 +513,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\cover-positioner.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_app_comunidades_components_cover_positioner_tsx",
-      "community": 14,
+      "community": 13,
       "norm_label": "cover-positioner.tsx"
     },
     {
@@ -522,7 +522,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\cover-positioner.tsx",
       "source_location": "L69",
       "id": "cover_positioner_handlemousedown",
-      "community": 14,
+      "community": 13,
       "norm_label": "handlemousedown()"
     },
     {
@@ -531,7 +531,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\cover-positioner.tsx",
       "source_location": "L78",
       "id": "cover_positioner_handlemousemove",
-      "community": 14,
+      "community": 13,
       "norm_label": "handlemousemove()"
     },
     {
@@ -540,7 +540,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\cover-positioner.tsx",
       "source_location": "L87",
       "id": "cover_positioner_handlemouseup",
-      "community": 14,
+      "community": 13,
       "norm_label": "handlemouseup()"
     },
     {
@@ -549,7 +549,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\cover-positioner.tsx",
       "source_location": "L91",
       "id": "cover_positioner_handletouchstart",
-      "community": 14,
+      "community": 13,
       "norm_label": "handletouchstart()"
     },
     {
@@ -558,7 +558,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\cover-positioner.tsx",
       "source_location": "L101",
       "id": "cover_positioner_handletouchmove",
-      "community": 14,
+      "community": 13,
       "norm_label": "handletouchmove()"
     },
     {
@@ -567,7 +567,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\cover-positioner.tsx",
       "source_location": "L111",
       "id": "cover_positioner_handletouchend",
-      "community": 14,
+      "community": 13,
       "norm_label": "handletouchend()"
     },
     {
@@ -576,7 +576,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\comunidades\\components\\cover-positioner.tsx",
       "source_location": "L115",
       "id": "cover_positioner_handleapply",
-      "community": 14,
+      "community": 13,
       "norm_label": "handleapply()"
     },
     {
@@ -819,7 +819,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\groups\\actions.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_app_groups_actions_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "actions.ts"
     },
     {
@@ -828,7 +828,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\groups\\actions.ts",
       "source_location": "L16",
       "id": "actions_creategroupaction",
-      "community": 2,
+      "community": 0,
       "norm_label": "creategroupaction()"
     },
     {
@@ -846,7 +846,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\groups\\[groupId]\\AddMembersDrawer.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_app_groups_groupid_addmembersdrawer_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "addmembersdrawer.tsx"
     },
     {
@@ -855,7 +855,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\groups\\[groupId]\\AddMembersDrawer.tsx",
       "source_location": "L143",
       "id": "addmembersdrawer_toggleuser",
-      "community": 3,
+      "community": 2,
       "norm_label": "toggleuser()"
     },
     {
@@ -864,7 +864,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\groups\\[groupId]\\AddMembersDrawer.tsx",
       "source_location": "L152",
       "id": "addmembersdrawer_handleselectall",
-      "community": 3,
+      "community": 2,
       "norm_label": "handleselectall()"
     },
     {
@@ -873,7 +873,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\groups\\[groupId]\\AddMembersDrawer.tsx",
       "source_location": "L160",
       "id": "addmembersdrawer_handleaddmembers",
-      "community": 3,
+      "community": 2,
       "norm_label": "handleaddmembers()"
     },
     {
@@ -882,7 +882,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\groups\\[groupId]\\MembersTable.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_app_groups_groupid_memberstable_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "memberstable.tsx"
     },
     {
@@ -891,7 +891,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\groups\\[groupId]\\MembersTable.tsx",
       "source_location": "L111",
       "id": "memberstable_togglesort",
-      "community": 3,
+      "community": 2,
       "norm_label": "togglesort()"
     },
     {
@@ -900,7 +900,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\groups\\[groupId]\\MembersTable.tsx",
       "source_location": "L119",
       "id": "memberstable_handleremove",
-      "community": 3,
+      "community": 2,
       "norm_label": "handleremove()"
     },
     {
@@ -1017,7 +1017,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\orgs\\actions.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_app_orgs_actions_ts",
-      "community": 2,
+      "community": 1,
       "norm_label": "actions.ts"
     },
     {
@@ -1026,7 +1026,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\(app)\\orgs\\actions.ts",
       "source_location": "L8",
       "id": "actions_createorgandgo",
-      "community": 2,
+      "community": 1,
       "norm_label": "createorgandgo()"
     },
     {
@@ -1161,7 +1161,7 @@
       "source_file": "src\\app\\(app)\\profile\\page.tsx",
       "source_location": "L1",
       "id": "src_app_app_profile_page_tsx",
-      "community": 9,
+      "community": 4,
       "norm_label": "page.tsx"
     },
     {
@@ -1170,7 +1170,7 @@
       "source_file": "src\\app\\(app)\\profile\\page.tsx",
       "source_location": "L8",
       "id": "page_profilepage",
-      "community": 9,
+      "community": 4,
       "norm_label": "profilepage()"
     },
     {
@@ -1188,7 +1188,7 @@
       "source_file": "src\\app\\(app)\\teams\\page.tsx",
       "source_location": "L1",
       "id": "src_app_app_teams_page_tsx",
-      "community": 4,
+      "community": 3,
       "norm_label": "page.tsx"
     },
     {
@@ -1197,7 +1197,7 @@
       "source_file": "src\\app\\(app)\\teams\\page.tsx",
       "source_location": "L18",
       "id": "page_canaccess",
-      "community": 4,
+      "community": 3,
       "norm_label": "canaccess()"
     },
     {
@@ -1206,7 +1206,7 @@
       "source_file": "src\\app\\(app)\\teams\\page.tsx",
       "source_location": "L28",
       "id": "page_teamspage",
-      "community": 4,
+      "community": 3,
       "norm_label": "teamspage()"
     },
     {
@@ -1368,7 +1368,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\auth\\callback\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_auth_callback_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -1377,7 +1377,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\auth\\recovery\\route.ts",
       "source_location": "L4",
       "id": "route_get",
-      "community": 2,
+      "community": 0,
       "norm_label": "get()"
     },
     {
@@ -1440,7 +1440,7 @@
       "source_file": "src\\app\\api\\admin\\users\\[id]\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_admin_users_id_route_ts",
-      "community": 3,
+      "community": 2,
       "norm_label": "route.ts"
     },
     {
@@ -1449,7 +1449,7 @@
       "source_file": "src\\app\\api\\admin\\users\\[id]\\route.ts",
       "source_location": "L10",
       "id": "route_json",
-      "community": 3,
+      "community": 2,
       "norm_label": "json()"
     },
     {
@@ -1458,7 +1458,7 @@
       "source_file": "src\\app\\api\\users\\[id]\\route.ts",
       "source_location": "L212",
       "id": "route_delete",
-      "community": 0,
+      "community": 4,
       "norm_label": "delete()"
     },
     {
@@ -1494,7 +1494,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\calendar\\events\\[id]\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_calendar_events_id_route_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1503,7 +1503,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\calendar\\events\\[id]\\route.ts",
       "source_location": "L12",
       "id": "route_isrlsforbidden",
-      "community": 0,
+      "community": 4,
       "norm_label": "isrlsforbidden()"
     },
     {
@@ -1512,7 +1512,7 @@
       "source_file": "src\\app\\api\\user-functions\\[id]\\route.ts",
       "source_location": "L61",
       "id": "route_patch",
-      "community": 0,
+      "community": 4,
       "norm_label": "patch()"
     },
     {
@@ -1530,7 +1530,7 @@
       "source_file": "src\\app\\api\\communities\\[communityId]\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_communities_communityid_route_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1539,7 +1539,7 @@
       "source_file": "src\\app\\api\\communities\\[communityId]\\route.ts",
       "source_location": "L26",
       "id": "route_loadcommunitybundle",
-      "community": 0,
+      "community": 4,
       "norm_label": "loadcommunitybundle()"
     },
     {
@@ -1548,7 +1548,7 @@
       "source_file": "src\\app\\api\\communities\\[communityId]\\feed\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_communities_communityid_feed_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -1557,7 +1557,7 @@
       "source_file": "src\\app\\api\\communities\\[communityId]\\spaces\\[spaceId]\\posts\\[postId]\\route.ts",
       "source_location": "L55",
       "id": "route_createsignedurlmapforpaths",
-      "community": 2,
+      "community": 0,
       "norm_label": "createsignedurlmapforpaths()"
     },
     {
@@ -1584,7 +1584,7 @@
       "source_file": "src\\app\\api\\communities\\[communityId]\\spaces\\[spaceId]\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_communities_communityid_spaces_spaceid_route_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1602,7 +1602,7 @@
       "source_file": "src\\app\\api\\communities\\[communityId]\\spaces\\[spaceId]\\posts\\[postId]\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_communities_communityid_spaces_spaceid_posts_postid_route_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1611,7 +1611,7 @@
       "source_file": "src\\app\\api\\communities\\[communityId]\\spaces\\[spaceId]\\posts\\[postId]\\route.ts",
       "source_location": "L21",
       "id": "route_canmutatepost",
-      "community": 0,
+      "community": 4,
       "norm_label": "canmutatepost()"
     },
     {
@@ -1620,7 +1620,7 @@
       "source_file": "src\\app\\api\\communities\\[communityId]\\spaces\\[spaceId]\\posts\\[postId]\\route.ts",
       "source_location": "L30",
       "id": "route_collectpoststoragepaths",
-      "community": 0,
+      "community": 4,
       "norm_label": "collectpoststoragepaths()"
     },
     {
@@ -1629,7 +1629,7 @@
       "source_file": "src\\app\\api\\communities\\[communityId]\\spaces\\[spaceId]\\posts\\[postId]\\reactions\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_communities_communityid_spaces_spaceid_posts_postid_reactions_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -1638,7 +1638,7 @@
       "source_file": "src\\app\\api\\communities\\[communityId]\\spaces\\[spaceId]\\posts\\[postId]\\reactions\\route.ts",
       "source_location": "L18",
       "id": "route_resolvereactiontarget",
-      "community": 2,
+      "community": 0,
       "norm_label": "resolvereactiontarget()"
     },
     {
@@ -1764,7 +1764,7 @@
       "source_file": "src\\app\\api\\groups\\[groupId]\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_groups_groupid_route_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1773,7 +1773,7 @@
       "source_file": "src\\app\\api\\groups\\[groupId]\\route.ts",
       "source_location": "L15",
       "id": "route_norm",
-      "community": 0,
+      "community": 4,
       "norm_label": "norm()"
     },
     {
@@ -1782,44 +1782,71 @@
       "source_file": "src\\app\\api\\groups\\[groupId]\\available-members\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_groups_groupid_available_members_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
+    },
+    {
+      "label": "canListAvailableGroupMembers()",
+      "file_type": "code",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\available-members\\route.ts",
+      "source_location": "L11",
+      "id": "route_canlistavailablegroupmembers",
+      "community": 0,
+      "norm_label": "canlistavailablegroupmembers()"
+    },
+    {
+      "label": "routeError()",
+      "file_type": "code",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L104",
+      "id": "route_routeerror",
+      "community": 0,
+      "norm_label": "routeerror()"
     },
     {
       "label": "route.ts",
       "file_type": "code",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
       "source_location": "L1",
-      "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
-      "community": 2,
+      "id": "src_app_api_groups_groupid_members_route_ts",
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
       "label": "extractBearerToken()",
       "file_type": "code",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L40",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L41",
       "id": "route_extractbearertoken",
-      "community": 2,
+      "community": 0,
       "norm_label": "extractbearertoken()"
     },
     {
       "label": "createClientFromAuth()",
       "file_type": "code",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L65",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L66",
       "id": "route_createclientfromauth",
-      "community": 2,
+      "community": 0,
       "norm_label": "createclientfromauth()"
     },
     {
       "label": "getGroupWithOrgId()",
       "file_type": "code",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L84",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L85",
       "id": "route_getgroupwithorgid",
-      "community": 2,
+      "community": 0,
       "norm_label": "getgroupwithorgid()"
+    },
+    {
+      "label": "canManageGroupMembers()",
+      "file_type": "code",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L96",
+      "id": "route_canmanagegroupmembers",
+      "community": 0,
+      "norm_label": "canmanagegroupmembers()"
     },
     {
       "label": "route.ts",
@@ -1836,7 +1863,7 @@
       "source_file": "src\\app\\api\\me\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_me_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -1863,7 +1890,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\messages\\announcements\\[announcementId]\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_messages_announcements_announcementid_route_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1872,7 +1899,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\messages\\announcements\\[announcementId]\\route.ts",
       "source_location": "L27",
       "id": "route_removecalendarevent",
-      "community": 0,
+      "community": 4,
       "norm_label": "removecalendarevent()"
     },
     {
@@ -1890,7 +1917,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\messages\\announcements\\[announcementId]\\metrics\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_messages_announcements_announcementid_metrics_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -1899,7 +1926,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\messages\\announcements\\[announcementId]\\metrics\\route.ts",
       "source_location": "L26",
       "id": "route_buildhourlyseries",
-      "community": 2,
+      "community": 0,
       "norm_label": "buildhourlyseries()"
     },
     {
@@ -1908,7 +1935,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\messages\\announcements\\[announcementId]\\metrics\\route.ts",
       "source_location": "L41",
       "id": "route_builddailyseries",
-      "community": 2,
+      "community": 0,
       "norm_label": "builddailyseries()"
     },
     {
@@ -1917,7 +1944,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\messages\\announcements\\[announcementId]\\metrics\\route.ts",
       "source_location": "L58",
       "id": "route_buildidentitymap",
-      "community": 2,
+      "community": 0,
       "norm_label": "buildidentitymap()"
     },
     {
@@ -1998,7 +2025,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\messages\\recipients\\groups\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_messages_recipients_groups_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2007,7 +2034,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\messages\\recipients\\teams\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_messages_recipients_teams_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2016,7 +2043,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\messages\\recipients\\users\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_messages_recipients_users_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2025,7 +2052,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\notifications\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_notifications_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2034,7 +2061,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\notifications\\route.ts",
       "source_location": "L17",
       "id": "route_parsetypes",
-      "community": 2,
+      "community": 0,
       "norm_label": "parsetypes()"
     },
     {
@@ -2043,7 +2070,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\notifications\\badges\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_notifications_badges_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2070,7 +2097,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\notifications\\push-subscriptions\\[id]\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_notifications_push_subscriptions_id_route_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -2079,7 +2106,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\notifications\\unread-count\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_notifications_unread_count_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2088,7 +2115,7 @@
       "source_file": "src\\app\\api\\orgs\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_orgs_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2097,7 +2124,7 @@
       "source_file": "src\\app\\api\\orgs\\[orgSlug]\\available-members\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_orgs_orgslug_available_members_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2106,7 +2133,7 @@
       "source_file": "src\\app\\api\\orgs\\[orgSlug]\\units\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_orgs_orgslug_units_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2124,7 +2151,7 @@
       "source_file": "src\\app\\api\\units\\[unitId]\\add-members\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_units_unitid_add_members_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2133,7 +2160,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\units\\[unitId]\\search-users\\route.ts",
       "source_location": "L8",
       "id": "route_isuuid",
-      "community": 2,
+      "community": 0,
       "norm_label": "isuuid()"
     },
     {
@@ -2142,7 +2169,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\units\\[unitId]\\available-members\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_units_unitid_available_members_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2169,7 +2196,7 @@
       "source_file": "src\\app\\api\\units\\[unitId]\\members\\[userId]\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_units_unitid_members_userid_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2178,7 +2205,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\units\\[unitId]\\search-users\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_api_units_unitid_search_users_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2205,7 +2232,7 @@
       "source_file": "src\\app\\api\\user-functions\\route.ts",
       "source_location": "L44",
       "id": "route_defaultpermissionsforbaserole",
-      "community": 5,
+      "community": 0,
       "norm_label": "defaultpermissionsforbaserole()"
     },
     {
@@ -2214,7 +2241,7 @@
       "source_file": "src\\app\\api\\user-functions\\[id]\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_user_functions_id_route_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -2223,7 +2250,7 @@
       "source_file": "src\\app\\api\\user-functions\\[id]\\route.ts",
       "source_location": "L25",
       "id": "route_getauthorizedprofile",
-      "community": 5,
+      "community": 4,
       "norm_label": "getauthorizedprofile()"
     },
     {
@@ -2295,7 +2322,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\auth\\confirm\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_auth_confirm_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2322,7 +2349,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\auth\\logout\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_auth_logout_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2331,7 +2358,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\auth\\logout\\route.ts",
       "source_location": "L5",
       "id": "route_absolute",
-      "community": 2,
+      "community": 0,
       "norm_label": "absolute()"
     },
     {
@@ -2340,7 +2367,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\auth\\logout\\route.ts",
       "source_location": "L10",
       "id": "route_handle",
-      "community": 2,
+      "community": 0,
       "norm_label": "handle()"
     },
     {
@@ -2367,7 +2394,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\auth\\recovery\\route.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_auth_recovery_route_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -2385,7 +2412,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\start\\page.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_app_start_page_tsx",
-      "community": 11,
+      "community": 10,
       "norm_label": "page.tsx"
     },
     {
@@ -2394,7 +2421,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\start\\page.tsx",
       "source_location": "L7",
       "id": "page_startpage",
-      "community": 11,
+      "community": 10,
       "norm_label": "startpage()"
     },
     {
@@ -2610,7 +2637,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\auth\\login-form.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_auth_login_form_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "login-form.tsx"
     },
     {
@@ -2619,7 +2646,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\auth\\login-form.tsx",
       "source_location": "L36",
       "id": "login_form_onsubmit",
-      "community": 3,
+      "community": 2,
       "norm_label": "onsubmit()"
     },
     {
@@ -2646,7 +2673,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\EditEventModal.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_calendar_editeventmodal_tsx",
-      "community": 12,
+      "community": 11,
       "norm_label": "editeventmodal.tsx"
     },
     {
@@ -2655,7 +2682,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\EditEventModal.tsx",
       "source_location": "L44",
       "id": "editeventmodal_pad",
-      "community": 12,
+      "community": 11,
       "norm_label": "pad()"
     },
     {
@@ -2664,7 +2691,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\EditEventModal.tsx",
       "source_location": "L47",
       "id": "editeventmodal_tohhmm",
-      "community": 12,
+      "community": 11,
       "norm_label": "tohhmm()"
     },
     {
@@ -2673,7 +2700,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\EditEventModal.tsx",
       "source_location": "L50",
       "id": "editeventmodal_startofday",
-      "community": 12,
+      "community": 11,
       "norm_label": "startofday()"
     },
     {
@@ -2682,7 +2709,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\EditEventModal.tsx",
       "source_location": "L55",
       "id": "editeventmodal_endofday",
-      "community": 12,
+      "community": 11,
       "norm_label": "endofday()"
     },
     {
@@ -2691,7 +2718,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\EditEventModal.tsx",
       "source_location": "L60",
       "id": "editeventmodal_combinedateandtime",
-      "community": 12,
+      "community": 11,
       "norm_label": "combinedateandtime()"
     },
     {
@@ -2700,7 +2727,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\EditEventModal.tsx",
       "source_location": "L67",
       "id": "editeventmodal_splithhmm",
-      "community": 12,
+      "community": 11,
       "norm_label": "splithhmm()"
     },
     {
@@ -2709,7 +2736,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\EditEventModal.tsx",
       "source_location": "L72",
       "id": "editeventmodal_timeselect",
-      "community": 12,
+      "community": 11,
       "norm_label": "timeselect()"
     },
     {
@@ -2718,7 +2745,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\EditEventModal.tsx",
       "source_location": "L179",
       "id": "editeventmodal_handlesave",
-      "community": 12,
+      "community": 11,
       "norm_label": "handlesave()"
     },
     {
@@ -2745,7 +2772,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\NewEventDialog.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_calendar_neweventdialog_tsx",
-      "community": 13,
+      "community": 12,
       "norm_label": "neweventdialog.tsx"
     },
     {
@@ -2754,7 +2781,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\NewEventDialog.tsx",
       "source_location": "L40",
       "id": "neweventdialog_pad",
-      "community": 13,
+      "community": 12,
       "norm_label": "pad()"
     },
     {
@@ -2763,7 +2790,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\NewEventDialog.tsx",
       "source_location": "L44",
       "id": "neweventdialog_tohhmm",
-      "community": 13,
+      "community": 12,
       "norm_label": "tohhmm()"
     },
     {
@@ -2772,7 +2799,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\NewEventDialog.tsx",
       "source_location": "L48",
       "id": "neweventdialog_startofday",
-      "community": 13,
+      "community": 12,
       "norm_label": "startofday()"
     },
     {
@@ -2781,7 +2808,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\NewEventDialog.tsx",
       "source_location": "L54",
       "id": "neweventdialog_endofday",
-      "community": 13,
+      "community": 12,
       "norm_label": "endofday()"
     },
     {
@@ -2790,7 +2817,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\NewEventDialog.tsx",
       "source_location": "L60",
       "id": "neweventdialog_combinedateandtime",
-      "community": 13,
+      "community": 12,
       "norm_label": "combinedateandtime()"
     },
     {
@@ -2799,7 +2826,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\NewEventDialog.tsx",
       "source_location": "L68",
       "id": "neweventdialog_splithhmm",
-      "community": 13,
+      "community": 12,
       "norm_label": "splithhmm()"
     },
     {
@@ -2808,7 +2835,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\NewEventDialog.tsx",
       "source_location": "L73",
       "id": "neweventdialog_timeselect",
-      "community": 13,
+      "community": 12,
       "norm_label": "timeselect()"
     },
     {
@@ -2817,7 +2844,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\calendar\\NewEventDialog.tsx",
       "source_location": "L200",
       "id": "neweventdialog_handlesubmit",
-      "community": 13,
+      "community": 12,
       "norm_label": "handlesubmit()"
     },
     {
@@ -2835,7 +2862,7 @@
       "source_file": "src\\components\\communication\\RichTextEditor.tsx",
       "source_location": "L1",
       "id": "src_components_communication_richtexteditor_tsx",
-      "community": 30,
+      "community": 29,
       "norm_label": "richtexteditor.tsx"
     },
     {
@@ -2844,7 +2871,7 @@
       "source_file": "src\\components\\communication\\RichTextEditor.tsx",
       "source_location": "L54",
       "id": "richtexteditor_exec",
-      "community": 30,
+      "community": 29,
       "norm_label": "exec()"
     },
     {
@@ -2943,7 +2970,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\groups\\new-group-modal.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_groups_new_group_modal_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "new-group-modal.tsx"
     },
     {
@@ -2952,7 +2979,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\groups\\new-group-modal.tsx",
       "source_location": "L60",
       "id": "new_group_modal_apply",
-      "community": 3,
+      "community": 2,
       "norm_label": "apply()"
     },
     {
@@ -2961,7 +2988,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\groups\\new-group-modal.tsx",
       "source_location": "L136",
       "id": "new_group_modal_handlecreate",
-      "community": 3,
+      "community": 2,
       "norm_label": "handlecreate()"
     },
     {
@@ -2970,7 +2997,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\groups\\new-group-modal.tsx",
       "source_location": "L181",
       "id": "new_group_modal_handleopenchange",
-      "community": 3,
+      "community": 2,
       "norm_label": "handleopenchange()"
     },
     {
@@ -3087,7 +3114,7 @@
       "source_file": "src\\components\\profile\\profile-form.tsx",
       "source_location": "L1",
       "id": "src_components_profile_profile_form_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "profile-form.tsx"
     },
     {
@@ -3096,7 +3123,7 @@
       "source_file": "src\\components\\profile\\profile-form.tsx",
       "source_location": "L46",
       "id": "profile_form_onsubmit",
-      "community": 3,
+      "community": 2,
       "norm_label": "onsubmit()"
     },
     {
@@ -3105,7 +3132,7 @@
       "source_file": "src\\components\\profile\\profile-form.tsx",
       "source_location": "L118",
       "id": "profile_form_handlecrop",
-      "community": 3,
+      "community": 2,
       "norm_label": "handlecrop()"
     },
     {
@@ -3114,7 +3141,7 @@
       "source_file": "src\\components\\profile\\profile-form.tsx",
       "source_location": "L124",
       "id": "profile_form_handleremoveimage",
-      "community": 3,
+      "community": 2,
       "norm_label": "handleremoveimage()"
     },
     {
@@ -3123,7 +3150,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\rich-text\\CKEditorComponent.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_rich_text_ckeditorcomponent_tsx",
-      "community": 11,
+      "community": 10,
       "norm_label": "ckeditorcomponent.tsx"
     },
     {
@@ -3132,7 +3159,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\rich-text\\CKEditorComponent.tsx",
       "source_location": "L24",
       "id": "ckeditorcomponent_ckeditorcomponent",
-      "community": 11,
+      "community": 10,
       "norm_label": "ckeditorcomponent()"
     },
     {
@@ -3330,7 +3357,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\teams\\TeamDialog.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_teams_teamdialog_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "teamdialog.tsx"
     },
     {
@@ -3339,7 +3366,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\teams\\TeamDialog.tsx",
       "source_location": "L129",
       "id": "teamdialog_togglemember",
-      "community": 3,
+      "community": 2,
       "norm_label": "togglemember()"
     },
     {
@@ -3348,7 +3375,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\teams\\TeamDialog.tsx",
       "source_location": "L156",
       "id": "teamdialog_handlesubmit",
-      "community": 3,
+      "community": 2,
       "norm_label": "handlesubmit()"
     },
     {
@@ -3357,7 +3384,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\teams\\TeamsClient.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_teams_teamsclient_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "teamsclient.tsx"
     },
     {
@@ -3366,7 +3393,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\teams\\TeamsClient.tsx",
       "source_location": "L84",
       "id": "teamsclient_handledelete",
-      "community": 3,
+      "community": 2,
       "norm_label": "handledelete()"
     },
     {
@@ -3375,7 +3402,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\teams\\TeamsClient.tsx",
       "source_location": "L115",
       "id": "teamsclient_opendelete",
-      "community": 3,
+      "community": 2,
       "norm_label": "opendelete()"
     },
     {
@@ -3384,7 +3411,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\teams\\TeamsClient.tsx",
       "source_location": "L119",
       "id": "teamsclient_opencreatedialog",
-      "community": 3,
+      "community": 2,
       "norm_label": "opencreatedialog()"
     },
     {
@@ -3393,7 +3420,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\teams\\TeamsClient.tsx",
       "source_location": "L125",
       "id": "teamsclient_openeditdialog",
-      "community": 3,
+      "community": 2,
       "norm_label": "openeditdialog()"
     },
     {
@@ -3402,7 +3429,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\teams\\TeamsClient.tsx",
       "source_location": "L135",
       "id": "teamsclient_closedialog",
-      "community": 3,
+      "community": 2,
       "norm_label": "closedialog()"
     },
     {
@@ -3672,7 +3699,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\ui\\editable-text.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_ui_editable_text_tsx",
-      "community": 20,
+      "community": 21,
       "norm_label": "editable-text.tsx"
     },
     {
@@ -3681,7 +3708,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\ui\\editable-text.tsx",
       "source_location": "L37",
       "id": "editable_text_handlesave",
-      "community": 20,
+      "community": 21,
       "norm_label": "handlesave()"
     },
     {
@@ -3690,7 +3717,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\ui\\editable-text.tsx",
       "source_location": "L43",
       "id": "editable_text_handlecancel",
-      "community": 20,
+      "community": 21,
       "norm_label": "handlecancel()"
     },
     {
@@ -3699,7 +3726,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\ui\\editable-text.tsx",
       "source_location": "L67",
       "id": "editable_text_clsx",
-      "community": 20,
+      "community": 21,
       "norm_label": "clsx()"
     },
     {
@@ -3762,7 +3789,7 @@
       "source_file": "src\\components\\ui\\pagination.tsx",
       "source_location": "L1",
       "id": "src_components_ui_pagination_tsx",
-      "community": 21,
+      "community": 20,
       "norm_label": "pagination.tsx"
     },
     {
@@ -3771,7 +3798,7 @@
       "source_file": "src\\components\\ui\\pagination.tsx",
       "source_location": "L7",
       "id": "pagination_pagination",
-      "community": 21,
+      "community": 20,
       "norm_label": "pagination()"
     },
     {
@@ -3780,7 +3807,7 @@
       "source_file": "src\\components\\ui\\pagination.tsx",
       "source_location": "L42",
       "id": "pagination_paginationlink",
-      "community": 21,
+      "community": 20,
       "norm_label": "paginationlink()"
     },
     {
@@ -3789,7 +3816,7 @@
       "source_file": "src\\components\\ui\\pagination.tsx",
       "source_location": "L62",
       "id": "pagination_paginationprevious",
-      "community": 21,
+      "community": 20,
       "norm_label": "paginationprevious()"
     },
     {
@@ -3798,7 +3825,7 @@
       "source_file": "src\\components\\ui\\pagination.tsx",
       "source_location": "L78",
       "id": "pagination_paginationnext",
-      "community": 21,
+      "community": 20,
       "norm_label": "paginationnext()"
     },
     {
@@ -3807,7 +3834,7 @@
       "source_file": "src\\components\\ui\\pagination.tsx",
       "source_location": "L94",
       "id": "pagination_paginationellipsis",
-      "community": 21,
+      "community": 20,
       "norm_label": "paginationellipsis()"
     },
     {
@@ -4203,7 +4230,7 @@
       "source_file": "src\\components\\units\\members\\add-unit-member-modal.tsx",
       "source_location": "L1",
       "id": "src_components_units_members_add_unit_member_modal_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "add-unit-member-modal.tsx"
     },
     {
@@ -4212,7 +4239,7 @@
       "source_file": "src\\components\\units\\members\\add-unit-member-modal.tsx",
       "source_location": "L78",
       "id": "add_unit_member_modal_toggle",
-      "community": 3,
+      "community": 2,
       "norm_label": "toggle()"
     },
     {
@@ -4221,7 +4248,7 @@
       "source_file": "src\\components\\units\\members\\add-unit-member-modal.tsx",
       "source_location": "L85",
       "id": "add_unit_member_modal_searchusers",
-      "community": 3,
+      "community": 2,
       "norm_label": "searchusers()"
     },
     {
@@ -4230,7 +4257,7 @@
       "source_file": "src\\components\\units\\members\\add-unit-member-modal.tsx",
       "source_location": "L130",
       "id": "add_unit_member_modal_handlesave",
-      "community": 3,
+      "community": 2,
       "norm_label": "handlesave()"
     },
     {
@@ -4248,7 +4275,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\units\\members\\remove-unit-member-button.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_units_members_remove_unit_member_button_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "remove-unit-member-button.tsx"
     },
     {
@@ -4257,7 +4284,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\units\\members\\remove-unit-member-button.tsx",
       "source_location": "L39",
       "id": "remove_unit_member_button_handleconfirm",
-      "community": 3,
+      "community": 2,
       "norm_label": "handleconfirm()"
     },
     {
@@ -4266,7 +4293,7 @@
       "source_file": "src\\components\\user-functions\\user-functions-client.tsx",
       "source_location": "L1",
       "id": "src_components_user_functions_user_functions_client_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "user-functions-client.tsx"
     },
     {
@@ -4275,7 +4302,7 @@
       "source_file": "src\\components\\user-functions\\user-functions-client.tsx",
       "source_location": "L84",
       "id": "user_functions_client_defaultpermissionsforrole",
-      "community": 3,
+      "community": 2,
       "norm_label": "defaultpermissionsforrole()"
     },
     {
@@ -4284,7 +4311,7 @@
       "source_file": "src\\components\\user-functions\\user-functions-client.tsx",
       "source_location": "L109",
       "id": "user_functions_client_loaddata",
-      "community": 3,
+      "community": 2,
       "norm_label": "loaddata()"
     },
     {
@@ -4293,7 +4320,7 @@
       "source_file": "src\\components\\user-functions\\user-functions-client.tsx",
       "source_location": "L143",
       "id": "user_functions_client_updateselectedprofile",
-      "community": 3,
+      "community": 2,
       "norm_label": "updateselectedprofile()"
     },
     {
@@ -4302,7 +4329,7 @@
       "source_file": "src\\components\\user-functions\\user-functions-client.tsx",
       "source_location": "L152",
       "id": "user_functions_client_createprofile",
-      "community": 3,
+      "community": 2,
       "norm_label": "createprofile()"
     },
     {
@@ -4311,7 +4338,7 @@
       "source_file": "src\\components\\user-functions\\user-functions-client.tsx",
       "source_location": "L186",
       "id": "user_functions_client_saveprofile",
-      "community": 3,
+      "community": 2,
       "norm_label": "saveprofile()"
     },
     {
@@ -4320,7 +4347,7 @@
       "source_file": "src\\components\\user-functions\\user-functions-client.tsx",
       "source_location": "L215",
       "id": "user_functions_client_saveassignments",
-      "community": 3,
+      "community": 2,
       "norm_label": "saveassignments()"
     },
     {
@@ -4329,7 +4356,7 @@
       "source_file": "src\\components\\user-functions\\user-functions-client.tsx",
       "source_location": "L241",
       "id": "user_functions_client_deleteprofile",
-      "community": 3,
+      "community": 2,
       "norm_label": "deleteprofile()"
     },
     {
@@ -4338,7 +4365,7 @@
       "source_file": "src\\components\\user-functions\\user-functions-client.tsx",
       "source_location": "L373",
       "id": "user_functions_client_getrolelabel",
-      "community": 3,
+      "community": 2,
       "norm_label": "getrolelabel()"
     },
     {
@@ -4347,7 +4374,7 @@
       "source_file": "src\\components\\users\\delete-user-dialog.tsx",
       "source_location": "L1",
       "id": "src_components_users_delete_user_dialog_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "delete-user-dialog.tsx"
     },
     {
@@ -4356,7 +4383,7 @@
       "source_file": "src\\components\\users\\delete-user-dialog.tsx",
       "source_location": "L36",
       "id": "delete_user_dialog_onconfirm",
-      "community": 3,
+      "community": 2,
       "norm_label": "onconfirm()"
     },
     {
@@ -4365,7 +4392,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\users\\disable-user-dialog.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_users_disable_user_dialog_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "disable-user-dialog.tsx"
     },
     {
@@ -4374,7 +4401,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\users\\disable-user-dialog.tsx",
       "source_location": "L34",
       "id": "disable_user_dialog_onconfirm",
-      "community": 3,
+      "community": 2,
       "norm_label": "onconfirm()"
     },
     {
@@ -4383,7 +4410,7 @@
       "source_file": "src\\components\\users\\edit-user-form.tsx",
       "source_location": "L1",
       "id": "src_components_users_edit_user_form_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "edit-user-form.tsx"
     },
     {
@@ -4392,7 +4419,7 @@
       "source_file": "src\\components\\users\\edit-user-form.tsx",
       "source_location": "L111",
       "id": "edit_user_form_onsubmit",
-      "community": 3,
+      "community": 2,
       "norm_label": "onsubmit()"
     },
     {
@@ -4401,7 +4428,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\users\\enable-user-dialog.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_users_enable_user_dialog_tsx",
-      "community": 3,
+      "community": 2,
       "norm_label": "enable-user-dialog.tsx"
     },
     {
@@ -4410,7 +4437,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\users\\enable-user-dialog.tsx",
       "source_location": "L34",
       "id": "enable_user_dialog_onconfirm",
-      "community": 3,
+      "community": 2,
       "norm_label": "onconfirm()"
     },
     {
@@ -4491,7 +4518,7 @@
       "source_file": "src\\components\\users\\users-client.tsx",
       "source_location": "L1",
       "id": "src_components_users_users_client_tsx",
-      "community": 0,
+      "community": 4,
       "norm_label": "users-client.tsx"
     },
     {
@@ -4500,7 +4527,7 @@
       "source_file": "src\\components\\users\\users-client.tsx",
       "source_location": "L69",
       "id": "users_client_getdisplayrole",
-      "community": 0,
+      "community": 4,
       "norm_label": "getdisplayrole()"
     },
     {
@@ -4509,7 +4536,7 @@
       "source_file": "src\\components\\users\\users-client.tsx",
       "source_location": "L134",
       "id": "users_client_canedittarget",
-      "community": 0,
+      "community": 4,
       "norm_label": "canedittarget()"
     },
     {
@@ -4518,7 +4545,7 @@
       "source_file": "src\\components\\users\\users-client.tsx",
       "source_location": "L147",
       "id": "users_client_canchangelifecycle",
-      "community": 0,
+      "community": 4,
       "norm_label": "canchangelifecycle()"
     },
     {
@@ -4527,7 +4554,7 @@
       "source_file": "src\\components\\users\\users-client.tsx",
       "source_location": "L244",
       "id": "users_client_handlerolechange",
-      "community": 0,
+      "community": 4,
       "norm_label": "handlerolechange()"
     },
     {
@@ -4536,7 +4563,7 @@
       "source_file": "src\\components\\users\\users-client.tsx",
       "source_location": "L257",
       "id": "users_client_handlestatuschange",
-      "community": 0,
+      "community": 4,
       "norm_label": "handlestatuschange()"
     },
     {
@@ -4545,7 +4572,7 @@
       "source_file": "src\\components\\users\\users-client.tsx",
       "source_location": "L270",
       "id": "users_client_buildpageurl",
-      "community": 0,
+      "community": 4,
       "norm_label": "buildpageurl()"
     },
     {
@@ -4554,7 +4581,7 @@
       "source_file": "src\\components\\users\\users-client.tsx",
       "source_location": "L277",
       "id": "users_client_handleclearfilters",
-      "community": 0,
+      "community": 4,
       "norm_label": "handleclearfilters()"
     },
     {
@@ -4563,7 +4590,7 @@
       "source_file": "src\\components\\users\\users-client.tsx",
       "source_location": "L291",
       "id": "users_client_handlesearch",
-      "community": 0,
+      "community": 4,
       "norm_label": "handlesearch()"
     },
     {
@@ -4572,7 +4599,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\users\\users-header.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_components_users_users_header_tsx",
-      "community": 11,
+      "community": 10,
       "norm_label": "users-header.tsx"
     },
     {
@@ -4581,7 +4608,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\components\\users\\users-header.tsx",
       "source_location": "L7",
       "id": "users_header_usersheader",
-      "community": 11,
+      "community": 10,
       "norm_label": "usersheader()"
     },
     {
@@ -4608,7 +4635,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-auth-context.tsx",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_hooks_use_auth_context_tsx",
-      "community": 11,
+      "community": 10,
       "norm_label": "use-auth-context.tsx"
     },
     {
@@ -4617,7 +4644,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-auth-context.tsx",
       "source_location": "L37",
       "id": "use_auth_context_authprovider",
-      "community": 11,
+      "community": 10,
       "norm_label": "authprovider()"
     },
     {
@@ -4626,7 +4653,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-auth-context.tsx",
       "source_location": "L71",
       "id": "use_auth_context_useauthcontext",
-      "community": 11,
+      "community": 10,
       "norm_label": "useauthcontext()"
     },
     {
@@ -4734,7 +4761,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-toast.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_hooks_use_toast_ts",
-      "community": 3,
+      "community": 2,
       "norm_label": "use-toast.ts"
     },
     {
@@ -4743,7 +4770,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-toast.ts",
       "source_location": "L38",
       "id": "use_toast_genid",
-      "community": 3,
+      "community": 2,
       "norm_label": "genid()"
     },
     {
@@ -4752,7 +4779,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-toast.ts",
       "source_location": "L48",
       "id": "use_toast_notify",
-      "community": 3,
+      "community": 2,
       "norm_label": "notify()"
     },
     {
@@ -4761,7 +4788,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-toast.ts",
       "source_location": "L53",
       "id": "use_toast_addtoremovequeue",
-      "community": 3,
+      "community": 2,
       "norm_label": "addtoremovequeue()"
     },
     {
@@ -4770,7 +4797,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-toast.ts",
       "source_location": "L62",
       "id": "use_toast_reducer",
-      "community": 3,
+      "community": 2,
       "norm_label": "reducer()"
     },
     {
@@ -4779,7 +4806,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-toast.ts",
       "source_location": "L100",
       "id": "use_toast_dispatch",
-      "community": 3,
+      "community": 2,
       "norm_label": "dispatch()"
     },
     {
@@ -4788,7 +4815,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-toast.ts",
       "source_location": "L106",
       "id": "use_toast_toast",
-      "community": 3,
+      "community": 2,
       "norm_label": "toast()"
     },
     {
@@ -4797,7 +4824,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\hooks\\use-toast.ts",
       "source_location": "L130",
       "id": "use_toast_dismiss",
-      "community": 3,
+      "community": 2,
       "norm_label": "dismiss()"
     },
     {
@@ -4846,21 +4873,12 @@
       "norm_label": "getauthcontext()"
     },
     {
-      "label": "createAsyncCache()",
-      "file_type": "code",
-      "source_file": "src\\lib\\auth-context.ts",
-      "source_location": "L153",
-      "id": "auth_context_createasynccache",
-      "community": 1,
-      "norm_label": "createasynccache()"
-    },
-    {
       "label": "email-admin.ts",
       "file_type": "code",
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\email-admin.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_email_admin_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "email-admin.ts"
     },
     {
@@ -4869,7 +4887,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\email-admin.ts",
       "source_location": "L17",
       "id": "email_admin_fetchemailsbyuserids",
-      "community": 2,
+      "community": 0,
       "norm_label": "fetchemailsbyuserids()"
     },
     {
@@ -4878,7 +4896,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\email-admin.ts",
       "source_location": "L51",
       "id": "email_admin_fetchemailforuserid",
-      "community": 2,
+      "community": 0,
       "norm_label": "fetchemailforuserid()"
     },
     {
@@ -4905,7 +4923,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\identity.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_identity_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "identity.ts"
     },
     {
@@ -4914,7 +4932,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\identity.ts",
       "source_location": "L10",
       "id": "identity_mergeidentity",
-      "community": 2,
+      "community": 0,
       "norm_label": "mergeidentity()"
     },
     {
@@ -4923,61 +4941,61 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\identity.ts",
       "source_location": "L28",
       "id": "identity_resolveidentitymap",
-      "community": 2,
+      "community": 0,
       "norm_label": "resolveidentitymap()"
     },
     {
       "label": "log.ts",
       "file_type": "code",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
+      "source_file": "src\\lib\\log.ts",
       "source_location": "L1",
-      "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
-      "community": 9,
+      "id": "src_lib_log_ts",
+      "community": 4,
       "norm_label": "log.ts"
     },
     {
       "label": "normalizeSupabaseLike()",
       "file_type": "code",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
+      "source_file": "src\\lib\\log.ts",
       "source_location": "L5",
       "id": "log_normalizesupabaselike",
-      "community": 9,
+      "community": 4,
       "norm_label": "normalizesupabaselike()"
     },
     {
       "label": "toLoggableError()",
       "file_type": "code",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
+      "source_file": "src\\lib\\log.ts",
       "source_location": "L18",
       "id": "log_tologgableerror",
-      "community": 9,
+      "community": 4,
       "norm_label": "tologgableerror()"
     },
     {
       "label": "logError()",
       "file_type": "code",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
-      "source_location": "L94",
+      "source_file": "src\\lib\\log.ts",
+      "source_location": "L92",
       "id": "log_logerror",
-      "community": 9,
+      "community": 4,
       "norm_label": "logerror()"
     },
     {
       "label": "logWarn()",
       "file_type": "code",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
-      "source_location": "L108",
+      "source_file": "src\\lib\\log.ts",
+      "source_location": "L106",
       "id": "log_logwarn",
-      "community": 9,
+      "community": 4,
       "norm_label": "logwarn()"
     },
     {
       "label": "logInfo()",
       "file_type": "code",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
-      "source_location": "L112",
+      "source_file": "src\\lib\\log.ts",
+      "source_location": "L110",
       "id": "log_loginfo",
-      "community": 9,
+      "community": 4,
       "norm_label": "loginfo()"
     },
     {
@@ -5067,7 +5085,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\permissions.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_permissions_ts",
-      "community": 15,
+      "community": 14,
       "norm_label": "permissions.ts"
     },
     {
@@ -5076,7 +5094,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\permissions.ts",
       "source_location": "L16",
       "id": "permissions_isplatformadmin",
-      "community": 15,
+      "community": 14,
       "norm_label": "isplatformadmin()"
     },
     {
@@ -5085,7 +5103,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\permissions.ts",
       "source_location": "L19",
       "id": "permissions_isorgadmin",
-      "community": 15,
+      "community": 14,
       "norm_label": "isorgadmin()"
     },
     {
@@ -5094,7 +5112,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\permissions.ts",
       "source_location": "L24",
       "id": "permissions_isorgadmineffective",
-      "community": 15,
+      "community": 14,
       "norm_label": "isorgadmineffective()"
     },
     {
@@ -5103,7 +5121,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\permissions.ts",
       "source_location": "L28",
       "id": "permissions_isorgadminof",
-      "community": 15,
+      "community": 14,
       "norm_label": "isorgadminof()"
     },
     {
@@ -5112,7 +5130,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\permissions.ts",
       "source_location": "L35",
       "id": "permissions_isunitmaster",
-      "community": 15,
+      "community": 14,
       "norm_label": "isunitmaster()"
     },
     {
@@ -5121,7 +5139,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\permissions.ts",
       "source_location": "L43",
       "id": "permissions_isunitmasterof",
-      "community": 15,
+      "community": 14,
       "norm_label": "isunitmasterof()"
     },
     {
@@ -5130,7 +5148,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\permissions.ts",
       "source_location": "L49",
       "id": "permissions_belongstounit",
-      "community": 15,
+      "community": 14,
       "norm_label": "belongstounit()"
     },
     {
@@ -5139,7 +5157,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\role-labels.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_role_labels_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "role-labels.ts"
     },
     {
@@ -5148,7 +5166,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\role-labels.ts",
       "source_location": "L10",
       "id": "role_labels_getrolelabel",
-      "community": 0,
+      "community": 4,
       "norm_label": "getrolelabel()"
     },
     {
@@ -5184,7 +5202,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\utils.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_utils_ts",
-      "community": 20,
+      "community": 21,
       "norm_label": "utils.ts"
     },
     {
@@ -5193,7 +5211,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\utils.ts",
       "source_location": "L4",
       "id": "utils_cn",
-      "community": 20,
+      "community": 21,
       "norm_label": "cn()"
     },
     {
@@ -5202,7 +5220,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\actions\\auth.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_actions_auth_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "auth.ts"
     },
     {
@@ -5211,7 +5229,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\actions\\auth.ts",
       "source_location": "L7",
       "id": "auth_signin",
-      "community": 2,
+      "community": 0,
       "norm_label": "signin()"
     },
     {
@@ -5220,7 +5238,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\actions\\auth.ts",
       "source_location": "L24",
       "id": "auth_signout",
-      "community": 2,
+      "community": 0,
       "norm_label": "signout()"
     },
     {
@@ -5229,7 +5247,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\actions\\auth.ts",
       "source_location": "L30",
       "id": "auth_sendpasswordresetemail",
-      "community": 2,
+      "community": 0,
       "norm_label": "sendpasswordresetemail()"
     },
     {
@@ -5238,7 +5256,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\actions\\auth.ts",
       "source_location": "L55",
       "id": "auth_updatepassword",
-      "community": 2,
+      "community": 0,
       "norm_label": "updatepassword()"
     },
     {
@@ -5373,7 +5391,7 @@
       "source_file": "src\\lib\\actions\\unit-members.ts",
       "source_location": "L1",
       "id": "src_lib_actions_unit_members_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "unit-members.ts"
     },
     {
@@ -5382,7 +5400,7 @@
       "source_file": "src\\lib\\actions\\unit-members.ts",
       "source_location": "L43",
       "id": "unit_members_fetchemailsbyuserids",
-      "community": 4,
+      "community": 3,
       "norm_label": "fetchemailsbyuserids()"
     },
     {
@@ -5400,7 +5418,7 @@
       "source_file": "src\\lib\\actions\\unit-members.ts",
       "source_location": "L87",
       "id": "unit_members_listunitmembers",
-      "community": 4,
+      "community": 3,
       "norm_label": "listunitmembers()"
     },
     {
@@ -5409,7 +5427,7 @@
       "source_file": "src\\lib\\actions\\unit-members.ts",
       "source_location": "L136",
       "id": "unit_members_listunitmemberswithemail",
-      "community": 4,
+      "community": 3,
       "norm_label": "listunitmemberswithemail()"
     },
     {
@@ -5418,7 +5436,7 @@
       "source_file": "src\\lib\\actions\\unit-members.ts",
       "source_location": "L204",
       "id": "unit_members_addunitmember",
-      "community": 4,
+      "community": 3,
       "norm_label": "addunitmember()"
     },
     {
@@ -5427,7 +5445,7 @@
       "source_file": "src\\lib\\actions\\unit-members.ts",
       "source_location": "L301",
       "id": "unit_members_removeunitmember",
-      "community": 4,
+      "community": 3,
       "norm_label": "removeunitmember()"
     },
     {
@@ -5643,7 +5661,7 @@
       "source_file": "src\\lib\\actions\\user.ts",
       "source_location": "L574",
       "id": "user_deleteuser",
-      "community": 0,
+      "community": 4,
       "norm_label": "deleteuser()"
     },
     {
@@ -5652,7 +5670,7 @@
       "source_file": "src\\lib\\actions\\user.ts",
       "source_location": "L591",
       "id": "user_updateuserroles",
-      "community": 4,
+      "community": 3,
       "norm_label": "updateuserroles()"
     },
     {
@@ -5670,7 +5688,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\admin\\org-members.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_admin_org_members_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "org-members.ts"
     },
     {
@@ -5679,7 +5697,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\admin\\org-members.ts",
       "source_location": "L14",
       "id": "org_members_canmanageorgmembers",
-      "community": 4,
+      "community": 3,
       "norm_label": "canmanageorgmembers()"
     },
     {
@@ -5688,7 +5706,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\admin\\org-members.ts",
       "source_location": "L33",
       "id": "org_members_adminlistmembers",
-      "community": 4,
+      "community": 3,
       "norm_label": "adminlistmembers()"
     },
     {
@@ -5697,7 +5715,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\admin\\org-members.ts",
       "source_location": "L51",
       "id": "org_members_adminupdatememberrole",
-      "community": 4,
+      "community": 3,
       "norm_label": "adminupdatememberrole()"
     },
     {
@@ -5706,7 +5724,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\admin\\org-members.ts",
       "source_location": "L73",
       "id": "org_members_adminremovemember",
-      "community": 4,
+      "community": 3,
       "norm_label": "adminremovemember()"
     },
     {
@@ -5715,7 +5733,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\admin\\org-members.ts",
       "source_location": "L95",
       "id": "org_members_adminaddmember",
-      "community": 4,
+      "community": 3,
       "norm_label": "adminaddmember()"
     },
     {
@@ -5724,7 +5742,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\admin\\org-members.ts",
       "source_location": "L119",
       "id": "org_members_admingetmember",
-      "community": 4,
+      "community": 3,
       "norm_label": "admingetmember()"
     },
     {
@@ -5778,7 +5796,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\auth\\invite.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_auth_invite_ts",
-      "community": 9,
+      "community": 4,
       "norm_label": "invite.ts"
     },
     {
@@ -5787,7 +5805,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\auth\\invite.ts",
       "source_location": "L13",
       "id": "invite_inviteuserwithorgcontext",
-      "community": 9,
+      "community": 4,
       "norm_label": "inviteuserwithorgcontext()"
     },
     {
@@ -5796,7 +5814,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\auth\\role-helpers.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_auth_role_helpers_ts",
-      "community": 0,
+      "community": 15,
       "norm_label": "role-helpers.ts"
     },
     {
@@ -5814,7 +5832,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\auth\\role-helpers.ts",
       "source_location": "L15",
       "id": "role_helpers_isorgadmin",
-      "community": 0,
+      "community": 15,
       "norm_label": "isorgadmin()"
     },
     {
@@ -5823,7 +5841,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\auth\\role-helpers.ts",
       "source_location": "L22",
       "id": "role_helpers_isunitmaster",
-      "community": 0,
+      "community": 15,
       "norm_label": "isunitmaster()"
     },
     {
@@ -5832,7 +5850,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\auth\\role-helpers.ts",
       "source_location": "L29",
       "id": "role_helpers_isorgmaster",
-      "community": 0,
+      "community": 15,
       "norm_label": "isorgmaster()"
     },
     {
@@ -5841,7 +5859,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\auth\\role-helpers.ts",
       "source_location": "L36",
       "id": "role_helpers_isunituser",
-      "community": 0,
+      "community": 15,
       "norm_label": "isunituser()"
     },
     {
@@ -5850,7 +5868,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\auth\\role-helpers.ts",
       "source_location": "L44",
       "id": "role_helpers_canmanageorg",
-      "community": 0,
+      "community": 15,
       "norm_label": "canmanageorg()"
     },
     {
@@ -5859,7 +5877,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\auth\\role-helpers.ts",
       "source_location": "L52",
       "id": "role_helpers_canmanageunit",
-      "community": 0,
+      "community": 15,
       "norm_label": "canmanageunit()"
     },
     {
@@ -5868,7 +5886,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\auth\\role-helpers.ts",
       "source_location": "L59",
       "id": "role_helpers_canviewunitcontent",
-      "community": 0,
+      "community": 15,
       "norm_label": "canviewunitcontent()"
     },
     {
@@ -6021,7 +6039,7 @@
       "source_file": "src\\lib\\communities\\api.ts",
       "source_location": "L8",
       "id": "api_jsonerror",
-      "community": 0,
+      "community": 4,
       "norm_label": "jsonerror()"
     },
     {
@@ -6039,7 +6057,7 @@
       "source_file": "src\\lib\\communities\\api.ts",
       "source_location": "L20",
       "id": "api_issameoriginrequest",
-      "community": 0,
+      "community": 4,
       "norm_label": "issameoriginrequest()"
     },
     {
@@ -6138,7 +6156,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\communities\\post-reactions.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_communities_post_reactions_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "post-reactions.ts"
     },
     {
@@ -6147,7 +6165,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\communities\\post-reactions.ts",
       "source_location": "L10",
       "id": "post_reactions_getcommunitypostreactiontarget",
-      "community": 2,
+      "community": 0,
       "norm_label": "getcommunitypostreactiontarget()"
     },
     {
@@ -6156,7 +6174,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\communities\\post-reactions.ts",
       "source_location": "L33",
       "id": "post_reactions_buildcommunitypostreactionsummarybypost",
-      "community": 2,
+      "community": 0,
       "norm_label": "buildcommunitypostreactionsummarybypost()"
     },
     {
@@ -6165,7 +6183,7 @@
       "source_file": "src\\lib\\communities\\storage-paths.ts",
       "source_location": "L1",
       "id": "src_lib_communities_storage_paths_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "storage-paths.ts"
     },
     {
@@ -6174,7 +6192,7 @@
       "source_file": "src\\lib\\communities\\storage-paths.ts",
       "source_location": "L1",
       "id": "storage_paths_iscommunitystoragepathownedbyscope",
-      "community": 0,
+      "community": 4,
       "norm_label": "iscommunitystoragepathownedbyscope()"
     },
     {
@@ -6183,7 +6201,7 @@
       "source_file": "src\\lib\\communities\\storage-paths.ts",
       "source_location": "L28",
       "id": "storage_paths_getinvalidcommunitystoragepaths",
-      "community": 0,
+      "community": 4,
       "norm_label": "getinvalidcommunitystoragepaths()"
     },
     {
@@ -6201,7 +6219,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\http\\problem.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_http_problem_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "problem.ts"
     },
     {
@@ -6210,7 +6228,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\http\\problem.ts",
       "source_location": "L3",
       "id": "problem_problem",
-      "community": 0,
+      "community": 4,
       "norm_label": "problem()"
     },
     {
@@ -6255,7 +6273,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\announcement-access.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_messages_announcement_access_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "announcement-access.ts"
     },
     {
@@ -6264,7 +6282,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\announcement-access.ts",
       "source_location": "L24",
       "id": "announcement_access_canmanageannouncement",
-      "community": 4,
+      "community": 3,
       "norm_label": "canmanageannouncement()"
     },
     {
@@ -6273,7 +6291,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\announcement-access.ts",
       "source_location": "L35",
       "id": "announcement_access_isannouncementrecipient",
-      "community": 4,
+      "community": 3,
       "norm_label": "isannouncementrecipient()"
     },
     {
@@ -6282,7 +6300,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\announcement-access.ts",
       "source_location": "L75",
       "id": "announcement_access_getannouncementviewaccess",
-      "community": 4,
+      "community": 3,
       "norm_label": "getannouncementviewaccess()"
     },
     {
@@ -6291,7 +6309,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\announcement-access.ts",
       "source_location": "L129",
       "id": "announcement_access_getannouncementifrecipient",
-      "community": 4,
+      "community": 3,
       "norm_label": "getannouncementifrecipient()"
     },
     {
@@ -6336,7 +6354,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\announcement-metrics.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_messages_announcement_metrics_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "announcement-metrics.ts"
     },
     {
@@ -6345,7 +6363,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\announcement-metrics.ts",
       "source_location": "L21",
       "id": "announcement_metrics_buildbuckets",
-      "community": 2,
+      "community": 0,
       "norm_label": "buildbuckets()"
     },
     {
@@ -6354,7 +6372,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\announcement-metrics.ts",
       "source_location": "L35",
       "id": "announcement_metrics_getannouncementmetrics",
-      "community": 2,
+      "community": 0,
       "norm_label": "getannouncementmetrics()"
     },
     {
@@ -6363,7 +6381,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\api-helpers.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_messages_api_helpers_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "api-helpers.ts"
     },
     {
@@ -6372,7 +6390,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\api-helpers.ts",
       "source_location": "L4",
       "id": "api_helpers_errorresponse",
-      "community": 0,
+      "community": 4,
       "norm_label": "errorresponse()"
     },
     {
@@ -6381,7 +6399,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\api-helpers.ts",
       "source_location": "L8",
       "id": "api_helpers_handlerouteerror",
-      "community": 0,
+      "community": 4,
       "norm_label": "handlerouteerror()"
     },
     {
@@ -6390,7 +6408,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\api-helpers.ts",
       "source_location": "L19",
       "id": "api_helpers_parsepagination",
-      "community": 2,
+      "community": 0,
       "norm_label": "parsepagination()"
     },
     {
@@ -6408,7 +6426,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_messages_inbox_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "inbox.ts"
     },
     {
@@ -6417,7 +6435,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L66",
       "id": "inbox_toplain",
-      "community": 4,
+      "community": 3,
       "norm_label": "toplain()"
     },
     {
@@ -6426,7 +6444,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L75",
       "id": "inbox_toannouncementmedia",
-      "community": 4,
+      "community": 3,
       "norm_label": "toannouncementmedia()"
     },
     {
@@ -6435,7 +6453,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L87",
       "id": "inbox_getannouncementpublishedat",
-      "community": 4,
+      "community": 3,
       "norm_label": "getannouncementpublishedat()"
     },
     {
@@ -6444,7 +6462,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L91",
       "id": "inbox_getannouncementtimelinetimestamp",
-      "community": 4,
+      "community": 3,
       "norm_label": "getannouncementtimelinetimestamp()"
     },
     {
@@ -6453,7 +6471,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L100",
       "id": "inbox_sortannouncementitems",
-      "community": 4,
+      "community": 3,
       "norm_label": "sortannouncementitems()"
     },
     {
@@ -6462,7 +6480,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L108",
       "id": "inbox_mapannouncementrows",
-      "community": 4,
+      "community": 3,
       "norm_label": "mapannouncementrows()"
     },
     {
@@ -6471,7 +6489,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L136",
       "id": "inbox_resolvesendernames",
-      "community": 4,
+      "community": 3,
       "norm_label": "resolvesendernames()"
     },
     {
@@ -6480,7 +6498,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L244",
       "id": "inbox_fetchannouncementitems",
-      "community": 4,
+      "community": 3,
       "norm_label": "fetchannouncementitems()"
     },
     {
@@ -6489,7 +6507,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L369",
       "id": "inbox_hydrateannouncementdetails",
-      "community": 4,
+      "community": 3,
       "norm_label": "hydrateannouncementdetails()"
     },
     {
@@ -6498,7 +6516,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L456",
       "id": "inbox_fetchauthoredannouncements",
-      "community": 4,
+      "community": 3,
       "norm_label": "fetchauthoredannouncements()"
     },
     {
@@ -6507,7 +6525,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L492",
       "id": "inbox_fetchannouncementdetail",
-      "community": 4,
+      "community": 3,
       "norm_label": "fetchannouncementdetail()"
     },
     {
@@ -6516,7 +6534,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L537",
       "id": "inbox_fetchcalendareventitems",
-      "community": 4,
+      "community": 3,
       "norm_label": "fetchcalendareventitems()"
     },
     {
@@ -6525,7 +6543,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\inbox.ts",
       "source_location": "L598",
       "id": "inbox_fetchinboxitems",
-      "community": 4,
+      "community": 3,
       "norm_label": "fetchinboxitems()"
     },
     {
@@ -6534,7 +6552,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\queries.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_messages_queries_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "queries.ts"
     },
     {
@@ -6543,7 +6561,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\notifications\\queries.ts",
       "source_location": "L19",
       "id": "queries_encodecursor",
-      "community": 4,
+      "community": 3,
       "norm_label": "encodecursor()"
     },
     {
@@ -6552,7 +6570,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\notifications\\queries.ts",
       "source_location": "L23",
       "id": "queries_decodecursor",
-      "community": 4,
+      "community": 3,
       "norm_label": "decodecursor()"
     },
     {
@@ -6561,7 +6579,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\queries.ts",
       "source_location": "L28",
       "id": "queries_fetchchats",
-      "community": 4,
+      "community": 3,
       "norm_label": "fetchchats()"
     },
     {
@@ -6570,7 +6588,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\queries.ts",
       "source_location": "L276",
       "id": "queries_fetchchatbyid",
-      "community": 4,
+      "community": 3,
       "norm_label": "fetchchatbyid()"
     },
     {
@@ -6579,7 +6597,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\queries.ts",
       "source_location": "L293",
       "id": "queries_fetchchatmembers",
-      "community": 4,
+      "community": 3,
       "norm_label": "fetchchatmembers()"
     },
     {
@@ -6588,7 +6606,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\queries.ts",
       "source_location": "L377",
       "id": "queries_fetchchatmessages",
-      "community": 4,
+      "community": 3,
       "norm_label": "fetchchatmessages()"
     },
     {
@@ -6597,7 +6615,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\queries.ts",
       "source_location": "L549",
       "id": "queries_ischatadmin",
-      "community": 4,
+      "community": 3,
       "norm_label": "ischatadmin()"
     },
     {
@@ -6606,7 +6624,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\messages\\queries.ts",
       "source_location": "L569",
       "id": "queries_ischatmember",
-      "community": 4,
+      "community": 3,
       "norm_label": "ischatmember()"
     },
     {
@@ -6849,7 +6867,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\notifications\\queries.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_notifications_queries_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "queries.ts"
     },
     {
@@ -6858,7 +6876,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\notifications\\queries.ts",
       "source_location": "L30",
       "id": "queries_listnotifications",
-      "community": 4,
+      "community": 3,
       "norm_label": "listnotifications()"
     },
     {
@@ -6867,7 +6885,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\notifications\\queries.ts",
       "source_location": "L76",
       "id": "queries_countunreadnotifications",
-      "community": 4,
+      "community": 3,
       "norm_label": "countunreadnotifications()"
     },
     {
@@ -6876,7 +6894,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\notifications\\queries.ts",
       "source_location": "L95",
       "id": "queries_updatenotificationsreadstate",
-      "community": 4,
+      "community": 3,
       "norm_label": "updatenotificationsreadstate()"
     },
     {
@@ -6993,7 +7011,7 @@
       "source_file": "src\\lib\\permissions\\user-functions.ts",
       "source_location": "L206",
       "id": "user_functions_loadmanagetargetuser",
-      "community": 4,
+      "community": 5,
       "norm_label": "loadmanagetargetuser()"
     },
     {
@@ -7020,7 +7038,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\queries\\profile.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_queries_profile_ts",
-      "community": 9,
+      "community": 4,
       "norm_label": "profile.ts"
     },
     {
@@ -7029,7 +7047,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\queries\\profile.ts",
       "source_location": "L8",
       "id": "profile_getloggeduserprofile",
-      "community": 9,
+      "community": 4,
       "norm_label": "getloggeduserprofile()"
     },
     {
@@ -7038,7 +7056,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\reactions\\core.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_reactions_core_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "core.ts"
     },
     {
@@ -7047,7 +7065,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\reactions\\core.ts",
       "source_location": "L23",
       "id": "core_createemptyreactionsummary",
-      "community": 2,
+      "community": 0,
       "norm_label": "createemptyreactionsummary()"
     },
     {
@@ -7056,7 +7074,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\reactions\\core.ts",
       "source_location": "L32",
       "id": "core_getemptyreactionsummary",
-      "community": 2,
+      "community": 0,
       "norm_label": "getemptyreactionsummary()"
     },
     {
@@ -7065,7 +7083,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\reactions\\core.ts",
       "source_location": "L36",
       "id": "core_buildreactionsummarybytargetids",
-      "community": 2,
+      "community": 0,
       "norm_label": "buildreactionsummarybytargetids()"
     },
     {
@@ -7074,7 +7092,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\reactions\\core.ts",
       "source_location": "L124",
       "id": "core_listreactionactorsfortarget",
-      "community": 2,
+      "community": 0,
       "norm_label": "listreactionactorsfortarget()"
     },
     {
@@ -7083,7 +7101,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\reactions\\core.ts",
       "source_location": "L172",
       "id": "core_toggletargetreaction",
-      "community": 2,
+      "community": 0,
       "norm_label": "toggletargetreaction()"
     },
     {
@@ -7092,7 +7110,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\admin.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_supabase_admin_ts",
-      "community": 9,
+      "community": 8,
       "norm_label": "admin.ts"
     },
     {
@@ -7101,7 +7119,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\admin.ts",
       "source_location": "L3",
       "id": "admin_createadminclient",
-      "community": 9,
+      "community": 8,
       "norm_label": "createadminclient()"
     },
     {
@@ -7146,7 +7164,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\rpc.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_supabase_rpc_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "rpc.ts"
     },
     {
@@ -7155,7 +7173,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\rpc.ts",
       "source_location": "L9",
       "id": "rpc_isplatformadminbyid",
-      "community": 4,
+      "community": 3,
       "norm_label": "isplatformadminbyid()"
     },
     {
@@ -7164,7 +7182,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\rpc.ts",
       "source_location": "L27",
       "id": "rpc_updateprofileselfrpc",
-      "community": 4,
+      "community": 3,
       "norm_label": "updateprofileselfrpc()"
     },
     {
@@ -7182,7 +7200,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\server.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_supabase_server_ts",
-      "community": 2,
+      "community": 0,
       "norm_label": "server.ts"
     },
     {
@@ -7191,7 +7209,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\server.ts",
       "source_location": "L6",
       "id": "server_getenv",
-      "community": 2,
+      "community": 0,
       "norm_label": "getenv()"
     },
     {
@@ -7200,7 +7218,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\server.ts",
       "source_location": "L20",
       "id": "server_createserverclientreadonly",
-      "community": 2,
+      "community": 0,
       "norm_label": "createserverclientreadonly()"
     },
     {
@@ -7209,7 +7227,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\server.ts",
       "source_location": "L45",
       "id": "server_createserverclientwithcookies",
-      "community": 2,
+      "community": 0,
       "norm_label": "createserverclientwithcookies()"
     },
     {
@@ -7227,7 +7245,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\service.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_supabase_service_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "service.ts"
     },
     {
@@ -7236,7 +7254,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\supabase\\service.ts",
       "source_location": "L4",
       "id": "service_createserviceclient",
-      "community": 4,
+      "community": 3,
       "norm_label": "createserviceclient()"
     },
     {
@@ -7254,7 +7272,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\teams\\enrich-org-users.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_teams_enrich_org_users_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "enrich-org-users.ts"
     },
     {
@@ -7263,7 +7281,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\teams\\enrich-org-users.ts",
       "source_location": "L13",
       "id": "enrich_org_users_enrichorguserswithauthmetadata",
-      "community": 4,
+      "community": 3,
       "norm_label": "enrichorguserswithauthmetadata()"
     },
     {
@@ -7272,7 +7290,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\teams\\user-directory.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_teams_user_directory_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "user-directory.ts"
     },
     {
@@ -7281,7 +7299,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\teams\\user-directory.ts",
       "source_location": "L4",
       "id": "user_directory_enrichorguserswithemployeeprofile",
-      "community": 4,
+      "community": 3,
       "norm_label": "enrichorguserswithemployeeprofile()"
     },
     {
@@ -7308,7 +7326,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\types\\roles.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_types_roles_ts",
-      "community": 29,
+      "community": 30,
       "norm_label": "roles.ts"
     },
     {
@@ -7317,7 +7335,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\types\\roles.ts",
       "source_location": "L25",
       "id": "roles_isplatformrole",
-      "community": 29,
+      "community": 30,
       "norm_label": "isplatformrole()"
     },
     {
@@ -7326,7 +7344,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\types\\roles.ts",
       "source_location": "L27",
       "id": "roles_isorgrole",
-      "community": 29,
+      "community": 30,
       "norm_label": "isorgrole()"
     },
     {
@@ -7335,7 +7353,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\types\\roles.ts",
       "source_location": "L29",
       "id": "roles_isunitrole",
-      "community": 29,
+      "community": 30,
       "norm_label": "isunitrole()"
     },
     {
@@ -7362,7 +7380,7 @@
       "source_file": "src\\lib\\users\\remove-from-org.ts",
       "source_location": "L1",
       "id": "src_lib_users_remove_from_org_ts",
-      "community": 0,
+      "community": 4,
       "norm_label": "remove-from-org.ts"
     },
     {
@@ -7371,7 +7389,7 @@
       "source_file": "src\\lib\\users\\remove-from-org.ts",
       "source_location": "L11",
       "id": "remove_from_org_removeuserfromcurrentorg",
-      "community": 0,
+      "community": 4,
       "norm_label": "removeuserfromcurrentorg()"
     },
     {
@@ -7380,7 +7398,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\utils\\sanitize.ts",
       "source_location": "L1",
       "id": "c_users_enzos_documents_dev_studio_comunication_src_lib_utils_sanitize_ts",
-      "community": 30,
+      "community": 29,
       "norm_label": "sanitize.ts"
     },
     {
@@ -7389,7 +7407,7 @@
       "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\utils\\sanitize.ts",
       "source_location": "L28",
       "id": "sanitize_sanitizehtml",
-      "community": 30,
+      "community": 29,
       "norm_label": "sanitizehtml()"
     },
     {
@@ -7567,7 +7585,7 @@
       "label": "makeRequest()",
       "file_type": "code",
       "source_file": "tests\\api\\groups\\available-members.test.ts",
-      "source_location": "L19",
+      "source_location": "L22",
       "id": "available_members_test_makerequest",
       "community": 32,
       "norm_label": "makerequest()"
@@ -7576,7 +7594,7 @@
       "label": "makeCtx()",
       "file_type": "code",
       "source_file": "tests\\api\\groups\\available-members.test.ts",
-      "source_location": "L23",
+      "source_location": "L26",
       "id": "available_members_test_makectx",
       "community": 32,
       "norm_label": "makectx()"
@@ -7585,7 +7603,7 @@
       "label": "makeSupabase()",
       "file_type": "code",
       "source_file": "tests\\api\\groups\\available-members.test.ts",
-      "source_location": "L27",
+      "source_location": "L30",
       "id": "available_members_test_makesupabase",
       "community": 32,
       "norm_label": "makesupabase()"
@@ -10413,7 +10431,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\app\\api\\groups\\[groupId]\\available-members\\route.ts",
-      "source_location": "L10",
+      "source_location": "L25",
       "weight": 1.0,
       "_src": "src_app_api_groups_groupid_available_members_route_ts",
       "_tgt": "route_get",
@@ -10422,22 +10440,46 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "contains",
+      "relation": "calls",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L100",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\available-members\\route.ts",
+      "source_location": "L35",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
-      "_tgt": "route_get",
+      "_src": "route_get",
+      "_tgt": "route_canlistavailablegroupmembers",
       "source": "route_get",
-      "target": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "target": "route_canlistavailablegroupmembers",
       "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L41",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L183",
+      "weight": 1.0,
+      "_src": "route_get",
+      "_tgt": "route_routeerror",
+      "source": "route_get",
+      "target": "route_routeerror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L113",
+      "weight": 1.0,
+      "_src": "src_app_api_groups_groupid_members_route_ts",
+      "_tgt": "route_get",
+      "source": "route_get",
+      "target": "src_app_api_groups_groupid_members_route_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L42",
       "weight": 1.0,
       "_src": "route_extractbearertoken",
       "_tgt": "route_get",
@@ -10448,8 +10490,8 @@
     {
       "relation": "calls",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L117",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L130",
       "weight": 1.0,
       "_src": "route_get",
       "_tgt": "route_createclientfromauth",
@@ -10460,8 +10502,8 @@
     {
       "relation": "calls",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L120",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L133",
       "weight": 1.0,
       "_src": "route_get",
       "_tgt": "route_getgroupwithorgid",
@@ -11445,6 +11487,18 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
+      "source_file": "src\\app\\api\\groups\\[groupId]\\available-members\\route.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_src": "route_routeerror",
+      "_tgt": "route_json",
+      "source": "route_json",
+      "target": "route_routeerror"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
       "source_file": "src\\components\\calendar\\EditEventModal.tsx",
       "source_location": "L231",
       "weight": 1.0,
@@ -11876,25 +11930,49 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L247",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L265",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "_src": "src_app_api_groups_groupid_members_route_ts",
       "_tgt": "route_delete",
       "source": "route_delete",
-      "target": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "target": "src_app_api_groups_groupid_members_route_ts",
       "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L266",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L278",
+      "weight": 1.0,
+      "_src": "route_delete",
+      "_tgt": "route_canmanagegroupmembers",
+      "source": "route_delete",
+      "target": "route_canmanagegroupmembers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L287",
       "weight": 1.0,
       "_src": "route_delete",
       "_tgt": "route_getgroupwithorgid",
       "source": "route_delete",
       "target": "route_getgroupwithorgid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L319",
+      "weight": 1.0,
+      "_src": "route_delete",
+      "_tgt": "route_routeerror",
+      "source": "route_delete",
+      "target": "route_routeerror",
       "confidence_score": 1.0
     },
     {
@@ -12584,25 +12662,49 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L179",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L193",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "_src": "src_app_api_groups_groupid_members_route_ts",
       "_tgt": "route_post",
       "source": "route_post",
-      "target": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "target": "src_app_api_groups_groupid_members_route_ts",
       "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L198",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L206",
+      "weight": 1.0,
+      "_src": "route_post",
+      "_tgt": "route_canmanagegroupmembers",
+      "source": "route_post",
+      "target": "route_canmanagegroupmembers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L215",
       "weight": 1.0,
       "_src": "route_post",
       "_tgt": "route_getgroupwithorgid",
       "source": "route_post",
       "target": "route_getgroupwithorgid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L255",
+      "weight": 1.0,
+      "_src": "route_post",
+      "_tgt": "route_routeerror",
+      "source": "route_post",
+      "target": "route_routeerror",
       "confidence_score": 1.0
     },
     {
@@ -14552,44 +14654,104 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L40",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\available-members\\route.ts",
+      "source_location": "L11",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "_src": "src_app_api_groups_groupid_available_members_route_ts",
+      "_tgt": "route_canlistavailablegroupmembers",
+      "source": "src_app_api_groups_groupid_available_members_route_ts",
+      "target": "route_canlistavailablegroupmembers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\available-members\\route.ts",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_src": "src_app_api_groups_groupid_available_members_route_ts",
+      "_tgt": "route_routeerror",
+      "source": "src_app_api_groups_groupid_available_members_route_ts",
+      "target": "route_routeerror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\app\\api\\groups\\[groupId]\\available-members\\route.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_src": "route_canlistavailablegroupmembers",
+      "_tgt": "user_functions_canusepermission",
+      "source": "route_canlistavailablegroupmembers",
+      "target": "user_functions_canusepermission"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L104",
+      "weight": 1.0,
+      "_src": "src_app_api_groups_groupid_members_route_ts",
+      "_tgt": "route_routeerror",
+      "source": "route_routeerror",
+      "target": "src_app_api_groups_groupid_members_route_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_src": "src_app_api_groups_groupid_members_route_ts",
       "_tgt": "route_extractbearertoken",
-      "source": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "source": "src_app_api_groups_groupid_members_route_ts",
       "target": "route_extractbearertoken",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L65",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L66",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "_src": "src_app_api_groups_groupid_members_route_ts",
       "_tgt": "route_createclientfromauth",
-      "source": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "source": "src_app_api_groups_groupid_members_route_ts",
       "target": "route_createclientfromauth",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L84",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L85",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "_src": "src_app_api_groups_groupid_members_route_ts",
       "_tgt": "route_getgroupwithorgid",
-      "source": "c_users_enzos_documents_dev_studio_comunication_src_app_api_groups_groupid_members_route_ts",
+      "source": "src_app_api_groups_groupid_members_route_ts",
       "target": "route_getgroupwithorgid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L96",
+      "weight": 1.0,
+      "_src": "src_app_api_groups_groupid_members_route_ts",
+      "_tgt": "route_canmanagegroupmembers",
+      "source": "src_app_api_groups_groupid_members_route_ts",
+      "target": "route_canmanagegroupmembers",
       "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\app\\api\\groups\\[groupId]\\members\\route.ts",
-      "source_location": "L66",
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L67",
       "weight": 1.0,
       "_src": "route_createclientfromauth",
       "_tgt": "route_extractbearertoken",
@@ -14608,6 +14770,18 @@
       "_tgt": "server_createclient",
       "source": "route_createclientfromauth",
       "target": "server_createclient"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\app\\api\\groups\\[groupId]\\members\\route.ts",
+      "source_location": "L100",
+      "weight": 1.0,
+      "_src": "route_canmanagegroupmembers",
+      "_tgt": "user_functions_canusepermission",
+      "source": "route_canmanagegroupmembers",
+      "target": "user_functions_canusepermission"
     },
     {
       "relation": "contains",
@@ -17649,24 +17823,12 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\auth-context.ts",
-      "source_location": "L167",
+      "source_location": "L153",
       "weight": 1.0,
       "_src": "src_lib_auth_context_ts",
       "_tgt": "auth_context_getauthcontext",
       "source": "src_lib_auth_context_ts",
       "target": "auth_context_getauthcontext",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src\\lib\\auth-context.ts",
-      "source_location": "L153",
-      "weight": 1.0,
-      "_src": "src_lib_auth_context_ts",
-      "_tgt": "auth_context_createasynccache",
-      "source": "src_lib_auth_context_ts",
-      "target": "auth_context_createasynccache",
       "confidence_score": 1.0
     },
     {
@@ -17864,68 +18026,68 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
+      "source_file": "src\\lib\\log.ts",
       "source_location": "L5",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
+      "_src": "src_lib_log_ts",
       "_tgt": "log_normalizesupabaselike",
-      "source": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
+      "source": "src_lib_log_ts",
       "target": "log_normalizesupabaselike",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
+      "source_file": "src\\lib\\log.ts",
       "source_location": "L18",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
+      "_src": "src_lib_log_ts",
       "_tgt": "log_tologgableerror",
-      "source": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
+      "source": "src_lib_log_ts",
       "target": "log_tologgableerror",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
-      "source_location": "L94",
+      "source_file": "src\\lib\\log.ts",
+      "source_location": "L92",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
+      "_src": "src_lib_log_ts",
       "_tgt": "log_logerror",
-      "source": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
+      "source": "src_lib_log_ts",
       "target": "log_logerror",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
-      "source_location": "L108",
+      "source_file": "src\\lib\\log.ts",
+      "source_location": "L106",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
+      "_src": "src_lib_log_ts",
       "_tgt": "log_logwarn",
-      "source": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
+      "source": "src_lib_log_ts",
       "target": "log_logwarn",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
-      "source_location": "L112",
+      "source_file": "src\\lib\\log.ts",
+      "source_location": "L110",
       "weight": 1.0,
-      "_src": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
+      "_src": "src_lib_log_ts",
       "_tgt": "log_loginfo",
-      "source": "c_users_enzos_documents_dev_studio_comunication_src_lib_log_ts",
+      "source": "src_lib_log_ts",
       "target": "log_loginfo",
       "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
-      "source_location": "L48",
+      "source_file": "src\\lib\\log.ts",
+      "source_location": "L46",
       "weight": 1.0,
       "_src": "log_tologgableerror",
       "_tgt": "log_normalizesupabaselike",
@@ -17936,8 +18098,8 @@
     {
       "relation": "calls",
       "confidence": "EXTRACTED",
-      "source_file": "C:\\Users\\enzos\\Documents\\DEV\\studio-comunication\\src\\lib\\log.ts",
-      "source_location": "L99",
+      "source_file": "src\\lib\\log.ts",
+      "source_location": "L97",
       "weight": 1.0,
       "_src": "log_logerror",
       "_tgt": "log_tologgableerror",
@@ -23073,7 +23235,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests\\api\\groups\\available-members.test.ts",
-      "source_location": "L19",
+      "source_location": "L22",
       "weight": 1.0,
       "_src": "tests_api_groups_available_members_test_ts",
       "_tgt": "available_members_test_makerequest",
@@ -23085,7 +23247,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests\\api\\groups\\available-members.test.ts",
-      "source_location": "L23",
+      "source_location": "L26",
       "weight": 1.0,
       "_src": "tests_api_groups_available_members_test_ts",
       "_tgt": "available_members_test_makectx",
@@ -23097,7 +23259,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests\\api\\groups\\available-members.test.ts",
-      "source_location": "L27",
+      "source_location": "L30",
       "weight": 1.0,
       "_src": "tests_api_groups_available_members_test_ts",
       "_tgt": "available_members_test_makesupabase",

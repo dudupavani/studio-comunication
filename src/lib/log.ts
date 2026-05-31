@@ -36,13 +36,11 @@ export function toLoggableError(err: AnyErr) {
       code: anyErr.code,
       hint: anyErr.hint,
       details: anyErr.details,
-      stack: err.stack,
       cause:
         anyErr.cause instanceof Error
           ? {
               name: anyErr.cause.name,
               message: anyErr.cause.message,
-              stack: anyErr.cause.stack,
             }
           : anyErr.cause
           ? normalizeSupabaseLike(anyErr.cause)

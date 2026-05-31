@@ -11,6 +11,7 @@ import {
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import { getAuthContext } from "@/lib/auth-context";
+import { canUsePermission } from "@/lib/permissions/user-functions";
 
 /* ========================= Schemas ========================= */
 
@@ -92,6 +93,18 @@ async function getGroupWithOrgId(supabase: any, groupId: string) {
   return (data ?? null) as { id: string; org_id: string } | null;
 }
 
+async function canManageGroupMembers(auth: NonNullable<Awaited<ReturnType<typeof getAuthContext>>>) {
+  return (
+    auth.platformRole === "platform_admin" ||
+    auth.orgRole === "org_admin" ||
+    (await canUsePermission(auth, "manage_users"))
+  );
+}
+
+function routeError(status: number, message: string) {
+  return NextResponse.json({ error: message }, { status });
+}
+
 /* ============================ GET ============================ */
 /**
  * GET /api/groups/[groupId]/members
@@ -166,7 +179,8 @@ export async function GET(
 
     return NextResponse.json({ groupId: group.id, members: result });
   } catch (err) {
-    return NextResponse.json({ error: toLoggableError(err) }, { status: 400 });
+    console.error("GROUP_MEMBERS_GET_ERROR", toLoggableError(err));
+    return routeError(400, "Erro ao carregar membros do grupo.");
   }
 }
 
@@ -188,6 +202,9 @@ export async function POST(
     const auth = await getAuthContext();
     if (!auth) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 401 });
+    }
+    if (!(await canManageGroupMembers(auth))) {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
     const supabase = createServiceClient();
@@ -234,7 +251,8 @@ export async function POST(
       count: data?.length ?? 0,
     });
   } catch (err) {
-    return NextResponse.json({ error: toLoggableError(err) }, { status: 400 });
+    console.error("GROUP_MEMBERS_POST_ERROR", toLoggableError(err));
+    return routeError(400, "Erro ao adicionar membros ao grupo.");
   }
 }
 
@@ -256,6 +274,9 @@ export async function DELETE(
     const auth = await getAuthContext();
     if (!auth) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 401 });
+    }
+    if (!(await canManageGroupMembers(auth))) {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
     const supabase = createServiceClient();
@@ -294,6 +315,7 @@ export async function DELETE(
       count: data?.length ?? 0,
     });
   } catch (err) {
-    return NextResponse.json({ error: toLoggableError(err) }, { status: 400 });
+    console.error("GROUP_MEMBERS_DELETE_ERROR", toLoggableError(err));
+    return routeError(400, "Erro ao remover membros do grupo.");
   }
 }

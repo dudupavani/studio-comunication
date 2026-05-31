@@ -4,8 +4,23 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { getAuthContext } from "@/lib/auth-context";
 import { toLoggableError } from "@/lib/log";
 import { resolveIdentityMap } from "@/lib/identity";
+import { canUsePermission } from "@/lib/permissions/user-functions";
 
 const ParamsSchema = z.object({ groupId: z.string().uuid() });
+
+async function canListAvailableGroupMembers(
+  auth: NonNullable<Awaited<ReturnType<typeof getAuthContext>>>
+) {
+  return (
+    auth.platformRole === "platform_admin" ||
+    auth.orgRole === "org_admin" ||
+    (await canUsePermission(auth, "manage_users"))
+  );
+}
+
+function routeError(status: number, message: string) {
+  return NextResponse.json({ error: message }, { status });
+}
 
 export async function GET(
   _req: Request,
@@ -17,6 +32,9 @@ export async function GET(
       return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
     if (!auth.orgId)
       return NextResponse.json({ error: "no-org" }, { status: 400 });
+    if (!(await canListAvailableGroupMembers(auth))) {
+      return routeError(403, "forbidden");
+    }
 
     const rawParams = await context.params;
     const parsed = ParamsSchema.safeParse(rawParams);
@@ -38,10 +56,8 @@ export async function GET(
       .maybeSingle();
 
     if (groupErr) {
-      return NextResponse.json(
-        { error: "Erro ao carregar grupo.", details: toLoggableError(groupErr) },
-        { status: 500 }
-      );
+      console.error("GROUP_AVAILABLE_MEMBERS_GROUP_ERROR", toLoggableError(groupErr));
+      return routeError(500, "Erro ao carregar grupo.");
     }
     if (!group) {
       return NextResponse.json(
@@ -60,13 +76,8 @@ export async function GET(
       .eq("group_id", group.id);
 
     if (membersErr) {
-      return NextResponse.json(
-        {
-          error: "Erro ao carregar membros do grupo.",
-          details: toLoggableError(membersErr),
-        },
-        { status: 500 }
-      );
+      console.error("GROUP_AVAILABLE_MEMBERS_CURRENT_ERROR", toLoggableError(membersErr));
+      return routeError(500, "Erro ao carregar membros do grupo.");
     }
 
     const existingIds = new Set(
@@ -80,13 +91,8 @@ export async function GET(
       .eq("org_id", group.org_id);
 
     if (orgErr) {
-      return NextResponse.json(
-        {
-          error: "Erro ao carregar usuários da organização.",
-          details: toLoggableError(orgErr),
-        },
-        { status: 500 }
-      );
+      console.error("GROUP_AVAILABLE_MEMBERS_ORG_ERROR", toLoggableError(orgErr));
+      return routeError(500, "Erro ao carregar usuários da organização.");
     }
 
     const userIds = Array.from(
@@ -110,13 +116,8 @@ export async function GET(
       .in("user_id", userIds);
 
     if (unitErr) {
-      return NextResponse.json(
-        {
-          error: "Erro ao carregar unidades.",
-          details: toLoggableError(unitErr),
-        },
-        { status: 500 }
-      );
+      console.error("GROUP_AVAILABLE_MEMBERS_UNITS_ERROR", toLoggableError(unitErr));
+      return routeError(500, "Erro ao carregar unidades.");
     }
 
     const unitIds = Array.from(
@@ -135,13 +136,8 @@ export async function GET(
         .in("id", unitIds);
 
       if (unitsErr) {
-        return NextResponse.json(
-          {
-            error: "Erro ao carregar nomes das unidades.",
-            details: toLoggableError(unitsErr),
-          },
-          { status: 500 }
-        );
+        console.error("GROUP_AVAILABLE_MEMBERS_UNIT_NAMES_ERROR", toLoggableError(unitsErr));
+        return routeError(500, "Erro ao carregar nomes das unidades.");
       }
       (units ?? []).forEach((row: any) =>
         unitNameMap.set(row.id as string, row.name ?? null)
@@ -167,13 +163,8 @@ export async function GET(
       .in("user_id", userIds);
 
     if (teamErr) {
-      return NextResponse.json(
-        {
-          error: "Erro ao carregar equipes.",
-          details: toLoggableError(teamErr),
-        },
-        { status: 500 }
-      );
+      console.error("GROUP_AVAILABLE_MEMBERS_TEAMS_ERROR", toLoggableError(teamErr));
+      return routeError(500, "Erro ao carregar equipes.");
     }
 
     const teamIds = Array.from(
@@ -192,13 +183,8 @@ export async function GET(
         .in("id", teamIds);
 
       if (teamsErr) {
-        return NextResponse.json(
-          {
-            error: "Erro ao carregar nomes das equipes.",
-            details: toLoggableError(teamsErr),
-          },
-          { status: 500 }
-        );
+        console.error("GROUP_AVAILABLE_MEMBERS_TEAM_NAMES_ERROR", toLoggableError(teamsErr));
+        return routeError(500, "Erro ao carregar nomes das equipes.");
       }
       (teams ?? []).forEach((row: any) =>
         teamNameMap.set(row.id as string, row.name ?? null)
@@ -228,12 +214,7 @@ export async function GET(
 
     return NextResponse.json({ users });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Erro inesperado ao carregar usuários disponíveis.",
-        details: toLoggableError(error),
-      },
-      { status: 500 }
-    );
+    console.error("GROUP_AVAILABLE_MEMBERS_UNEXPECTED_ERROR", toLoggableError(error));
+    return routeError(500, "Erro inesperado ao carregar usuários disponíveis.");
   }
 }
