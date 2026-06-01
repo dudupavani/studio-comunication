@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, RefreshCcw, Save, Trash2 } from "lucide-react";
+import { Plus, Save, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -81,9 +81,8 @@ const roleOptions: UserFunctionBaseRole[] = [
   "unit_user",
 ];
 
-function defaultPermissionsForRole(role: UserFunctionBaseRole) {
-  if (role === "org_master") return DEFAULT_ORG_MASTER_PERMISSIONS;
-  return [];
+function defaultPermissionsForRole(_role: UserFunctionBaseRole) {
+  return DEFAULT_ORG_MASTER_PERMISSIONS;
 }
 
 export default function UserFunctionsClient() {
@@ -270,29 +269,14 @@ export default function UserFunctionsClient() {
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
       <Card>
         <CardHeader className="gap-3">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h2>Funcoes</h2>
-              <p className="text-sm text-muted-foreground">
-                Perfis de permissao da organizacao.
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={loadData}
-              disabled={loading}>
-              <RefreshCcw className="h-4 w-4" />
-            </Button>
-          </div>
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button disabled={allowedBaseRoles.length === 0}>
-                <Plus className="h-4 w-4" />
-                Funcao
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-2">
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex-1" disabled={loading || allowedBaseRoles.length === 0}>
+                  <Plus className="h-4 w-4" />
+                  Nova funcao
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Nova funcao de usuario</DialogTitle>
@@ -345,7 +329,8 @@ export default function UserFunctionsClient() {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </CardHeader>
         <CardContent className="pt-0">
           {loading ? (

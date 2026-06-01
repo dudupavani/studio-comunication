@@ -41,9 +41,8 @@ async function authorizeList() {
   return { auth, orgId: auth.orgId };
 }
 
-function defaultPermissionsForBaseRole(baseRole: UserFunctionBaseRole) {
-  if (baseRole === "org_master") return DEFAULT_ORG_MASTER_PERMISSIONS;
-  return [];
+function defaultPermissionsForBaseRole(_baseRole: UserFunctionBaseRole) {
+  return DEFAULT_ORG_MASTER_PERMISSIONS;
 }
 
 export async function GET() {

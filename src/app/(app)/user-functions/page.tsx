@@ -21,9 +21,9 @@ export default async function UserFunctionsPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="mb-6">
-        <h1>Funcoes de usuarios</h1>
+        
         <p className="mt-2 text-sm text-muted-foreground">
-          Configure perfis de permissao para limitar a atuacao de usuarios por
+          Perfis de permissao para limitar a atuacao de usuarios por
           funcao.
         </p>
       </div>

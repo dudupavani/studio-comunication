@@ -113,7 +113,7 @@ export async function getEffectivePermissionKeys(
   }
   if (!auth.orgId || !auth.orgRole) return [];
 
-  const defaults = defaultPermissionsForRole(auth.orgRole as AppRole);
+  const defaults = DEFAULT_ORG_MASTER_PERMISSIONS;
   if (!defaults.length) return [];
 
   const svc = createServiceClient();
@@ -173,7 +173,7 @@ export function canActorManageFunctionBaseRole(
 ): boolean {
   if (!auth) return false;
   if (auth.platformRole === "platform_admin") return true;
-  if (auth.orgRole === "org_admin") return baseRole === "org_master";
+  if (auth.orgRole === "org_admin") return true;
   if (auth.orgRole === "org_master") {
     return baseRole === "unit_master" || baseRole === "unit_user";
   }

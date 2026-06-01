@@ -20,8 +20,8 @@
   - Sempre que novas tabelas/funções forem adicionadas ao banco, atualize `src/types/supabase.ts` e reexporte delas por `src/lib/supabase/types.ts`.
 
 - **Migrations**
-  - Adicione migrations no diretório `database/migrations`.
-  - Siga o padrão já usado no repositório: `YYYYMMDD_descricao_snake_case.sql`.
+  - Adicione migrations no diretório `supabase/migrations`.
+  - Siga o padrão nativo da Supabase CLI: `YYYYMMDDHHMMSS_descricao_snake_case.sql`.
   - Regras de schema que impactem o app (ex.: tabelas de chats, funções RPC, policies RLS) devem ser versionadas ali.
 
 - **Reações (arquitetura compartilhada)**
