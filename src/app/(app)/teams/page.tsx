@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import TeamsClient from "@/components/teams/TeamsClient";
 import type { OrgUserOption, TeamSummary } from "@/components/teams/types";
 import { enrichOrgUsersWithAuthMetadata } from "@/lib/teams/enrich-org-users";
-import { enrichOrgUsersWithEmployeeProfile } from "@/lib/teams/user-directory";
+import { enrichOrgUsersWithEmployeeProfile, enrichOrgUsersWithUnitName } from "@/lib/teams/user-directory";
 import { canUsePermission } from "@/lib/permissions/user-functions";
 
 const TEAM_MANAGER_ROLES = new Set([
@@ -132,6 +132,7 @@ export default async function TeamsPage() {
 
   orgUsers = await enrichOrgUsersWithAuthMetadata(orgUsers);
   orgUsers = await enrichOrgUsersWithEmployeeProfile(orgUsers);
+  orgUsers = await enrichOrgUsersWithUnitName(orgUsers, auth.orgId);
 
   const orgUsersMap = new Map(orgUsers.map((user) => [user.id, user]));
 

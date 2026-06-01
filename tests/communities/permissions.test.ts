@@ -6,6 +6,10 @@ import {
   hasSegmentMatch,
 } from "@/lib/communities/permissions";
 
+jest.mock("@/lib/permissions/user-functions", () => ({
+  canUsePermission: jest.fn().mockResolvedValue(true),
+}));
+
 const makeAuth = (overrides: Partial<AuthContext> = {}): AuthContext =>
   ({
     userId: "user-1",
@@ -17,20 +21,12 @@ const makeAuth = (overrides: Partial<AuthContext> = {}): AuthContext =>
   }) as AuthContext;
 
 describe("lib/communities/permissions", () => {
-  it("canManageCommunities allows platform admin, org admin and org master", () => {
-    expect(canManageCommunities(null)).toBe(false);
-    expect(
-      canManageCommunities(makeAuth({ platformRole: "platform_admin" })),
-    ).toBe(true);
-    expect(canManageCommunities(makeAuth({ orgRole: "org_admin" }))).toBe(
-      true,
-    );
-    expect(canManageCommunities(makeAuth({ orgRole: "org_master" }))).toBe(
-      true,
-    );
-    expect(canManageCommunities(makeAuth({ orgRole: "unit_user" }))).toBe(
-      false,
-    );
+  it("canManageCommunities allows platform admin, org admin and org master", async () => {
+    expect(await canManageCommunities(null)).toBe(false);
+    expect(await canManageCommunities(makeAuth({ platformRole: "platform_admin" }))).toBe(true);
+    expect(await canManageCommunities(makeAuth({ orgRole: "org_admin" }))).toBe(true);
+    expect(await canManageCommunities(makeAuth({ orgRole: "org_master" }))).toBe(true);
+    expect(await canManageCommunities(makeAuth({ orgRole: "unit_user" }))).toBe(false);
   });
 
   it("canPostInCommunity respects role and community flags", () => {
@@ -47,7 +43,7 @@ describe("lib/communities/permissions", () => {
       true,
     );
     expect(
-      canPostInCommunity(makeAuth({ orgRole: "org_master" }), community),
+      canPostInCommunity(makeAuth({ orgRole: "org_master" }), community, true),
     ).toBe(true);
     expect(
       canPostInCommunity(makeAuth({ orgRole: "unit_master" }), community),
@@ -91,6 +87,7 @@ describe("lib/communities/permissions", () => {
         community: { visibility: "segmented", segment_type: "group" },
         segmentTargetIds: [],
         memberships,
+        canManage: true,
       }),
     ).toBe(true);
 

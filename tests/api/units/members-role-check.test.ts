@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 
 jest.mock("@/lib/auth-context", () => ({ getAuthContext: jest.fn() }));
 jest.mock("@/lib/supabase/server", () => ({ createClient: jest.fn() }));
+jest.mock("@/lib/permissions/user-functions", () => ({
+  canUsePermission: jest.fn().mockResolvedValue(true),
+}));
 
 const mockedGetAuthContext = getAuthContext as jest.Mock;
 const mockedCreateClient = createClient as jest.Mock;

@@ -58,6 +58,21 @@ jest.mock("@/components/units/members/members-tab.server", () => ({
   default: jest.fn(),
 }));
 
+jest.mock("@/lib/actions/unit-members", () => ({
+  getUnitMemberCount: jest.fn().mockResolvedValue(0),
+  addUnitMember: jest.fn(),
+  removeUnitMember: jest.fn(),
+}));
+
+jest.mock("@/lib/permissions/user-functions", () => ({
+  canUsePermission: jest.fn().mockResolvedValue(true),
+  getEffectivePermissionKeys: jest.fn().mockResolvedValue(new Set()),
+}));
+
+jest.mock("@/lib/supabase/service", () => ({
+  createServiceClient: jest.fn(),
+}));
+
 jest.mock("@/components/units/unit-details-form", () => ({
   __esModule: true,
   default: (props: any) => {

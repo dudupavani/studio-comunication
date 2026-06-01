@@ -33,6 +33,15 @@ jest.mock("@/lib/permissions-org", () => ({
   isOrgAdminFor: jest.fn(),
 }));
 
+jest.mock("@/lib/permissions/user-functions", () => ({
+  canUsePermission: jest.fn().mockResolvedValue(true),
+  getEffectivePermissionKeys: jest.fn().mockResolvedValue(new Set()),
+}));
+
+jest.mock("@/lib/supabase/service", () => ({
+  createServiceClient: jest.fn(),
+}));
+
 jest.mock("@/components/units/add-unit-modal", () => ({
   AddUnitModal: jest.fn(() => null),
 }));

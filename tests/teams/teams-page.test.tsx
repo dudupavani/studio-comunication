@@ -5,7 +5,7 @@ import { getAuthContext } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/server";
 import TeamsClient from "@/components/teams/TeamsClient";
 import { enrichOrgUsersWithAuthMetadata } from "@/lib/teams/enrich-org-users";
-import { enrichOrgUsersWithEmployeeProfile } from "@/lib/teams/user-directory";
+import { enrichOrgUsersWithEmployeeProfile, enrichOrgUsersWithUnitName } from "@/lib/teams/user-directory";
 
 jest.mock("@/lib/auth-context", () => ({
   getAuthContext: jest.fn(),
@@ -26,6 +26,7 @@ jest.mock("@/lib/teams/enrich-org-users", () => ({
 
 jest.mock("@/lib/teams/user-directory", () => ({
   enrichOrgUsersWithEmployeeProfile: jest.fn(),
+  enrichOrgUsersWithUnitName: jest.fn(),
 }));
 
 const mockedGetAuthContext =
@@ -39,6 +40,10 @@ const mockedEnrichOrgUsersWithAuthMetadata =
 const mockedEnrichOrgUsersWithEmployeeProfile =
   enrichOrgUsersWithEmployeeProfile as jest.MockedFunction<
     typeof enrichOrgUsersWithEmployeeProfile
+  >;
+const mockedEnrichOrgUsersWithUnitName =
+  enrichOrgUsersWithUnitName as jest.MockedFunction<
+    typeof enrichOrgUsersWithUnitName
   >;
 
 function makeAwaitableQuery<T>(result: T) {
@@ -251,8 +256,14 @@ describe("app/(app)/teams/page", () => {
       { ...usersAfterAuth[1], title: "Analista" },
     ] as any;
 
+    const usersAfterUnit = [
+      { ...usersAfterEmployee[0], unitName: "Florianópolis" },
+      { ...usersAfterEmployee[1], unitName: null },
+    ] as any;
+
     mockedEnrichOrgUsersWithAuthMetadata.mockResolvedValue(usersAfterAuth);
     mockedEnrichOrgUsersWithEmployeeProfile.mockResolvedValue(usersAfterEmployee);
+    mockedEnrichOrgUsersWithUnitName.mockResolvedValue(usersAfterUnit);
 
     const element = await TeamsPage();
     renderToStaticMarkup(element as any);
@@ -265,15 +276,15 @@ describe("app/(app)/teams/page", () => {
 
     expect(mockedEnrichOrgUsersWithAuthMetadata).toHaveBeenCalledTimes(1);
     expect(mockedEnrichOrgUsersWithEmployeeProfile).toHaveBeenCalledTimes(1);
-    expect(mockedEnrichOrgUsersWithEmployeeProfile).toHaveBeenCalledWith(
-      usersAfterAuth
-    );
+    expect(mockedEnrichOrgUsersWithEmployeeProfile).toHaveBeenCalledWith(usersAfterAuth);
+    expect(mockedEnrichOrgUsersWithUnitName).toHaveBeenCalledTimes(1);
+    expect(mockedEnrichOrgUsersWithUnitName).toHaveBeenCalledWith(usersAfterEmployee, "org-1");
 
     expect(mockedTeamsClient).toHaveBeenCalledTimes(1);
     const teamsClientProps = mockedTeamsClient.mock.calls[0][0];
 
     expect(teamsClientProps.canManage).toBe(true);
-    expect(teamsClientProps.orgUsers).toEqual(usersAfterEmployee);
+    expect(teamsClientProps.orgUsers).toEqual(usersAfterUnit);
     expect(teamsClientProps.initialTeams).toEqual([
       {
         id: "team-1",

@@ -19,6 +19,10 @@ jest.mock("@/lib/supabase/server", () => ({
   createClient: jest.fn(),
 }));
 
+jest.mock("@/lib/permissions/user-functions", () => ({
+  canUsePermission: jest.fn().mockResolvedValue(true),
+}));
+
 const mockedNotFound = notFound as jest.MockedFunction<typeof notFound>;
 const mockedGetAuthContext =
   getAuthContext as jest.MockedFunction<typeof getAuthContext>;
@@ -29,16 +33,16 @@ describe("comunidades/page-helpers", () => {
     jest.clearAllMocks();
   });
 
-  it("permission resolvers allow platform admin, org admin and org master", () => {
+  it("permission resolvers allow platform admin, org admin and org master", async () => {
     const auth = {
       platformRole: null,
       orgRole: "org_master",
     } as any;
 
-    expect(resolveManagePermission(auth)).toBe(true);
-    expect(resolveCreateCommunityPermission(auth)).toBe(true);
+    expect(await resolveManagePermission(auth)).toBe(true);
+    expect(await resolveCreateCommunityPermission(auth)).toBe(true);
     expect(
-      resolveManagePermission({ platformRole: null, orgRole: "unit_user" } as any),
+      await resolveManagePermission({ platformRole: null, orgRole: "unit_user" } as any),
     ).toBe(false);
   });
 

@@ -132,13 +132,13 @@ describe("app/(app)/users/page", () => {
     mockedGetAuthContext.mockResolvedValue(auth);
     mockedCanManageUsers.mockResolvedValue(true);
     mockedIsPlatformAdmin.mockReturnValue(true);
-    mockedGetUsers.mockResolvedValue(users);
+    mockedGetUsers.mockResolvedValue({ users, total: users.length });
 
     const element = (await UsersPage({
       searchParams: Promise.resolve({ role: ["org_admin", "unit_user"] }),
     })) as any;
 
-    expect(mockedGetUsers).toHaveBeenCalledWith("org-1");
+    expect(mockedGetUsers).toHaveBeenCalledWith("org-1", expect.objectContaining({}));
     expect(element.props.className).toBe("p-4");
 
     const clientElement = element.props.children;

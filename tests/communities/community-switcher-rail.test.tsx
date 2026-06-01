@@ -106,10 +106,10 @@ describe("CommunitySwitcherRail", () => {
     render(<CommunitySwitcherRail {...defaultProps} selectedCommunityId="c1" />);
     
     const alphaInitial = screen.getByText("A");
-    expect(alphaInitial).toHaveClass("bg-zinc-900");
+    expect(alphaInitial).toHaveClass("bg-red-500");
 
     const betaInitial = screen.getByText("B");
-    expect(betaInitial).toHaveClass("bg-zinc-700");
+    expect(betaInitial).toHaveClass("bg-secondary");
   });
 
   it("renders loading skeletons when communitiesLoading is true", () => {

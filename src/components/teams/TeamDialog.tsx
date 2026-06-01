@@ -13,6 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Spinner } from "@/components/ui/spinner";
 import { getRoleLabel } from "@/lib/role-labels";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +28,13 @@ import { useToast } from "@/hooks/use-toast";
 import type { OrgUserOption } from "./types";
 import UserSummary from "@/components/shared/user-summary";
 import { Toggle } from "@/components/ui/toggle";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type TeamDialogProps = {
   mode: "create" | "edit";
@@ -57,6 +72,7 @@ export default function TeamDialog({
     () => new Set()
   );
   const [search, setSearch] = useState("");
+  const [unitFilter, setUnitFilter] = useState<string>("all");
 
   useEffect(() => {
     if (!open) {
@@ -65,6 +81,7 @@ export default function TeamDialog({
       setSelectedMembers(new Set());
       setTeam(null);
       setSearch("");
+      setUnitFilter("all");
       setLoading(false);
       setSubmitting(false);
       return;
@@ -113,18 +130,26 @@ export default function TeamDialog({
     }
   }, [open, mode, teamId, orgUsers, toast, onOpenChange]);
 
+  const unitOptions = useMemo(() => {
+    const names = new Set<string>();
+    for (const u of orgUsers) {
+      names.add(u.unitName ?? "Matriz");
+    }
+    return Array.from(names).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [orgUsers]);
+
   const normalizedSearch = search.trim().toLowerCase();
   const filteredUsers = useMemo(() => {
-    if (!normalizedSearch) return orgUsers;
     return orgUsers.filter((user) => {
-      const needle = normalizedSearch;
+      if (unitFilter !== "all" && (user.unitName ?? "Matriz") !== unitFilter) return false;
+      if (!normalizedSearch) return true;
       return (
-        user.name.toLowerCase().includes(needle) ||
-        (user.email ?? "").toLowerCase().includes(needle) ||
-        (user.title ?? "").toLowerCase().includes(needle)
+        user.name.toLowerCase().includes(normalizedSearch) ||
+        (user.email ?? "").toLowerCase().includes(normalizedSearch) ||
+        (user.title ?? "").toLowerCase().includes(normalizedSearch)
       );
     });
-  }, [orgUsers, normalizedSearch]);
+  }, [orgUsers, normalizedSearch, unitFilter]);
 
   function toggleMember(userId: string) {
     setSelectedMembers((prev) => {
@@ -221,8 +246,8 @@ export default function TeamDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl" aria-describedby={undefined}>
-        <DialogHeader>
+      <DialogContent className="flex max-w-3xl h-[90vh] flex-col" aria-describedby={undefined}>
+        <DialogHeader className="shrink-0">
           <DialogTitle>
             {mode === "create"
               ? "Criar equipe"
@@ -249,8 +274,8 @@ export default function TeamDialog({
             </p>
           </div>
         ) : (
-          <form className="space-y-8" onSubmit={handleSubmit}>
-            <div className="space-y-2">
+          <form className="flex flex-1 flex-col gap-6 overflow-hidden" onSubmit={handleSubmit}>
+            <div className="shrink-0 space-y-2">
               <Label htmlFor="team-name">Nome</Label>
               <Input
                 id="team-name"
@@ -261,8 +286,8 @@ export default function TeamDialog({
               />
             </div>
 
-            <div className="space-y-3">
-              <div className="mb-4 space-y-1">
+            <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+              <div className="shrink-0 space-y-1">
                 <div className="flex gap-1 items-center">
                   <h5>Membros da equipe </h5>
                   <span className="text-lg text-light leading-[1.5rem]">
@@ -274,84 +299,108 @@ export default function TeamDialog({
                 </p>
               </div>
 
-              <Input
-                placeholder="Buscar por nome ou cargo"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                disabled={submitting}
-              />
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Buscar por nome ou cargo"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  disabled={submitting}
+                />
+                <Select
+                  value={unitFilter}
+                  onValueChange={setUnitFilter}
+                  disabled={submitting}>
+                  <SelectTrigger className="w-48 shrink-0">
+                    <SelectValue placeholder="Unidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as unidades</SelectItem>
+                    {unitOptions.map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <ScrollArea className="h-64 rounded-md border">
-                <div
-                  className="divide-y"
-                  role="group"
-                  aria-label="Selecionar líder da equipe">
-                  {filteredUsers.length === 0 ? (
-                    <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-                      Nenhum usuário encontrado.
-                    </div>
-                  ) : (
-                    filteredUsers.map((user) => {
-                      const checked = selectedMembers.has(user.id);
-                      const disabled = submitting;
-                      const isLeader = leaderId === user.id;
-                      return (
-                        <div
-                          key={user.id}
-                          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-3 px-4 py-3 transition hover:bg-muted/60 ${
-                            !checked ? "opacity-75" : ""
-                          }`}>
-                          <div className="flex flex-1 items-center gap-3">
-                            <Checkbox
-                              checked={checked}
-                              onCheckedChange={() => toggleMember(user.id)}
-                              disabled={disabled}
-                            />
-                            <div className="flex flex-1">
+              <ScrollArea className="flex-1 rounded-md border">
+                {filteredUsers.length === 0 ? (
+                  <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                    Nenhum usuário encontrado.
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8" />
+                        <TableHead>Usuário</TableHead>
+                        <TableHead>Unidade</TableHead>
+                        <TableHead>Perfil</TableHead>
+                        <TableHead />
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => {
+                        const checked = selectedMembers.has(user.id);
+                        const isLeader = leaderId === user.id;
+                        return (
+                          <TableRow key={user.id}>
+                            <TableCell>
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={() => toggleMember(user.id)}
+                                disabled={submitting}
+                              />
+                            </TableCell>
+                            <TableCell>
                               <UserSummary
                                 avatarUrl={user.avatarUrl}
                                 name={user.name}
                                 subtitle={user.title ?? "Sem cargo"}
                                 fallback="Sem nome"
                               />
-                            </div>
-                            <Badge variant="outline">
-                              {user.role ? getRoleLabel(user.role) : "Membro"}
-                            </Badge>
-                          </div>
-                          <div className="flex justify-center items-center gap-2">
-                            <Toggle
-                              aria-label={`Definir ${user.name} como líder`}
-                              pressed={isLeader}
-                              onPressedChange={(pressed) => {
-                                if (!selectedMembers.has(user.id)) {
-                                  toast({
-                                    title: "Selecione o membro primeiro",
-                                    description:
-                                      "Para definir alguém como líder, selecione-o como membro.",
-                                  });
-                                  return;
+                            </TableCell>
+                            <TableCell>{user.unitName ?? "Matriz"}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {user.role ? getRoleLabel(user.role) : "Membro"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Toggle
+                                aria-label={`Definir ${user.name} como líder`}
+                                pressed={isLeader}
+                                onPressedChange={(pressed) => {
+                                  if (!selectedMembers.has(user.id)) {
+                                    toast({
+                                      title: "Selecione o membro primeiro",
+                                      description:
+                                        "Para definir alguém como líder, selecione-o como membro.",
+                                    });
+                                    return;
+                                  }
+                                  if (!pressed) return;
+                                  setLeaderId(user.id);
+                                }}
+                                disabled={
+                                  !selectedMembers.has(user.id) || submitting
                                 }
-                                if (!pressed) return;
-                                setLeaderId(user.id);
-                              }}
-                              disabled={
-                                !selectedMembers.has(user.id) || submitting
-                              }
-                              className="h-8 px-3 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                              <Shield className="h-4 w-4" />
-                              <span className="ml-1 font-medium">Líder</span>
-                            </Toggle>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
+                                className="h-8 px-3 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                                <Shield className="h-4 w-4" />
+                                <span className="ml-1 font-medium">Líder</span>
+                              </Toggle>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
               </ScrollArea>
             </div>
 
-            <div className="flex justify-end gap-2 border-t pt-4">
+            <div className="shrink-0 flex justify-end gap-2 border-t pt-4">
               <Button
                 type="button"
                 variant="outline"

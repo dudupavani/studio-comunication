@@ -27,6 +27,22 @@ jest.mock("@/lib/users/remove-from-org", () => ({
   removeUserFromCurrentOrg: jest.fn(),
 }));
 
+jest.mock("@/lib/auth-context", () => ({
+  getAuthContext: jest.fn().mockResolvedValue({
+    userId: "admin-u",
+    orgId: "o1",
+    platformRole: "platform_admin",
+    orgRole: null,
+    unitIds: [],
+  }),
+}));
+
+jest.mock("@/lib/permissions/user-functions", () => ({
+  canUsePermission: jest.fn().mockResolvedValue(true),
+  canManageTargetUser: jest.fn().mockResolvedValue(true),
+  loadManageTargetUser: jest.fn().mockResolvedValue({ ok: true }),
+}));
+
 jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
 }));
@@ -209,8 +225,8 @@ describe("User Actions", () => {
       mockSupabase.auth.admin.getUserById.mockResolvedValue({ data: { user: { email: "ana@ex.com" } } });
 
       const result = await getUsers("o1");
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
+      expect(result.users).toHaveLength(1);
+      expect(result.users[0]).toMatchObject({
         id: "u1",
         email: "ana@ex.com",
         full_name: "Ana",

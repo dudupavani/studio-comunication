@@ -22,6 +22,7 @@ export type OrgUserOption = {
   avatarUrl: string | null;
   role: string | null;
   title?: string | null;
+  unitName?: string | null;
 };
 
 export type TeamFormValues = {
