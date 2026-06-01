@@ -24,35 +24,41 @@ export type UserFunctionBaseRole = (typeof USER_FUNCTION_BASE_ROLES)[number];
 
 export const USER_FUNCTION_PERMISSION_CATALOG: Array<{
   key: UserFunctionPermissionKey;
+  module: string;
   label: string;
   description: string;
 }> = [
   {
     key: "manage_users",
+    module: "Usuarios",
     label: "Gerenciar usuarios",
     description:
       "Acessar usuarios, convidar, editar dados permitidos, alterar roles permitidos e remover usuarios permitidos.",
   },
   {
     key: "manage_units",
+    module: "Unidades",
     label: "Gerenciar unidades",
     description:
       "Acessar unidades, criar, editar, excluir e gerenciar membros de unidades.",
   },
   {
     key: "manage_teams",
+    module: "Equipes",
     label: "Gerenciar equipes",
     description:
       "Acessar equipes, criar, editar, excluir e gerenciar membros e lideres.",
   },
   {
     key: "manage_communities",
+    module: "Comunidades",
     label: "Gerenciar comunidades",
     description:
       "Acessar comunidades como gestor, criar, editar, excluir, segmentar e publicar como gestor.",
   },
   {
     key: "manage_user_functions",
+    module: "Funcoes",
     label: "Gerenciar funcoes de usuarios",
     description:
       "Acessar Funcoes de usuarios e gerenciar funcoes dentro do escopo permitido.",

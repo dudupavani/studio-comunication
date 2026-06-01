@@ -18,16 +18,5 @@ export default async function UserFunctionsPage() {
 
   if (!canAccess) redirect("/dashboard");
 
-  return (
-    <div className="p-4 md:p-8">
-      <div className="mb-6">
-        
-        <p className="mt-2 text-sm text-muted-foreground">
-          Perfis de permissao para limitar a atuacao de usuarios por
-          funcao.
-        </p>
-      </div>
-      <UserFunctionsClient />
-    </div>
-  );
+  return <UserFunctionsClient />;
 }

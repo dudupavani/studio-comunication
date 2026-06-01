@@ -230,11 +230,11 @@ h4 {
   line-height: 1.5rem;
 }
 h5 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 1.5rem;
 }
 h6 {
-  font-size: 1rem;
+  font-size: 0.875rem;
   line-height: 1.5rem;
 }
 
@@ -257,11 +257,11 @@ h6 {
     line-height: 1.5rem;
   }
   h5 {
-    font-size: 1.125rem;
+    font-size: 1rem;
     line-height: 1.5rem;
   }
   h6 {
-    font-size: 1em;
+    font-size: 0.875rem;
     line-height: 1.5rem;
   }
 }

@@ -89,7 +89,7 @@ export default async function AppLayout({
     <div className={cn("flex min-h-screen flex-col")}>
       <FinalizeInviteCSR />
       <AppShellHeader user={userProfile} />
-      <div className="flex flex-col">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </div>
   );
 }

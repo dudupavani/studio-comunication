@@ -52,7 +52,7 @@ export async function GET() {
     const { auth, orgId } = scope;
 
     const svc = createServiceClient();
-    const [profilesRes, permissionsRes, assignmentsRes, usersRes] =
+    const [profilesRes, permissionsRes, assignmentsRes, usersRes, employeeProfilesRes] =
       await Promise.all([
         svc
           .from("user_permission_profiles")
@@ -82,6 +82,10 @@ export async function GET() {
           )
           .eq("org_id", orgId)
           .in("role", ["org_master", "unit_master", "unit_user"]),
+        svc
+          .from("employee_profile")
+          .select("user_id, cargo")
+          .eq("org_id", orgId),
       ]);
 
     if (profilesRes.error) {
@@ -95,6 +99,9 @@ export async function GET() {
     }
     if (usersRes.error) {
       return jsonError(500, "Erro ao listar usuarios elegiveis.", toLoggableError(usersRes.error));
+    }
+    if (employeeProfilesRes.error) {
+      return jsonError(500, "Erro ao listar cargos dos usuarios.", toLoggableError(employeeProfilesRes.error));
     }
 
     const permissionsByProfile = new Map<string, string[]>();
@@ -117,6 +124,9 @@ export async function GET() {
 
     const allowedBaseRoles = (["org_master", "unit_master", "unit_user"] as const).filter(
       (role) => canActorManageFunctionBaseRole(auth, role)
+    );
+    const cargoByUser = new Map(
+      (employeeProfilesRes.data ?? []).map((row) => [row.user_id, row.cargo])
     );
 
     return NextResponse.json({
@@ -141,6 +151,7 @@ export async function GET() {
           name: row.profiles?.full_name ?? "Sem nome",
           avatarUrl: row.profiles?.avatar_url ?? null,
           globalRole: row.profiles?.global_role ?? null,
+          cargo: cargoByUser.get(row.user_id as string) ?? null,
           assignedProfileId: assignmentByUser.get(row.user_id as string) ?? null,
         })) ?? [],
     });
